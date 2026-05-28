@@ -18,6 +18,199 @@
       },
       "registered_skills": [],
       "installed_at": "2026-05-28T01:19:23.416338+00:00"
+    },
+    "branch-convention": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:7efe1bfce264c25a4eddce6d65aa74ebc63a532b82e2d82264155e82c39d3859",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "opencode": [
+          "speckit.branch-convention.configure",
+          "speckit.branch-convention.validate",
+          "speckit.branch-convention.rename"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-05-28T02:05:07.374076+00:00"
+    },
+    "wireframe": {
+      "version": "0.1.1",
+      "source": "local",
+      "manifest_hash": "sha256:246ce4f535c9149c28fa28d38fb7642034b17c44a62d13a59474a2272b753172",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "opencode": [
+          "speckit.wireframe.generate",
+          "speckit.wireframe.prep",
+          "speckit.wireframe.review",
+          "speckit.wireframe.inspect",
+          "speckit.wireframe.screenshots",
+          "speckit.wireframe.view"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-05-28T02:18:45.771322+00:00"
+    },
+    "status": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:25d080d9f1a0ea2fc62de2464479143c7c008b9131d32755f351413605d7946f",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "opencode": [
+          "speckit.status.show",
+          "speckit.status"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-05-28T02:20:21.544718+00:00"
+    },
+    "doctor": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:45150c8ac10b6b002ebea9de34a203911951fe3a89cb8635a2a149082c02eeed",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "opencode": [
+          "speckit.doctor.check",
+          "speckit.doctor"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-05-28T02:21:14.123064+00:00"
+    },
+    "security-review": {
+      "version": "1.5.0",
+      "source": "local",
+      "manifest_hash": "sha256:6845e1d761f2eeb49d395425f7bc1bb18dddc4bbc287a5de81c573ae6c215025",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "opencode": [
+          "speckit.security-review.audit",
+          "speckit.security-review.staged",
+          "speckit.security-review.branch",
+          "speckit.security-review.plan",
+          "speckit.security-review.tasks",
+          "speckit.security-review.followup",
+          "speckit.security-review.apply",
+          "speckit.security-review.export",
+          "speckit.security-review.init"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-05-28T02:21:50.634794+00:00"
+    },
+    "superpowers": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:f61002d13908c232021b6b9a5a82cae5204d0fc876800db67c4037334966c3f5",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "opencode": [
+          "speckit.superpowers.status",
+          "speckit.superpowers.brainstorm",
+          "speckit.superpowers.tasks",
+          "speckit.superpowers.execute",
+          "speckit.superpowers.review"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-05-28T02:38:16.336095+00:00"
+    },
+    "learn": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:88e5b334106c25aa5ee1e0564e8f684b39a33b799d35f4ff5a3567189ea94607",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "opencode": [
+          "speckit.learn.review",
+          "speckit.learn.clarify"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-05-28T02:42:39.985767+00:00"
+    },
+    "memory-md": {
+      "version": "0.8.5",
+      "source": "local",
+      "manifest_hash": "sha256:b0368e6d1d4d3eb0e2662d68fed547210f0647466b0162ff1f78d6fa39d281af",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "opencode": [
+          "speckit.memory-md.init",
+          "speckit.memory-md.plan-with-memory",
+          "speckit.memory-md.capture",
+          "speckit.memory-md.capture-from-diff",
+          "speckit.memory-md.audit",
+          "speckit.memory-md.log-finding",
+          "speckit.memory-md.token-report"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-05-28T02:43:27.489207+00:00"
+    },
+    "review": {
+      "version": "1.0.1",
+      "source": "local",
+      "manifest_hash": "sha256:3f9eedfc8079662edfb8d1f9c07a161be4e66111ea57621061f1658e91710d83",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "opencode": [
+          "speckit.review.run",
+          "speckit.review.code",
+          "speckit.review.comments",
+          "speckit.review.tests",
+          "speckit.review.errors",
+          "speckit.review.types",
+          "speckit.review.simplify"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-05-28T02:49:22.606985+00:00"
+    },
+    "diagram": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:a2ab4ddf44a45c8bfd7f0a0a75e3aa2075d0135e1e288c6d70974f8b37d0621d",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "opencode": [
+          "speckit.diagram.workflow",
+          "speckit.diagram.status",
+          "speckit.diagram.dependencies"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-05-28T02:52:49.528721+00:00"
+    },
+    "refine": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:f81d942a057a69e00d223e0c2154de0e1040b33f80f9acfc1a15a6e3762ae22b",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "opencode": [
+          "speckit.refine.update",
+          "speckit.refine.propagate",
+          "speckit.refine.diff",
+          "speckit.refine.status"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-05-28T02:53:13.876246+00:00"
     }
   }
 }

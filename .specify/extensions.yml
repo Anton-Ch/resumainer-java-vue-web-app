@@ -1,5 +1,16 @@
 installed:
+- branch-convention
+- diagram
+- doctor
 - git
+- learn
+- memory-md
+- refine
+- review
+- security-review
+- status
+- superpowers
+- wireframe
 settings:
   auto_execute_hooks: true
 hooks:
@@ -19,6 +30,14 @@ hooks:
     prompt: Execute speckit.git.feature?
     description: Create feature branch before specification
     condition: null
+  - extension: branch-convention
+    command: speckit.branch-convention.validate
+    enabled: true
+    optional: true
+    prompt: Validate branch naming convention before creating new feature?
+    description: Check naming convention compliance before /specify creates a new
+      branch
+    condition: null
   before_clarify:
   - extension: git
     command: speckit.git.commit
@@ -35,6 +54,21 @@ hooks:
     prompt: Commit outstanding changes before planning?
     description: Auto-commit before implementation planning
     condition: null
+  - extension: wireframe
+    command: speckit.wireframe.review
+    enabled: true
+    optional: true
+    prompt: Review and sign off wireframes before planning? (signed-off wireframes
+      become spec constraints)
+    description: Ensure wireframes are reviewed and signed off before plan is written
+    condition: null
+  - extension: memory-md
+    command: speckit.memory-md.plan-with-memory
+    enabled: true
+    optional: true
+    prompt: Would you like to synthesize project memory before planning?
+    description: ''
+    condition: null
   before_tasks:
   - extension: git
     command: speckit.git.commit
@@ -50,6 +84,14 @@ hooks:
     optional: true
     prompt: Commit outstanding changes before implementation?
     description: Auto-commit before implementation
+    condition: null
+  - extension: superpowers
+    command: speckit.superpowers.execute
+    enabled: true
+    optional: true
+    prompt: Run Superpowers-guided implementation with TDD and checkpoints?
+    description: Enforce TDD discipline and Superpowers execution guidance before
+      core implementation
     condition: null
   before_checklist:
   - extension: git
@@ -91,6 +133,20 @@ hooks:
     prompt: Commit specification changes?
     description: Auto-commit after specification
     condition: null
+  - extension: wireframe
+    command: speckit.wireframe.generate
+    enabled: true
+    optional: true
+    prompt: Generate wireframes for this feature now?
+    description: Offer wireframe generation after spec creation
+    condition: null
+  - extension: refine
+    command: speckit.refine.status
+    enabled: true
+    optional: true
+    prompt: Check artifact sync status after specification?
+    description: Show sync status after spec generation
+    condition: null
   after_clarify:
   - extension: git
     command: speckit.git.commit
@@ -107,6 +163,21 @@ hooks:
     prompt: Commit plan changes?
     description: Auto-commit after implementation planning
     condition: null
+  - extension: security-review
+    command: speckit.security-review.plan
+    enabled: true
+    optional: true
+    prompt: Would you like to perform a security review on the proposed technical
+      plan?
+    description: ''
+    condition: null
+  - extension: refine
+    command: speckit.refine.status
+    enabled: true
+    optional: true
+    prompt: Check artifact sync status after planning?
+    description: Show sync status after plan generation
+    condition: null
   after_tasks:
   - extension: git
     command: speckit.git.commit
@@ -115,6 +186,29 @@ hooks:
     prompt: Commit task changes?
     description: Auto-commit after task generation
     condition: null
+  - extension: security-review
+    command: speckit.security-review.tasks
+    enabled: true
+    optional: true
+    prompt: Would you like to verify that security boundaries are represented in the
+      tasks?
+    description: ''
+    condition: null
+  - extension: superpowers
+    command: speckit.superpowers.tasks
+    enabled: true
+    optional: true
+    prompt: Run enhanced Superpowers task decomposition and validation?
+    description: Verify task coverage and add Superpowers execution markers after
+      core task generation
+    condition: null
+  - extension: diagram
+    command: speckit.diagram.dependencies
+    enabled: true
+    optional: true
+    prompt: Generate task dependency diagram after task breakdown?
+    description: Auto-generate dependency DAG after tasks are created
+    condition: null
   after_implement:
   - extension: git
     command: speckit.git.commit
@@ -122,6 +216,49 @@ hooks:
     optional: true
     prompt: Commit implementation changes?
     description: Auto-commit after implementation
+    condition: null
+  - extension: wireframe
+    command: speckit.wireframe.screenshots
+    enabled: true
+    optional: true
+    prompt: Capture implementation screenshots and compare to signed-off wireframes?
+    description: 'Regression check: compare implementation to approved wireframes'
+    condition: null
+  - extension: security-review
+    command: speckit.security-review.branch
+    enabled: true
+    optional: true
+    prompt: Would you like to scan the new implementation for security vulnerabilities?
+    description: ''
+    condition: null
+  - extension: superpowers
+    command: speckit.superpowers.review
+    enabled: true
+    optional: true
+    prompt: Run Superpowers review against the specification and implementation?
+    description: Review implementation against the spec, plan, tasks, and constitution
+    condition: null
+  - extension: learn
+    command: speckit.learn.review
+    enabled: true
+    optional: true
+    prompt: Generate a learning guide from this implementation?
+    description: ''
+    condition: null
+  - extension: memory-md
+    command: speckit.memory-md.capture-from-diff
+    enabled: true
+    optional: true
+    prompt: Would you like to capture durable lessons from this implementation to
+      project memory?
+    description: ''
+    condition: null
+  - extension: review
+    command: speckit.review.run
+    enabled: true
+    optional: true
+    prompt: Run PR review on implemented changes?
+    description: Comprehensive review after implementation
     condition: null
   after_checklist:
   - extension: git
