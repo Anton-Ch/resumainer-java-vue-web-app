@@ -12,8 +12,6 @@ Early-stage scaffold. No application code, no build files, no CI yet.
 | `chore/spec-kit-configuration` | Spec Kit tooling (CLAUDE.md, .gitignore, .specify/) |
 | `chore/spec-kit-setup` (HEAD) | Only README.md (same as main) |
 
-**You likely want `chore/spec-kit-configuration`** checked out — that's where all tooling lives.
-
 ## Methodology
 
 Spec-Driven Development with GitHub Spec Kit. The flow is:
@@ -40,7 +38,6 @@ AI: OpenRouter API (DeepSeek in dev), Mock AI provider for tests
 
 ## Known quirks
 
-- `superspec` and `wireframe` are broken symlinks (tracked but unresolved)
 - `.claude/*` is gitignored except `.claude/skills/`
 - `chore/spec-kit-configuration` local (`2ae1a7c`) is ahead of remote (`9c35a45`)
 - No `pom.xml`, `package.json`, `docker-compose.yml` exist yet
@@ -54,3 +51,7 @@ AI: OpenRouter API (DeepSeek in dev), Mock AI provider for tests
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
 <!-- SPECKIT END -->
+
+### Spec Kit
+
+You MUST follow the memory-first workflow defined in `.specify/memory/workflow.md` and proactively execute `/speckit.memory-md.prepare-context` before planning.
