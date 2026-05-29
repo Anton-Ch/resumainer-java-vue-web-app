@@ -1,0 +1,444 @@
+@startuml erd_001_resumainer_mvp_data_
+hide methods
+hide stereotypes
+
+skinparam classBackgroundColor #FAFAFA
+skinparam classBorderColor #AAAAAA
+skinparam backgroundColor #FFFFFF
+
+title ERD — ResumAIner MVP Data Model (v2.0)
+
+entity "role" as role {
+  + id : Integer [PK]
+  --
+  code varchar UNIQUE
+  name varchar
+}
+
+entity "user_status" as user_status {
+  + id : Integer [PK]
+  --
+  code varchar UNIQUE
+  name varchar
+}
+
+entity "user_permission" as user_permission {
+  + id : Integer [PK]
+  --
+  code varchar UNIQUE
+  name varchar
+}
+
+entity "response_status" as response_status {
+  + id : Integer [PK]
+  --
+  code varchar UNIQUE
+  name varchar
+}
+
+entity "language" as language {
+  + id : Integer [PK]
+  --
+  code varchar UNIQUE
+  name varchar
+}
+
+entity "adaptation_level" as adaptation_level {
+  + id : Integer [PK]
+  --
+  code varchar UNIQUE
+  name varchar
+  description text
+}
+
+entity "work_format" as work_format {
+  + id : Integer [PK]
+  --
+  code varchar UNIQUE
+  name varchar
+}
+
+entity "resume_template" as resume_template {
+  + id : Integer [PK]
+  --
+  name varchar
+  html_file_path varchar
+  description text
+  is_active boolean
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "users" as users {
+  + id : Integer [PK]
+  --
+  username varchar UNIQUE
+  email varchar UNIQUE
+  password_hash varchar
+  role_id FK
+  status_id FK
+  permission_id FK
+  default_language_id FK
+  secondary_language_id FK
+  is_privileged boolean
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+  is_deleted boolean
+}
+
+entity "contact_detail" as contact_detail {
+  + id : Integer [PK]
+  --
+  user_id FK UNIQUE
+  full_name varchar
+  phone varchar "not null"
+  resume_email varchar "not null"
+  location varchar
+  professional_title varchar
+  linkedin_url varchar
+  portfolio_url varchar
+  telegram varchar
+  whatsapp varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "work_experience" as work_experience {
+  + id : Integer [PK]
+  --
+  user_id FK
+  job_title varchar
+  company_name varchar
+  description text
+  location varchar "not null"
+  start_date date
+  end_date date
+  is_current boolean
+  company_url varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "education" as education {
+  + id : Integer [PK]
+  --
+  user_id FK
+  institution_name varchar
+  degree varchar
+  field_of_study varchar "not null"
+  education_type varchar
+  description text
+  start_date date
+  end_date date
+  location varchar
+  gpa_grade varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "project" as project {
+  + id : Integer [PK]
+  --
+  user_id FK
+  project_name varchar
+  role varchar
+  description text
+  location varchar
+  start_date date "not null"
+  end_date date
+  project_url varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "course_certificate" as course_certificate {
+  + id : Integer [PK]
+  --
+  user_id FK
+  name varchar
+  provider varchar
+  description text
+  course_focus varchar
+  start_date date
+  end_date date
+  credential_url varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "additional_profile_info" as additional_profile_info {
+  + id : Integer [PK]
+  --
+  user_id FK UNIQUE
+  skills text
+  languages text
+  professional_aspirations text
+  achievements text
+  general_information text
+  default_resume_language_id FK
+  additional_resume_language_id FK
+  ready_for_relocation varchar
+  ready_for_business_trips varchar
+  date_of_birth date
+  citizenship varchar
+  photo_file_path varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "user_work_format" as user_work_format {
+  + id : Integer [PK]
+  --
+  user_id FK
+  work_format_id FK
+}
+
+entity "ai_model" as ai_model {
+  + id : Integer [PK]
+  --
+  provider varchar
+  model_code varchar
+  display_name varchar
+  provider_api_url varchar
+  api_key_encrypted varchar
+  is_active boolean
+  is_paid boolean
+  is_hidden boolean
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "resume_budget_configs" as resume_budget_configs {
+  + id : BigInt [PK]
+  --
+  name varchar
+  version_no int
+  is_active boolean
+  description text
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "resume_template_selection_rules" as resume_template_selection_rules {
+  + id : BigInt [PK]
+  --
+  config_id FK
+  rule_key varchar
+  value_type varchar
+  int_value int
+  boolean_value boolean
+  text_value varchar
+  description text
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "resume_work_experience_distribution_rules" as resume_work_experience_distribution_rules {
+  + id : BigInt [PK]
+  --
+  config_id FK
+  case_key varchar
+  min_total_jobs int
+  max_total_jobs int
+  min_projects int
+  max_projects int
+  require_no_courses boolean
+  template_mode varchar
+  page1_jobs int
+  page2_jobs int
+  page2_max_additional_jobs int
+  priority int
+  notes text
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "resume_section_budget_rules" as resume_section_budget_rules {
+  + id : BigInt [PK]
+  --
+  config_id FK
+  section_key varchar
+  profile_key varchar
+  metric_key varchar
+  min_value int
+  max_value int
+  notes text
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "resume_generation_request" as resume_generation_request {
+  + id : Integer [PK]
+  --
+  user_id FK
+  ai_model_id FK
+  vacancy_description text
+  company_description text
+  additional_comments text
+  include_cover_letter boolean
+  language_id FK
+  adaptation_level_id FK
+  language_mode varchar
+  budget_config_id bigint FK
+  budget_config_version_used int
+  status varchar
+  error_message text
+  created_at timestamp
+  completed_at timestamp
+}
+
+entity "resume_generation_response" as resume_generation_response {
+  + id : Integer [PK]
+  --
+  generation_request_id FK UNIQUE
+  status_id FK
+  professional_title varchar "not null"
+  professional_summary text
+  professional_aspirations text
+  cover_letter text
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "generation_response_experience" as generation_response_experience {
+  + id : Integer [PK]
+  --
+  response_id FK
+  job_title varchar
+  company_name varchar
+  description text
+  location varchar
+  is_first_page boolean
+  start_date date
+  end_date date
+  order_in_resume integer
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "generation_response_education" as generation_response_education {
+  + id : Integer [PK]
+  --
+  response_id FK
+  institution_name varchar
+  degree varchar
+  field_of_study varchar
+  start_date date
+  end_date date
+  location varchar
+  gpa_grade varchar
+  order_in_resume integer
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "generation_response_course" as generation_response_course {
+  + id : Integer [PK]
+  --
+  response_id FK
+  name varchar
+  provider varchar
+  is_first_page boolean
+  course_focus varchar
+  order_in_resume integer
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "generation_response_project" as generation_response_project {
+  + id : Integer [PK]
+  --
+  response_id FK
+  project_name varchar
+  role varchar
+  description text
+  location varchar
+  start_date date
+  end_date date
+  order_in_resume integer
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "generation_response_skill" as generation_response_skill {
+  + id : Integer [PK]
+  --
+  response_id FK
+  skill_group varchar
+  skill_name varchar
+  order_in_resume integer
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "saved_resume" as saved_resume {
+  + id : Integer [PK]
+  --
+  user_id FK
+  generation_request_id FK
+  response_id FK
+  template_id FK
+  adaptation_level_id FK
+  language_id FK
+  title varchar
+  public_code varchar
+  public_url_link varchar "not null"
+  pdf_file_path varchar "not null"
+  is_deleted boolean
+  deleted_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+entity "ai_usage_log" as ai_usage_log {
+  + id : Integer [PK]
+  --
+  user_id FK
+  ai_model_id FK
+  generation_request_id FK
+  generation_response_id FK
+  tokens_sent integer
+  tokens_generated integer
+  cost decimal
+  created_at timestamp
+}
+
+users }o--|| role : "has role"
+users }o--|| user_status : "has status"
+users }o--|| user_permission : "has permission"
+users }o--|| language : "default interface language"
+users }o--|| language : "secondary interface language"
+users ||--|| contact_detail : "has profile contact info"
+users ||--o{ work_experience : "has work experience records"
+users ||--o{ education : "has education records"
+users ||--o{ project : "has project/volunteering records"
+users ||--o{ course_certificate : "has course/certificate records"
+users ||--|| additional_profile_info : "has additional profile info"
+users ||--o{ user_work_format : "prefers work formats"
+work_format ||--o{ user_work_format : "selected by users"
+additional_profile_info }o--|| language : "default resume language"
+additional_profile_info }o--|| language : "additional resume language"
+users ||--o{ resume_generation_request : "submits generation requests"
+ai_model ||--o{ resume_generation_request : "used in requests"
+resume_generation_request ||--|| resume_generation_response : "produces response"
+response_status ||--o{ resume_generation_response : "has status"
+resume_generation_response ||--o{ generation_response_experience : "contains experience items"
+resume_generation_response ||--o{ generation_response_education : "contains education items"
+resume_generation_response ||--o{ generation_response_course : "contains course items"
+resume_generation_response ||--o{ generation_response_project : "contains project items"
+resume_generation_response ||--o{ generation_response_skill : "contains skill items"
+resume_generation_request ||--|| saved_resume : "results in saved resume"
+resume_generation_response ||--|| saved_resume : "finalized as saved resume"
+users ||--o{ saved_resume : "owns saved resumes"
+resume_template ||--o{ saved_resume : "used as template"
+users ||--o{ ai_usage_log : "has usage entries"
+ai_model ||--o{ ai_usage_log : "has usage entries"
+resume_generation_request ||--o{ ai_usage_log : "recorded in usage log"
+resume_generation_response ||--o{ ai_usage_log : "recorded in usage log"
+resume_budget_configs ||--o{ resume_template_selection_rules : "has selection rules"
+resume_budget_configs ||--o{ resume_work_experience_distribution_rules : "has distribution rules"
+resume_budget_configs ||--o{ resume_section_budget_rules : "has section budget rules"
+resume_budget_configs ||--o{ resume_generation_request : "used by generation"
+
+@enduml
