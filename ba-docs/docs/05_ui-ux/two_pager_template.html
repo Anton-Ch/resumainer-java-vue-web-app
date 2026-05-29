@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EC-016 v3 - Two-page, shared dynamic font scale with page 2 minimum fill</title>
+  <style>
+
+    /* =========================================================
+       PAGE SETUP — strict A4, hard page break between pages
+    ========================================================== */
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    body {
+      margin: 0;
+      background: #f5f6f8;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.32;
+      color: #111111;
+    }
+
+    .resume-page {
+      --font-scale: 1;
+      --section-gap: 0px;
+      --page-two-min-fill-ratio: 0.5;
+
+      width: 210mm;
+      min-height: 297mm;
+      height: 297mm;                 /* Fixed height = strict 1 page */
+      margin: 0 auto;
+      background: #ffffff;
+      box-sizing: border-box;
+      padding: 11mm;
+      position: relative;
+
+      display: flex;
+      flex-direction: column;
+
+      font-size: calc(10.5px * var(--font-scale));
+      line-height: 1.32;
+
+      page-break-after: always;     /* Forces PDF to create new page */
+      break-after: page;
+    }
+
+    .resume-page:last-child {
+      page-break-after: auto;       /* No break after last page */
+      break-after: auto;
+    }
+
+    .page-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;  /* Font size is fitted first; spacing is added after */
+      row-gap: var(--section-gap);
+    }
+
+    /* Page 1: content fills most of A4 height */
+    .page-1 .page-content {
+      min-height: 265mm;
+    }
+
+    /* Page 2 keeps a usable content area. Extra section gaps are calculated after font fitting. */
+    .page-2 .page-content {
+      min-height: 220mm;
+    }
+
+    /* =========================================================
+       DYNAMIC TYPOGRAPHY — current sizes are minimum values
+       Main text: min 10.5px, max 16px. Other font sizes scale
+       proportionally through --font-scale.
+    ========================================================== */
+
+    .candidate-name {
+      font-size: calc(25px * var(--font-scale));
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1;
+      margin-bottom: 2px;
+      color: #111111;
+    }
+
+    .candidate-title {
+      font-size: calc(14px * var(--font-scale));
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 6px;
+    }
+
+    .contact-line {
+      font-size: calc(9.7px * var(--font-scale));
+      color: #2b2b2b;
+      margin-bottom: 2px;
+    }
+
+    .value-line {
+      margin-top: 7px;
+      padding: 5px 0;
+      border-top: 1px solid #1f2937;
+      border-bottom: 1px solid #1f2937;
+      font-size: calc(9.8px * var(--font-scale));
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+      color: #1f2937;
+    }
+
+    .section-title {
+      font-size: calc(12px * var(--font-scale));
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #444444;
+      color: #111111;
+    }
+
+    .summary-text,
+    .keyword-line,
+    .skill-group,
+    .education-line,
+    .course-line,
+    .info-line {
+      font-size: calc(10px * var(--font-scale));
+    }
+
+    .summary-text {
+      margin-bottom: 4px;
+    }
+
+    strong {
+      font-weight: 800;
+    }
+
+    /* =========================================================
+       EXPERIENCE / PROJECTS
+    ========================================================== */
+
+    .job-block,
+    .project-block,
+    .additional-job-block {
+      margin-bottom: 9px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .item-heading {
+      font-size: calc(10.4px * var(--font-scale));
+      font-weight: 700;
+      margin-bottom: 2px;
+      color: #111111;
+    }
+
+    .date {
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    ul {
+      margin-top: 2px;
+      margin-bottom: 0;
+      padding-left: 17px;
+    }
+
+    li {
+      margin-bottom: 2px;
+      padding-left: 1px;
+    }
+
+    /* =========================================================
+       SKILLS
+    ========================================================== */
+
+    .skill-group {
+      margin-bottom: 4px;
+    }
+
+    .skill-label {
+      font-weight: 800;
+    }
+
+    /* =========================================================
+       PAGE NAVIGATION NOTES — "see next/previous page"
+    ========================================================== */
+
+    .page-note-bottom {
+      margin-top: 5mm;
+      border-top: 1px solid #cccccc;
+      padding-top: 4px;
+      text-align: right;
+      font-size: calc(9px * var(--font-scale));
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: #666666;
+    }
+
+    .page-note-top {
+      margin-bottom: 6px;
+      border-bottom: 1px solid #cccccc;
+      padding-bottom: 4px;
+      text-align: right;
+      font-size: calc(9px * var(--font-scale));
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: #666666;
+    }
+
+    .page-two-name {
+      font-size: calc(16px * var(--font-scale));
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .page-two-title {
+      font-size: calc(11px * var(--font-scale));
+      font-weight: 700;
+      color: #444444;
+      margin-bottom: 6px;
+    }
+
+    /* =========================================================
+       PRINT
+    ========================================================== */
+
+    @media print {
+      body {
+        background: #ffffff;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .resume-page {
+        margin: 0;
+        box-shadow: none;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+<main class="resume-page page-1">
+  <div class="page-content">
+    <section>
+      <div class="candidate-name">Alex Morgan</div>
+      <div class="candidate-title">Business Analyst / Junior Java Developer</div>
+      <div class="contact-line">+7-701-245-66-88 | alex.morgan@example.com | linkedin.com/in/alexmorgan | Astana, Kazakhstan</div>
+      <div class="contact-line">github.com/alexmorgan | Telegram: @alexmorgan | WhatsApp: +7-701-245-66-88</div>
+      <div class="value-line">Business Analysis | Java Web Development | Requirements Engineering | SQL | Process Improvement</div>
+    </section>
+
+    <!-- Professional Summary -->
+
+    <section>
+      <div class="section-title">Professional Summary</div>
+      <p class="summary-text">
+        <strong>Business Analyst and junior Java developer</strong> with practical experience in requirements analysis, documentation, process review, and structured delivery support.
+        Skilled at translating business needs into clear functional requirements, user stories, wireframes, data structures, and testable implementation scenarios.
+      </p>
+    </section>
+
+
+    <!-- Primary Work Experience -->
+
+    <section>
+      <div class="section-title">Primary Work Experience</div>
+
+      <div class="job-block">
+        <div class="item-heading">
+          Business Analyst | Robosoft Digital Solutions – Astana, Kazakhstan |
+          <span class="date">May 2025 – Present</span>
+        </div>
+
+        <p class="job-description">
+          Working on public-sector and internal digital solutions, supporting the full requirements lifecycle from initial stakeholder request to implementation-ready documentation.
+          Working on public-sector and internal digital solutions, supporting the full requirements lifecycle from initial stakeholder request to implementation-ready documentation.
+          Working on public-sector and internal digital solutions, supporting the full requirements lifecycle from initial stakeholder request to implementation-ready documentation.
+        </p>
+
+        <ul>
+          <li><strong>Analyzed</strong> business needs, user requests, and existing workflows to define functional requirements, acceptance criteria, and clear delivery notes.</li>
+          <li><strong>Created</strong> specifications, wireframes, process descriptions, and traceability links to reduce ambiguity before development started.</li>
+        </ul>
+      </div>
+
+      <div class="job-block">
+        <div class="item-heading">
+          Technical Translator / Documentation Specialist | Worley / TCO FGP – Atyrau, Kazakhstan |
+          <span class="date">May 2017 – Nov 2024</span>
+        </div>
+
+        <p class="job-description">
+          Supported large-scale engineering and construction teams by managing complex technical documentation and ensuring accurate communication between multilingual project stakeholders. Worked with high-volume document flows where consistency, terminology control, and attention to detail were critical.
+        </p>
+
+        <ul>
+          <li><strong>Managed</strong> technical documentation flows, including engineering procedures, reports, correspondence, and project-related records.</li>
+          <li><strong>Translated</strong> and reviewed technical materials while maintaining accuracy, consistent terminology, and alignment with project standards.</li>
+        </ul>
+      </div>
+
+      <div class="job-block">
+        <div class="item-heading">
+          Process Documentation Coordinator | NorthStep Services LLP – Astana, Kazakhstan |
+          <span class="date">Jan 2015 – Apr 2017</span>
+        </div>
+
+        <p class="job-description">
+          Focused on documenting internal operational processes and improving the clarity of procedures used by business and administrative teams. Helped structure workflows, responsibilities, approvals, and reporting rules into practical documentation for daily use.
+        </p>
+
+        <ul>
+          <li><strong>Documented</strong> internal workflows, team responsibilities, approval steps, and reporting procedures for operations teams.</li>
+          <li><strong>Reviewed</strong> existing process descriptions to identify gaps, unclear steps, and inconsistencies in operational documentation.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Skills -->
+
+    <section>
+      <div class="section-title">Skills</div>
+
+      <div class="skill-group">
+        <span class="skill-label">Business Analysis:</span>
+        Requirements Elicitation, Stakeholder Interviews, User Stories, Use Cases, Acceptance Criteria, Business Rules, Gap Analysis
+      </div>
+
+      <div class="skill-group">
+        <span class="skill-label">Systems Analysis:</span>
+        Functional Specifications, System Requirements, Process Mapping, Data Flow Analysis, Traceability Matrices, Change Requests
+      </div>
+
+      <div class="skill-group">
+        <span class="skill-label">Technical Skills:</span>
+        Java, Spring MVC, JDBC, PostgreSQL, REST APIs, HTML/CSS, Vue Basics
+      </div>
+
+    </section>
+
+    <!-- Education -->
+
+    <section>
+      <div class="section-title">Education</div>
+
+      <div class="education-line">
+        <strong>B.Sc. in Information Systems</strong> | Eurasian Technical University – Astana, Kazakhstan | 2022 – 2026
+      </div>
+
+      <div class="education-line">
+        <strong>Diploma in Technical Translation</strong> | Astana College of Humanities and Technology – Astana, Kazakhstan | 2013 – 2015
+      </div>
+
+      <div class="education-line">
+        <strong>Certificate in Java Backend Development</strong> | IT Academy – Astana, Kazakhstan | 2024 – 2025
+      </div>
+    </section>
+
+    <!-- Courses and Certifications -->
+     
+    <section>
+      <div class="section-title">Courses and Certifications</div>
+
+      <div class="course-line"><strong>Microsoft Business Analyst Professional Certificate</strong> — Coursera | Business analysis, requirements management, and stakeholder communication.</div>
+      <div class="course-line"><strong>Java Web Development Foundations</strong> — Training Platform | Java basics, MVC structure, and backend application fundamentals.</div>
+      <div class="course-line"><strong>Spring MVC and JDBC Practical Course</strong> — LinkedIn Learning | Spring MVC, JDBC, SQL queries, and database-driven web applications.</div>
+    </section>
+
+  </div>
+  <div class="page-note-bottom">See the next page</div>
+</main>
+
+<main class="resume-page page-2">
+  <div class="page-note-top">See the previous page</div>
+  <div class="page-content">
+    <section>
+      <div class="page-two-name">Alex Morgan</div>
+      <div class="page-two-title">Business Analyst / Junior Java Developer | Continued Resume</div>
+    </section>
+
+    <!-- Projects and Volunteering -->
+
+    <section>
+      <div class="section-title">Projects and Volunteering</div>
+
+      <div class="project-block">
+        <div class="item-heading">
+          AI Resume Tailor Capstone Project | Business Analyst / Java Developer | <span class="date">2026</span>
+        </div>
+
+        <p class="project-description">
+          Designed a Java web application that generates vacancy-specific resumes from structured user profile data and AI-assisted content adaptation. The project focused on connecting business requirements, resume templates, keyword matching, and export-ready document generation into one clear workflow.
+        </p>
+
+        <ul>
+          <li><strong>Prepared</strong> functional requirements, user stories, acceptance criteria, wireframes, and implementation-ready workflows.</li>
+          <li><strong>Designed</strong> the ERD, data dictionary, resume template structure, and traceability links between profile data and generated resume sections.</li>
+          <li><strong>Implemented</strong> core backend logic using Java, Spring MVC, JDBC, and PostgreSQL with basic frontend interaction for resume preview and editing.</li>
+        </ul>
+      </div>
+
+      <div class="project-block">
+        <div class="item-heading">
+          Volunteer Event Registration Platform | Business Analyst / Documentation Coordinator | <span class="date">2025</span>
+        </div>
+
+        <p class="project-description">
+          Supported the design of a simple registration and coordination platform for local volunteer events, including participant sign-up, role assignment, and organizer reporting. The project aimed to reduce manual spreadsheet work and make volunteer coordination more transparent for small community teams.
+        </p>
+
+        <ul>
+          <li><strong>Collected</strong> requirements from organizers and volunteers to define registration forms, participant statuses, event roles, and notification needs.</li>
+          <li><strong>Created</strong> process maps, wireframes, field descriptions, and user scenarios covering registration, approval, cancellation, and attendance tracking.</li>
+          <li><strong>Documented</strong> reporting requirements, basic admin workflows, and test scenarios to support future development and user acceptance testing.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Professional Aspirations -->
+
+    <section>
+      <div class="section-title">Professional Aspirations</div>
+      <p class="summary-text">Seeking a role that combines business analysis, systems thinking, and Java web development. Motivated to work on products where user workflows, data quality, and implementation constraints must be aligned carefully. Interested in growing toward a business/system analyst role with stronger technical depth and the ability to support backend development when needed.</p>
+      <!-- <p class="summary-text">Aiming to build practical experience with Spring MVC, JDBC, PostgreSQL, Vue, PDF generation, and AI-assisted workflows while maintaining clear documentation and responsible scope control.</p> -->
+    </section>
+
+    <!-- Additional Work Experience -->
+
+    <section>
+      <div class="section-title">Additional Work Experience</div>
+
+      <div class="additional-job-block">
+        <div class="item-heading">
+          Junior Operations Analyst | Steppe Logistics Group – Karaganda, Kazakhstan |
+          <span class="date">Jun 2013 – Dec 2014</span>
+        </div>
+
+        <p class="job-description">
+          Supported logistics operations by preparing reports, checking source data, and helping teams track daily performance indicators.
+        </p>
+
+      </div>
+
+      <div class="additional-job-block">
+        <div class="item-heading">
+          Administrative Assistant | City Service Center – Pavlodar, Kazakhstan |
+          <span class="date">Feb 2012 – May 2013</span>
+        </div>
+
+        <p class="job-description">
+          Assisted front-office and administrative teams with client communication, document handling, scheduling, and basic reporting.
+        </p>
+
+      </div>
+
+      <div class="additional-job-block">
+        <div class="item-heading">
+          Customer Support Specialist | InfoLine Contact Center – Remote |
+          <span class="date">Apr 2011 – Jan 2012</span>
+        </div>
+
+        <p class="job-description">
+          Provided remote customer support for service users by answering inquiries, recording issues, and following standard communication scripts.
+        </p>
+
+      </div>
+
+      <div class="additional-job-block">
+        <div class="item-heading">
+          Intern, Documentation Department | Regional IT Office – Astana, Kazakhstan |
+          <span class="date">Sep 2010 – Mar 2011</span>
+        </div>
+
+        <p class="job-description">
+          Assisted the documentation department with organizing technical records, updating registers, and preparing files for internal review.
+        </p>
+
+      </div>
+
+      <div class="additional-job-block">
+        <div class="item-heading">
+          Data Entry Operator | Central Records Bureau – Astana, Kazakhstan |
+          <span class="date">Jan 2010 – Aug 2010</span>
+        </div>
+
+        <p class="job-description">
+          Entered, checked, and organized administrative data while maintaining accuracy and confidentiality of internal records.
+        </p>
+
+      </div>
+
+    </section>
+
+    <!-- Personal Information -->
+
+    <section>
+      <div class="section-title">Personal Information</div>
+      <div class="info-line"><strong>Location:</strong> Astana, Kazakhstan</div>
+      <div class="info-line"><strong>Languages:</strong> English – Fluent; Russian – Native; Kazakh – Intermediate</div>
+      <div class="info-line"><strong>Relocation:</strong> Negotiable</div>
+      <div class="info-line"><strong>Business Trips:</strong> Yes</div>
+      <div class="info-line"><strong>Work Format:</strong> Full-time, Hybrid, Remote</div>
+      <div class="info-line"><strong>Citizenship:</strong> Kazakhstan</div>
+      <div class="info-line"><strong>Date of Birth:</strong> 15.03.1995</div>
+    </section>
+  </div>
+</main>
+
+<script>
+  (function () {
+    const MIN_SCALE = 1;
+    const MAX_SCALE = 16 / 10.5; // Main inherited text cannot exceed 16px.
+    const FIT_TOLERANCE_PX = 2;
+    const GAP_SAFETY_PX = 1;
+    const PAGE_2_MIN_FILL_RATIO = 0.5; // Page 2 content block must occupy at least 50% of A4 height.
+
+    const pages = Array.from(document.querySelectorAll(".resume-page"));
+
+    function setScale(page, scale) {
+      page.style.setProperty("--font-scale", scale.toFixed(4));
+    }
+
+    function setSectionGap(page, gapPx) {
+      page.style.setProperty("--section-gap", `${Math.max(0, gapPx).toFixed(2)}px`);
+    }
+
+    function resetSpacing() {
+      pages.forEach(function (page) {
+        setSectionGap(page, 0);
+      });
+    }
+
+    function pageFits(page) {
+      return page.scrollHeight <= page.clientHeight + FIT_TOLERANCE_PX;
+    }
+
+    function findMaxScaleForPage(page) {
+      let low = MIN_SCALE;
+      let high = MAX_SCALE;
+
+      setSectionGap(page, 0);
+      setScale(page, MIN_SCALE);
+
+      if (!pageFits(page)) {
+        page.dataset.overflowAtMinFont = "true";
+        return MIN_SCALE;
+      }
+
+      delete page.dataset.overflowAtMinFont;
+
+      for (let i = 0; i < 22; i++) {
+        const mid = (low + high) / 2;
+        setScale(page, mid);
+
+        if (pageFits(page)) {
+          low = mid;
+        } else {
+          high = mid;
+        }
+      }
+
+      return low;
+    }
+
+    function getVisibleSections(content) {
+      return Array.from(content.children).filter(function (child) {
+        return child.offsetParent !== null;
+      });
+    }
+
+    function getNaturalContentHeight(content) {
+      const sections = getVisibleSections(content);
+
+      if (!sections.length) {
+        return 0;
+      }
+
+      const first = sections[0];
+      const last = sections[sections.length - 1];
+
+      return (last.offsetTop + last.offsetHeight) - first.offsetTop;
+    }
+
+    function distributeSectionGapsToTarget(page, targetHeightPx) {
+      const content = page.querySelector(".page-content");
+      if (!content) return;
+
+      setSectionGap(page, 0);
+
+      const sections = getVisibleSections(content);
+      const gapSlots = Math.max(0, sections.length - 1);
+
+      if (gapSlots === 0) return;
+
+      const naturalContentHeight = getNaturalContentHeight(content);
+      const maxUsableHeight = content.clientHeight;
+      const safeTargetHeight = Math.min(targetHeightPx, maxUsableHeight - GAP_SAFETY_PX);
+      const extraSpaceNeeded = safeTargetHeight - naturalContentHeight;
+
+      if (extraSpaceNeeded <= 0) return;
+
+      const gap = extraSpaceNeeded / gapSlots;
+      setSectionGap(page, gap);
+    }
+
+    function distributePageOneRemainingSpace() {
+      const page = document.querySelector(".page-1");
+      if (!page) return;
+
+      const content = page.querySelector(".page-content");
+      if (!content) return;
+
+      /* Page 1 may still use the remaining usable area after font fitting. */
+      distributeSectionGapsToTarget(page, content.clientHeight);
+    }
+
+    function distributePageTwoMinimumFill() {
+      const page = document.querySelector(".page-2");
+      if (!page) return;
+
+      const content = page.querySelector(".page-content");
+      if (!content) return;
+
+      const a4PageHeightPx = page.clientHeight;
+      const minimumContentBlockHeight = a4PageHeightPx * PAGE_2_MIN_FILL_RATIO;
+
+      /*
+        Page 2 should not leave all content compressed at the top.
+        If natural content is shorter than 50% of the A4 page height,
+        increase only the section gaps until the block reaches that minimum.
+      */
+      distributeSectionGapsToTarget(page, minimumContentBlockHeight);
+    }
+
+    function fitResumeWithSharedScale() {
+      if (!pages.length) return;
+
+      resetSpacing();
+      pages.forEach(function (page) {
+        setScale(page, MIN_SCALE);
+      });
+
+      const maxScalesPerPage = pages.map(findMaxScaleForPage);
+      const sharedScale = Math.min.apply(null, maxScalesPerPage);
+
+      pages.forEach(function (page) {
+        setScale(page, sharedScale);
+        page.dataset.fontScale = sharedScale.toFixed(4);
+      });
+
+      /*
+        Order matters:
+        1. Fit font size using a shared scale.
+        2. Only after that, add dynamic section spacing.
+      */
+      distributePageOneRemainingSpace();
+      distributePageTwoMinimumFill();
+    }
+
+    let resizeTimer;
+
+    window.addEventListener("load", function () {
+      requestAnimationFrame(fitResumeWithSharedScale);
+    });
+
+    window.addEventListener("resize", function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        requestAnimationFrame(fitResumeWithSharedScale);
+      }, 100);
+    });
+
+    window.addEventListener("beforeprint", function () {
+      fitResumeWithSharedScale();
+    });
+  })();
+</script>
+</body>
+</html>
