@@ -808,3 +808,209 @@ flowchart TD
 7. Keep setup maintainable long-term.
 
 ---
+
+# Spec Kit Configuring Extensions 
+
+## `spec-kit-branch-convention`
+[Repo](https://github.com/Quratulain-bilal/spec-kit-branch-convention)
+
+### Purpose
+Enforces consistent naming for:
+- Git branches
+- Spec Kit feature folders
+
+Helps keep GitHub Flow and Spec Kit structure aligned.
+### Configuration Command
+
+~~~text
+/speckit.branch-convention.configure
+~~~
+### Selected Configuration
+
+| Setting          | Value                  |
+| ---------------- | ---------------------- |
+| Convention type  | `custom`               |
+| Branch pattern   | `{type}/{seq}-{kebab}` |
+| Folder pattern   | `{type}-{seq}-{kebab}` |
+| Sequence padding | `3`                    |
+| Max length       | `80`                   |
+| Separator        | `-`                    |
+| Lowercase        | `true`                 |
+### Final Branch Examples
+
+| Purpose | Example |
+|---|---|
+| Feature | `feat/001-user-auth` |
+| Chore | `chore/002-spec-kit-setup` |
+| Docs | `docs/003-readme-update` |
+| Fix | `fix/004-login-validation` |
+### Final Folder Examples
+
+| Purpose | Example |
+|---|---|
+| Feature folder | `feat-001-user-auth` |
+| Docs folder | `docs-003-readme-update` |
+### Added Branch Types
+added to config file `branch-convention.yml`
+~~~yaml
+type_prefix:
+  feature: "feat"
+  bugfix: "fix"
+  hotfix: "hotfix"
+  refactor: "refactor"
+  docs: "docs"
+  chore: "chore"
+  build: "build"
+  test: "test"
+  security: "security"
+  ci: "ci"
+  style: "style"
+~~~
+### Generated Config File
+~~~text
+.specify/branch-convention.yml
+~~~
+### Validation Command
+
+~~~text
+/speckit.branch-convention.validate
+~~~
+### Validation Result
+- Existing branches created before convention setup remain unchanged
+- New branches must follow configured naming rules
+- `main` branch is excluded automatically
+### Practical Rule
+Use numbered branches for all new work:
+
+~~~text
+feat/001-java-hello-world
+chore/002-spec-kit-setup
+docs/003-update-readme
+~~~
+
+## `spec-kit-memory-hub`
+[Repo](https://github.com/DyanGalih/spec-kit-memory-hub)
+
+### Purpose
+Adds durable project memory for Spec Kit workflows.
+
+Used to store:
+- project context;
+- architecture notes;
+- technical decisions;
+- recurring bugs;
+- durable lessons;
+- feature-local memory.
+### Init Command
+~~~text
+/speckit.memory-md.init
+~~~
+### Created Structure
+
+| Path | Purpose |
+|---|---|
+| `.specify/memory/workflow.md` | Memory-first workflow rules |
+| `.specify/extensions/memory-md/config.yml` | Memory Hub config |
+| `docs/memory/INDEX.md` | Memory routing map |
+| `docs/memory/PROJECT_CONTEXT.md` | Product/project context |
+| `docs/memory/ARCHITECTURE.md` | Architecture context |
+| `docs/memory/DECISIONS.md` | Long-term technical decisions |
+| `docs/memory/BUGS.md` | Recurring bug patterns |
+| `docs/memory/WORKLOG.md` | Durable lessons only |
+| `specs/<feature>/memory.md` | Feature-local memory |
+### Memory Model
+
+| Layer | Purpose |
+|---|---|
+| `.specify/memory/` | Stable memory workflow / governance |
+| `docs/memory/` | Durable cross-feature memory |
+| `specs/<feature>/memory.md` | Feature-specific context |
+| `memory-synthesis.md` | Context summary for planning |
+| Ephemeral session data | Not committed |
+### Setup Notes
+- SQLite optimizer was installed.
+- `AGENTS.md` was updated with Spec Kit pointer.
+- `PROJECT_CONTEXT.md` and `ARCHITECTURE.md` should be filled first.
+- `WORKLOG.md` is not a changelog.
+- Store only durable lessons, not temporary thoughts.
+### Validation / Next Use
+Use before planning:
+~~~text
+/speckit.memory-md.prepare-context
+~~~
+
+Use when planning with memory:
+~~~text
+/speckit.memory-md.plan-with-memory
+~~~
+
+Use after useful implementation findings:
+~~~text
+/speckit.memory-md.capture
+~~~
+
+---
+
+## `superspec`
+[Repo](https://github.com/WangX0111/superspec)
+
+### Purpose
+Adds SuperSpec workflow on top of Spec Kit and Superpowers.
+
+Used for:
+- brainstorming;
+- task refinement;
+- execution support;
+- implementation review;
+- resumable workflow status.
+
+---
+### Status Check Command
+~~~text
+/speckit.superpowers.status
+~~~
+### Expected Status Result
+
+| Check | Result |
+|---|---|
+| Superpowers detected | `14/14` ✅ |
+| Constitution | Placeholder ⚠️ |
+| Features | None yet |
+| Config file | `.specify/superpowers.yml` created |
+
+Detected Superpowers:
+- brainstorming;
+- dispatching-parallel-agents;
+- executing-plans;
+- finishing-a-development-branch;
+- receiving-code-review;
+- requesting-code-review;
+- subagent-driven-development;
+- systematic-debugging;
+- test-driven-development;
+- using-git-worktrees;
+- using-superpowers;
+- verification-before-completion;
+- writing-plans;
+- writing-skills.
+### Main Commands
+~~~text
+/speckit.superpowers.status
+/speckit.superpowers.brainstorm
+/speckit.superpowers.tasks
+/speckit.superpowers.execute
+/speckit.superpowers.review
+~~~
+### Practical Rule
+Use SuperSpec to strengthen Spec Kit, not replace it.
+
+Recommended usage:
+~~~text
+/speckit-specify
+/speckit.superpowers.brainstorm
+/speckit-plan
+/speckit.superpowers.tasks
+/speckit.superpowers.execute
+/speckit.superpowers.review
+~~~
+

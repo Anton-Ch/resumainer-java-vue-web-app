@@ -1,0 +1,17 @@
+# Superpowers Detection Results
+detected:
+  brainstorming: true
+  dispatching-parallel-agents: true
+  executing-plans: true
+  finishing-a-development-branch: true
+  receiving-code-review: true
+  requesting-code-review: true
+  subagent-driven-development: true
+  systematic-debugging: true
+  test-driven-development: true
+  using-git-worktrees: true
+  using-superpowers: true
+  verification-before-completion: true
+  writing-plans: true
+  writing-skills: true
+not_found: []
