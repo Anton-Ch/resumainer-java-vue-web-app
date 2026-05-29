@@ -378,7 +378,27 @@ If approval is ambiguous, do not execute.
 
 ---
 
-## 11. Preferred Behavior
+## 11. Critical Branch Deletion Safety Rule
+
+**Never delete a local or remote branch if its PR is still open (not merged).**
+
+Deleting the source branch before the PR is merged causes GitHub to automatically close the PR without merging — losing changes and creating a broken workflow.
+
+Guard:
+- Before any `git branch -d` / `git push origin --delete` / branch cleanup, **always** check `gh pr view` or the PR page to confirm the PR is already in **MERGED** state.
+- If no PR exists, or PR is open/closed-without-merge — **do not delete** the branch. Ask the user first.
+- After a successful PR merge, GitHub offers a "Delete branch" button — prefer using that over manual deletion.
+
+Correct order:
+```
+1. Create PR
+2. PR gets reviewed and merged (Merged state)
+3. Only then delete the branch (locally + remote)
+```
+
+---
+
+## 12. Preferred Behavior
 
 Be direct and practical.
 
@@ -398,7 +418,7 @@ Do not pretend verification happened.
 
 ---
 
-## 12. Common ResumAIner Examples
+## 13. Common ResumAIner Examples
 
 ### Spec Kit setup
 
