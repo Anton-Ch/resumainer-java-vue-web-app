@@ -20,12 +20,15 @@ public class HelloWorldController {
     @Value("${spring.application.name:ResumAIner}")
     private String appName;
 
+    @Value("${spring.profiles.active:default}")
+    private String activeProfile;
+
     @GetMapping("/")
     public String home(Model model) {
         model.addAttribute("appName", appName);
         model.addAttribute("serverTime", LocalDateTime.now().format(
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        model.addAttribute("activeProfile", System.getProperty("spring.profiles.active", "default"));
+        model.addAttribute("activeProfile", activeProfile);
         return "hello";
     }
 }

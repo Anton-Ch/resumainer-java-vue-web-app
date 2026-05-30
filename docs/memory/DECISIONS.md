@@ -144,3 +144,35 @@ Docker build and run test: nc not found in tomcat:10.1.28-jdk21-temurin-jammy. S
 
 **Where to look next**
 docker/scripts/wait-for-it.sh
+
+---
+
+### 2026-05-30 - Docker Dev Workflow: Rebuild Image After Code Changes
+
+**Status**
+Active
+
+**Why this is durable**
+When running a Java application in Docker, the WAR/JAR is baked into the image during docker build. docker compose up -d without rebuilding uses the cached image with the old code. Developers waste time debugging why changes don't take effect.
+
+**Decision**
+After any Java source code change, follow this workflow:
+1. mvnw clean package (rebuilds WAR locally)
+2. docker compose build --no-cache (rebuilds image with new WAR — no-cache ensures Maven runs)
+3. docker compose up -d (starts fresh container)
+
+Alternatively use the --build flag: docker compose up -d --build
+
+**Tradeoffs**
+- Gained: Guarantees the running container reflects the latest code. No stale-code debugging.
+- Made harder: Full rebuild takes ~2-3 minutes. For rapid iteration without Docker changes, run mvnw test or start Tomcat locally.
+- Reconsider: For frontend code (HTML, JS, CSS) that doesn't need compilation, bind mounts can be used instead of rebuilds.
+
+**Future mistake prevented**
+Running docker compose up -d after changing Java code shows the old behavior. Developer assumes the fix didn't work and wastes time debugging the wrong version.
+
+**Evidence**
+Changed HelloWorldController to show active profile via @Value. docker compose up -d still showed "default" for 3 iterations. Only after docker compose build --no-cache did the new WAR take effect.
+
+**Where to look next**
+docker/Dockerfile, docker/docker-compose.yml
