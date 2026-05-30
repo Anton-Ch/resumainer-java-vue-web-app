@@ -113,6 +113,11 @@ Set up a minimal Java Spring MVC application that deploys as a WAR to Tomcat, se
 ```
 backend/
 ├── pom.xml                          # Maven project descriptor
+├── mvnw                             # Maven Wrapper script (at pom.xml level per Maven docs)
+├── mvnw.cmd                         # Maven Wrapper script for Windows
+├── .mvn/
+│   └── wrapper/
+│       └── maven-wrapper.properties # Maven version pinning (3.9.x)
 ├── src/
 │   └── main/
 │       ├── java/
@@ -148,13 +153,7 @@ docker/
 dev-docs/
 └── learnings.md                      # Learning document (already created)
 
-backend/.mvn/
-└── wrapper/
-    └── maven-wrapper.properties      # Maven version pinning
-
 .gitignore                            # Project root (to be created)
-mvnw                                  # Maven Wrapper script (generated)
-mvnw.cmd                              # Maven Wrapper script (generated)
 ```
 
 ---

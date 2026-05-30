@@ -88,3 +88,30 @@ Spring Framework 6.2 reference docs confirm this is the standard approach for Ja
 
 **Where to look next**
 backend/src/main/java/com/resumainer/initializer/AppInitializer.java
+
+---
+
+### 2026-05-30 - Maven Wrapper Must Be at Same Directory Level as pom.xml
+
+**Status**
+Active
+
+**Why this is durable**
+Maven Wrapper scripts (mvnw, mvnw.cmd) determine the project root directory. They look for pom.xml in the same directory. If pom.xml is elsewhere (e.g., backend/), running mvnw from the project root fails with "The goal you specified requires a project to execute but there is no POM in this directory."
+
+**Decision**
+Place mvnw, mvnw.cmd, and .mvn/wrapper/ in the same directory as pom.xml. For this project: all in backend/ alongside backend/pom.xml.
+
+**Tradeoffs**
+- Gained: mvnw clean package works immediately, no -f flag needed, matches Maven Wrapper documentation and community convention.
+- Made harder: Developer must cd backend/ before running mvnw, or use cd backend && ./mvnw ... from project root (minor inconvenience).
+- Reconsider: If the project restructures to a multi-module build with a parent pom.xml at root, the wrapper should move to root level.
+
+**Future mistake prevented**
+Putting mvnw at the project root while pom.xml lives in a subdirectory causes confusing "no POM in this directory" errors. Developers waste time debugging build configuration when the issue is simply directory mismatch.
+
+**Evidence**
+Maven Wrapper documentation (maven.apache.org/wrapper/): "mvnw must be placed in the same directory as pom.xml." Spec review flagged the inconsistency during Context7 documentation check.
+
+**Where to look next**
+backend/mvnw, backend/pom.xml, and any future multi-module restructure.
