@@ -31,3 +31,22 @@ Describe service, module, or package boundaries.
 - stale diagrams without current boundaries
 
 Update the review date when boundaries, ownership, or integrations materially change.
+
+---
+
+### 2026-05-30 - Servlet Container Integration via Java SPI, Not XML Descriptor
+
+**Status**
+Active
+
+**Why this is durable**
+Defines the project's approach to servlet container setup. All future controllers depend on this initialization mechanism.
+
+**Boundary**
+The project does not use web.xml for servlet registration. Servlet initialization is handled exclusively through Java classes extending `AbstractAnnotationConfigDispatcherServletInitializer` or implementing `WebApplicationInitializer`.
+
+**Evidence**
+Spring Framework 6.2 documentation. Tomcat 10.1+ requires Jakarta EE 10. Spec and plan for feature 001-hello-world-tomcat.
+
+**Where to look next**
+backend/src/main/java/com/resumainer/initializer/
