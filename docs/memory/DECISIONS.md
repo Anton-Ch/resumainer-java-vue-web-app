@@ -115,3 +115,32 @@ Maven Wrapper documentation (maven.apache.org/wrapper/): "mvnw must be placed in
 
 **Where to look next**
 backend/mvnw, backend/pom.xml, and any future multi-module restructure.
+
+---
+
+### 2026-05-30 - Docker Tomcat: Use bash /dev/tcp Instead of nc for TCP Health Checks
+
+**Status**
+Active
+
+**Why this is durable**
+The official tomcat Docker image does not include netcat (nc). Any script that relies on nc -z for TCP connectivity checks will fail silently in containers built from this image. This applies to all future Docker services that need startup ordering.
+
+**Decision**
+Use bash's built-in TCP pseudo-device instead of nc for port availability checks:
+`timeout 1 bash -c "echo >/dev/tcp/$HOST/$PORT" 2>/dev/null`
+This works in any bash 4+ environment without additional packages.
+
+**Tradeoffs**
+- Gained: No need to install netcat in the container (smaller image, fewer dependencies).
+- Made harder: The /dev/tcp syntax is bash-specific and not POSIX sh-compatible. The script must use #!/usr/bin/env bash, not sh.
+- Reconsider: If the project migrates to a minimal base image that lacks bash entirely (e.g., Alpine with ash only), install netcat or use a different tool.
+
+**Future mistake prevented**
+Adding a wait-for-it.sh script that uses nc will silently hang or fail in Tomcat-based containers, causing confusing startup failures that are hard to debug inside a running container.
+
+**Evidence**
+Docker build and run test: nc not found in tomcat:10.1.28-jdk21-temurin-jammy. Script using nc -z timed out repeatedly. Replaced with bash /dev/tcp — worked immediately.
+
+**Where to look next**
+docker/scripts/wait-for-it.sh
