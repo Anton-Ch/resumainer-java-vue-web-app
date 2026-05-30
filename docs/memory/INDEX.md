@@ -9,9 +9,12 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - A1 | Servlet Container Integration via Java SPI, Not XML Descriptor | servlet, tomcat, architecture, spi, jakarta-ee | [ARCHITECTURE.md](ARCHITECTURE.md) | active
 
 ## Bugs
+- B1 | Controller Without Registration Is Invisible to Spring MVC | spring-mvc, controller, configuration, component-scan, bean-registration | [BUGS.md](BUGS.md) | active
 
 ## Decisions
 - D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web.xml) | servlet, spring-mvc, jakarta-ee, tomcat, initialization, web.xml | [DECISIONS.md](DECISIONS.md) | active
 - D2 | Maven Wrapper Must Be at Same Directory Level as pom.xml | maven, wrapper, build, project-structure, best-practice | [DECISIONS.md](DECISIONS.md) | active
+- D3 | Docker Tomcat: Use bash /dev/tcp Instead of nc for TCP Health Checks | docker, tomcat, wait-for-it, networking, shell, bash | [DECISIONS.md](DECISIONS.md) | active
 
 ## Workflow
+- W1 | First Feature MVP Achieved: Hello World Tomcat | milestone, mvp, hello-world, docker, spring-mvc, tomcat | [WORKLOG.md](WORKLOG.md) | active
