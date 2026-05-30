@@ -51,3 +51,30 @@ HelloWorldController with @Controller and @GetMapping("/") returned 404 despite 
 
 **Where to look next**
 backend/src/main/java/com/resumainer/config/WebConfig.java
+
+---
+
+### 2026-05-30 - Spring MVC (non-Boot): Use @Value for Profile, Not Environment.getActiveProfiles()
+
+**Status**
+Active
+
+**Symptoms**
+Controller displays "Active Profile: default" even though spring.profiles.active=dev is set in application.properties. The @Value("${spring.profiles.active:default}") annotation resolves correctly, but Environment.getActiveProfiles() returns an empty array.
+
+**Root Cause**
+In pure Spring MVC (without Spring Boot), Environment.getActiveProfiles() is populated only through programmatic profile activation in a WebApplicationInitializer or ApplicationContextInitializer. The spring.profiles.active property from a .properties file is read by PropertySources and available via @Value, but it does NOT activate profiles in the Environment.
+
+**Future mistake prevented**
+Always use @Value("${spring.profiles.active:default}") to read the active profile value in Spring MVC (non-Boot) controllers. Do not rely on environment.getActiveProfiles() unless profiles are activated programmatically.
+
+**Evidence**
+HelloWorldController showed "default" despite spring.profiles.active=dev in application.properties. After switching from Environment.getActiveProfiles() to @Value("${spring.profiles.active:default}"), the page correctly displayed "dev".
+
+**Prevention / Detection**
+- Verify profile display immediately in the first controller test
+- For pure Spring MVC, always use @Value for profile-dependent logic
+- Programmatic activation via context.getEnvironment().setActiveProfiles() is also valid but requires changes in AppInitializer
+
+**Where to look next**
+backend/src/main/java/com/resumainer/controller/HelloWorldController.java

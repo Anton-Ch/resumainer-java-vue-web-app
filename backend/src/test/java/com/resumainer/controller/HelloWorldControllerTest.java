@@ -14,8 +14,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <p>
  * Uses standalone MockMvc setup — no full Spring context required.
  * {@code @Value} fields are injected via {@link ReflectionTestUtils}.
- * Tests that the controller returns the correct view name
- * and populates the expected model attributes.
  */
 class HelloWorldControllerTest {
 
@@ -25,6 +23,7 @@ class HelloWorldControllerTest {
     void setUp() {
         HelloWorldController controller = new HelloWorldController();
         ReflectionTestUtils.setField(controller, "appName", "ResumAIner");
+        ReflectionTestUtils.setField(controller, "activeProfile", "dev");
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -33,8 +32,8 @@ class HelloWorldControllerTest {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("hello"))
-                .andExpect(model().attributeExists("appName"))
+                .andExpect(model().attribute("appName", "ResumAIner"))
                 .andExpect(model().attributeExists("serverTime"))
-                .andExpect(model().attributeExists("activeProfile"));
+                .andExpect(model().attribute("activeProfile", "dev"));
     }
 }
