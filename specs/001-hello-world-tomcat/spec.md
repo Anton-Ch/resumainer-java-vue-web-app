@@ -75,10 +75,13 @@ As a developer, I want application configuration (database URL, ports, profiles)
 ### Edge Cases
 
 - What happens when Docker is not installed on the developer machine?
-- What happens when port 8080 is already in use?
+- What happens when port 8080 or 5432 is already in use?
 - What happens when Maven build fails due to network issues (missing dependencies)?
 - How does the application handle missing or invalid environment variables?
 - What happens when the Tomcat container runs out of memory?
+- What happens if PostgreSQL is not ready before Tomcat starts? A startup readiness script (`wait-for-it.sh`) should wait for PostgreSQL before starting Tomcat.
+- How does Docker Compose know Tomcat is ready before the developer opens a browser? The startup script should verify the application responds on the expected port before considering the container healthy.
+- What happens when PostgreSQL data needs to persist between restarts? Docker volumes should be configured for the database container.
 
 ## Requirements *(mandatory)*
 
@@ -87,13 +90,15 @@ As a developer, I want application configuration (database URL, ports, profiles)
 - **FR-001**: System MUST provide a "Hello World" page accessible via HTTP GET on the root URL.
 - **FR-002**: The Hello World page MUST display the application name and current server time.
 - **FR-003**: System MUST run inside a Docker container with a Tomcat servlet container.
-- **FR-004**: Docker Compose MUST start the application container with one command.
+- **FR-004**: Docker Compose MUST start the application container with one command, including both Tomcat and PostgreSQL containers.
 - **FR-005**: The Maven build MUST produce a deployable WAR file via `mvn clean package`.
 - **FR-006**: The Dockerfile MUST use multi-stage build: compile in stage 1, run in stage 2.
 - **FR-007**: Application MUST support at least two Spring profiles: `dev` and `prod`.
 - **FR-008**: External configuration (ports, profiles) MUST be overridable via environment variables.
 - **FR-009**: The application root URL MUST NOT expose stack traces or internal details on error.
 - **FR-010**: The Maven build MUST run without IDE assistance on a clean checkout.
+- **FR-011**: The project MUST include Maven Wrapper (`mvnw`) to lock Maven version and enable builds without pre-installed Maven.
+- **FR-012**: The project root MUST include a `.gitignore` file with rules for Java, Maven, Node.js, IDE (IntelliJ IDEA, VS Code), OS (Windows, macOS, Linux), Docker, and secrets (.env, .env.*).
 
 ### Key Entities *(include if feature involves data)*
 
@@ -109,12 +114,23 @@ As a developer, I want application configuration (database URL, ports, profiles)
 - **SC-004**: Developer can switch between `dev` and `prod` profiles by changing a single environment variable.
 - **SC-005**: Application responds to HTTP requests within 2 seconds on first startup (cold start).
 
+## Brainstorm Log
+
+### Session 2026-05-30
+
+- **Startup readiness**: Added `wait-for-it.sh` approach for Tomcat to wait on PostgreSQL before starting, and for Docker Compose to verify the app responds before considering the container healthy.
+- **Maven Wrapper**: Added `mvnw` to lock Maven version (FR-011) and ensure reproducible builds without pre-installed Maven.
+- **Docker Compose scope**: PostgreSQL container included alongside Tomcat for future database-dependent features. Hello World page itself does not use it.
+- **Project hygiene**: Added `.gitignore` requirement (FR-012) with community best practices for Java, Maven, Node, IDE, OS, Docker, and secrets.
+
 ## Assumptions
 
+- The project root `.gitignore` follows community best practices for Java, Maven, Node.js, IDE, and OS files.
+
 - Docker and Docker Compose are installed on the developer machine.
-- JDK 21 and Maven are available locally for development (or via Docker multi-stage build).
+- JDK 21 is required locally for development. Maven is provided via Maven Wrapper (`mvnw`) or Docker multi-stage build.
 - The application runs on Tomcat 10.1.x (Jakarta Servlet 6.0 compatible).
-- No database is required for the Hello World page — this is a pure web layer setup.
+- No database is required for the Hello World page — this is a pure web layer setup. PostgreSQL container is included in Docker Compose for future features, but the Hello World page does not use it.
 - The default HTTP port is 8080, configurable via environment variable.
 - The project root contains `pom.xml` at `backend/pom.xml` (backend module).
 - Development will be done on Windows, but the Docker setup must work on Linux for VPS deployment.
