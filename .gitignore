@@ -1,0 +1,33 @@
+# Spec Kit memory cache (binary SQLite)
+.spec-kit-memory/
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.settings/
+.project
+.classpath
+.factorypath
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Secrets
+.env
+.env.*
+
+# Node
+node_modules/

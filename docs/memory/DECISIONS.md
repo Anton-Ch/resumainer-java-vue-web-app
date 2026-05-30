@@ -57,3 +57,34 @@ Diff, tests, review, incident, or repeated implementation evidence.
 
 **Where to look next**
 Files, modules, or specs future maintainers should inspect.
+
+---
+
+### 2026-05-30 - Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web.xml)
+
+**Status**
+Active
+
+**Why this is durable**
+Tomcat 10.1+ uses Jakarta EE 10 (jakarta.servlet.* namespace). web.xml with javax.* namespace causes class loading conflicts. This decision applies to every servlet/controller feature in the project.
+
+**Decision**
+Use `AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer` for servlet initialization instead of web.xml. The initializer:
+- Registers DispatcherServlet with "/" mapping
+- Loads WebConfig (@Configuration, @EnableWebMvc) as servlet config class
+- Is auto-discovered by Tomcat via ServletContainerInitializer SPI
+- Provides compile-time type safety (vs string-based class names in web.xml)
+
+**Tradeoffs**
+- Gained: Type-safe configuration, one less XML file, Jakarta EE 10 compatible, compile-time errors instead of runtime failures
+- Made harder: Requires understanding of Servlet 3.0+ SPI mechanism
+- Reconsider: If the project migrates to embedded containers (future consideration)
+
+**Future mistake prevented**
+Adding a web.xml with javax.servlet.* declarations would cause incompatibility errors with Tomcat 10.1+ and Spring MVC 6.x.
+
+**Evidence**
+Spring Framework 6.2 reference docs confirm this is the standard approach for Jakarta EE environments. Spec review feedback identified the javax/jakarta namespace conflict.
+
+**Where to look next**
+backend/src/main/java/com/resumainer/initializer/AppInitializer.java
