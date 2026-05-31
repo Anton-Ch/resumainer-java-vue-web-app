@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="#{hero.eyebrow}">ResumAIner — Resume AI Aligner</title>
+  <link rel="stylesheet" th:href="@{/static/css/landing.css}">
+  <link rel="icon" type="image/svg+xml" th:href="@{/static/images/logos/resumainer-favicon.svg}">
+</head>
+<body>
+  <header class="topnav" id="topnav">
+    <div class="container topnav-inner">
+      <a th:href="@{/}" class="logo" aria-label="ResumAIner">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260" role="img" aria-label="ResumAIner" style="height: 40px; width: auto;"><g transform="translate(42 38) scale(1.16)" vector-effect="non-scaling-stroke"><rect x="6" y="6" width="116" height="148" rx="18" fill="#FFFDF8" stroke="#17211D" stroke-width="8"/><line x1="6" y1="112" x2="122" y2="112" stroke="#17211D" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="62" r="30" fill="none" stroke="#17211D" stroke-width="6"/><line x1="64" y1="20" x2="64" y2="34" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="64" y1="90" x2="64" y2="104" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="22" y1="62" x2="36" y2="62" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="92" y1="62" x2="106" y2="62" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><circle cx="64" cy="62" r="13" fill="#0F8A6A"/><rect x="24" y="127" width="80" height="19" rx="5" fill="#0F8A6A"/></g><text x="250" y="158" font-family="Manrope, Inter, Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="86" font-weight="700" letter-spacing="-3" fill="#17211D">ResumAIner</text></svg>
+      </a>
+      <nav>
+        <a href="#how-it-works" th:text="#{nav.link.how}">How it works</a>
+        <a href="#features" th:text="#{nav.link.features}">Features</a>
+        <a href="#faq" th:text="#{nav.link.faq}">FAQ</a>
+      </nav>
+      <div class="topnav-actions">
+        <button class="hamburger" aria-label="Toggle navigation" onclick="this.closest('.topnav-inner').classList.toggle('nav-open')">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="lang-switch">
+          <button th:classappend="${#locale.language == 'en'} ? 'active' : ''" th:onclick="|window.location='?lang=en'|" th:text="#{nav.lang.en}">EN</button>
+          <button th:classappend="${#locale.language == 'ru'} ? 'active' : ''" th:onclick="|window.location='?lang=ru'|" th:text="#{nav.lang.ru}">RU</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="content">
+    <!-- Hero -->
+    <section class="section" style="padding-bottom: 0;">
+      <div class="container">
+        <div class="hero-split">
+          <div>
+            <p class="eyebrow" style="display: flex; align-items: center; gap: 8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-hidden="true" style="height: 18px; width: auto; display: block; flex-shrink: 0;"><rect x="24" y="24" width="464" height="464" rx="104" fill="#FAF7F0"/><g transform="translate(96 68) scale(2.5)" vector-effect="non-scaling-stroke"><rect x="6" y="6" width="116" height="148" rx="18" fill="#FFFDF8" stroke="#17211D" stroke-width="8"/><line x1="6" y1="112" x2="122" y2="112" stroke="#17211D" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="62" r="30" fill="none" stroke="#17211D" stroke-width="6"/><line x1="64" y1="20" x2="64" y2="34" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="64" y1="90" x2="64" y2="104" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="22" y1="62" x2="36" y2="62" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="92" y1="62" x2="106" y2="62" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><circle cx="64" cy="62" r="13" fill="#0F8A6A"/><rect x="24" y="127" width="80" height="19" rx="5" fill="#0F8A6A"/></g></svg>
+              <span th:text="#{hero.eyebrow}">ResumAIner — Resume AI Aligner</span>
+            </p>
+            <h1 th:text="#{hero.title}">Apply smarter, not harder.</h1>
+            <p style="color: var(--fg); font-size: var(--fs-lead); font-weight: 500; margin: 0 0 8px; line-height: 1.4;" th:text="#{hero.subtitle}">One profile. Tailored resumes for any role.</p>
+            <p class="lead" style="margin-bottom: var(--gap-md);" th:text="#{hero.lead}">Create job-specific resumes and cover letters from one structured profile, tailored to each vacancy and company.</p>
+            <p style="color: var(--muted); font-size: 15px; line-height: 1.55; margin: 0 0 var(--gap-lg);" th:text="#{hero.body}">Make personalized resumes and cover letters for any vacancy, review, save, and share polished PDFs or public links.</p>
+            <div class="hero-cta">
+              <a th:href="${ctaUrl}" class="btn btn-primary" th:text="#{hero.cta}">Get started</a>
+            </div>
+            <a href="#how-it-works" class="hero-secondary-link" style="display: inline-flex; align-items: center; gap: 6px; margin-top: var(--gap-lg); padding: 10px 24px; border: 1.5px solid var(--border); border-radius: var(--radius-md); color: var(--fg); font-size: 15px; font-weight: 500; text-decoration: none; background: var(--bg);" th:text="#{hero.secondary}">See how it works ↓</a>
+          </div>
+          <div>
+            <div class="resume-mockup">
+              <div class="resume-mockup-label" th:text="#{mockup.workflow}">Workflow</div>
+              <div class="mockup-flow">
+                <div class="mockup-row">
+                  <div class="mockup-card">
+                    <div class="mockup-card-title" th:text="#{mockup.profile.title}">Profile</div>
+                    <div class="mockup-card-desc" th:text="#{mockup.profile.desc}">John Doe · Full-Stack Engineer</div>
+                    <div class="mockup-chip-row">
+                      <span class="mockup-chip" th:text="#{mockup.profile.skill1}">Java</span>
+                      <span class="mockup-chip" th:text="#{mockup.profile.skill2}">Spring Boot</span>
+                      <span class="mockup-chip" th:text="#{mockup.profile.skill3}">React</span>
+                      <span class="mockup-chip" th:text="#{mockup.profile.skill4}">PostgreSQL</span>
+                    </div>
+                  </div>
+                  <div class="mockup-card">
+                    <div class="mockup-card-title" th:text="#{mockup.vacancy.title}">Vacancy</div>
+                    <div class="mockup-card-desc" th:text="#{mockup.vacancy.desc}">Senior Java Developer · FinTech Corp</div>
+                    <div class="mockup-chip-row">
+                      <span class="mockup-chip highlight" th:text="#{mockup.vacancy.skill1}">Java 17+</span>
+                      <span class="mockup-chip highlight" th:text="#{mockup.vacancy.skill2}">Microservices</span>
+                      <span class="mockup-chip outline" th:text="#{mockup.vacancy.skill3}">· · ·</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="mockup-arrow">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 13l7 7 7-7"/></svg>
+                </div>
+                <div class="mockup-alignment">
+                  <div class="mockup-alignment-dot">
+                    <svg viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>
+                  </div>
+                  <div>
+                    <div class="mockup-alignment-text" th:text="#{mockup.alignment.title}">AI Alignment — matched strengths highlighted</div>
+                    <div class="mockup-alignment-sub" th:text="#{mockup.alignment.desc}">Java 17+, Spring Boot, Microservices, REST APIs, Kafka</div>
+                  </div>
+                </div>
+                <div class="mockup-arrow">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 13l7 7 7-7"/></svg>
+                </div>
+                <div class="mockup-row">
+                  <div class="mockup-card" style="flex: 1.4;">
+                    <div class="mockup-card-title" th:text="#{mockup.resume.title}">Tailored Resume</div>
+                    <div class="mockup-card-desc" style="font-size: 10px; line-height: 1.3;" th:text="#{mockup.resume.desc}">John Doe — Senior Java Developer application resume, aligned to FinTech Corp vacancy requirements.</div>
+                    <div class="mockup-chip-row">
+                      <span class="mockup-chip" th:text="#{mockup.resume.tag.en}">EN</span>
+                      <span class="mockup-chip" th:text="#{mockup.resume.tag.pdf}">PDF</span>
+                      <span class="mockup-chip" th:text="#{mockup.resume.tag.link}">Public link</span>
+                    </div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 6px; justify-content: center;">
+                    <span class="tag" style="justify-content: center;" th:text="#{mockup.resume.cover}">Cover letter</span>
+                    <span class="mockup-chip highlight" style="justify-content: center; font-size: 9px;" th:text="#{mockup.resume.saved}">Version saved</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Problem -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2 th:text="#{problem.title}">Resume adaptation should not feel like starting from zero every time.</h2>
+          <p th:text="#{problem.subtitle}">Every serious application needs a focused resume. But rewriting, translating, and tracking versions manually quickly becomes slow, repetitive, and messy.</p>
+        </div>
+        <div class="problem-grid">
+          <div class="problem-card">
+            <h3 th:text="#{problem.card1.title}">Manual tailoring takes hours</h3>
+            <p th:text="#{problem.card1.desc}">Rewriting a resume for every vacancy is slow and mentally draining.</p>
+          </div>
+          <div class="problem-card">
+            <h3 th:text="#{problem.card2.title}">Career data is scattered</h3>
+            <p th:text="#{problem.card2.desc}">Experience, skills, projects, and achievements live across files, LinkedIn, old resumes, and memory.</p>
+          </div>
+          <div class="problem-card">
+            <h3 th:text="#{problem.card3.title}">Translation doubles the work</h3>
+            <p th:text="#{problem.card3.desc}">When you need English and Russian versions, you must translate, compare, and keep both consistent.</p>
+          </div>
+          <div class="problem-card">
+            <h3 th:text="#{problem.card4.title}">AI chats repeat the same setup</h3>
+            <p th:text="#{problem.card4.desc}">Without a structured profile, every AI session starts with the same context-building work.</p>
+          </div>
+          <div class="problem-card">
+            <h3 th:text="#{problem.card5.title}">Resume versions become messy</h3>
+            <p th:text="#{problem.card5.desc}">It becomes hard to remember which resume was sent to which company.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="section" id="how-it-works" style="background: var(--surface-soft);">
+      <div class="container">
+        <div class="section-header">
+          <h2 th:text="#{how.title}">How ResumAIner works</h2>
+          <p th:text="#{how.subtitle}">Create your profile once, then adapt your resume for each vacancy through a clear, controlled workflow.</p>
+        </div>
+        <div class="timeline">
+          <div class="timeline-step">
+            <h3 th:text="#{how.step1.title}">Create your profile</h3>
+            <p th:text="#{how.step1.desc}">Add contact details, work experience, projects, education, courses, skills, and additional info.</p>
+          </div>
+          <div class="timeline-step">
+            <h3 th:text="#{how.step2.title}">Paste a vacancy</h3>
+            <p th:text="#{how.step2.desc}">Add vacancy description, company context, target language, and adaptation level.</p>
+          </div>
+          <div class="timeline-step">
+            <h3 th:text="#{how.step3.title}">Prepare tailored drafts</h3>
+            <p th:text="#{how.step3.desc}">Get a vacancy-specific resume and cover letter based on your structured profile.</p>
+          </div>
+          <div class="timeline-step">
+            <h3 th:text="#{how.step4.title}">Review and edit</h3>
+            <p th:text="#{how.step4.desc}">Keep control over the final content before saving.</p>
+          </div>
+          <div class="timeline-step">
+            <h3 th:text="#{how.step5.title}">Export and share</h3>
+            <p th:text="#{how.step5.desc}">Download a polished PDF or share a public recruiter link.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section" id="features">
+      <div class="container stack" style="gap: 56px;">
+        <div class="section-header">
+          <h2 th:text="#{features.title}">Everything you need to prepare focused job applications</h2>
+          <p th:text="#{features.subtitle}">ResumAIner combines structured profile storage, resume adaptation, bilingual preparation, version tracking, and sharing in one workflow.</p>
+        </div>
+        <div class="grid-4">
+          <div class="feature card-flat">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v6H4zM4 14h16v6H4z"></path></svg>
+            </div>
+            <h3 th:text="#{features.card1.title}">Structured career profile</h3>
+            <p th:text="#{features.card1.desc}">Store your professional data once and reuse it for many applications.</p>
+          </div>
+          <div class="feature card-flat">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M3 12h18"></path></svg>
+            </div>
+            <h3 th:text="#{features.card2.title}">AI-assisted resume adaptation</h3>
+            <p th:text="#{features.card2.desc}">Tailor resumes for specific vacancies and company descriptions.</p>
+          </div>
+          <div class="feature card-flat">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h12M4 17h8"></path></svg>
+            </div>
+            <h3 th:text="#{features.card3.title}">Cover letter drafting</h3>
+            <p th:text="#{features.card3.desc}">Create vacancy-specific cover letters from the same profile context.</p>
+          </div>
+          <div class="feature card-flat">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"></circle><path d="M2 12h4M18 12h4M12 2v4M12 18v4"></path></svg>
+            </div>
+            <h3 th:text="#{features.card4.title}">Bilingual interface and auto-translation</h3>
+            <p th:text="#{features.card4.desc}">The product supports English and Russian UI, and can make resume versions in English, Russian, or both.</p>
+          </div>
+          <div class="feature card-flat">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 8v4l3 2"></path><circle cx="12" cy="12" r="8"></circle></svg>
+            </div>
+            <h3 th:text="#{features.card5.title}">Resume version history</h3>
+            <p th:text="#{features.card5.desc}">Save, search, sort, and manage resume versions.</p>
+          </div>
+          <div class="feature card-flat">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 3v4a1 1 0 001 1h4"></path><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"></path></svg>
+            </div>
+            <h3 th:text="#{features.card6.title}">PDF download</h3>
+            <p th:text="#{features.card6.desc}">Export polished, print-friendly, selectable-text PDFs.</p>
+          </div>
+          <div class="feature card-flat">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"></path></svg>
+            </div>
+            <h3 th:text="#{features.card7.title}">Public recruiter links</h3>
+            <p th:text="#{features.card7.desc}">Share a public resume link without sending files manually.</p>
+          </div>
+          <div class="feature card-flat">
+            <div class="feature-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"></path></svg>
+            </div>
+            <h3 th:text="#{features.card8.title}">User control before saving</h3>
+            <p th:text="#{features.card8.desc}">AI helps prepare drafts; you review and edit the final result.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trust & Control -->
+    <section class="section" style="background: var(--surface-soft);">
+      <div class="container trust-split">
+        <div>
+          <p class="eyebrow" th:text="#{trust.eyebrow}">Your data, your decisions</p>
+          <h2 th:text="#{trust.title}">Stay in control of your career story.</h2>
+          <p class="lead" style="margin-top: var(--gap-md);" th:text="#{trust.lead}">Stop rewriting and translating your resume from scratch manually. Highlight your most relevant strengths for each specific role without losing control over the final result.</p>
+        </div>
+        <div class="trust-cards">
+          <div class="card">
+            <h3 style="font-size: 16px; margin-bottom: 4px;" th:text="#{trust.card1.title}">Editable before saving</h3>
+            <p style="margin: 0; color: var(--muted); font-size: 14px;" th:text="#{trust.card1.desc}">Review and adjust resume and cover letter drafts before finalizing them.</p>
+          </div>
+          <div class="card">
+            <h3 style="font-size: 16px; margin-bottom: 4px;" th:text="#{trust.card2.title}">Intentional public sharing</h3>
+            <p style="margin: 0; color: var(--muted); font-size: 14px;" th:text="#{trust.card2.desc}">Public links are shared only when you decide to use them.</p>
+          </div>
+          <div class="card">
+            <h3 style="font-size: 16px; margin-bottom: 4px;" th:text="#{trust.card3.title}">Bilingual consistency</h3>
+            <p style="margin: 0; color: var(--muted); font-size: 14px;" th:text="#{trust.card3.desc}">Prepare English and Russian resume versions in one structured workflow.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="faq">
+      <div class="container">
+        <div class="section-header">
+          <h2 th:text="#{faq.title}">Questions before you start</h2>
+        </div>
+        <div class="faq-list">
+          <div class="faq-item">
+            <details>
+              <summary th:text="#{faq.q1}">Is ResumAIner a resume builder?</summary>
+              <p class="faq-answer" th:text="#{faq.q1.a}">Yes, but it is more focused than a classic resume builder. It helps you adapt resumes for specific vacancies using one structured profile.</p>
+            </details>
+          </div>
+          <div class="faq-item">
+            <details>
+              <summary th:text="#{faq.q2}">Can I edit AI-assisted resume drafts?</summary>
+              <p class="faq-answer" th:text="#{faq.q2.a}">Yes. You review and edit the resume before saving the final version.</p>
+            </details>
+          </div>
+          <div class="faq-item">
+            <details>
+              <summary th:text="#{faq.q3}">Can it make cover letters?</summary>
+              <p class="faq-answer" th:text="#{faq.q3.a}">Yes. ResumAIner can prepare cover letter drafts based on your profile and the target vacancy.</p>
+            </details>
+          </div>
+          <div class="faq-item">
+            <details>
+              <summary th:text="#{faq.q4}">Does it support English and Russian resumes?</summary>
+              <p class="faq-answer" th:text="#{faq.q4.a}">Yes. You can make resume versions in English, Russian, or both.</p>
+            </details>
+          </div>
+          <div class="faq-item">
+            <details>
+              <summary th:text="#{faq.q5}">Does the interface support English and Russian?</summary>
+              <p class="faq-answer" th:text="#{faq.q5.a}">Yes. The UI supports both English and Russian.</p>
+            </details>
+          </div>
+          <div class="faq-item">
+            <details>
+              <summary th:text="#{faq.q6}">Can I download resumes as PDF?</summary>
+              <p class="faq-answer" th:text="#{faq.q6.a}">Yes. You can download a polished, print-friendly PDF.</p>
+            </details>
+          </div>
+          <div class="faq-item">
+            <details>
+              <summary th:text="#{faq.q7}">Can I share a resume with recruiters using a public link?</summary>
+              <p class="faq-answer" th:text="#{faq.q7.a}">Yes. You can create a public link and send it to a recruiter.</p>
+            </details>
+          </div>
+          <div class="faq-item">
+            <details>
+              <summary th:text="#{faq.q8}">Does AI publish or send anything automatically?</summary>
+              <p class="faq-answer" th:text="#{faq.q8.a}">No. You stay in control. Nothing is final until you review and save it.</p>
+            </details>
+          </div>
+          <div class="faq-item">
+            <details>
+              <summary th:text="#{faq.q9}">Why use this instead of a normal AI chat?</summary>
+              <p class="faq-answer" th:text="#{faq.q9.a}">Because your career data is stored once in a structured profile. You do not need to rebuild the same context every time.</p>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+        <div class="cta-card">
+          <h2 th:text="#{cta.title}">Ready to tailor your resume faster?</h2>
+          <p th:text="#{cta.subtitle}">Create your structured profile once and adapt resumes for the roles you want.</p>
+          <a th:href="${ctaUrl}" class="btn" th:text="#{cta.button}">Create your profile</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pagefoot">
+    <div class="container" style="display: flex; align-items: center; justify-content: space-between; gap: var(--gap-md); flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260" role="img" th:attr="aria-label=#{footer.logo.alt}" style="height: 22px; width: auto; display: block;"><g transform="translate(42 38) scale(1.16)" vector-effect="non-scaling-stroke"><rect x="6" y="6" width="116" height="148" rx="18" fill="#FFFDF8" stroke="#17211D" stroke-width="8"/><line x1="6" y1="112" x2="122" y2="112" stroke="#17211D" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="62" r="30" fill="none" stroke="#17211D" stroke-width="6"/><line x1="64" y1="20" x2="64" y2="34" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="64" y1="90" x2="64" y2="104" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="22" y1="62" x2="36" y2="62" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="92" y1="62" x2="106" y2="62" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><circle cx="64" cy="62" r="13" fill="#0F8A6A"/><rect x="24" y="127" width="80" height="19" rx="5" fill="#0F8A6A"/></g><text x="250" y="158" font-family="Manrope, Inter, Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="86" font-weight="700" letter-spacing="-3" fill="#17211D">ResumAIner</text></svg>
+        <span>© <span id="copyright-year"></span></span>
+      </div>
+      <span class="meta" th:text="#{footer.caption}">One profile. Tailored resumes for any role.</span>
+    </div>
+  </footer>
+
+  <script>document.getElementById('copyright-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

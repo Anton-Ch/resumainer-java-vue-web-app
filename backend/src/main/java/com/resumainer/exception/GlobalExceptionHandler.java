@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
     public String handleNotFound(Exception ex, HttpServletResponse response) {
         log.warn("Page not found: {}", ex.getMessage());
         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        return "forward:/static/error/404.html";
+        return "error/404";
     }
 
     /**
@@ -37,6 +37,6 @@ public class GlobalExceptionHandler {
     public String handleServerError(Exception ex, HttpServletResponse response) {
         log.error("Unhandled server error", ex);
         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        return "forward:/static/error/500.html";
+        return "error/500";
     }
 }
