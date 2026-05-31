@@ -8,4 +8,18 @@ _Feature: `specs/002-thymeleaf-landing-page`_
 - [1] Feature Branch : feat/002-thymeleaf-landing-page Created : 2026-05-31 Status : Approved Input : User description: &quot;Create a Thymeleaf Landing Page that introduces ResumAIner to first-time visitors, explains the product value, shows the workflow, and guides visitors to start using the application.&quot; (specs/002-thymeleaf-landing-page/spec.md)
 - [2] spec / Feature Specification: Thymeleaf Landing Page / User Scenarios & Testing *(mandatory)* / User Story 1 - First-time visitor views the Landing Page and understands the product (Priority: P1) (specs/002-thymeleaf-landing-page/spec.md)
 - [3] No persistent data entities in this feature. This is a presentation-layer feature only. The Landing Page displays static structured content that supports i18n (English/Russian message keys). (specs/002-thymeleaf-landing-page/spec.md)
-- [4] SC-001 : A first-time visitor can open the application URL and understand what ResumAIner does within 10 seconds of viewing the Hero section . SC-002 : A visitor can switch the page language between English and Russian and all visible text changes correctly , with no missing or untranslated text remaining visible . SC-003 : The Landing Page displays correctly... (specs/002-thymeleaf-landing-page/spec.md)
+
+## Plan
+- [1] Branch : feat/002-thymeleaf-landing-page | Date : 2026-05-31 | Spec : spec.md Input : Feature specification from /specs/002-thymeleaf-landing-page/spec.md (specs/002-thymeleaf-landing-page/plan.md)
+- [2] specs /002-thymeleaf-landing-page/ ├── spec .md # Feature specification (Approved) ├── plan .md # This file ├── research .md # Phase 0 output (if needed ) ├── data-model .md # Phase 1 output (if applicable ) ├── quickstart .md # Phase 1 output ├── memory-synthesis .md # Memory synthesis for context ├── doc-synthesis .md # Doc synthesis ├── checklists / │... (specs/002-thymeleaf-landing-page/plan.md)
+- [3] See quickstart.md for implementation steps. (specs/002-thymeleaf-landing-page/plan.md)
+- [4] No external API contracts. Thymeleaf renders server-side HTML. (specs/002-thymeleaf-landing-page/plan.md)
+- [5] No constitution violations — all principles pass. Complexity tracking not required. (specs/002-thymeleaf-landing-page/plan.md)
+- [6] GATE: Must pass before Phase 0 research. Re-check after Phase 1 design. (specs/002-thymeleaf-landing-page/plan.md)
+- [7] No persistent data entities. This feature uses only i18n message keys (static content). (specs/002-thymeleaf-landing-page/plan.md)
+- [8] Root URL conflict : Resolved — Option A chosen . Landing Page serves at / . HelloWorldController and its associated JSP view ( hello.jsp ) are removed. (specs/002-thymeleaf-landing-page/plan.md)
+- [9] Test Framework : ✅ JUnit 5 + Mockito + MockMvc for controller test. Coverage Target : ✅ Controller test required. Landing page is thin — coverage applies to controller logic. (specs/002-thymeleaf-landing-page/plan.md)
+- [10] Database Access : ✅ N/A — no database access. UTF-8 Encoding : ✅ i18n resource files must use UTF-8 encoding. Content Budget Enforcement : ✅ N/A — no AI-generated content. (specs/002-thymeleaf-landing-page/plan.md)
+
+## Tasks
+- [1] Input : Design documents from specs/002-thymeleaf-landing-page/ Prerequisites : plan.md (required), component-diagram.md (required for architecture context) Organization : Tasks are grouped by user story to enable independent implementation and testing of each story. (specs/002-thymeleaf-landing-page/tasks.md)
