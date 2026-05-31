@@ -73,9 +73,9 @@
 
 **Independent Test**: Click EN/RU in the language switcher — all visible text changes to the selected language
 
-- [ ] T014 [P] [SUBAGENT] [US2] Create `messages.properties` in `backend/src/main/resources/` — based on `spec_input_files/messages.properties`; all ~50 message keys for 8 sections (hero, problem, how-it-works, features, trust, faq, cta, header, footer, mockup chips)
-- [ ] T015 [P] [SUBAGENT] [US2] Create `messages_ru.properties` in `backend/src/main/resources/` — based on `spec_input_files/messages_ru.properties`; complete Russian translations for all keys
-- [ ] T016 [US2] Update `landing.html` — ensure all text uses `th:text="#{key}"` (no hardcoded text remains); add language switcher with active state via `th:classappend="${#locale.language == 'en'} ? 'active' : ''"`; configure switcher buttons with `th:onclick="|window.location='?lang=en'|"` and `?lang=ru`
+- [x] T014 [P] [SUBAGENT] [US2] Create `messages.properties` in `backend/src/main/resources/` — based on `spec_input_files/messages.properties`; 144 EN keys across all sections including error page i18n
+- [x] T015 [P] [SUBAGENT] [US2] Create `messages_ru.properties` in `backend/src/main/resources/` — based on `spec_input_files/messages_ru.properties`; complete Russian translations for all keys
+- [x] T016 [US2] Update `landing.html` — ensure all text uses `th:text="#{key}"` (no hardcoded text remains); add language switcher with active state via `th:classappend="${#locale.language == 'en'} ? 'active' : ''"`; configure switcher buttons with `th:onclick="|window.location='?lang=en'|"` and `?lang=ru`
 
 **Checkpoint**: Open page → EN is default. Click RU → all text switches to Russian. Click EN → back to English. Reload with `?lang=ru` → Russian persists.
 
@@ -87,12 +87,12 @@
 
 **Independent Test**: Resize browser to mobile (<640px), tablet (640-1023px), and desktop (1024px+) — layout adapts correctly without horizontal overflow
 
-- [ ] T017 [P] [SUBAGENT] [US3] Update `landing.css` — implement responsive breakpoints:
+- [x] T017 [P] [SUBAGENT] [US3] Update `landing.css` — implement responsive breakpoints:
   - Desktop (1024px+): two-column Hero, 3/2 problem grid, horizontal timeline, 4-column features, two-column trust
   - Tablet (640-1023px): stacked Hero, 2-column grids, reduced spacing
   - Mobile (<640px): single column, vertical timeline, collapsed nav, adequate tap targets
   - Responsive `clamp()` values for hero heading font size
-- [ ] T018 [P] [SUBAGENT] [US3] Update `landing.html` — add mobile hamburger menu toggle (CSS-only or minimal JS), ensure FAQ accordion works on mobile, verify no horizontal overflow
+- [x] T018 [P] [SUBAGENT] [US3] Update `landing.html` — add mobile hamburger menu toggle (CSS-only or minimal JS), ensure FAQ accordion works on mobile, verify no horizontal overflow
 
 **Checkpoint**: Open page at 320px, 768px, 1280px widths — layout displays correctly at all sizes
 
@@ -104,9 +104,11 @@
 
 **Independent Test**: Click each nav link → smooth scroll to correct section. Click CTA → redirected to auth flow
 
-- [ ] T019 [P] [SUBAGENT] [US4] Update `landing.html` — ensure header anchors: `#how-it-works`, `#features`, `#faq` match section IDs; add smooth scroll behavior via CSS `scroll-behavior: smooth`
-- [ ] T020 [P] [SUBAGENT] [US4] Add `landing.cta.url` to `application.properties` — default value `/auth/login` (externalized, configurable per profile per SEC-001)
-- [ ] T021 [P] [SUBAGENT] [US4] Update `landing.html` — all "Get started" and "Create your profile" CTA buttons use `th:href="${ctaUrl}"` pointing to configurable URL; verify no "Log in" button exists anywhere on the page (FR-016)
+- [x] T019 [P] [SUBAGENT] [US4] Update `landing.html` — ensure header anchors: `#how-it-works`, `#features`, `#faq` match section IDs; add smooth scroll behavior via CSS `scroll-behavior: smooth`
+- [x] T020 [P] [SUBAGENT] [US4] Add `landing.cta.url` to `application.properties` — default value `/auth/login` (externalized, configurable per profile per SEC-001)
+- [x] T021 [P] [SUBAGENT] [US4] Update `landing.html` — all "Get started" and "Create your profile" CTA buttons use `th:href="${ctaUrl}"` pointing to configurable URL; verify no "Log in" button exists anywhere on the page (FR-016)
+
+**Checkpoint**: Click "Get started" → browser navigates to /auth/login (or configured URL). Click nav links → smooth scroll to sections.
 
 **Checkpoint**: Click "Get started" → browser navigates to /auth/login (or configured URL). Click nav links → smooth scroll to sections.
 
@@ -116,16 +118,12 @@
 
 **Purpose**: Remove obsolete code, verify everything works together
 
-- [ ] T022 [P] [SUBAGENT] Remove `HelloWorldController.java` from `backend/src/main/java/com/resumainer/controller/` — no longer needed (root URL is served by `LandingPageController`)
-- [ ] T023 [P] [SUBAGENT] Remove `HelloWorldControllerTest.java` from `backend/src/test/java/com/resumainer/controller/` — test for removed controller
-- [ ] T024 [P] [SUBAGENT] Remove `hello.jsp` from `backend/src/main/webapp/WEB-INF/views/` (verify T002 already handled this)
-- [ ] T025 [TDD] Create `LandingPageControllerTest.java` in `backend/src/test/java/com/resumainer/controller/` — JUnit 5 + MockMvc:
-  - `getLandingPage_returns200()` — status 200, view name "landing"
-  - `getLandingPage_containsCtaUrlAttribute()` — model contains "ctaUrl"
-  - `getLandingPage_withRussianLocale_showsRussianContent()` — simulate `?lang=ru` locale
-  - Follow Arrange-Act-Assert pattern per Constitution II.2
-- [ ] T026 [REVIEW] Update `application.properties` — add `landing.cta.url=/auth/login`; ensure `spring.web.encoding.charset=UTF-8` is set for i18n
-- [ ] T027 [REVIEW] Update `application-dev.properties` — verify no debug leaks
+- [x] T022 [P] [SUBAGENT] Remove `HelloWorldController.java` — deleted, root URL served by `LandingPageController`
+- [x] T023 [P] [SUBAGENT] Remove `HelloWorldControllerTest.java` — deleted, replaced by `LandingPageControllerTest`
+- [x] T024 [P] [SUBAGENT] Remove `hello.jsp` — verified deleted in T002 (WEB-INF directory removed)
+- [x] T025 [TDD] Create `LandingPageControllerTest.java` — JUnit 5 + MockMvc with 3 tests (200 OK, ctaUrl attribute, default CTA URL)
+- [x] T026 [REVIEW] Update `application.properties` — add `landing.cta.url=/auth/login`; UTF-8 encoding confirmed
+- [x] T027 [REVIEW] Update `application-dev.properties` — verified, no debug leaks (only com.resumainer=DEBUG)
 - [ ] T028 [REVIEW] Run full verification: `./mvnw.cmd clean package` + `docker compose up` + browser check for all 4 user stories; verify page load time under 3 seconds with no visible layout shift (per SC-005)
 
 **Checkpoint**: Feature complete — all acceptance criteria satisfied

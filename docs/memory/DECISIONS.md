@@ -176,3 +176,27 @@ Changed HelloWorldController to show active profile via @Value. docker compose u
 
 **Where to look next**
 docker/Dockerfile, docker/docker-compose.yml
+
+---
+
+### 2026-05-31 - Error pages use Thymeleaf templates for i18n support, static fallback for low-level failures
+
+**Status**
+Active
+
+**Why this is durable**
+Every feature that adds i18n will need error pages in all supported languages. This decision defines the pattern: Thymeleaf templates with full branding for most errors, static HTML only for failures before the template engine is available.
+
+**Decision**
+Error pages (404, 500) are implemented as Thymeleaf templates in `templates/error/` with full header, nav bar, language switcher, and footer matching the landing page design. `GlobalExceptionHandler` forwards to Thymeleaf views (`error/404`, `error/500`). Static HTML copies in `static/error/` are kept as low-level fallbacks for failures that occur before Thymeleaf initialization.
+
+**Tradeoffs**
+- Gained: Bilingual error pages, consistent branding, language switcher works on error pages
+- Made harder: Two copies to maintain (Thymeleaf + static fallback)
+- Reconsider: If the project drops i18n or all errors go through Thymeleaf, static fallbacks can be removed
+
+**Future mistake prevented**
+Creating new static error pages without i18n support, or forgetting to keep static fallbacks for low-level failures.
+
+**Where to look next**
+backend/src/main/resources/templates/error/404.html, backend/src/main/resources/templates/error/500.html, backend/src/main/java/com/resumainer/exception/GlobalExceptionHandler.java
