@@ -1,6 +1,7 @@
 package com.resumainer.config;
 
 import com.resumainer.controller.LandingPageController;
+import com.resumainer.exception.GlobalExceptionHandler;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -165,6 +166,18 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     public LandingPageController landingPageController() {
         return new LandingPageController();
+    }
+
+    /**
+     * Global exception handler for 404/500 with bilingual Thymeleaf templates.
+     * <p>
+     * Registered explicitly as a {@link Bean} because in pure Spring MVC
+     * (without Boot), {@code @ControllerAdvice} alone does NOT register the
+     * handler (same pattern as BUGS.md B1 for {@code @Controller}).
+     */
+    @Bean
+    public GlobalExceptionHandler globalExceptionHandler() {
+        return new GlobalExceptionHandler();
     }
 
     // ============================================================

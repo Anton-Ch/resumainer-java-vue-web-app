@@ -32,3 +32,5 @@ Desktop.ini
 
 # Node
 node_modules/
+
+# Playwright MCP testing artifacts.playwright-mcp/

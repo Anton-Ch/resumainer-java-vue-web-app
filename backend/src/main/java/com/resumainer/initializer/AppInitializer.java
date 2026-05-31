@@ -1,6 +1,9 @@
 package com.resumainer.initializer;
 
 import com.resumainer.config.WebConfig;
+import jakarta.servlet.ServletRegistration;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 /**
@@ -28,5 +31,20 @@ public class AppInitializer extends AbstractAnnotationConfigDispatcherServletIni
     @Override
     protected String[] getServletMappings() {
         return new String[]{"/"};
+    }
+
+    @Override
+    protected DispatcherServlet createDispatcherServlet(WebApplicationContext servletAppContext) {
+        DispatcherServlet dispatcherServlet = new DispatcherServlet(servletAppContext);
+        // Throw NoHandlerFoundException for unhandled URLs so GlobalExceptionHandler
+        // can serve our custom bilingual 404 Thymeleaf template instead of Tomcat default.
+        dispatcherServlet.setThrowExceptionIfNoHandlerFound(true);
+        return dispatcherServlet;
+    }
+
+    @Override
+    protected void customizeRegistration(ServletRegistration.Dynamic registration) {
+        // Enable case-sensitive REST-style mapping (default is true, explicit for clarity)
+        registration.setInitParameter("spring.mvc.static-path-pattern", "/static/**");
     }
 }
