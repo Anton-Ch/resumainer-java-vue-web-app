@@ -99,7 +99,7 @@ backend/src/main/java/com/resumainer/
 ├── config/
 │   └── WebConfig.java              # [MODIFY] Register LandingPageController bean
 ├── controller/
-│   ├── HelloWorldController.java   # [EXISTING] Keep as-is
+│   ├── HelloWorldController.java   # [EXISTING → DELETE] Removed (replaced by LandingPageController)
 │   └── LandingPageController.java  # [NEW] GET / — renders landing.html, reads landing.cta.url from @Value
 ├── exception/
 │   └── GlobalExceptionHandler.java # [NEW] @ControllerAdvice — custom 404/500, no stack traces
@@ -144,15 +144,13 @@ No NEEDS CLARIFICATION — all technical decisions are clear:
 - **Thymeleaf**: Spring MVC integration with `ThymeleafViewResolver`
 - **Pico CSS**: Minimal version as base reset + design tokens overridden in `landing.css`
 - **Controller**: `LandingPageController` with `@GetMapping("/")` — must be registered as `@Bean` in `WebConfig` (per B1 from memory)
-- **Landing page at root**: Replaces existing `HelloWorldController` root mapping OR maps to a different path — needs decision
+- **Landing page at root**: Replaces existing `HelloWorldController` root mapping — HelloWorldController is removed entirely (feature 001 complete)
 
 ### Research Required
 
-1. **Root URL conflict**: `HelloWorldController` currently maps `GET /`. Landing Page needs `GET /`. Decision needed on URL mapping strategy:
-   - Option A: Replace HelloWorldController's `/` mapping with Landing Page. Hello page moves to `/hello` or removed (feature complete).
-   - Option B: Landing page at different URL (e.g., `/landing`) — adds complexity, not aligned with spec (FR-001: "application root URL").
+1. **Root URL conflict**: Resolved — **Option A chosen**. Landing Page serves at `/`. HelloWorldController and its associated JSP view (`hello.jsp`) are removed. All JSP dependencies (`jakarta.servlet.jsp-api`, `jakarta.servlet.jsp.jstl-api`) are removed from `pom.xml`. The application migrates entirely from JSP to Thymeleaf.
 
-**Recommendation**: Option A — Landing Page serves at `/`. HelloWorldController repurposed or removed.
+**Decision**: Option A — Landing Page at root. HelloWorldController removed.
 
 *(Research file not needed — single straightforward decision documented here.)*
 
