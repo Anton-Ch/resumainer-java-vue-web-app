@@ -7,6 +7,28 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-05-31 - Second Feature MVP Achieved: Thymeleaf Landing Page
+
+**Status**
+Active
+
+**Milestone**
+Feature 002-thymeleaf-landing-page reaches MVP.
+
+**What was achieved**
+Full Landing Page with 8 sections (Header, Hero, Problem, How It Works, Features, Trust & Control, FAQ, Final CTA), bilingual EN/RU i18n with browser auto-detection and ?lang= parameter switching, responsive layout, self-hosted fonts (Inter + Manrope, 7 TTF files), SVG brand assets (4 logos), custom bilingual error pages (404/500) with full branding, and MockMvc controller tests (3 tests, all pass). Migrated from JSP to Thymeleaf. All 28 tasks complete. BUILD SUCCESS.
+
+**Why this is durable**
+Establishes the Thymeleaf + i18n + responsive design pattern for all future Thymeleaf views. Documents the migration from JSP to Thymeleaf and the self-hosted font approach (SEC-002).
+
+**Evidence**
+Commit `f8ec657` — 22 files, 1288 insertions. Branch `feat/002-thymeleaf-landing-page`. Build: 3 tests pass, WAR created.
+
+**Where to look next**
+backend/src/main/resources/templates/landing.html, backend/src/main/webapp/static/css/landing.css, backend/src/main/resources/messages.properties
+
 ### 2026-05-30 - First Feature MVP Achieved: Hello World Tomcat
 
 **Milestone**: Feature `001-hello-world-tomcat` reaches MVP.

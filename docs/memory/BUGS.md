@@ -78,3 +78,28 @@ HelloWorldController showed "default" despite spring.profiles.active=dev in appl
 
 **Where to look next**
 backend/src/main/java/com/resumainer/controller/HelloWorldController.java
+
+---
+
+### 2026-05-31 - SpringResourceTemplateResolver: ServletContext prefix fails in MockMvc tests
+
+**Status**
+Active
+
+**Symptoms**
+MockMvc tests throw `FileNotFoundException: Could not open ServletContext resource [/templates/landing.html]` even though the template file exists at `src/main/resources/templates/landing.html`. In deployed Tomcat, the same prefix (`/templates/`) works fine.
+
+**Root Cause**
+`SpringResourceTemplateResolver` with prefix `/templates/` resolves templates via `ServletContextResource`, which looks for files relative to the webapp root. In MockMvc tests, there is no ServletContext with those resources — templates live on the classpath, not in the webapp directory.
+
+**Future mistake prevented**
+Using `classpath:/templates/` as prefix instead of `/templates/` ensures templates resolve correctly in both contexts: deployed Tomcat (via Spring's classpath resource loader) and MockMvc tests.
+
+**Evidence**
+LandingPageControllerTest failed with TemplateInputException. Changing prefix from `/templates/` to `classpath:/templates/` fixed all 3 tests immediately (BUILD SUCCESS).
+
+**Prevention / Detection**
+Always use `classpath:/templates/` (or `classpath:/` prefix) for SpringResourceTemplateResolver in pure Spring MVC projects. The `/WEB-INF/templates/` convention only works in Servlet containers.
+
+**Where to look next**
+backend/src/main/java/com/resumainer/config/WebConfig.java
