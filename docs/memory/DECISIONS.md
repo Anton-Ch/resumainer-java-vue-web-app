@@ -200,3 +200,29 @@ Creating new static error pages without i18n support, or forgetting to keep stat
 
 **Where to look next**
 backend/src/main/resources/templates/error/404.html, backend/src/main/resources/templates/error/500.html, backend/src/main/java/com/resumainer/exception/GlobalExceptionHandler.java
+
+---
+
+### 2026-05-31 - Custom 404 requires DispatcherServlet config + bean registration
+
+**Status**
+Active
+
+**Why this is durable**
+Every feature that adds i18n or custom error pages needs this configuration. Without it, 404 errors fall through to the servlet container default page.
+
+**Decision**
+Custom 404 Thymeleaf templates require two changes:
+1. `AppInitializer`: override `createDispatcherServlet()` and call `dispatcherServlet.setThrowExceptionIfNoHandlerFound(true)` so Spring MVC throws `NoHandlerFoundException` for unhandled URLs.
+2. Register the `@ControllerAdvice` handler (e.g. `GlobalExceptionHandler`) as an explicit `@Bean` in `WebConfig` (see B5).
+
+**Tradeoffs**
+- Gained: Custom bilingual 404 pages with full branding, nav, and language switch
+- Made harder: Two configuration points to remember (initializer + bean)
+- Reconsider: If the project adds Spring Boot later, both steps become automatic
+
+**Future mistake prevented**
+Adding custom error pages without configuring the DispatcherServlet to throw exceptions for unhandled URLs.
+
+**Where to look next**
+backend/src/main/java/com/resumainer/initializer/AppInitializer.java, backend/src/main/java/com/resumainer/config/WebConfig.java

@@ -103,3 +103,57 @@ Always use `classpath:/templates/` (or `classpath:/` prefix) for SpringResourceT
 
 **Where to look next**
 backend/src/main/java/com/resumainer/config/WebConfig.java
+
+---
+
+### 2026-05-31 - Shell scripts with CRLF line endings fail in Linux Docker containers
+
+**Status**
+Active
+
+**Symptoms**
+Docker container repeatedly restarts with exit code 127. Logs show:
+`/usr/bin/env: 'bash\r': No such file or directory`
+
+**Root Cause**
+On Windows, Git checks out or creates shell scripts with CRLF (`\r\n`) line endings. The Linux kernel's shebang (`#!`) parser treats `\r` as part of the interpreter path — `bash\r` is not a valid executable. This affects any `.sh` script copied into a Docker image: entrypoints, health checks, wait-for scripts.
+
+**Future mistake prevented**
+All shell scripts destined for Linux Docker containers must have LF (`\n`) line endings. Fix with PowerShell: `(Get-Content script.sh -Raw) -replace "\r\n", "\n"` or with `sed -i 's/\r$//' script.sh` in Git Bash / WSL.
+
+**Evidence**
+wait-for-it.sh failed with `bash\r: No such file or directory` in Docker. Fixed by converting to LF line endings. Container started successfully.
+
+**Prevention / Detection**
+Add a `.gitattributes` file or a pre-commit hook to normalize shell scripts to LF. Or add a Dockerfile RUN step: `sed -i 's/\r$//' /path/to/*.sh`.
+
+**Where to look next**
+docker/scripts/wait-for-it.sh, .specify/scripts/bash/*.sh, any new Docker shell scripts
+
+---
+
+### 2026-05-31 - All Spring stereotype annotations require explicit @Bean in pure Spring MVC
+
+**Status**
+Active
+
+**Symptoms**
+`@ControllerAdvice` with `@ExceptionHandler` methods never gets invoked. Log shows: `ControllerAdvice beans: none` during DispatcherServlet init. 404 errors show Tomcat default page instead of custom Thymeleaf template.
+
+**Root Cause**
+In pure Spring MVC with `@Configuration` + `@EnableWebMvc` and no `@ComponentScan`, Spring does NOT scan the classpath for stereotype annotations. This applies to ALL annotation-driven Spring beans: `@Controller` (B1), `@ControllerAdvice`, `@RestController`, `@Service`, `@Repository`, `@Component`.
+
+**Future mistake prevented**
+Every annotated class must be registered as an explicit `@Bean` in a `@Configuration` class (typically `WebConfig.java`). This is a project-wide constraint — not a one-off workaround. See also B1 for `@Controller`.
+
+**Evidence**
+GlobalExceptionHandler (`@ControllerAdvice`) was never invoked despite correct `@ExceptionHandler` methods. Log showed `ControllerAdvice beans: none`. Adding `@Bean public GlobalExceptionHandler globalExceptionHandler()` to WebConfig.java fixed it immediately. 404 errors now serve our Thymeleaf template.
+
+**Prevention / Detection**
+After adding any new annotated class, check the startup log for:
+- `ControllerAdvice beans: none` → @ControllerAdvice not registered
+- HandlerMapping with zero mappings → @Controller not registered
+Always add a corresponding `@Bean` method in WebConfig.java.
+
+**Where to look next**
+backend/src/main/java/com/resumainer/config/WebConfig.java, any new class with @Controller, @ControllerAdvice, @RestController, etc.
