@@ -2,7 +2,8 @@
 
 ## Project state
 
-Early-stage scaffold. No application code, no build files, no CI yet.
+Active development. Feature 001 (Hello World Tomcat) — complete and merged to main.
+Feature 002 (Thymeleaf Landing Page) — specification approved, plan ready.
 
 ## Project Snapshot
 
@@ -104,7 +105,8 @@ Agents provide specialization.
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
+shell commands, and other important information, read the implementation
+plan at `specs/002-thymeleaf-landing-page/plan.md`.
 <!-- SPECKIT END -->
 
 ### Spec Kit
