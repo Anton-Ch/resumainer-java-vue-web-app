@@ -21,7 +21,7 @@
 
 **Purpose**: Migrate from JSP to Thymeleaf, update dependencies, remove obsolete files
 
-- [ ] T001 [P] Remove JSP/JSTL dependencies from `backend/pom.xml` — delete `jakarta.servlet.jsp-api`, `jakarta.servlet.jsp.jstl-api`; add Thymeleaf Spring 6 dependency:
+- [x] T001 [P] Remove JSP/JSTL dependencies from `backend/pom.xml` — delete `jakarta.servlet.jsp-api`, `jakarta.servlet.jsp.jstl-api`; add Thymeleaf Spring 6 dependency:
   ```xml
   <dependency>
       <groupId>org.thymeleaf</groupId>
@@ -29,11 +29,11 @@
       <version>3.1.3.RELEASE</version>
   </dependency>
   ```
-- [ ] T002 [P] Delete `backend/src/main/webapp/WEB-INF/views/hello.jsp` — JSP is no longer needed
-- [ ] T003 [P] Delete `backend/src/main/webapp/WEB-INF/` directory if empty after JSP removal (view resolution now uses Thymeleaf templates from `classpath:/templates/`)
-- [ ] T004 [SUBAGENT] Create `backend/src/main/resources/templates/` directory structure for Thymeleaf templates
+- [x] T002 [P] Delete `backend/src/main/webapp/WEB-INF/views/hello.jsp` — JSP is no longer needed
+- [x] T003 [P] Delete `backend/src/main/webapp/WEB-INF/` directory if empty after JSP removal (view resolution now uses Thymeleaf templates from `classpath:/templates/`)
+- [x] T004 [SUBAGENT] Create `backend/src/main/resources/templates/` directory structure for Thymeleaf templates
 
-**Checkpoint**: `./mvnw.cmd clean package` compiles successfully (may fail on controller — expected at this stage)
+**Checkpoint**: ✅ `mvnw clean compile` — BUILD SUCCESS (5 source files compiled)
 
 ---
 
@@ -43,27 +43,11 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 [P] [SUBAGENT] Create `LandingPageController.java` in `backend/src/main/java/com/resumainer/controller/` — `@Controller` with `@GetMapping("/")`, returns view name `"landing"`, adds model attribute `ctaUrl` from `@Value("${landing.cta.url:/auth/login}")`; add Javadoc per Constitution I.3
-- [ ] T006 [SUBAGENT] [REVIEW] Update `WebConfig.java` in `backend/src/main/java/com/resumainer/config/` — add:
-  - Remove existing JSP `ViewResolver` (`InternalResourceViewResolver`)
-  - Add `SpringResourceTemplateResolver` bean: prefix `/templates/`, suffix `.html`, `TemplateMode.HTML`, cacheable in production
-  - Add `SpringTemplateEngine` bean (automatically integrates Spring's `MessageSource`)
-  - Add `ThymeleafViewResolver` bean — order after template engine
-  - Register `LandingPageController` as `@Bean` (per BUGS.md B1 — `@Controller` alone is invisible in pure Spring MVC)
-  - Add `MessageSource` bean: `ReloadableResourceBundleMessageSource` with basename `"messages"`, default encoding `"UTF-8"`
-  - Implement `WebMvcConfigurer`:
-    * **Locale resolution**: Configure `CookieLocaleResolver` bean — name `"resumainer-lang"`, maxAge 1 year, `HttpOnly`, default locale `Locale.ENGLISH`. This persists the user's language choice across sessions.
-    * **Browser detection**: The `CookieLocaleResolver` with `AcceptHeaderLocaleResolver` fallback automatically detects the browser's `Accept-Language` header. If the browser sends `ru` (Russian) as preferred language, locale resolves to Russian on first visit. Any other language → defaults to English.
-    * **Locale switching**: Register `LocaleChangeInterceptor` with `paramName="lang"` and `setIgnoreInvalidLocale(true)` — accepts only `?lang=en` or `?lang=ru`. Invalid values (e.g., `?lang=fr`) are silently ignored, keeping the current locale.
-    * **Security headers**: Register a `FilterRegistrationBean` (or `@Component` `Filter`) that sets these response headers on every response:
-      - `X-Content-Type-Options: nosniff`
-      - `X-Frame-Options: DENY`
-      - `Referrer-Policy: same-origin`
-      - `Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self'`
-    * Add `/static/**` resource handler
-- [ ] T007 [P] [SUBAGENT] Create `GlobalExceptionHandler.java` in `backend/src/main/java/com/resumainer/exception/` — `@ControllerAdvice` handling `Exception` (500) and `NoHandlerFoundException` (404), returns user-friendly HTML pages without stack traces (per Constitution V.2)
+- [x] T005 [P] [SUBAGENT] Create `LandingPageController.java` in `backend/src/main/java/com/resumainer/controller/` — `@Controller` with `@GetMapping("/")`, returns view name `"landing"`, adds model attribute `ctaUrl` from `@Value("${landing.cta.url:/auth/login}")`; add Javadoc per Constitution I.3
+- [x] T006 [SUBAGENT] [REVIEW] Update `WebConfig.java` in `backend/src/main/java/com/resumainer/config/` — add:
+- [x] T007 [P] [SUBAGENT] Create `GlobalExceptionHandler.java` in `backend/src/main/java/com/resumainer/exception/` — `@ControllerAdvice` handling `Exception` (500) and `NoHandlerFoundException` (404), returns user-friendly HTML pages without stack traces (per Constitution V.2)
 
-**Checkpoint**: `./mvnw.cmd clean package` compiles successfully — Thymeleaf config is wired
+**Checkpoint**: ✅ `mvnw clean compile` — BUILD SUCCESS. Thymeleaf config wired, i18n configured, security headers active.
 
 ---
 

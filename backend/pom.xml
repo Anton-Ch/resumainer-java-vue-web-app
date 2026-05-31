@@ -38,19 +38,11 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- JSP API (provided by Tomcat 10.1+) -->
+        <!-- Thymeleaf Spring 6 (template engine) -->
         <dependency>
-            <groupId>jakarta.servlet.jsp</groupId>
-            <artifactId>jakarta.servlet.jsp-api</artifactId>
-            <version>3.1.1</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- JSTL -->
-        <dependency>
-            <groupId>jakarta.servlet.jsp.jstl</groupId>
-            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
-            <version>3.0.1</version>
+            <groupId>org.thymeleaf</groupId>
+            <artifactId>thymeleaf-spring6</artifactId>
+            <version>3.1.3.RELEASE</version>
         </dependency>
 
         <!-- Logging: SLF4J + Logback -->
