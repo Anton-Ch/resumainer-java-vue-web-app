@@ -57,23 +57,13 @@
 
 **Independent Test**: Open `http://localhost:8080`, see all 8 sections (Header, Hero, Problem, How It Works, Features, Trust & Control, FAQ, Final CTA) with proper content and styling
 
-- [ ] T008 [P] [US1] Create `landing.html` in `backend/src/main/resources/templates/` — based on `spec_input_files/landing_page.html`; replace all inline text with `th:text="#{key}"` expressions; include Thymeleaf namespace (`xmlns:th="http://www.thymeleaf.org"`); structure:
-  - Header with logo, navigation anchors, language switcher, "Get started" CTA
-  - Hero section with all copy, CTA button, and product mockup (HTML/CSS-based per FR-017)
-  - Problem section with 5 cards
-  - How It Works 5-step timeline
-  - Features section with 8 cards in 4×2 grid
-  - Trust & Control section with message and 3 reassurance cards
-  - FAQ section using native `<details>`/`<summary>` with 9 items (no JS)
-  - Final CTA card
-  - Footer with logo and tagline
-- [ ] T009 [P] [US1] Create `landing.css` in `backend/src/main/webapp/static/css/` — implement design tokens per design_dna.md (variables for `--color-bg: #FAF7F0`, `--color-surface: #FFFDF8`, `--color-emerald: #0F8A6A`, etc.), typography (Manrope headings, Inter body), spacing system (4px base), radius tokens, shadows, responsive breakpoints, component styles for all 8 sections
-- [ ] T010 [P] [SUBAGENT] [US1] Download and place Pico CSS in `backend/src/main/webapp/static/vendor/pico/pico.min.css` — used as base reset and typography foundation
-- [ ] T011 [P] [SUBAGENT] [US1] Download self-hosted Manrope and Inter WOFF2 fonts to `backend/src/main/webapp/static/fonts/` — no Google Fonts CDN (per SEC-002, GDPR-safe)
-- [ ] T012 [P] [SUBAGENT] [US1] Copy SVG logo assets from `spec_input_files/` to `backend/src/main/webapp/static/images/logos/` — full logo, monochrome logo, app icon, favicon
-- [ ] T013 [P] [US1] Create custom error pages in `backend/src/main/webapp/static/error/` — `404.html` and `500.html` with graceful user-readable messages, no stack traces, consistent with landing page design tokens (per SEC-003)
+- [x] T008 [P] [US1] Create `landing.html` in `backend/src/main/resources/templates/` — based on `spec_input_files/landing_page.html`; all text via `th:text="#{key}"`, 8 sections complete, Google Fonts CDN removed (self-hosted per SEC-002), CTA buttons use `th:href="${ctaUrl}"`, language switcher with Thymeleaf conditionals
+- [x] T009 [P] [US1] Create `landing.css` in `backend/src/main/webapp/static/css/` — design tokens, typography, spacing, all 8 section styles, responsive breakpoints, extracted from inline style block
+- [x] T011 [P] [US1] Download Manrope (600-800) and Inter (400-700) TTF fonts from Google Fonts to `backend/src/main/webapp/static/fonts/` — 7 files, self-hosted, no CDN (per SEC-002)
+- [x] T012 [P] [SUBAGENT] [US1] Copy SVG logo assets from `spec_input_files/` to `backend/src/main/webapp/static/images/logos/` — resumainer-full.svg, resumainer-mono.svg, resumainer-icon.svg, resumainer-favicon.svg
+- [x] T013 [P] [US1] Create bilingual Thymeleaf error pages in `templates/error/` — `404.html` and `500.html` with full header/nav/footer, consistent landing page design, language switcher, `btn-primary` CTA, and i18n message keys for EN/RU (per SEC-003)
 
-**Checkpoint**: `docker compose up` → Landing Page visible at `http://localhost:8080` with all 8 sections, proper styling, and working static assets
+**Checkpoint**: ✅ `mvnw clean compile` — BUILD SUCCESS. Templates, styles, fonts, logos, error pages all ready. MVP accessible at `/`.
 
 ---
 

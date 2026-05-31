@@ -12,7 +12,7 @@ Implement a professional Landing Page that introduces ResumAIner to first-time v
 
 **Language/Version**: Java 21
 
-**Primary Dependencies**: Spring MVC 6.x, Thymeleaf (Spring MVC integration), Pico CSS (base reset/typography), custom `landing.css` (design tokens and component styles), SLF4J + Logback
+**Primary Dependencies**: Spring MVC 6.x, Thymeleaf (Spring MVC integration), custom `landing.css` (design tokens, component styles, self-hosted fonts), SLF4J + Logback
 
 **Storage**: N/A — static presentation layer, no persistent data. i18n messages in `messages.properties` / `messages_ru.properties`.
 
