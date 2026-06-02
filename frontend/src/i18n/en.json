@@ -1,0 +1,50 @@
+{
+  "auth": {
+    "login": "Log in",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "rememberMe": "Remember me",
+    "loginTitle": "Welcome back",
+    "registerTitle": "Create account",
+    "loginLink": "Already registered? Log in now!",
+    "registerLink": "Don't have an account? Register now!",
+    "error": {
+      "invalidCredentials": "Invalid email or password",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email address",
+      "passwordRequired": "Password is required",
+      "passwordMinLength": "Password must be at least 8 characters",
+      "passwordStrength": "Password must contain uppercase, lowercase, and digit",
+      "confirmPasswordRequired": "Please confirm your password",
+      "passwordMismatch": "Passwords do not match",
+      "emailTaken": "An account with this email already exists",
+      "accountBlocked": "Your account is inactive. Contact support for assistance.",
+      "rateLimited": "Too many failed attempts. Try again later.",
+      "serverError": "Something went wrong. Please try again."
+    },
+    "success": {
+      "registered": "Account created successfully!",
+      "loggedOut": "Logged out successfully"
+    }
+  },
+  "home": {
+    "userHome": "User Home",
+    "adminHome": "Admin Home",
+    "totalTokensSent": "Total tokens sent",
+    "totalTokensGenerated": "Total tokens generated",
+    "totalResumes": "Total resumes created",
+    "totalUsers": "Total users",
+    "editProfile": "Edit my profile",
+    "generateResume": "Generate new resume",
+    "noResumes": "You haven't created any resumes yet. Click 'Generate new resume' to get started.",
+    "users": "Users",
+    "aiModels": "AI Models",
+    "resumes": "Resumes"
+  },
+  "nav": {
+    "logout": "Log out",
+    "language": "Language"
+  }
+}
