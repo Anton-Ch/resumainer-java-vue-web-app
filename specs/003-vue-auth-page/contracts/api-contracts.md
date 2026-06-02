@@ -136,7 +136,8 @@ Check if the current session is authenticated.
 | Aspect | Mechanism |
 |--------|-----------|
 | Cookie | `JSESSIONID`, HTTP-only, SameSite=Lax |
-| Timeout | 30 minutes inactivity (configurable) |
+| Regeneration | On login: invalidate old session, create new (prevents session fixation) |
+| Timeout | 30 minutes inactivity (configurable); 7 days with "Remember me" |
 | Storage | In-memory HttpSession (server-side) |
 | User context | `session.setAttribute("user", UserSession)` after login |
 
