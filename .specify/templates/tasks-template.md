@@ -11,6 +11,13 @@ description: "Task list template for feature implementation"
 
 **Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
 
+**Constitution Compliance**: Every task phase MUST reference the ResumAIner Constitution principles:
+- **I** — Code Quality & Maintainability (layered architecture, SOLID, no Spring Boot/JPA)
+- **II** — Testing Excellence (JUnit 5, Mockito, TDD for business logic, JaCoCo 50%+)
+- **III** — User Experience (i18n, dual validation, PRG, error safety)
+- **IV** — Performance & Reliability (PreparedStatement, JDBC transactions, pagination, UTF-8)
+- **V** — Security by Design (backend auth, API key masking, XSS sanitization, no secrets in logs)
+
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
 ## Format: `[ID] [P?] [Story] Description`

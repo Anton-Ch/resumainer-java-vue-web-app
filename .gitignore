@@ -29,8 +29,13 @@ Desktop.ini
 .env
 .env.*
 !.env.example
+docker/.env
 
 # Node
 node_modules/
 
-# Playwright MCP testing artifacts.playwright-mcp/
+# Playwright MCP testing artifacts
+.playwright-mcp/
+
+# Temporary files
+tempfiles/

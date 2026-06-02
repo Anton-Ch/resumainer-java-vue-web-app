@@ -45,10 +45,10 @@ Write-Host ""
 Write-Host "=== Project Structure ==="
 Check-Directory ".specify" ".specify/ directory" "error"
 Check-Directory "specs" "specs/ directory" "info"
-Check-Directory "scripts" "scripts/ directory" "error"
-Check-Directory "templates" "templates/ directory" "error"
-Check-Directory "memory" "memory/ directory" "error"
-Check-File "memory/constitution.md" "memory/constitution.md" "warning"
+Check-Directory ".specify/scripts" "scripts/ directory" "error"
+Check-Directory ".specify/templates" "templates/ directory" "error"
+Check-Directory ".specify/memory" "memory/ directory" "error"
+Check-File ".specify/memory/constitution.md" "memory/constitution.md" "warning"
 
 # ── 2. AI agent detection ─────────────────────────────────────────
 Write-Host ""
@@ -119,7 +119,7 @@ if (Test-Path $specsDir -PathType Container) {
             $hasTasks = Test-Path (Join-Path $fdir.FullName "tasks.md")
 
             if ($hasSpec -and $hasPlan -and $hasTasks) {
-                Write-Host "  [OK] $($fdir.Name) — spec, plan, tasks all present"
+                Write-Host "  [OK] $($fdir.Name) - spec, plan, tasks all present"
             } else {
                 $missing = @()
                 if (-not $hasSpec) { $missing += "spec" }
@@ -127,10 +127,10 @@ if (Test-Path $specsDir -PathType Container) {
                 if (-not $hasTasks) { $missing += "tasks" }
 
                 if (-not $hasSpec) {
-                    Write-Host "  [ERROR] $($fdir.Name) — missing: $($missing -join ', ')"
+                    Write-Host "  [ERROR] $($fdir.Name) - missing: $($missing -join ', ')"
                     $Errors += "Feature '$($fdir.Name)' is missing spec.md"
                 } else {
-                    Write-Host "  [PARTIAL] $($fdir.Name) — missing: $($missing -join ', ')"
+                    Write-Host "  [PARTIAL] $($fdir.Name) - missing: $($missing -join ', ')"
                     if (-not $hasPlan) { $Notes += "Feature '$($fdir.Name)' has no plan.md" }
                     if (-not $hasTasks) { $Notes += "Feature '$($fdir.Name)' has no tasks.md" }
                 }
@@ -145,9 +145,9 @@ if (Test-Path $specsDir -PathType Container) {
 Write-Host ""
 Write-Host "=== Scripts ==="
 
-$expectedScripts = @("common", "check-prerequisites", "create-new-feature", "setup-plan", "update-agent-context")
+$expectedScripts = @("common", "check-prerequisites", "create-new-feature", "setup-plan", "setup-plan-fixed", "setup-tasks")
 
-$bashDir = Join-Path $ProjectRoot "scripts/bash"
+$bashDir = Join-Path $ProjectRoot ".specify/scripts/bash"
 if (Test-Path $bashDir -PathType Container) {
     foreach ($name in $expectedScripts) {
         $script = Join-Path $bashDir "$name.sh"
@@ -160,7 +160,7 @@ if (Test-Path $bashDir -PathType Container) {
     }
 }
 
-$psDir = Join-Path $ProjectRoot "scripts/powershell"
+$psDir = Join-Path $ProjectRoot ".specify/scripts/powershell"
 if (Test-Path $psDir -PathType Container) {
     foreach ($name in $expectedScripts) {
         $script = Join-Path $psDir "$name.ps1"
@@ -184,9 +184,11 @@ if (Test-Path $extYml) {
     Write-Host "  [NOTE] No extensions configured"
 }
 
-$regJson = Join-Path $ProjectRoot ".specify/extensions/registry.json"
-if (Test-Path $regJson) {
-    Write-Host "  [OK] Extension registry found"
+$regDir = Join-Path $ProjectRoot ".specify/extensions"
+$regJson = Join-Path $regDir ".registry"
+if (Test-Path $regJson -PathType Leaf) {
+    $extCount = (Get-ChildItem $regDir -Directory | Where-Object { $_.Name -ne '.cache' }).Count
+    Write-Host "  [OK] Extension registry found ($extCount extensions installed)"
 } else {
     Write-Host "  [NOTE] No extensions installed"
 }
@@ -235,7 +237,7 @@ if ($Notes.Count -gt 0) {
 
 if ($Errors.Count -eq 0 -and $Warnings.Count -eq 0 -and $Notes.Count -eq 0) {
     Write-Host ""
-    Write-Host "  All checks passed — project looks healthy!"
+    Write-Host "  All checks passed - project looks healthy!"
 }
 
 Write-Host ""

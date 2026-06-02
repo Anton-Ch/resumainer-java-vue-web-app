@@ -38,9 +38,15 @@
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*GATE: Must pass before proceeding to task breakdown. Re-check if design changes.*
 
-[Gates determined based on constitution file]
+| Principle | Status | Notes |
+|---|---|---|
+| **I. Code Quality & Maintainability** | [✅ Pass / ❌ Fail] | Verify: layered architecture (controller/service/dao/model/config/util), SOLID/DRY compliance, minimal dependencies, no JPA/Hibernate/Spring Boot |
+| **II. Testing Excellence** | [✅ Pass / ❌ Fail] | Verify: JUnit 5 + Mockito, TDD for business logic, coverage target 50%+ on Service/DAO layers, no real AI calls in tests |
+| **III. User Experience Consistency** | [✅ Pass / ❌ Fail] | Verify: i18n (messages_en/messages_ru), dual validation (frontend + backend), PRG pattern, error safety |
+| **IV. Performance & Reliability** | [✅ Pass / ❌ Fail] | Verify: PreparedStatement (not raw SQL), JDBC transaction management (commit/rollback), SQL-level pagination, UTF-8 encoding |
+| **V. Security by Design** | [✅ Pass / ❌ Fail] | Verify: no stack traces exposed (FR-009), no secrets in build/images/logs, BCrypt for passwords, XSS sanitization, API key masking |
 
 ## Project Structure
 

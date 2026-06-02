@@ -117,6 +117,24 @@
 - **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
 - **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
 
+## Constitution Alignment
+
+This feature MUST comply with the ResumAIner Constitution principles:
+
+| Principle | Impact on this feature |
+|---|---|
+| **I. Code Quality & Maintainability** | All Java code follows layered architecture (controller/service/dao/model/config/util). No Spring Boot, JPA, or Hibernate. Maven CLI build must succeed. |
+| **II. Testing Excellence** | JUnit 5 + Mockito tests required. TDD for business logic. Mock AI provider used - no real API calls in tests. JaCoCo coverage tracked. |
+| **III. User Experience Consistency** | i18n via messages_en.properties/messages_ru.properties. Dual validation (frontend + backend). PRG pattern for form submissions. No stack traces exposed. |
+| **IV. Performance & Reliability** | PreparedStatement for all SQL queries. JDBC transaction management (commit/rollback). SQL-level pagination. UTF-8 encoding throughout. |
+| **V. Security by Design** | Backend validation is authoritative. No secrets in logs or builds. API keys masked in UI. XSS sanitization for AI-generated content. |
+
+**Technology Constraint Check** (per Constitution Technology Stack):
+- [ ] Java 21, Spring MVC (no Spring Boot), Plain JDBC (no ORM)
+- [ ] PostgreSQL with Flyway migrations
+- [ ] Docker Compose for deployment
+- [ ] Dev + Prod Spring profiles
+
 ## Assumptions
 
 <!--
