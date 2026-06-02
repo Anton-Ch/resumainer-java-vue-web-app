@@ -128,7 +128,7 @@
 ### Implementation for User Story 2
 
 - [ ] T031 **[TDD] [US2]** Add `authenticate(LoginRequest)` to `AuthService.java`: find user by email → check status (ACTIVE?) → check locked_until → verify BCrypt password → on failure: increment failed_login_attempts, if >= 5 set locked_until = now+15min → on success: reset counter and locked_until. **Constitution V**: Generic "Invalid email or password" — no email enumeration. Per FR-014, FR-028.
-- [ ] T032 **[US2]** Add `@PostMapping("/api/auth/login")` to `AuthController.java`: validate LoginRequest → call AuthService.authenticate() → set HttpSession attribute with UserSession → return AuthResponse with role-based redirectUrl.
+- [ ] T032 **[US2]** Add `@PostMapping("/api/auth/login")` to `AuthController.java`: validate LoginRequest → call AuthService.authenticate() → **invalidate old session (`request.getSession(false).invalidate()`), create new session (`request.getSession(true)`)**, set session attribute with UserSession → return AuthResponse with role-based redirectUrl. Per FR-013, SEC-002.
 - [ ] T033 **[US2]** Add `@PostMapping("/api/auth/logout")` to `AuthController.java`: invalidate session → return success response. Per FR-018.
 - [ ] T034 **[TDD] [US2]** Add `@GetMapping("/api/auth/status")` to `AuthController.java`: check HttpSession for UserSession attribute → return `{authenticated: true/false, email, role}`.
 - [ ] T035 **[US2]** Add login error logging: failed login at WARN level with email, timestamp, failure reason. Successful login at INFO level. Per FR-027.
@@ -142,6 +142,8 @@
 **Purpose**: HandlerInterceptor to protect routes, WebConfig to register all beans, exception handling for auth errors. Required by US3 and US4.
 
 - [ ] T036 **[TDD] [US3/US4]** Create `AuthInterceptor.java` in `interceptor/`: `preHandle()` — check HttpSession for `user` attribute. If missing and path requires auth → return 401 with JSON error. Exclude `/api/auth/*` from check. **Constitution V**: Session auth, no stack traces exposed.
+- [ ] T062 **[US3/US4]** Create `CsrfFilter.java` in `filter/`: extend `OncePerRequestFilter` — for POST/PUT/DELETE requests, validate `X-CSRF-Token` header matches token stored in session. Skip validation for `/api/auth/*`, `/api/public/**`. On login, generate CSRF token via `SecureRandom`, store in session, send as non-HTTP-only cookie `XSRF-TOKEN` in response. Per OWASP cookie-to-header pattern, SEC-003.
+- [ ] T063 **[US3/US4]** Update `AppInitializer.java`: override `getServletFilters()` to register `CsrfFilter`. Update `authService.ts` in Vue: create fetch interceptor that reads `XSRF-TOKEN` from `document.cookie` and adds `X-CSRF-Token` header to all POST/PUT/DELETE requests.
 - [ ] T037 **[US3/US4]** Update `WebConfig.java` in `config/`: add `@Bean` methods for `AuthController`, `AuthService`, `PasswordService`, `UserDao`, `RoleDao`, `UserStatusDao`, `UserPermissionDao`, `LanguageDao`, `ContactDetailDao`, `AuthInterceptor`. Implement `WebMvcConfigurer.addInterceptors()` to register AuthInterceptor with path patterns. **Memory B1/B5**: ALL annotated classes need explicit @Bean — this is a critical constitution constraint.
 - [ ] T038 **[US3/US4]** Create `AuthExceptionHandler.java` as `@ControllerAdvice` or handle errors directly in controller: map `ServiceException` → 400/401/409/423 with JSON `{message, errorCode, timestamp}`. No stack traces in response. **Constitution III**: Error safety.
 - [ ] T061 **[US3/US4]** Configure session timeout: set 30 min default in `AppInitializer` via `dispatcherServlet.getSessionConfig().setMaxInactiveInterval(1800)`. Add "Remember me" support: when `rememberMe=true` in login request, set session max inactive interval to 604800 seconds (7 days). Per FR-011, SC-010.
@@ -267,7 +269,7 @@ flowchart TD
 
 ---
 
-## Total Tasks: 61
+## Total Tasks: 63
 
 | Phase | Tasks | Count |
 |-------|-------|-------|
@@ -275,13 +277,13 @@ flowchart TD
 | P2: Foundational | T005–T019 | 15 |
 | P3: US1 Registration | T020–T028 | 9 |
 | P4: US2 Login | T029–T035 | 7 |
-| P5: Interceptor + Config | T036–T038, T061 | 4 |
+| P5: Interceptor + Config + CSRF | T036–T038, T061–T063 | 7 |
 | P6: US3 Redirect | T039–T041 | 3 |
 | P7: US6 Placeholder Pages | T042–T046 | 5 |
 | P8: US5 Bilingual Forms | T047–T049 | 3 |
 | P9: Docker & Integration | T050–T056 | 7 |
 | P10: Polish | T057–T060 | 4 |
-| **Total** | | **61** |
+| **Total** | | **63** |
 
 ## Execution Markers Summary
 

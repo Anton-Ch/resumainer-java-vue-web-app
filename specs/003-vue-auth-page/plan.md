@@ -90,6 +90,13 @@ Implement a complete authentication system: Registration and Login in Vue 3 SPA,
 - **Rationale**: Spring docs note interceptors are "not recommended as primary security layer", but for a Capstone project without sensitive financial data, session-based auth with server-side HttpSession is appropriate and aligns with Spring MVC patterns. Using `@SessionAttribute` for user context.
 - **Registration transaction**: User creation + contact_detail creation in single JDBC transaction.
 
+### CSRF Protection Decision
+
+- **Decision**: Implement OWASP cookie-to-header CSRF pattern. On login, generate a CSRF token (SecureRandom), store in session, set as non-HTTP-only cookie (`XSRF-TOKEN`). Vue SPA reads token from cookie via `document.cookie` and sends as `X-CSRF-Token` header on all POST/PUT/DELETE requests. Backend `CsrfFilter` (OncePerRequestFilter) validates header matches session token.
+- **Why needed per OWASP**: SameSite=Lax alone is NOT sufficient — it doesn't protect state-changing GET requests, doesn't cover all browsers, and doesn't protect against subdomain attacks. The cookie-to-header pattern is OWASP's recommended approach for SPAs.
+- **Implementation**: (1) Add CSRF token to login response, (2) Create `CsrfFilter` as OncePerRequestFilter registered in `AppInitializer`, (3) Update Vue `authService.ts` to read cookie and inject header via fetch interceptor.
+- **Excluded paths**: `/api/auth/*` (no session yet on register/login), `/api/public/**` (future), `/api/health` (future).
+
 ### Flyway Naming Convention
 
 - **Decision**: Standard versioned migrations: `V1__create_role_table.sql`, `V2__create_user_status_table.sql`, `V3__create_user_permission_table.sql`, `V4__create_language_table.sql`, `V5__create_users_table.sql`, `V6__create_contact_detail_table.sql`, `V7__seed_lookup_data.sql`.
@@ -154,6 +161,8 @@ backend/
 │   │   └── ContactDetail.java               # UUID id, user_id, full_name, etc.
 │   ├── interceptor/
 │   │   └── AuthInterceptor.java             # HandlerInterceptor — checks session, redirects if unauthenticated
+│   ├── filter/
+│   │   └── CsrfFilter.java                  # OncePerRequestFilter — validates X-CSRF-Token for POST/PUT/DELETE
 │   ├── dto/
 │   │   ├── RegisterRequest.java             # email, password, passwordConfirmation
 │   │   ├── LoginRequest.java                # email, password, rememberMe
@@ -254,15 +263,16 @@ docker/
 - `AuthService`: register (transactional: user + profile), authenticate, logout, checkAuthStatus, rate limiting logic
 
 **Step 5: Controller layer**
-- `AuthController`: POST /api/auth/register, POST /api/auth/login (with rememberMe support → set session TTL to 7 days), POST /api/auth/logout, GET /api/auth/status
+- `AuthController`: POST /api/auth/register, POST /api/auth/login (with session regeneration: invalidate old → create new; rememberMe support → set session TTL to 7 days), POST /api/auth/logout, GET /api/auth/status
 - Validation via Jakarta Validation (`@Valid` on request DTOs)
 
 **Step 6: HandlerInterceptor**
 - `AuthInterceptor`: preHandle — check HttpSession for user attribute; redirect to login if missing and path is protected
 
 **Step 7: WebConfig updates**
-- Register `@Bean` for `AuthController`, `AuthService`, `AuthDao` (and all DAOs), `PasswordService`, `AuthInterceptor`
+- Register `@Bean` for `AuthController`, `AuthService`, `AuthDao` (and all DAOs), `PasswordService`, `AuthInterceptor`, `CsrfFilter`
 - Register interceptor via `addInterceptors()` with path matchers
+- Register `CsrfFilter` by overriding `AppInitializer.getServletFilters()` — returns `Filter[]` containing `new CsrfFilter()` bean (pure Spring MVC API, no Spring Boot)
 
 **Step 8: Session timeout configuration**
 - In `AppInitializer`: set default session timeout to 30 min via `dispatcherServlet.getSessionConfig().setMaxInactiveInterval(1800)`

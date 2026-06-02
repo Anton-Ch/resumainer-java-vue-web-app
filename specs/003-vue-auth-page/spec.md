@@ -149,7 +149,7 @@ As a newly registered or returning user, I want to see a functional placeholder 
 - **FR-010**: System MUST provide a login page accessible from the Landing Page via "Login" button and from the registration page.
 - **FR-011**: Login form MUST include fields for email, password, and an optional "Remember me" checkbox. When "Remember me" is checked, the session TTL extends to 7 days (instead of the default 30 minutes).
 - **FR-012**: Login form MUST validate that both email and password are provided.
-- **FR-013**: Upon successful login, the system MUST redirect the user to User Home (for regular users) or Admin Home (for admin users).
+- **FR-013**: Upon successful login, the system MUST invalidate any existing session, create a new authenticated session, and redirect the user to User Home (for regular users) or Admin Home (for admin users).
 - **FR-014**: If login credentials are invalid, the system MUST display a generic error message ("Invalid email or password") without revealing whether the email exists or the password is wrong.
 - **FR-015**: If the user account status is BLOCKED or soft-deleted, the system MUST prevent login and display a message instructing the user to contact support.
 - **FR-016**: The login page MUST include a link to the registration page.
