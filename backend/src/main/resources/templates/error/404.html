@@ -5,13 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title th:text="#{error.404.title}">Page not found — ResumAIner</title>
   <link rel="stylesheet" th:href="@{/static/css/landing.css}">
-  <style>
-    .error-page { display: grid; place-items: center; min-height: 70vh; text-align: center; padding: 2rem; }
-    .error-code { font-family: var(--font-display); font-size: clamp(80px, 12vw, 140px); font-weight: 800; color: var(--color-emerald); margin: 0; line-height: 1; opacity: 0.15; }
-    .error-page h1 { margin-top: 0.5rem; font-size: clamp(24px, 3vw, 36px); }
-    .error-page .error-message { color: var(--color-ink); font-size: var(--fs-lead); font-weight: 500; margin: 0.5rem 0 0; }
-    .error-page .error-hint { color: var(--color-ink-soft); font-size: 15px; margin: 0.25rem 0 2rem; max-width: 40ch; }
-  </style>
 </head>
 <body>
   <!-- Header -->
@@ -36,11 +29,13 @@
 
   <main>
     <div class="error-page">
-      <div class="error-code">404</div>
-      <h1 th:text="#{error.404.title}">Page not found</h1>
-      <p class="error-message" th:text="#{error.404.message}">This page has gone missing. Suspiciously.</p>
-      <p class="error-hint" th:text="#{error.404.hint}">It may have been moved, deleted, or taken by tiny website gremlins.</p>
-      <a th:href="@{/}" class="btn btn-primary" th:text="#{error.404.cta}">Go to homepage</a>
+      <div class="error-card">
+        <div class="error-code">404</div>
+        <h1 th:text="#{error.404.title}">Page not found</h1>
+        <p class="error-message" th:text="#{error.404.message}">This page has gone missing. Suspiciously.</p>
+        <p class="error-hint" th:text="#{error.404.hint}">It may have been moved, deleted, or taken by tiny website gremlins.</p>
+        <a th:href="@{/}" class="btn btn-primary" th:text="#{error.404.cta}">Go to homepage</a>
+      </div>
     </div>
   </main>
 
