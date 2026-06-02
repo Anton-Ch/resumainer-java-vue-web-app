@@ -20,6 +20,8 @@
         <junit.version>5.12.2</junit.version>
         <surefire.version>3.5.5</surefire.version>
         <jacoco.version>0.8.13</jacoco.version>
+        <flyway.version>10.22.0</flyway.version>
+        <jackson.version>2.18.3</jackson.version>
     </properties>
 
     <dependencies>
@@ -43,6 +45,58 @@
             <groupId>org.thymeleaf</groupId>
             <artifactId>thymeleaf-spring6</artifactId>
             <version>3.1.3.RELEASE</version>
+        </dependency>
+
+        <!-- Flyway (database version control migrations) -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>${flyway.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>${flyway.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- BCrypt (password hashing — actively maintained fork) -->
+        <dependency>
+            <groupId>at.favre.lib</groupId>
+            <artifactId>bcrypt</artifactId>
+            <version>0.10.2</version>
+        </dependency>
+
+        <!-- Jakarta Bean Validation API + Expression Language (required for validation) -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>jakarta.el</artifactId>
+            <version>4.0.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Jackson for JSON serialization (REST API request/response) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <!-- Spring JDBC (DataSource transaction manager) -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>${spring.version}</version>
         </dependency>
 
         <!-- Logging: SLF4J + Logback -->
