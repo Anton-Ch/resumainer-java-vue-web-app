@@ -1,0 +1,50 @@
+{
+  "auth": {
+    "login": "Войти",
+    "register": "Регистрация",
+    "email": "Эл. почта",
+    "password": "Пароль",
+    "confirmPassword": "Подтвердите пароль",
+    "rememberMe": "Запомнить меня",
+    "loginTitle": "С возвращением",
+    "registerTitle": "Создать аккаунт",
+    "loginLink": "Уже зарегистрированы? Войти!",
+    "registerLink": "Нет аккаунта? Зарегистрироваться!",
+    "error": {
+      "invalidCredentials": "Неверный email или пароль",
+      "emailRequired": "Email обязателен",
+      "emailInvalid": "Введите корректный email",
+      "passwordRequired": "Пароль обязателен",
+      "passwordMinLength": "Пароль должен быть минимум 8 символов",
+      "passwordStrength": "Пароль должен содержать заглавную, строчную буквы и цифру",
+      "confirmPasswordRequired": "Подтвердите пароль",
+      "passwordMismatch": "Пароли не совпадают",
+      "emailTaken": "Аккаунт с таким email уже существует",
+      "accountBlocked": "Аккаунт неактивен. Обратитесь в поддержку.",
+      "rateLimited": "Слишком много попыток. Попробуйте позже.",
+      "serverError": "Что-то пошло не так. Попробуйте снова."
+    },
+    "success": {
+      "registered": "Аккаунт успешно создан!",
+      "loggedOut": "Вы вышли из системы"
+    }
+  },
+  "home": {
+    "userHome": "Главная",
+    "adminHome": "Админ-панель",
+    "totalTokensSent": "Всего токенов отправлено",
+    "totalTokensGenerated": "Всего токенов получено",
+    "totalResumes": "Всего резюме создано",
+    "totalUsers": "Всего пользователей",
+    "editProfile": "Редактировать профиль",
+    "generateResume": "Создать резюме",
+    "noResumes": "У вас ещё нет резюме. Нажмите «Создать резюме» чтобы начать.",
+    "users": "Пользователи",
+    "aiModels": "AI-модели",
+    "resumes": "Резюме"
+  },
+  "nav": {
+    "logout": "Выйти",
+    "language": "Язык"
+  }
+}
