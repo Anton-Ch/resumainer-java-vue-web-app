@@ -147,7 +147,7 @@ As a newly registered or returning user, I want to see a functional placeholder 
 - **FR-008**: If the email is already registered, the system MUST display an error message and NOT create a duplicate account.
 - **FR-009**: The registration page MUST include a link to the login page for already-registered visitors.
 - **FR-010**: System MUST provide a login page accessible from the Landing Page via "Login" button and from the registration page.
-- **FR-011**: Login form MUST include fields for email and password.
+- **FR-011**: Login form MUST include fields for email, password, and an optional "Remember me" checkbox. When "Remember me" is checked, the session TTL extends to 7 days (instead of the default 30 minutes).
 - **FR-012**: Login form MUST validate that both email and password are provided.
 - **FR-013**: Upon successful login, the system MUST redirect the user to User Home (for regular users) or Admin Home (for admin users).
 - **FR-014**: If login credentials are invalid, the system MUST display a generic error message ("Invalid email or password") without revealing whether the email exists or the password is wrong.
@@ -186,6 +186,7 @@ As a newly registered or returning user, I want to see a functional placeholder 
 - **SC-007**: After authentication, users see the correct role-based placeholder page (User Home or Admin Home) with all expected structural elements present (title, stats area, navigation buttons/links, logout, language switcher).
 - **SC-008**: The User Home placeholder displays an appropriate empty-state message when no resumes exist, guiding the user to create their first resume.
 - **SC-009**: After 5 consecutive failed login attempts, the account is locked for 15 minutes and further login attempts are rejected with a lockout message. Successful login or lockout expiry resets the counter.
+- **SC-010**: After 30 minutes of inactivity, the user session expires and the user is redirected to the login page on the next request. When "Remember me" is checked, session persists for 7 days.
 
 ## Constitution Alignment
 
@@ -217,5 +218,5 @@ This feature MUST comply with the ResumAIner Constitution principles:
 - PostgreSQL database is already running in Docker and accessible from the backend.
 - Flyway migrations are versioned and repeatable; the first migration creates all auth-related tables (users, role, user_status, user_permission, language).
 - The Landing Page (Thymeleaf) and auth pages (Vue) are separate but share the same domain. Navigation between them is handled by URL routing.
-- Session timeout defaults to 30 minutes of inactivity.
+- Session timeout defaults to 30 minutes of inactivity. With "Remember me" enabled: 7 days.
 - Security: passwords are BCrypt-hashed before storage; API responses never expose password hashes; session IDs are HTTP-only cookies.

@@ -4,9 +4,11 @@
 
 **Input**: Feature specification from `specs/003-vue-auth-page/spec.md`
 
+**Propagated**: 2026-06-02 — Updated from spec.md refinement: added "Remember me" checkbox + 7-day session TTL (FR-011, SC-010), added session timeout config task (T061), added `[TDD]` markers to all DAO/Service tasks, removed UuidV7Generator reference.
+
 ## Summary
 
-Implement a complete authentication system: Registration and Login in Vue 3 SPA, with Spring MVC REST API backend, session-based auth via HandlerInterceptor, Flyway-managed PostgreSQL schema (UUID v4 via built-in `gen_random_uuid()` for entity tables, BIGSERIAL for lookup tables), and Docker Compose with PostgreSQL container. After successful auth, users land on placeholder User Home (regular) or Admin Home (admin) pages.
+Implement a complete authentication system: Registration and Login in Vue 3 SPA, with Spring MVC REST API backend, session-based auth via HandlerInterceptor, Flyway-managed PostgreSQL schema (UUID v4 via built-in `gen_random_uuid()` for entity tables, BIGSERIAL for lookup tables), and Docker Compose with PostgreSQL container. After successful auth, users land on placeholder User Home (regular) or Admin Home (admin) pages. Supports optional "Remember me" checkbox extending session TTL to 7 days.
 
 **Input design files used:**
 - `spec_input_files/login-page-brief.md` — auth page UX requirements
@@ -20,7 +22,7 @@ Implement a complete authentication system: Registration and Login in Vue 3 SPA,
 
 **Key design decisions from input files:**
 - D-A1: Single auth page with Login/Register toggle (link-switching), not separate pages
-- D-A5: Add "Remember me" checkbox below password field
+- D-A5: Add "Remember me" checkbox below password field — extends session TTL to 7 days
 - D-A6: Password visibility toggle (eye icon) on password fields
 - D-A12: Staggered slide animation for form switching (Login ↔ Register)
 - D-A13: PrimeVue Form + Zod resolver for validation
@@ -52,6 +54,7 @@ Implement a complete authentication system: Registration and Login in Vue 3 SPA,
 - Spring MVC HandlerInterceptor for auth, NOT Spring Security.
 - Entity PKs use PostgreSQL built-in `gen_random_uuid()` (UUID v4). Lookup tables use `BIGSERIAL`. No custom UUID generators, no ORM.
 - PrimeVue 4 components for all UI elements.
+- Session timeout: 30 min default, 7 days with "Remember me". Configured in AppInitializer.
 
 **Scale/Scope**: Single-user / small-team Capstone project. Max 100 users in MVP.
 
@@ -62,9 +65,9 @@ Implement a complete authentication system: Registration and Login in Vue 3 SPA,
 | Principle | Status | Notes |
 |---|---|---|
 | **I. Code Quality & Maintainability** | ✅ Pass | Layered architecture: AuthController → AuthService → AuthDao. No JPA/Hibernate/Spring Boot. No custom UUID generators — built-in PostgreSQL `gen_random_uuid()`. @Bean registration in WebConfig for all classes. |
-| **II. Testing Excellence** | ✅ Pass | JUnit 5 + Mockito. TDD for auth service. 50%+ coverage target. MockMvc for controller tests. Mock AI provider not applicable. BCrypt tests for password hashing. |
+| **II. Testing Excellence** | ✅ Pass | JUnit 5 + Mockito. TDD for all service and DAO business logic (12 tasks marked [TDD]). 50%+ coverage target. MockMvc for controller tests. Mock AI provider not applicable. BCrypt tests for password hashing. |
 | **III. User Experience Consistency** | ✅ Pass | i18n via messages_en/messages_ru for auth pages. PrimeVue + Zod dual validation. PRG pattern (button disabled + spinner). Error safety (generic auth errors). Light Enterprise SaaS styling. |
-| **IV. Performance & Reliability** | ✅ Pass | PreparedStatement for all auth DAO queries. JDBC transaction (register: create user + profile in one tx). UTF-8 encoding. Session timeout (30 min inactivity). |
+| **IV. Performance & Reliability** | ✅ Pass | PreparedStatement for all auth DAO queries. JDBC transaction (register: create user + profile in one tx). UTF-8 encoding. Session timeout: 30 min default, 7 days with "Remember me" (T061). |
 | **V. Security by Design** | ✅ Pass | BCrypt for passwords (never plaintext). No stack traces exposed. No secrets in logs/builds. Generic "Invalid email or password" (no email enumeration). HTTP-only cookies. Rate limiting (5 fails → 15 min lockout). Logged auth events. |
 
 ## Research
@@ -157,7 +160,6 @@ backend/
 │   │   ├── AuthResponse.java                # success, role, message, redirectUrl
 │   │   └── UserSession.java                 # userId, email, role
 │   └── util/
-│       └── UuidV7Generator.java             # UUID v7 generation utility
 ├── src/main/resources/
 │   ├── messages_en.properties               # i18n auth messages (English)
 │   ├── messages_ru.properties               # i18n auth messages (Russian)
@@ -252,7 +254,7 @@ docker/
 - `AuthService`: register (transactional: user + profile), authenticate, logout, checkAuthStatus, rate limiting logic
 
 **Step 5: Controller layer**
-- `AuthController`: POST /api/auth/register, POST /api/auth/login, POST /api/auth/logout, GET /api/auth/status
+- `AuthController`: POST /api/auth/register, POST /api/auth/login (with rememberMe support → set session TTL to 7 days), POST /api/auth/logout, GET /api/auth/status
 - Validation via Jakarta Validation (`@Valid` on request DTOs)
 
 **Step 6: HandlerInterceptor**
@@ -261,6 +263,10 @@ docker/
 **Step 7: WebConfig updates**
 - Register `@Bean` for `AuthController`, `AuthService`, `AuthDao` (and all DAOs), `PasswordService`, `AuthInterceptor`
 - Register interceptor via `addInterceptors()` with path matchers
+
+**Step 8: Session timeout configuration**
+- In `AppInitializer`: set default session timeout to 30 min via `dispatcherServlet.getSessionConfig().setMaxInactiveInterval(1800)`
+- In `AuthController.login`: when `rememberMe=true`, set session max inactive interval to 604800 seconds (7 days)
 
 **Test coverage**: JUnit 5 + Mockito for service layer. MockMvc for controller. DAO tests with H2 or Testcontainers.
 
@@ -354,7 +360,8 @@ Detailed task breakdown will be generated by `/speckit.tasks` command. See `task
 
 Summary of task groups:
 1. **DB**: Flyway migrations (V1–V7) with hybrid PK strategy (UUID v4 + BIGSERIAL)
-2. **Backend**: Model → DAO → Service → Controller → Interceptor → WebConfig
-3. **Frontend**: Vue scaffold → Router → Auth Service → Forms → Placeholder pages → i18n → Styling
-4. **Docker**: PostgreSQL service → Backend container → Frontend container → Integration
-5. **Tests**: Service unit tests → Controller MockMvc → DAO integration → Frontend component tests
+2. **Backend**: Model → DAO → Service → Controller → Interceptor → WebConfig → Session config
+3. **Frontend**: Vue scaffold → Router → Auth Service → Forms (LoginForm with rememberMe) → Placeholder pages → i18n → Styling
+4. **Session**: 30 min default, 7 days with "Remember me" — configured in AppInitializer + LoginRequest processing
+5. **Docker**: PostgreSQL service → Backend container → Frontend container → Integration
+6. **Tests**: TDD for all DAO + Service + Controller + Interceptor (12 TDD tasks)
