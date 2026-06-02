@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="en" data-page="auth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResumAIner — Auth</title>
+<style>
+@font-face { font-family: 'Manrope'; src: url('mpvzg7zl-Manrope-800.ttf') format('truetype'); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Manrope'; src: url('mpvzg7z1-Manrope-700.ttf') format('truetype'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Manrope'; src: url('mpvzg7yr-Manrope-600.ttf') format('truetype'); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('mpvzg7xj-Inter-600.ttf') format('truetype'); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('mpvzg7yf-Inter-700.ttf') format('truetype'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('mpvzg80j-Inter-500.ttf') format('truetype'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('mpvzg808-Inter-400.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F6F7FB;
+  --surface: #FFFFFF;
+  --subtle: #FBFCFE;
+  --control: #F7FAFE;
+
+  --text-primary: #10233F;
+  --text-secondary: #5D718B;
+  --text-muted: #8091A7;
+  --text-inverse: #FFFFFF;
+
+  --border-default: #D8DEE9;
+  --border-soft: #E3E8F0;
+  --border-subtle: #E8EDF4;
+  --border-control: #E5EAF2;
+  --border-card: #E4E9F1;
+
+  --accent: #0F9D7A;
+  --accent-hover: #0C8467;
+  --accent-active: #0A6F56;
+  --accent-disabled: #B8DED2;
+
+  --blue: #2F6BFF;
+  --blue-hover: #1A54D9;
+  --blue-bg: #EEF4FF;
+
+  --error: #C2410C;
+  --error-bg: #FFF5F0;
+  --error-border: #FDDCC8;
+
+  --radius-card: 26px;
+  --radius-control: 14px;
+  --radius-button: 18px;
+  --radius-pill: 8px;
+  --radius-checkbox: 6px;
+
+  --shadow-card: 0 10px 30px rgba(16, 35, 63, 0.08);
+  --shadow-btn: 0 4px 12px rgba(15, 157, 122, 0.3);
+  --shadow-btn-active: 0 1px 4px rgba(15, 157, 122, 0.2);
+  --focus-blue: 0 0 0 3px rgba(47, 107, 255, 0.12);
+  --focus-emerald: 0 0 0 3px rgba(15, 157, 122, 0.25);
+  --focus-error: 0 0 0 3px rgba(194, 65, 12, 0.08);
+
+  --font-display: 'Manrope', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========== Page Canvas ========== */
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+/* ========== Auth Card ========== */
+.auth-card {
+  display: flex;
+  width: 100%;
+  max-width: 1060px;
+  min-height: 600px;
+  max-height: 680px;
+  background: var(--surface);
+  border: 1.4px solid var(--border-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.auth-form-col {
+  flex: 0 0 50%;
+  display: flex;
+  flex-direction: column;
+  padding: 48px 44px;
+  position: relative;
+}
+
+.auth-info-col {
+  flex: 0 0 50%;
+  background: var(--blue-bg);
+  border-left: 1.4px solid var(--border-card);
+  border-radius: 0 var(--radius-card) var(--radius-card) 0;
+  padding: 52px 44px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ========== Form Column Layout ========== */
+.auth-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.auth-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 200ms ease;
+}
+
+.auth-logo:hover { opacity: 0.85; }
+
+.auth-logo-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.auth-logo-text {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.lang-switcher {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.lang-btn {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border: 1.2px solid #D9E1EC;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 200ms ease;
+  letter-spacing: 0.02em;
+}
+
+.lang-btn:first-child {
+  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+}
+
+.lang-btn:last-child {
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  border-left: none;
+}
+
+.lang-btn:hover:not(.lang-btn--active) {
+  background: #F0F2F5;
+  color: var(--text-secondary);
+  border-color: #C8D0DC;
+}
+
+.lang-btn--active {
+  background: var(--blue-bg);
+  color: var(--blue);
+  font-weight: 700;
+  border-color: transparent;
+}
+
+/* ========== Form Body ========== */
+.auth-form-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 28px 0 0;
+}
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+
+.auth-subtitle {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 32px;
+}
+
+/* ========== Error Alert ========== */
+.auth-error-alert {
+  display: none;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 18px;
+  background: var(--error-bg);
+  border: 1.2px solid var(--error-border);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--error);
+  line-height: 1.4;
+  animation: slideDown 250ms var(--ease-out);
+}
+
+.auth-error-alert--visible {
+  display: flex;
+}
+
+.auth-error-alert svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+/* ========== Form Fields ========== */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+  margin-bottom: 6px;
+}
+
+.form-input-wrap {
+  position: relative;
+}
+
+.form-input {
+  width: 100%;
+  height: 58px;
+  padding: 0 18px;
+  padding-left: 46px;
+  background: var(--surface);
+  border: 1.4px solid var(--border-control);
+  border-radius: var(--radius-control);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.form-input:hover {
+  border-color: #D0D8E6;
+}
+
+.form-input:focus {
+  border-color: var(--blue);
+  border-width: 1.8px;
+  box-shadow: var(--focus-blue);
+  background: var(--surface);
+}
+
+.form-input--filled {
+  border-color: var(--border-default);
+}
+
+.form-input--error {
+  border-color: var(--error);
+  background: #FFF8F5;
+}
+
+.form-input--error:focus {
+  border-color: var(--error);
+  box-shadow: var(--focus-error);
+}
+
+.form-input--disabled {
+  background: var(--bg);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.form-input--disabled::placeholder {
+  color: #B0BCCB;
+}
+
+.input-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  transition: color 200ms ease;
+  pointer-events: none;
+}
+
+.form-input:focus ~ .input-icon {
+  color: var(--blue);
+}
+
+.form-input--error ~ .input-icon {
+  color: var(--error);
+}
+
+.form-input--disabled ~ .input-icon {
+  color: #B0BCCB;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-muted);
+  transition: color 200ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle:hover {
+  color: var(--text-secondary);
+}
+
+.password-toggle--active {
+  color: var(--blue);
+}
+
+.inline-error {
+  display: none;
+  margin-top: 6px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--error);
+  line-height: 1.3;
+}
+
+.inline-error--visible {
+  display: block;
+}
+
+/* ========== Confirm Password (register only) ========== */
+.form-group--confirm {
+  display: none;
+}
+
+.form-group--confirm--visible {
+  display: block;
+}
+
+/* ========== Remember Me ========== */
+.form-group--checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.checkbox-custom {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #D0D8E6;
+  border-radius: var(--radius-checkbox);
+  background: var(--surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 200ms ease;
+  position: relative;
+}
+
+.checkbox-custom:hover {
+  background: #F6F7FB;
+  border-color: #B8C3D4;
+}
+
+.checkbox-custom--checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.checkbox-custom--checked svg {
+  opacity: 1;
+}
+
+.checkbox-custom svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  color: var(--text-inverse);
+}
+
+.checkbox-label {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-custom--checked ~ .checkbox-label {
+  color: var(--text-primary);
+}
+
+/* ========== Submit Button ========== */
+.btn-submit {
+  width: 100%;
+  height: 58px;
+  border: none;
+  border-radius: var(--radius-button);
+  background: var(--accent);
+  color: var(--text-inverse);
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 200ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: var(--accent-hover);
+  box-shadow: var(--shadow-btn);
+}
+
+.btn-submit:active:not(:disabled) {
+  background: var(--accent-active);
+  box-shadow: var(--shadow-btn-active);
+}
+
+.btn-submit:focus-visible:not(:disabled) {
+  box-shadow: var(--focus-emerald);
+}
+
+.btn-submit:disabled {
+  background: var(--accent-disabled);
+  cursor: not-allowed;
+}
+
+.btn-spinner {
+  display: none;
+  width: 22px;
+  height: 22px;
+  animation: spin 0.8s linear infinite;
+}
+
+.btn-submit--loading .btn-spinner {
+  display: block;
+}
+
+.btn-submit--loading .btn-text {
+  opacity: 0.7;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ========== Mode Switch Link ========== */
+.mode-switch {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.mode-switch a {
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 200ms ease;
+}
+
+.mode-switch a:hover {
+  color: var(--blue-hover);
+  text-decoration: underline;
+}
+
+/* ========== Right Info Panel ========== */
+.info-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.info-heading {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin-bottom: 16px;
+}
+
+.info-body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.info-features {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-features li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.info-features li svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+}
+
+/* ========== Decorative Shapes ========== */
+.info-decoration {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.info-decoration svg {
+  position: absolute;
+  top: -30px;
+  right: -20px;
+  width: 280px;
+  height: 280px;
+  opacity: 0.35;
+}
+
+/* ========== Diagonal Curved Shapes ========== */
+.auth-diagonal {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+}
+
+.auth-diagonal--primary {
+  right: -80px;
+  top: -80px;
+  width: 600px;
+  height: 820px;
+  background: linear-gradient(160deg, rgba(15,157,122,0.10) 0%, rgba(47,107,255,0.06) 100%);
+  transform: rotate(6deg) skewY(38deg);
+  transform-origin: bottom right;
+  transition: transform 1000ms var(--ease-out);
+  border-radius: 80px;
+}
+
+.auth-card.is-register .auth-diagonal--primary {
+  transform: rotate(0deg) skewY(0deg);
+}
+
+.auth-diagonal--secondary {
+  left: 180px;
+  top: 100%;
+  width: 580px;
+  height: 680px;
+  background: linear-gradient(200deg, rgba(47,107,255,0.05) 0%, rgba(15,157,122,0.03) 100%);
+  border-top: 1.5px solid rgba(47,107,255,0.08);
+  transform: rotate(0deg) skewY(0deg);
+  transform-origin: bottom left;
+  transition: transform 1000ms var(--ease-out);
+  transition-delay: 150ms;
+  border-radius: 60px;
+}
+
+.auth-card.is-register .auth-diagonal--secondary {
+  transform: rotate(-6deg) skewY(-38deg);
+  transition-delay: 500ms;
+}
+
+/* ========== Horizontal Slide Animations ========== */
+.auth-form-slider {
+  position: relative;
+  overflow: hidden;
+  min-height: 380px;
+}
+
+.form-panel {
+  transition: opacity 350ms var(--ease-out), transform 350ms var(--ease-out);
+}
+
+.form-panel--exit-left {
+  opacity: 0;
+  transform: translateX(-64px);
+  position: absolute;
+  width: 100%;
+  pointer-events: none;
+}
+
+.form-panel--exit-right {
+  opacity: 0;
+  transform: translateX(64px);
+  position: absolute;
+  width: 100%;
+  pointer-events: none;
+}
+
+.form-panel--enter-from-right {
+  opacity: 0;
+  transform: translateX(64px);
+}
+
+.form-panel--enter-from-left {
+  opacity: 0;
+  transform: translateX(-64px);
+}
+
+.form-panel--active {
+  opacity: 1;
+  transform: translateX(0);
+  position: relative;
+}
+
+.form-field {
+  transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out);
+}
+
+.form-field--enter {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.form-field--active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Info panel horizontal slides */
+.info-panel-content {
+  transition: opacity 350ms var(--ease-out), transform 350ms var(--ease-out);
+}
+
+.info-panel-content--exit-right {
+  opacity: 0;
+  transform: translateX(48px);
+  position: absolute;
+  width: calc(100% - 88px);
+  pointer-events: none;
+}
+
+.info-panel-content--exit-left {
+  opacity: 0;
+  transform: translateX(-48px);
+  position: absolute;
+  width: calc(100% - 88px);
+  pointer-events: none;
+}
+
+.info-panel-content--enter-from-right {
+  opacity: 0;
+  transform: translateX(48px);
+}
+
+.info-panel-content--enter-from-left {
+  opacity: 0;
+  transform: translateX(-48px);
+}
+
+.info-panel-content--active {
+  opacity: 1;
+  transform: translateX(0);
+  position: relative;
+}
+
+/* ========== prefers-reduced-motion ========== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========== Shake Animation ========== */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+.shake {
+  animation: shake 300ms ease-in-out;
+}
+
+/* ========== Slide Down (error) ========== */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== Redirect Overlay ========== */
+.redirect-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+  z-index: 10;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  border-radius: var(--radius-card);
+}
+
+.redirect-overlay--visible {
+  display: flex;
+}
+
+.redirect-spinner {
+  width: 40px;
+  height: 40px;
+  animation: spin 0.8s linear infinite;
+  color: var(--accent);
+}
+
+.redirect-text {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ========== Responsive: Tablet ========== */
+@media (max-width: 1059px) {
+  .auth-form-col { padding: 36px; }
+  .auth-info-col { padding: 36px; }
+  .auth-title { font-size: 26px; }
+  .info-heading { font-size: 24px; }
+  .form-group { margin-bottom: 14px; }
+}
+
+/* ========== Responsive: Mobile ========== */
+@media (max-width: 767px) {
+  .auth-page { padding: 16px; align-items: flex-start; padding-top: 24px; }
+
+  .auth-card {
+    flex-direction: column;
+    max-width: 100%;
+    max-height: none;
+    min-height: auto;
+    border-radius: var(--radius-card);
+  }
+
+  .auth-info-col {
+    flex: none;
+    border-left: none;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    padding: 28px 24px;
+    min-height: 80px;
+    max-height: 100px;
+  }
+
+  .auth-form-col {
+    flex: none;
+    padding: 28px 24px;
+  }
+
+  .auth-diagonal { display: none; }
+  .info-decoration { display: none; }
+  .info-features { display: none; }
+  .info-body { display: none; }
+
+  .info-panel { justify-content: flex-start; }
+
+  .info-heading {
+    font-size: 22px;
+    margin-bottom: 0;
+  }
+
+  .auth-title { font-size: 26px; }
+  .auth-subtitle { display: none; }
+  .auth-form-body { padding-top: 20px; }
+
+  .form-group { margin-bottom: 14px; }
+  .form-group--checkbox { margin-bottom: 20px; }
+
+  .info-panel-content--exit-right,
+  .info-panel-content--exit-left {
+    width: calc(100% - 48px);
+  }
+}
+
+/* ========== Responsive: Small Mobile ========== */
+@media (max-width: 399px) {
+  .auth-page { padding: 0; }
+  .auth-card { border-radius: 0; }
+  .auth-info-col { display: none; }
+  .auth-form-col { padding: 20px; }
+  .auth-title { font-size: 22px; }
+  .auth-logo-text { font-size: 18px; }
+}
+
+/* ========== Developer Handoff Notes (hidden) ========== */
+.handoff-notes {
+  display: none;
+}
+</style>
+</head>
+<body>
+
+<div class="auth-page">
+  <div class="auth-card" id="authCard">
+
+    <!-- Curved diagonal shapes for mode transition -->
+    <div class="auth-diagonal auth-diagonal--primary" aria-hidden="true"></div>
+    <div class="auth-diagonal auth-diagonal--secondary" aria-hidden="true"></div>
+
+    <!-- ===== LEFT COLUMN: Form ===== -->
+    <div class="auth-form-col">
+      <div class="auth-top-row">
+        <a class="auth-logo" href="/" title="Back to Home">
+          <svg class="auth-logo-icon" viewBox="0 0 512 512" role="img" aria-label="ResumAIner">
+            <rect x="24" y="24" width="464" height="464" rx="104" fill="#F6F7FB"/>
+            <g transform="translate(96 68) scale(2.5)">
+              <rect x="6" y="6" width="116" height="148" rx="18" fill="#FFFDF8" stroke="#10233F" stroke-width="8"/>
+              <line x1="6" y1="112" x2="122" y2="112" stroke="#10233F" stroke-width="8" stroke-linecap="round"/>
+              <circle cx="64" cy="62" r="30" fill="none" stroke="#10233F" stroke-width="6"/>
+              <line x1="64" y1="20" x2="64" y2="34" stroke="#10233F" stroke-width="7" stroke-linecap="round"/>
+              <line x1="64" y1="90" x2="64" y2="104" stroke="#10233F" stroke-width="7" stroke-linecap="round"/>
+              <line x1="22" y1="62" x2="36" y2="62" stroke="#10233F" stroke-width="7" stroke-linecap="round"/>
+              <line x1="92" y1="62" x2="106" y2="62" stroke="#10233F" stroke-width="7" stroke-linecap="round"/>
+              <circle cx="64" cy="62" r="13" fill="#0F9D7A"/>
+              <rect x="24" y="127" width="80" height="19" rx="5" fill="#0F9D7A"/>
+            </g>
+          </svg>
+          <span class="auth-logo-text">ResumAIner</span>
+        </a>
+
+        <div class="lang-switcher" role="group" aria-label="Language">
+          <button class="lang-btn lang-btn--active" data-lang="en" type="button">EN</button>
+          <button class="lang-btn" data-lang="ru" type="button">RU</button>
+        </div>
+      </div>
+
+      <!-- Form slider container -->
+      <div class="auth-form-body auth-form-slider" id="formSlider">
+
+        <!-- ====== REDIRECT OVERLAY ====== -->
+        <div class="redirect-overlay" id="redirectOverlay">
+          <svg class="redirect-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
+          </svg>
+          <span class="redirect-text" data-i18n="auth.redirecting">Redirecting…</span>
+        </div>
+
+        <!-- ====== LOGIN FORM ====== -->
+        <div class="form-panel form-panel--active" id="loginPanel" data-mode="login">
+          <div class="auth-title" data-i18n="auth.login.title">Log in</div>
+          <div class="auth-subtitle" data-i18n="auth.login.subtitle">Access your ResumAIner dashboard</div>
+
+          <div class="auth-error-alert" id="authError">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="10.5" x2="8" y2="10.5"/>
+            </svg>
+            <span id="authErrorText" data-i18n-dynamic>Invalid email or password</span>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group form-field form-field--active" data-stagger="0">
+            <label class="form-label" for="loginEmail" data-i18n="auth.login.emailLabel">Email</label>
+            <div class="form-input-wrap">
+              <input class="form-input" type="email" id="loginEmail" name="email"
+                     autocomplete="email" spellcheck="false"
+                     placeholder="you@company.com"
+                     data-i18n-placeholder="auth.login.emailPlaceholder">
+              <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 4l7 5 7-5"/>
+              </svg>
+            </div>
+            <div class="inline-error" data-i18n="auth.validation.emailRequired" data-error="required">Email is required</div>
+            <div class="inline-error" data-i18n="auth.validation.emailInvalid" data-error="invalid">Please enter a valid email address</div>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group form-field form-field--active" data-stagger="1">
+            <label class="form-label" for="loginPassword" data-i18n="auth.login.passwordLabel">Password</label>
+            <div class="form-input-wrap">
+              <input class="form-input" type="password" id="loginPassword" name="password"
+                     autocomplete="current-password"
+                     placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
+                     data-i18n-placeholder="auth.login.passwordPlaceholder">
+              <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="6" width="10" height="8" rx="1.5"/><path d="M5 6V4a3 3 0 016 0v2"/>
+              </svg>
+              <button class="password-toggle" type="button" tabindex="-1" aria-label="Toggle password visibility">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18">
+                  <path d="M1 10s3-7 9-7 9 7 9 7-3 7-9 7-9-7-9-7z"/><circle cx="10" cy="10" r="3"/>
+                  <line x1="4" y1="4" x2="16" y2="16" class="eye-slash" style="display:none"/>
+                </svg>
+              </button>
+            </div>
+            <div class="inline-error" data-i18n="auth.validation.passwordRequired" data-error="required">Password is required</div>
+          </div>
+
+          <!-- Remember Me -->
+          <div class="form-group--checkbox form-field form-field--active" data-stagger="3">
+            <div class="checkbox-custom" id="loginRemember" role="checkbox" aria-checked="false" tabindex="0">
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2 6 5 9 10 3"/>
+              </svg>
+            </div>
+            <span class="checkbox-label" data-i18n="auth.login.rememberMe">Remember me</span>
+          </div>
+
+          <!-- Submit -->
+          <div class="form-field form-field--active" data-stagger="4">
+            <button class="btn-submit" type="submit" id="loginSubmit" data-mode="login" data-loading-text="Logging in…">
+              <svg class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
+              </svg>
+              <span class="btn-text" data-i18n="auth.login.submit">Log in</span>
+            </button>
+          </div>
+
+          <!-- Mode Switch -->
+          <div class="mode-switch form-field form-field--active" data-stagger="5">
+            <span data-i18n="auth.login.noAccount">Don't have an account?</span>
+            <a data-switch="register" data-i18n="auth.login.registerLink">Register now!</a>
+          </div>
+        </div>
+
+        <!-- ====== REGISTER FORM ====== -->
+        <div class="form-panel" id="registerPanel" data-mode="register" style="display:none;">
+          <div class="auth-title" data-i18n="auth.register.title">Registration</div>
+          <div class="auth-subtitle" data-i18n="auth.register.subtitle">Create your ResumAIner account</div>
+
+          <div class="auth-error-alert" id="regError">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="10.5" x2="8" y2="10.5"/>
+            </svg>
+            <span id="regErrorText" data-i18n-dynamic></span>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group form-field" data-stagger="0">
+            <label class="form-label" for="regEmail" data-i18n="auth.register.emailLabel">Email</label>
+            <div class="form-input-wrap">
+              <input class="form-input" type="email" id="regEmail" name="email"
+                     autocomplete="email" spellcheck="false"
+                     placeholder="you@company.com"
+                     data-i18n-placeholder="auth.register.emailPlaceholder">
+              <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 4l7 5 7-5"/>
+              </svg>
+            </div>
+            <div class="inline-error" data-i18n="auth.validation.emailRequired" data-error="required">Email is required</div>
+            <div class="inline-error" data-i18n="auth.validation.emailInvalid" data-error="invalid">Please enter a valid email address</div>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group form-field" data-stagger="1">
+            <label class="form-label" for="regPassword" data-i18n="auth.register.passwordLabel">Password</label>
+            <div class="form-input-wrap">
+              <input class="form-input" type="password" id="regPassword" name="password"
+                     autocomplete="new-password"
+                     placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
+                     data-i18n-placeholder="auth.register.passwordPlaceholder">
+              <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="6" width="10" height="8" rx="1.5"/><path d="M5 6V4a3 3 0 016 0v2"/>
+              </svg>
+              <button class="password-toggle" type="button" tabindex="-1" aria-label="Toggle password visibility">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18">
+                  <path d="M1 10s3-7 9-7 9 7 9 7-3 7-9 7-9-7-9-7z"/><circle cx="10" cy="10" r="3"/>
+                  <line x1="4" y1="4" x2="16" y2="16" class="eye-slash" style="display:none"/>
+                </svg>
+              </button>
+            </div>
+            <div class="inline-error" data-i18n="auth.validation.passwordRequired" data-error="required">Password is required</div>
+            <div class="inline-error" data-i18n="auth.validation.passwordMin" data-error="min">Password must be at least 8 characters</div>
+          </div>
+
+          <!-- Confirm Password (register only) -->
+          <div class="form-group form-group--confirm form-group--confirm--visible form-field" data-stagger="2">
+            <label class="form-label" for="regConfirm" data-i18n="auth.register.confirmPasswordLabel">Confirm password</label>
+            <div class="form-input-wrap">
+              <input class="form-input" type="password" id="regConfirm" name="confirmPassword"
+                     autocomplete="new-password"
+                     placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
+                     data-i18n-placeholder="auth.register.confirmPasswordPlaceholder">
+              <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="6" width="10" height="8" rx="1.5"/><path d="M5 6V4a3 3 0 016 0v2"/>
+              </svg>
+            </div>
+            <div class="inline-error" data-i18n="auth.validation.confirmPasswordRequired" data-error="required">Please confirm your password</div>
+            <div class="inline-error" data-i18n="auth.validation.passwordMismatch" data-error="mismatch">Passwords do not match</div>
+          </div>
+
+          <!-- Remember Me -->
+          <div class="form-group--checkbox form-field" data-stagger="3">
+            <div class="checkbox-custom" id="regRemember" role="checkbox" aria-checked="false" tabindex="0">
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2 6 5 9 10 3"/>
+              </svg>
+            </div>
+            <span class="checkbox-label" data-i18n="auth.register.rememberMe">Remember me</span>
+          </div>
+
+          <!-- Submit -->
+          <div class="form-field" data-stagger="4">
+            <button class="btn-submit" type="submit" id="regSubmit" data-mode="register" data-loading-text="Creating account…">
+              <svg class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
+              </svg>
+              <span class="btn-text" data-i18n="auth.register.submit">Create account</span>
+            </button>
+          </div>
+
+          <!-- Mode Switch -->
+          <div class="mode-switch form-field" data-stagger="5">
+            <span data-i18n="auth.register.hasAccount">Already have an account?</span>
+            <a data-switch="login" data-i18n="auth.register.loginLink">Log In</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== RIGHT COLUMN: Info Panel ===== -->
+    <div class="auth-info-col">
+      <div class="info-decoration">
+        <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M280 0C280 0 220 40 230 110C240 180 280 200 280 280H0V0H280Z" fill="#D6E3FF" opacity="0.3"/>
+          <circle cx="220" cy="60" r="80" fill="#D6E3FF" opacity="0.2"/>
+          <circle cx="260" cy="200" r="100" fill="#D6E3FF" opacity="0.15"/>
+        </svg>
+      </div>
+
+      <div class="info-panel" id="infoPanel">
+        <!-- Login mode content -->
+        <div class="info-panel-content info-panel-content--active" id="infoLogin">
+          <div class="info-heading" data-i18n="auth.panel.loginTitle">Welcome Back</div>
+          <div class="info-body" data-i18n="auth.panel.loginBody">
+            Sign in to manage your profiles, generate tailored resumes, and track your applications — all from one place.
+          </div>
+        </div>
+
+        <!-- Register mode content -->
+        <div class="info-panel-content" id="infoRegister" style="display:none;">
+          <div class="info-heading" data-i18n="auth.panel.registerTitle">Join ResumAIner</div>
+          <div class="info-body" data-i18n="auth.panel.registerBody">
+            Create your professional profile once. Generate AI-adapted resumes for every job with one click.
+          </div>
+          <ul class="info-features" data-i18n-group="auth.panel.features">
+            <li>
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 9 7 13 15 5"/>
+              </svg>
+              <span data-i18n="auth.panel.feature1">AI-powered resume adaptation</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 9 7 13 15 5"/>
+              </svg>
+              <span data-i18n="auth.panel.feature2">Smart cover letter drafting</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 9 7 13 15 5"/>
+              </svg>
+              <span data-i18n="auth.panel.feature3">Bilingual resume support (EN/RU)</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 9 7 13 15 5"/>
+              </svg>
+              <span data-i18n="auth.panel.feature4">PDF export and public link sharing</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== HANDOFF NOTES ===== -->
+<div class="handoff-notes" aria-hidden="true">
+  DEVELOPER HANDOFF — ResumAIner Auth Page (Vue 3 SPA)
+  ====================================================
+
+  FILES TO CREATE:
+    src/views/auth/AuthPage.vue         — Orchestrator: mode state, URL sync, transition orchestration
+    src/views/auth/LoginForm.vue        — Login form component
+    src/views/auth/RegisterForm.vue     — Register form component
+    src/views/auth/AuthSidebar.vue      — Right info panel component
+    src/views/auth/AuthHeader.vue        — Logo + language switcher
+
+  ROUTING:
+    /app              → AuthPage (router guard redirects if authenticated)
+    /user-home        → UserHome.vue (placeholder)
+    /admin-home       → AdminHome.vue (placeholder)
+
+  ROUTER GUARD (beforeEach /app):
+    if token exists:
+      fetch role → USER → /user-home, ADMIN → /admin-home
+    else: allow /app
+
+  STATES IMPLEMENTED:
+    - idle (form default)
+    - typing (content present, real-time validation after first change)
+    - validation error (inline errors per field)
+    - submitting (spinner, fields dimmed, button disabled)
+    - auth error (inline message, password cleared)
+    - network timeout (toast after 15s)
+    - server error (generic toast)
+    - email exists (register: inline "Already registered")
+    - success (redirect overlay → router.replace)
+    - already authenticated (router guard, form not rendered)
+
+  ANIMATIONS:
+    - Diagonal curved shapes sweep with gradient to visually connect form/info columns
+    - Shape 1 (primary gradient emerald→blue): rotates/skews on mode switch (1000ms ease)
+    - Shape 2 (secondary gradient): counter-rotates with staggered delay for depth
+    - Login ↔ Register: horizontal slide (350ms) - login slides left, register enters from right
+    - Register → Login: reverses - register slides right, login enters from left
+    - Info panel: horizontal slide independently (350ms, opposite direction)
+    - Stagger delays: Email 0ms, Password 80ms, Confirm 160ms, Checkbox 240ms, Submit 320ms, Link 400ms
+    - Easing: cubic-bezier(0.16, 1, 0.3, 1)
+    - Error: shake 300ms on card, slideDown 250ms on error message
+
+  VALIDATION (PrimeVue Form + Zod resolver):
+    Email: required, valid format
+    Password (login): required, non-empty
+    Password (register): required, min 8 chars
+    Confirm password: required, must match password
+
+  API CONTRACTS:
+    POST /api/auth/login  → { email, password }
+      200: { ok, token, user: { id, email, role } }
+      401: "Invalid email or password" (generic — no email disclosure)
+      403: blocked / inactive (different messages)
+
+    POST /api/auth/register → { email, password }
+      201: { ok, token, user }
+      409: "This email is already registered"
+
+  TOKEN STORAGE:
+    Remember me checked  → localStorage
+    Remember me unchecked → sessionStorage
+
+  AXIOS INTERCEPTOR:
+    Request: attach token from storage
+    Response 401: clear token, redirect /app, toast "Session expired"
+
+  PRIMVUE COMPONENTS:
+    InputText with pi-envelope icon
+    Password with eye toggle (feedback=false on login, strength on register)
+    Checkbox for remember me
+    Button with :loading prop for spinner
+    SelectButton for EN/RU language switch
+    Toast for non-field errors (timeout, server, session expiry)
+
+  i18n:
+    Vue I18n with en/ru locale files
+    Keys structured as auth.login.*, auth.register.*, auth.panel.*, auth.validation.*, auth.error.*
+    Russian text must be natural UI Russian, not machine translation
+    Product name "ResumAIner" NOT translated
+    Locale detection: browser → localStorage fallback → en
+</div>
+
+<script>
+// ============================================================
+// i18n Messages (EN / RU)
+// ============================================================
+const I18N = {
+  en: {
+    "auth.lang.en": "EN",
+    "auth.lang.ru": "RU",
+    "auth.login.title": "Log in",
+    "auth.login.subtitle": "Access your ResumAIner dashboard",
+    "auth.login.emailLabel": "Email",
+    "auth.login.emailPlaceholder": "you@company.com",
+    "auth.login.passwordLabel": "Password",
+    "auth.login.passwordPlaceholder": "········",
+    "auth.login.rememberMe": "Remember me",
+    "auth.login.submit": "Log in",
+    "auth.login.noAccount": "Don't have an account?",
+    "auth.login.registerLink": "Register now!",
+    "auth.register.title": "Registration",
+    "auth.register.subtitle": "Create your ResumAIner account",
+    "auth.register.emailLabel": "Email",
+    "auth.register.emailPlaceholder": "you@company.com",
+    "auth.register.passwordLabel": "Password",
+    "auth.register.passwordPlaceholder": "········",
+    "auth.register.confirmPasswordLabel": "Confirm password",
+    "auth.register.confirmPasswordPlaceholder": "········",
+    "auth.register.rememberMe": "Remember me",
+    "auth.register.submit": "Create account",
+    "auth.register.hasAccount": "Already have an account?",
+    "auth.register.loginLink": "Log In",
+    "auth.panel.loginTitle": "Welcome Back",
+    "auth.panel.loginBody": "Sign in to manage your profiles, generate tailored resumes, and track your applications — all from one place.",
+    "auth.panel.registerTitle": "Join ResumAIner",
+    "auth.panel.registerBody": "Create your professional profile once. Generate AI-adapted resumes for every job with one click.",
+    "auth.panel.feature1": "AI-powered resume adaptation",
+    "auth.panel.feature2": "Smart cover letter drafting",
+    "auth.panel.feature3": "Bilingual resume support (EN/RU)",
+    "auth.panel.feature4": "PDF export and public link sharing",
+    "auth.validation.emailRequired": "Email is required",
+    "auth.validation.emailInvalid": "Please enter a valid email address",
+    "auth.validation.passwordRequired": "Password is required",
+    "auth.validation.passwordMin": "Password must be at least 8 characters",
+    "auth.validation.confirmPasswordRequired": "Please confirm your password",
+    "auth.validation.passwordMismatch": "Passwords do not match",
+    "auth.error.invalidCredentials": "Invalid email or password",
+    "auth.error.emailExists": "This email is already registered",
+    "auth.error.blocked": "Your account has been blocked. Please contact support.",
+    "auth.error.inactive": "Your account is inactive. Please contact support.",
+    "auth.error.timeout": "Connection timed out. Please try again.",
+    "auth.error.server": "Something went wrong. Please try again later.",
+    "auth.error.sessionExpired": "Your session has expired. Please log in again.",
+    "auth.loading.login": "Logging in\u2026",
+    "auth.loading.register": "Creating account\u2026",
+    "auth.redirecting": "Redirecting\u2026",
+    "home.user.title": "User Home",
+    "home.admin.title": "Admin Home",
+    "common.logout": "Log out"
+  },
+  ru: {
+    "auth.lang.en": "EN",
+    "auth.lang.ru": "RU",
+    "auth.login.title": "Войти",
+    "auth.login.subtitle": "Войдите в панель ResumAIner",
+    "auth.login.emailLabel": "Электронная почта",
+    "auth.login.emailPlaceholder": "you@company.com",
+    "auth.login.passwordLabel": "Пароль",
+    "auth.login.passwordPlaceholder": "········",
+    "auth.login.rememberMe": "Запомнить меня",
+    "auth.login.submit": "Войти",
+    "auth.login.noAccount": "Нет аккаунта?",
+    "auth.login.registerLink": "Зарегистрироваться",
+    "auth.register.title": "Регистрация",
+    "auth.register.subtitle": "Создайте аккаунт ResumAIner",
+    "auth.register.emailLabel": "Электронная почта",
+    "auth.register.emailPlaceholder": "you@company.com",
+    "auth.register.passwordLabel": "Пароль",
+    "auth.register.passwordPlaceholder": "········",
+    "auth.register.confirmPasswordLabel": "Подтвердите пароль",
+    "auth.register.confirmPasswordPlaceholder": "········",
+    "auth.register.rememberMe": "Запомнить меня",
+    "auth.register.submit": "Создать аккаунт",
+    "auth.register.hasAccount": "Уже есть аккаунт?",
+    "auth.register.loginLink": "Войти",
+    "auth.panel.loginTitle": "С возвращением",
+    "auth.panel.loginBody": "Войдите, чтобы управлять профилями, создавать резюме и отслеживать отклики — всё в одном месте.",
+    "auth.panel.registerTitle": "Присоединяйтесь",
+    "auth.panel.registerBody": "Создайте профессиональный профиль один раз. Адаптируйте резюме под любую вакансию в один клик.",
+    "auth.panel.feature1": "Адаптация резюме с помощью AI",
+    "auth.panel.feature2": "Автоматическое составление сопроводительных писем",
+    "auth.panel.feature3": "Двуязычные резюме (EN/RU)",
+    "auth.panel.feature4": "Экспорт в PDF и публичная ссылка",
+    "auth.validation.emailRequired": "Укажите электронную почту",
+    "auth.validation.emailInvalid": "Введите корректный адрес почты",
+    "auth.validation.passwordRequired": "Введите пароль",
+    "auth.validation.passwordMin": "Пароль должен содержать минимум 8 символов",
+    "auth.validation.confirmPasswordRequired": "Подтвердите пароль",
+    "auth.validation.passwordMismatch": "Пароли не совпадают",
+    "auth.error.invalidCredentials": "Неверная почта или пароль",
+    "auth.error.emailExists": "Такой email уже зарегистрирован",
+    "auth.error.blocked": "Ваш аккаунт заблокирован. Обратитесь в поддержку.",
+    "auth.error.inactive": "Ваш аккаунт неактивен. Обратитесь в поддержку.",
+    "auth.error.timeout": "Время ожидания истекло. Попробуйте снова.",
+    "auth.error.server": "Что-то пошло не так. Повторите попытку позже.",
+    "auth.error.sessionExpired": "Сессия истекла. Войдите снова.",
+    "auth.loading.login": "Вход\u2026",
+    "auth.loading.register": "Создание аккаунта\u2026",
+    "auth.redirecting": "Перенаправление\u2026",
+    "home.user.title": "Главная",
+    "home.admin.title": "Админ панель",
+    "common.logout": "Выйти"
+  }
+};
+
+// ============================================================
+// App State
+// ============================================================
+const state = {
+  locale: 'en',
+  mode: 'login',
+  submitting: false,
+  errors: {}
+};
+
+// ============================================================
+// Locale Detection
+// ============================================================
+function detectLocale() {
+  const saved = localStorage.getItem('resumainer_locale');
+  if (saved && (saved === 'en' || saved === 'ru')) return saved;
+  const browser = (navigator.language || navigator.languages?.[0] || 'en').toLowerCase();
+  return browser.startsWith('ru') ? 'ru' : 'en';
+}
+
+// ============================================================
+// i18n Render
+// ============================================================
+function applyLocale(locale) {
+  state.locale = locale;
+  localStorage.setItem('resumainer_locale', locale);
+
+  const msgs = I18N[locale];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (msgs[key]) {
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.placeholder = msgs[key];
+      } else {
+        el.textContent = msgs[key];
+      }
+    }
+  });
+
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (msgs[key]) el.placeholder = msgs[key];
+  });
+
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('lang-btn--active', btn.dataset.lang === locale);
+  });
+}
+
+// ============================================================
+// Form Switching (Login ↔ Register) — horizontal slide + diagonal shape
+// ============================================================
+function switchMode(mode) {
+  if (state.mode === mode || state.submitting) return;
+  state.mode = mode;
+
+  const loginPanel = document.getElementById('loginPanel');
+  const registerPanel = document.getElementById('registerPanel');
+  const infoLogin = document.getElementById('infoLogin');
+  const infoRegister = document.getElementById('infoRegister');
+  const authCard = document.getElementById('authCard');
+
+  const isRegister = mode === 'register';
+
+  // Toggle is-register on card for diagonal shape animation
+  authCard.classList.toggle('is-register', isRegister);
+
+  const enteringPanel = isRegister ? registerPanel : loginPanel;
+  const exitingPanel = isRegister ? loginPanel : registerPanel;
+  const enteringInfo = isRegister ? infoRegister : infoLogin;
+  const exitingInfo = isRegister ? infoLogin : infoRegister;
+
+  // Login → Register: login slides left, register enters from right
+  // Register → Login: register slides right, login enters from left
+  const exitFormClass = isRegister ? 'form-panel--exit-left' : 'form-panel--exit-right';
+  const enterFormClass = isRegister ? 'form-panel--enter-from-right' : 'form-panel--enter-from-left';
+  const exitInfoClass = isRegister ? 'info-panel-content--exit-right' : 'info-panel-content--exit-left';
+  const enterInfoClass = isRegister ? 'info-panel-content--enter-from-left' : 'info-panel-content--enter-from-right';
+
+  const enterFields = enteringPanel.querySelectorAll('.form-field');
+  const exitFields = exitingPanel.querySelectorAll('.form-field');
+
+  // Clean up all state classes on both panels
+  [loginPanel, registerPanel].forEach(p => {
+    p.classList.remove('form-panel--exit-left', 'form-panel--exit-right',
+      'form-panel--enter-from-left', 'form-panel--enter-from-right');
+  });
+  [infoLogin, infoRegister].forEach(p => {
+    p.classList.remove('info-panel-content--exit-left', 'info-panel-content--exit-right',
+      'info-panel-content--enter-from-left', 'info-panel-content--enter-from-right');
+  });
+
+  // Exit: fields leave simultaneously
+  exitFields.forEach(f => {
+    f.classList.remove('form-field--active');
+    f.classList.add('form-field--enter');
+  });
+
+  // Exit: panel slides out
+  exitingPanel.style.display = '';
+  exitingPanel.classList.remove('form-panel--active');
+  exitingPanel.classList.add(exitFormClass);
+
+  exitingInfo.style.display = '';
+  exitingInfo.classList.remove('info-panel-content--active');
+  exitingInfo.classList.add(exitInfoClass);
+
+  // After exit completes, hide entering from opposite direction
+  setTimeout(() => {
+    exitingPanel.style.display = 'none';
+    exitingPanel.classList.remove(exitFormClass);
+    exitingInfo.style.display = 'none';
+    exitingInfo.classList.remove(exitInfoClass);
+
+    // Position entering panel for animation
+    enteringPanel.style.display = '';
+    enteringPanel.classList.add(enterFormClass);
+
+    enteringInfo.style.display = '';
+    enteringInfo.classList.add(enterInfoClass);
+
+    enterFields.forEach(f => {
+      f.style.display = '';
+      f.classList.add('form-field--enter');
+    });
+
+    // Trigger reflow
+    void enteringPanel.offsetWidth;
+
+    // Animate in
+    enteringPanel.classList.remove(enterFormClass);
+    enteringPanel.classList.add('form-panel--active');
+
+    enteringInfo.classList.remove(enterInfoClass);
+    enteringInfo.classList.add('info-panel-content--active');
+
+    // Stagger field entrance
+    enterFields.forEach((f, i) => {
+      const delay = parseInt(f.dataset.stagger || '0') * 80;
+      f.style.transitionDelay = delay + 'ms';
+      f.classList.remove('form-field--enter');
+      f.classList.add('form-field--active');
+      setTimeout(() => { f.style.transitionDelay = ''; }, delay + 400);
+    });
+  }, 280);
+
+  // Update URL
+  const url = new URL(window.location);
+  url.searchParams.set('mode', mode);
+  window.history.replaceState({}, '', url);
+}
+
+// ============================================================
+// Mode Switch Links
+// ============================================================
+document.querySelectorAll('[data-switch]').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    switchMode(link.dataset.switch);
+    hideError();
+    hideRegError();
+  });
+});
+
+// ============================================================
+// Language Switcher
+// ============================================================
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    applyLocale(btn.dataset.lang);
+  });
+});
+
+// ============================================================
+// Password Toggle
+// ============================================================
+document.querySelectorAll('.password-toggle').forEach(toggle => {
+  toggle.addEventListener('click', () => {
+    const input = toggle.closest('.form-input-wrap').querySelector('.form-input');
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    toggle.classList.toggle('password-toggle--active', !isPassword);
+    const slash = toggle.querySelector('.eye-slash');
+    if (slash) slash.style.display = isPassword ? '' : 'none';
+  });
+});
+
+// ============================================================
+// Checkbox Toggle
+// ============================================================
+document.querySelectorAll('.checkbox-custom').forEach(cb => {
+  cb.addEventListener('click', () => {
+    const checked = cb.getAttribute('aria-checked') === 'true';
+    cb.setAttribute('aria-checked', !checked);
+    cb.classList.toggle('checkbox-custom--checked', !checked);
+  });
+  cb.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cb.click(); }
+  });
+});
+
+// ============================================================
+// Input State Tracking
+// ============================================================
+document.querySelectorAll('.form-input').forEach(input => {
+  input.addEventListener('input', () => {
+    input.classList.toggle('form-input--filled', input.value.length > 0);
+  });
+  input.addEventListener('focus', () => {
+    input.closest('.form-group')?.querySelector('.inline-error--visible')?.classList.remove('inline-error--visible');
+  });
+});
+
+// ============================================================
+// Validation
+// ============================================================
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateField(input, errors, mode) {
+  const group = input.closest('.form-group') || input.closest('.form-group--checkbox');
+  if (!group) return true;
+  group.querySelectorAll('.inline-error').forEach(e => e.classList.remove('inline-error--visible'));
+  input.classList.remove('form-input--error');
+
+  const name = input.name || input.id;
+  const value = input.value.trim();
+  let valid = true;
+
+  if (name === 'email' || name === 'regEmail') {
+    if (!value) { showError(group, 'required', input, errors, name + '.required'); valid = false; }
+    else if (!EMAIL_RE.test(value)) { showError(group, 'invalid', input, errors, name + '.invalid'); valid = false; }
+  }
+
+  if (name === 'password') {
+    if (!value) { showError(group, 'required', input, errors, 'password.required'); valid = false; }
+    else if (mode === 'register' && value.length < 8) { showError(group, 'min', input, errors, 'password.min'); valid = false; }
+  }
+
+  if (name === 'confirmPassword') {
+    const pwInput = document.getElementById('regPassword');
+    const pw = pwInput ? pwInput.value : '';
+    if (!value) { showError(group, 'required', input, errors, 'confirm.required'); valid = false; }
+    else if (value !== pw) { showError(group, 'mismatch', input, errors, 'confirm.mismatch'); valid = false; }
+  }
+
+  return valid;
+}
+
+function showError(group, errorType, input, errors, key) {
+  const errorEl = group.querySelector(`[data-error="${errorType}"]`);
+  if (errorEl) errorEl.classList.add('inline-error--visible');
+  input.classList.add('form-input--error');
+  errors[key] = true;
+}
+
+function hideError() {
+  const alert = document.getElementById('authError');
+  alert.classList.remove('auth-error-alert--visible');
+}
+
+function hideRegError() {
+  const alert = document.getElementById('regError');
+  alert.classList.remove('auth-error-alert--visible');
+}
+
+// ============================================================
+// Submit Handler
+// ============================================================
+function handleSubmit(mode) {
+  return function(e) {
+    e.preventDefault();
+    if (state.submitting) return;
+
+    const isLogin = mode === 'login';
+    const panel = isLogin ? document.getElementById('loginPanel') : document.getElementById('registerPanel');
+    const inputs = panel.querySelectorAll('.form-input');
+    const errors = {};
+
+    // Clear previous errors
+    panel.querySelectorAll('.inline-error').forEach(el => el.classList.remove('inline-error--visible'));
+    panel.querySelectorAll('.form-input').forEach(el => el.classList.remove('form-input--error'));
+    if (isLogin) hideError(); else hideRegError();
+
+    let allValid = true;
+    inputs.forEach(input => {
+      if (!validateField(input, errors, mode)) allValid = false;
+    });
+
+    if (!allValid) return;
+
+    // Submitting state
+    state.submitting = true;
+    const btn = isLogin ? document.getElementById('loginSubmit') : document.getElementById('regSubmit');
+    const formFields = panel.querySelectorAll('.form-input, .checkbox-custom, .mode-switch a');
+    const submitText = isLogin
+      ? I18N[state.locale]['auth.loading.login']
+      : I18N[state.locale]['auth.loading.register'];
+
+    btn.classList.add('btn-submit--loading');
+    btn.disabled = true;
+    btn.querySelector('.btn-text').textContent = submitText;
+    formFields.forEach(f => {
+      if (f.tagName === 'INPUT') f.classList.add('form-input--disabled');
+    });
+
+    // Simulate API call with email-triggered error states for demo
+    const email = panel.querySelector('[name="email"], [name="regEmail"]')?.value || '';
+    const simEmail = email.toLowerCase();
+
+    setTimeout(() => {
+      btn.classList.remove('btn-submit--loading');
+      btn.disabled = false;
+      btn.querySelector('.btn-text').textContent = isLogin
+        ? I18N[state.locale]['auth.login.submit']
+        : I18N[state.locale]['auth.register.submit'];
+      formFields.forEach(f => {
+        if (f.tagName === 'INPUT') f.classList.remove('form-input--disabled');
+      });
+      state.submitting = false;
+
+      // Demo: email-triggered error states
+      if (simEmail === 'bad@test.com') {
+        const errorAlert = isLogin ? document.getElementById('authError') : document.getElementById('regError');
+        const errorText = isLogin ? document.getElementById('authErrorText') : document.getElementById('regErrorText');
+        errorText.textContent = isLogin
+          ? I18N[state.locale]['auth.error.invalidCredentials']
+          : I18N[state.locale]['auth.error.emailExists'];
+        errorAlert.classList.add('auth-error-alert--visible');
+        const pwInput = panel.querySelector('[name="password"]');
+        if (pwInput) { pwInput.value = ''; pwInput.classList.remove('form-input--filled'); }
+        document.getElementById('authCard').classList.add('shake');
+        setTimeout(() => document.getElementById('authCard').classList.remove('shake'), 300);
+        return;
+      }
+
+      if (simEmail === 'blocked@test.com' && isLogin) {
+        const errorAlert = document.getElementById('authError');
+        const errorText = document.getElementById('authErrorText');
+        errorText.textContent = I18N[state.locale]['auth.error.blocked'];
+        errorAlert.classList.add('auth-error-alert--visible');
+        document.getElementById('authCard').classList.add('shake');
+        setTimeout(() => document.getElementById('authCard').classList.remove('shake'), 300);
+        return;
+      }
+
+      // Demo: server-error trigger
+      if (simEmail === 'error@test.com') {
+        const errorAlert = isLogin ? document.getElementById('authError') : document.getElementById('regError');
+        const errorText = isLogin ? document.getElementById('authErrorText') : document.getElementById('regErrorText');
+        errorText.textContent = I18N[state.locale]['auth.error.server'];
+        errorAlert.classList.add('auth-error-alert--visible');
+        document.getElementById('authCard').classList.add('shake');
+        setTimeout(() => document.getElementById('authCard').classList.remove('shake'), 300);
+        return;
+      }
+
+      if (!isLogin && simEmail === 'exists@test.com') {
+        const errorAlert = document.getElementById('regError');
+        const errorText = document.getElementById('regErrorText');
+        errorText.textContent = I18N[state.locale]['auth.error.emailExists'];
+        errorAlert.classList.add('auth-error-alert--visible');
+        document.getElementById('authCard').classList.add('shake');
+        setTimeout(() => document.getElementById('authCard').classList.remove('shake'), 300);
+        return;
+      }
+
+      // Success: show redirect overlay
+      const overlay = document.getElementById('redirectOverlay');
+      const redirectText = overlay.querySelector('.redirect-text');
+      redirectText.textContent = I18N[state.locale]['auth.redirecting'];
+      overlay.classList.add('redirect-overlay--visible');
+
+      // Simulate redirect
+      setTimeout(() => {
+        const role = email.includes('admin') ? 'admin' : 'user';
+        const target = role === 'admin' ? 'admin-home.html' : 'user-home.html';
+        window.location.href = target;
+      }, 1500);
+    }, 1200);
+  };
+}
+
+document.getElementById('loginSubmit').addEventListener('click', handleSubmit('login'));
+document.getElementById('regSubmit').addEventListener('click', handleSubmit('register'));
+
+// ============================================================
+// Enter key support
+// ============================================================
+document.querySelectorAll('.form-input').forEach(input => {
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const panel = input.closest('.form-panel');
+      if (panel) {
+        const btn = panel.querySelector('.btn-submit');
+        if (btn) btn.click();
+      }
+    }
+  });
+});
+
+// ============================================================
+// Init
+// ============================================================
+const initialLocale = detectLocale();
+applyLocale(initialLocale);
+
+// Check URL for mode
+const urlParams = new URLSearchParams(window.location.search);
+const modeParam = urlParams.get('mode');
+if (modeParam === 'register') {
+  switchMode('register');
+}
+</script>
+</body>
+</html>

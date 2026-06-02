@@ -1,0 +1,280 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@1,300&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  color: #fff;
+  font-family: "Lato", sans-serif;
+}
+
+body{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #25252b;
+}
+
+.container{
+  position: relative;
+  width: 750px;
+  height: 450px;
+  border: 2px solid #27f4ff;
+  box-shadow: 0 0 25px #27f4ff;
+  overflow: hidden;
+}
+
+.container .form_box{
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.form_box h2{
+  font-size: 30px;
+  text-align: center;
+}
+
+.form_box .input_box{
+  position: relative;
+  width: 100%;
+  height: 50px;
+  margin-top: 25px;
+}
+
+.input_box input{
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  color: #fff;
+  font-weight: 600;
+  border-bottom: 2px solid #fff;
+  padding-right: 23px;
+  transition: .5s;
+}
+
+.form_box.login{
+  left: 0;
+  padding: 0 40px;
+
+
+}
+
+.input_box label{
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #fff;
+  transition: .5s;
+}
+
+.input_box input:focus ~ label,
+.input_box input:valid ~ label{
+  top: -5px;
+  color: #27f4ff;
+}
+
+.input_box i {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  font-size: 20px;
+  transform: translateY(-50%);
+}
+
+.input_box input:focus ~ i,
+.input_box input:valid ~ i{
+ 
+  color: #27f4ff;
+}
+
+.input_box input:focus,
+.input_box input:valid {
+  border-bottom: 2px solid #27f4ff;
+}
+
+.btn{
+  position: relative;
+  width: 100%;
+  height: 45px;
+  background: transparent;
+  border-radius: 40px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid #27f4ff;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn::before{
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 300%;
+  background: linear-gradient(#25252b,#27f4ff,#25252b,#27f4ff);
+  top: -100%;
+  left: 0;
+  z-index: -1;
+  transition: .5s;
+}
+
+.btn:hover::before{
+  top: 0;
+}
+
+.reg_link{
+  font-size: 15px;
+  text-align: center;
+  margin: 20px 0 10px;
+}
+
+.reg_link a{
+  text-decoration: none;
+  color: #27f4ff;
+  font-weight: 600;
+}
+
+.reg_link a:hover{
+  text-decoration: underline;
+}
+
+.info_content{
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.info_content.Login{
+  right: 0;
+  text-align: right;
+  padding: 0 40px 60px 150px;
+
+}
+
+.info_content h2{
+  text-transform: uppercase;
+  font-size: 36px;
+  line-height: 1.3;
+}
+
+.info_content p{
+  font-size: 16px;
+}
+
+.container .curved_shape{
+  position: absolute;
+  right: 0;
+  top: -5px;
+  width: 850px;
+  height: 600px;
+  background: linear-gradient(45deg,#25252b,#27f4ff);
+  transform: rotate(10deg) skewY(40deg);
+  transition: 1.5s ease;
+  transform-origin: bottom right;
+  transition-delay: 1.6s;
+}
+
+.form_box.signup{
+  right: 0;
+  padding: 0 60px;
+}
+
+.info_content.signup{
+  left: 0;
+  text-align: left;
+  padding: 0 150px 60px 30px;
+  pointer-events: none;
+}
+
+.container .curved_shape2{
+  position: absolute;
+  left: 250px;
+  top: 100%;
+  width: 850px;
+  height: 700px;
+  background: #25252b;
+  border-top: 3px solid #27f4ff;
+  transform: rotate(0deg) skewY(0deg);
+  transition: 1.5s ease;
+  transform-origin: bottom left;
+  transition-delay: 0.5s;
+}
+
+.container.active .curved_shape{
+  transform: rotate(0deg) skewY(0deg);
+  transition-delay: .5s;
+}
+
+.container.active .curved_shape2{
+  transform: rotate(-11deg) skewY(-41deg);
+  transition-delay: 1s;
+}
+
+.form_box.login .animation{
+  transform: translateX(0%);
+  transition: .7s ease;
+  opacity: 1;
+  transition-delay: calc(0.1s * var(--S));
+}
+
+
+.container.active .form_box.login .animation{
+  transform: translateX(-120%);
+  opacity: 0;
+  transition-delay: calc(0.1s * var(--D)); 
+}
+
+.container.active .info_content.Login .animation{
+  transform: translateX(120%);
+  opacity: 0;
+  transition-delay: calc(0.1s * var(--D)); 
+}
+
+.info_content.Login .animation{
+  transform: translateX(0);
+  transition: .7s ease;
+  transition-delay: calc(0.1s * var(--S));
+  opacity: 1;
+}
+
+.form_box.signup .animation{
+  transform: translateX(120%);
+  transition: .7s ease;
+  opacity: 0;
+  transition-delay: calc(0.1s * var(--S));
+}
+
+.container.active .form_box.signup .animation{
+  transform: translateX(0%);
+  opacity: 1;
+  transition-delay: calc(0.1s * var(--li)); 
+}
+
+.container.active .info_content.signup .animation{
+  transform: translateX(0%);
+  opacity: 1;
+  transition-delay: calc(0.1s * var(--li)); 
+}
+
+.info_content.signup .animation{
+  transform: translate(-120%);
+  transition: .7s ease;
+  opacity: 0;
+  transition-delay: calc(0.1s * var(--S));
+
+}
