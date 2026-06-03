@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-02
 
-**Status**: Draft
+**Status**: Approved — Phase 1 (Setup) completed, implementation in progress
 
 **Input**: User description: "create a specification for a Vue Auth Page. This will include both frontend and backend. Also, we need to start using Flyway for DB migration versioning, and the Postgres DB itself needs to be created in a Docker container."
 

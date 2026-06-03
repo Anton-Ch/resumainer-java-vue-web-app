@@ -182,6 +182,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.version}</version>
+                <configuration>
+                    <!-- Allow Mockito inline mock maker to self-attach (needed on some JDK versions) -->
+                    <argLine>-Djdk.attach.allowAttachSelf=true</argLine>
+                </configuration>
             </plugin>
 
             <!-- JaCoCo coverage -->

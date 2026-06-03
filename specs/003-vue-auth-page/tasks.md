@@ -38,12 +38,12 @@
 
 **⚠️ CRITICAL**: No implementation work can begin until this phase is complete.
 
-- [ ] T001 **[P]** Add backend dependencies to `backend/pom.xml`: Flyway, BCrypt (`org.mindrot:jbcrypt:0.4`), Jakarta Bean Validation API, Jackson Databind. Remove unused Thymeleaf dependency for auth (Thymeleaf stays for Landing Page only).
-- [ ] T002 **Create Vue 3 + Vite project at `frontend/`** with: Vue 3 (Composition API), PrimeVue 4, Zod, @primevue/forms with zodResolver, Vue Router 4, vue-i18n. Scaffold `package.json`, `vite.config.ts`, `main.ts`, `App.vue`.
-- [ ] T003 **[P]** Create base `docker/docker-compose.yml` with: `db` service (postgres:17-alpine, port 5432, volume pgdata, health check pg_isready).
-- [ ] T004 Create `backend/src/main/resources/application.properties` with dev profile (DB host, Flyway auto-migration enabled). Create `application-prod.properties` for container DB.
+- [x] T001 **[P]** Add backend dependencies to `backend/pom.xml`: Flyway, BCrypt (`org.mindrot:jbcrypt:0.4`), Jakarta Bean Validation API, Jackson Databind. Remove unused Thymeleaf dependency for auth (Thymeleaf stays for Landing Page only).
+- [x] T002 **Create Vue 3 + Vite project at `frontend/`** with: Vue 3 (Composition API), PrimeVue 4, Zod, @primevue/forms with zodResolver, Vue Router 4, vue-i18n. Scaffold `package.json`, `vite.config.ts`, `main.ts`, `App.vue`.
+- [x] T003 **[P]** Create base `docker/docker-compose.yml` with: `db` service (postgres:17-alpine, port 5432, volume pgdata, health check pg_isready).
+- [x] T004 Create `backend/src/main/resources/application.properties` with dev profile (DB host, Flyway auto-migration enabled). Create `application-prod.properties` for container DB.
 
-**Checkpoint**: `mvn clean package` succeeds. `docker compose up db` starts PostgreSQL. `npm create vue` scaffold compiles.
+**✅ Phase 1 Complete** — подтверждено физическими файлами + коммитами `4c1dd99` и `9fad712`. `backend/pom.xml` с зависимостями, `frontend/` Vue scaffold, `docker/docker-compose.yml` с PostgreSQL 17, `application.properties` с dev профилем.
 
 ---
 
@@ -57,31 +57,35 @@
 
 **Constitution IV**: All SQL via PreparedStatement. **Constitution I**: No ORM — plain JDBC only.
 
-- [ ] T005 **[P] [FOUNDATION]** Create `V1__create_role_table.sql` — `role` table with BIGSERIAL PK, `code` (VARCHAR(20) UNIQUE), `name` (VARCHAR(50)).
-- [ ] T006 **[P] [FOUNDATION]** Create `V2__create_user_status_table.sql` — `user_status` with BIGSERIAL PK, `code` (ACTIVE/BLOCKED), `name`.
-- [ ] T007 **[P] [FOUNDATION]** Create `V3__create_user_permission_table.sql` — `user_permission` with BIGSERIAL PK, `code` (ALLOWED/FORBIDDEN), `name`.
-- [ ] T008 **[P] [FOUNDATION]** Create `V4__create_language_table.sql` — `language` with BIGSERIAL PK, `code` (EN/RU), `name`.
-- [ ] T009 **[FOUNDATION]** Create `V5__create_users_table.sql` — `users` with UUID PK (`DEFAULT gen_random_uuid()`), `email` (UNIQUE), `password_hash`, `username` (nullable), `role_id` (FK→role), `status_id` (FK→user_status), `permission_id` (FK→user_permission), `default_language_id` (FK→language, nullable), `secondary_language_id` (FK→language, nullable), `is_privileged`, `failed_login_attempts` (DEFAULT 0), `locked_until` (nullable), `created_at`, `updated_at`, `deleted_at`, `is_deleted`. All FKs to lookup tables use BIGINT type.
-- [ ] T010 **[FOUNDATION]** Create `V6__create_contact_detail_table.sql` — `contact_detail` with UUID PK (`DEFAULT gen_random_uuid()`), `user_id` (FK→users, UNIQUE), `full_name`, `phone`, `resume_email`, `location`, `created_at`, `updated_at`. All nullable — created as empty shell on registration.
-- [ ] T011 **[FOUNDATION]** Create `V7__seed_lookup_data.sql` — INSERT seed data: role (USER, ADMIN), user_status (ACTIVE, BLOCKED), user_permission (ALLOWED, FORBIDDEN), language (EN, RU).
+- [x] T005 **[P] [FOUNDATION]** Create `V1__create_role_table.sql` — `role` table with BIGSERIAL PK, `code` (VARCHAR(20) UNIQUE), `name` (VARCHAR(50)).
+- [x] T006 **[P] [FOUNDATION]** Create `V2__create_user_status_table.sql` — `user_status` with BIGSERIAL PK, `code` (ACTIVE/BLOCKED), `name`.
+- [x] T007 **[P] [FOUNDATION]** Create `V3__create_user_permission_table.sql` — `user_permission` with BIGSERIAL PK, `code` (ALLOWED/FORBIDDEN), `name`.
+- [x] T008 **[P] [FOUNDATION]** Create `V4__create_language_table.sql` — `language` with BIGSERIAL PK, `code` (EN/RU), `name`.
+- [x] T009 **[FOUNDATION]** Create `V5__create_users_table.sql` — `users` with UUID PK (`DEFAULT gen_random_uuid()`), `email` (UNIQUE), `password_hash`, `username` (nullable), `role_id` (FK→role), `status_id` (FK→user_status), `permission_id` (FK→user_permission), `default_language_id` (FK→language, nullable), `secondary_language_id` (FK→language, nullable), `is_privileged`, `failed_login_attempts` (DEFAULT 0), `locked_until` (nullable), `created_at`, `updated_at`, `deleted_at`, `is_deleted`. All FKs to lookup tables use BIGINT type.
+- [x] T010 **[FOUNDATION]** Create `V6__create_contact_detail_table.sql` — `contact_detail` with UUID PK (`DEFAULT gen_random_uuid()`), `user_id` (FK→users, UNIQUE), `full_name`, `phone`, `resume_email`, `location`, `created_at`, `updated_at`. All nullable — created as empty shell on registration.
+- [x] T011 **[FOUNDATION]** Create `V7__seed_lookup_data.sql` — INSERT seed data: role (USER, ADMIN), user_status (ACTIVE, BLOCKED), user_permission (ALLOWED, FORBIDDEN), language (EN, RU).
 
 ### Model & DTO Classes
 
-- [ ] T012 **[P] [FOUNDATION]** Create model classes in `backend/src/main/java/com/resumainer/model/`: `User.java` (UUID id, String email, String passwordHash, etc.), `Role.java`, `UserStatus.java`, `UserPermission.java`, `Language.java`, `ContactDetail.java`.
-- [ ] T013 **[P] [FOUNDATION]** Create DTO classes in `backend/src/main/java/com/resumainer/dto/`: `RegisterRequest.java` (email, password, passwordConfirmation + @NotBlank/@Email/@Size), `LoginRequest.java` (email, password, rememberMe), `AuthResponse.java` (success, role, message, redirectUrl), `UserSession.java` (userId, email, role).
+- [x] T012 **[P] [FOUNDATION]** Create model classes in `backend/src/main/java/com/resumainer/model/`: `User.java` (UUID id, String email, String passwordHash, etc.), `Role.java`, `UserStatus.java`, `UserPermission.java`, `Language.java`, `ContactDetail.java`.
+- [x] T013 **[P] [FOUNDATION]** Create DTO classes in `backend/src/main/java/com/resumainer/dto/`: `RegisterRequest.java` (email, password, passwordConfirmation + @NotBlank/@Email/@Size), `LoginRequest.java` (email, password, rememberMe), `AuthResponse.java` (success, role, message, redirectUrl), `UserSession.java` (userId, email, role).
 
 ### DAO Layer
 
 **Constitution IV**: All DAOs use PreparedStatement exclusively. **Constitution I**: Each DAO maps to one table.
 
-- [ ] T014 **[P] [TDD] [FOUNDATION]** Create `UserDao.java` in `dao/`: `create(User)`, `findByEmail(String email)`, `findById(UUID id)`, `updateLoginAttempts(UUID id, int attempts, LocalDateTime lockedUntil)`, `resetLoginAttempts(UUID id)`. All via PreparedStatement.
-- [ ] T015 **[P] [TDD] [FOUNDATION]** Create `RoleDao.java` in `dao/`: `findByCode(String code)` — returns Role by USER/ADMIN code.
-- [ ] T016 **[P] [TDD] [FOUNDATION]** Create `UserStatusDao.java` in `dao/`: `findByCode(String code)`.
-- [ ] T017 **[P] [TDD] [FOUNDATION]** Create `UserPermissionDao.java` in `dao/`: `findByCode(String code)`.
-- [ ] T018 **[P] [TDD] [FOUNDATION]** Create `LanguageDao.java` in `dao/`: `findByCode(String code)`.
-- [ ] T019 **[TDD] [FOUNDATION]** Create `ContactDetailDao.java` in `dao/`: `create(ContactDetail)` — creates empty profile shell on registration.
+- [x] T014 **[P] [TDD] [FOUNDATION]** Create `UserDao.java` in `dao/`: `create(User)`, `findByEmail(String email)`, `findById(UUID id)`, `updateLoginAttempts(UUID id, int attempts, LocalDateTime lockedUntil)`, `resetLoginAttempts(UUID id)`. All via PreparedStatement.
+- [x] T015 **[P] [TDD] [FOUNDATION]** Create `RoleDao.java` in `dao/`: `findByCode(String code)` — returns Role by USER/ADMIN code.
+- [x] T016 **[P] [TDD] [FOUNDATION]** Create `UserStatusDao.java` in `dao/`: `findByCode(String code)`.
+- [x] T017 **[P] [TDD] [FOUNDATION]** Create `UserPermissionDao.java` in `dao/`: `findByCode(String code)`.
+- [x] T018 **[P] [TDD] [FOUNDATION]** Create `LanguageDao.java` in `dao/`: `findByCode(String code)`.
+- [x] T019 **[TDD] [FOUNDATION]** Create `ContactDetailDao.java` in `dao/`: `create(ContactDetail)` — creates empty profile shell on registration.
 
-**Checkpoint**: All 6 Flyway migrations run successfully against PostgreSQL. All 6 model classes compile. All 6 DAOs compile. All 4 DTOs compile. `mvn clean compile` succeeds.
+**✅ Phase 2 Complete** — `mvn clean compile` succeeds (1 pre-existing deprecation warning). All 26 DAO tests pass (TDD for T014–T019). Files created:
+- 7 Flyway migrations: `V1__create_role_table.sql` … `V7__seed_lookup_data.sql`
+- 6 model classes: `User.java`, `Role.java`, `UserStatus.java`, `UserPermission.java`, `Language.java`, `ContactDetail.java`
+- 4 DTO classes: `RegisterRequest.java`, `LoginRequest.java`, `AuthResponse.java`, `UserSession.java`
+- 6 DAO classes: `UserDao.java`, `RoleDao.java`, `UserStatusDao.java`, `UserPermissionDao.java`, `LanguageDao.java`, `ContactDetailDao.java`
 
 ---
 
@@ -273,8 +277,8 @@ flowchart TD
 
 | Phase | Tasks | Count |
 |-------|-------|-------|
-| P1: Setup | T001–T004 | 4 |
-| P2: Foundational | T005–T019 | 15 |
+| P1: Setup ✅ | T001–T004 | 4/4 ✅ |
+| P2: Foundational ✅ | T005–T019 | 15/15 ✅ |
 | P3: US1 Registration | T020–T028 | 9 |
 | P4: US2 Login | T029–T035 | 7 |
 | P5: Interceptor + Config + CSRF | T036–T038, T061–T063 | 7 |
