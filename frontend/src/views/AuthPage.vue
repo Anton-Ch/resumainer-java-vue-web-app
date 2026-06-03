@@ -40,18 +40,6 @@
 
         <!-- Form body with transition -->
         <div class="auth-form-body">
-          <!-- Error alert -->
-          <Transition name="alert-slide">
-            <div v-if="errorMessage" class="auth-error-alert">
-              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
-                <line x1="8" y1="5" x2="8" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                <circle cx="8" cy="11.5" r="0.8" fill="currentColor"/>
-              </svg>
-              <span>{{ errorMessage }}</span>
-            </div>
-          </Transition>
-
           <!-- Login / Register title -->
           <h1 class="auth-title">
             {{ isLoginMode ? $t('auth.loginTitle') : $t('auth.registerTitle') }}
@@ -62,98 +50,12 @@
 
           <!-- Form with slide transition -->
           <Transition name="form-slide" mode="out-in">
-            <form v-if="isLoginMode" key="login-form" class="auth-form" @submit.prevent="handleLogin">
-              <!-- Staggered fields -->
-              <div class="form-field" :style="{ animationDelay: '0ms' }">
-                <label class="form-label" for="login-email">{{ $t('auth.email') }}</label>
-                <input
-                  id="login-email"
-                  v-model="email"
-                  type="email"
-                  class="form-input"
-                  :class="{ 'form-input--error': fieldError === 'email' }"
-                  :placeholder="$t('auth.email')"
-                  autocomplete="email"
-                />
-              </div>
-              <div class="form-field" :style="{ animationDelay: '50ms' }">
-                <label class="form-label" for="login-password">{{ $t('auth.password') }}</label>
-                <input
-                  id="login-password"
-                  v-model="password"
-                  type="password"
-                  class="form-input"
-                  :class="{ 'form-input--error': fieldError === 'password' }"
-                  :placeholder="$t('auth.password')"
-                  autocomplete="current-password"
-                />
-              </div>
-              <div class="form-field remember-row" :style="{ animationDelay: '100ms' }">
-                <label class="remember-label">
-                  <input type="checkbox" v-model="rememberMe" class="remember-checkbox" />
-                  <span>{{ $t('auth.rememberMe') }}</span>
-                </label>
-              </div>
-              <div class="form-field" :style="{ animationDelay: '150ms' }">
-                <button
-                  type="submit"
-                  class="vue-btn vue-btn-primary vue-btn-lg auth-submit-btn"
-                  :disabled="loading"
-                >
-                  <span v-if="loading" class="spinner"></span>
-                  <span v-else>{{ $t('auth.login') }}</span>
-                </button>
-              </div>
-            </form>
-
-            <form v-else key="register-form" class="auth-form" @submit.prevent="handleRegister">
-              <div class="form-field" :style="{ animationDelay: '0ms' }">
-                <label class="form-label" for="reg-email">{{ $t('auth.email') }}</label>
-                <input
-                  id="reg-email"
-                  v-model="email"
-                  type="email"
-                  class="form-input"
-                  :class="{ 'form-input--error': fieldError === 'email' }"
-                  :placeholder="$t('auth.email')"
-                  autocomplete="email"
-                />
-              </div>
-              <div class="form-field" :style="{ animationDelay: '50ms' }">
-                <label class="form-label" for="reg-password">{{ $t('auth.password') }}</label>
-                <input
-                  id="reg-password"
-                  v-model="password"
-                  type="password"
-                  class="form-input"
-                  :class="{ 'form-input--error': fieldError === 'password' }"
-                  :placeholder="$t('auth.password')"
-                  autocomplete="new-password"
-                />
-              </div>
-              <div class="form-field" :style="{ animationDelay: '100ms' }">
-                <label class="form-label" for="reg-confirm">{{ $t('auth.confirmPassword') }}</label>
-                <input
-                  id="reg-confirm"
-                  v-model="confirmPassword"
-                  type="password"
-                  class="form-input"
-                  :class="{ 'form-input--error': fieldError === 'confirm' }"
-                  :placeholder="$t('auth.confirmPassword')"
-                  autocomplete="new-password"
-                />
-              </div>
-              <div class="form-field" :style="{ animationDelay: '150ms' }">
-                <button
-                  type="submit"
-                  class="vue-btn vue-btn-primary vue-btn-lg auth-submit-btn"
-                  :disabled="loading"
-                >
-                  <span v-if="loading" class="spinner"></span>
-                  <span v-else>{{ $t('auth.register') }}</span>
-                </button>
-              </div>
-            </form>
+            <div v-if="isLoginMode" key="login-form" class="auth-form-wrapper">
+              <LoginForm @success="onAuthSuccess" />
+            </div>
+            <div v-else key="register-form" class="auth-form-wrapper">
+              <RegisterForm @success="onAuthSuccess" />
+            </div>
           </Transition>
 
           <!-- Toggle link -->
@@ -174,81 +76,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
+import LoginForm from '@/components/LoginForm.vue'
+import RegisterForm from '@/components/RegisterForm.vue'
 
 const router = useRouter()
-const { login, register, loading, error, successMessage, clearError } = useAuth()
 
 const isLoginMode = ref(true)
-const email = ref('')
-const password = ref('')
-const confirmPassword = ref('')
-const rememberMe = ref(false)
-const fieldError = ref<string | null>(null)
-const errorMessage = ref<string | null>(null)
-
-// Watch for auth errors
-watch(error, (err) => {
-  errorMessage.value = err
-  if (err) {
-    // Map common error messages to fields
-    if (err.toLowerCase().includes('email')) {
-      fieldError.value = 'email'
-    } else if (err.toLowerCase().includes('password')) {
-      fieldError.value = 'password'
-    }
-  }
-})
 
 function switchMode(mode: string) {
   isLoginMode.value = mode === 'login'
-  errorMessage.value = null
-  fieldError.value = null
-  clearError()
 }
 
-async function handleLogin() {
-  errorMessage.value = null
-  fieldError.value = null
-  clearError()
-
-  if (!email.value) { fieldError.value = 'email'; return }
-  if (!password.value) { fieldError.value = 'password'; return }
-
-  try {
-    const response = await login(email.value, password.value, rememberMe.value)
-    if (response.success) {
-      router.push(response.redirectUrl || '/home')
-    }
-  } catch (err: any) {
-    errorMessage.value = err?.message || 'Login failed'
-  }
-}
-
-async function handleRegister() {
-  errorMessage.value = null
-  fieldError.value = null
-  clearError()
-
-  if (!email.value) { fieldError.value = 'email'; return }
-  if (!password.value) { fieldError.value = 'password'; return }
-  if (password.value !== confirmPassword.value) {
-    fieldError.value = 'confirm'
-    errorMessage.value = 'Passwords do not match'
-    return
-  }
-
-  try {
-    const response = await register(email.value, password.value, confirmPassword.value)
-    if (response.success) {
-      router.push(response.redirectUrl || '/home')
-    }
-  } catch (err: any) {
-    errorMessage.value = err?.message || 'Registration failed'
-  }
+function onAuthSuccess(redirectUrl: string) {
+  router.push(redirectUrl)
 }
 </script>
 
@@ -406,107 +249,13 @@ async function handleRegister() {
   line-height: 1.5;
 }
 
-/* ========== Error Alert ========== */
-.auth-error-alert {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 16px;
-  background: var(--vue-accent-bg-error);
-  border: 1px solid var(--vue-accent-border-error);
-  border-radius: var(--vue-radius-md);
-  margin-bottom: 16px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--vue-accent-error);
-  line-height: 1.4;
+.auth-form-wrapper {
+  animation: formAppear 400ms var(--vue-ease-premium) both;
 }
 
-.auth-error-alert svg {
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  margin-top: 1px;
-}
-
-.alert-slide-enter-active {
-  animation: slideDown 200ms var(--vue-ease-standard);
-}
-
-.alert-slide-leave-active {
-  animation: slideDown 200ms var(--vue-ease-standard) reverse;
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-8px); }
+@keyframes formAppear {
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-/* ========== Form ========== */
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.form-field {
-  margin-bottom: 16px;
-  animation: fieldEntrance 400ms var(--vue-ease-premium) both;
-}
-
-@keyframes fieldEntrance {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.form-label {
-  display: block;
-  font-family: var(--vue-font-body);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--vue-text-secondary);
-  margin-bottom: 6px;
-}
-
-.form-input {
-  width: 100%;
-  height: 48px;
-  padding: 0 16px;
-  background: var(--vue-bg-surface);
-  border: 1.5px solid var(--vue-border-control);
-  border-radius: var(--vue-radius-md);
-  font-family: var(--vue-font-body);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--vue-text-primary);
-  outline: none;
-  transition: border-color 200ms var(--vue-ease-standard),
-              box-shadow 200ms var(--vue-ease-standard);
-}
-
-.form-input::placeholder {
-  color: var(--vue-text-muted);
-  font-weight: 400;
-}
-
-.form-input:hover {
-  border-color: #D0D8E6;
-}
-
-.form-input:focus {
-  border-color: var(--vue-accent-blue);
-  border-width: 1.8px;
-  box-shadow: var(--vue-shadow-focus);
-}
-
-.form-input--error {
-  border-color: var(--vue-accent-error);
-  background: #FFF8F5;
-}
-
-.form-input--error:focus {
-  border-color: var(--vue-accent-error);
-  box-shadow: var(--vue-shadow-error);
 }
 
 /* Form slide transition */
@@ -526,50 +275,6 @@ async function handleRegister() {
 @keyframes formLeave {
   from { opacity: 1; transform: translateX(0); }
   to { opacity: 0; transform: translateX(-24px); }
-}
-
-/* ========== Remember me ========== */
-.remember-row {
-  display: flex;
-  align-items: center;
-}
-
-.remember-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--vue-text-secondary);
-}
-
-.remember-checkbox {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--vue-accent-primary);
-  cursor: pointer;
-}
-
-/* ========== Submit Button ========== */
-.auth-submit-btn {
-  width: 100%;
-  height: 48px;
-  margin-top: 4px;
-}
-
-.spinner {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 600ms linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 /* ========== Toggle Link ========== */
@@ -595,6 +300,17 @@ async function handleRegister() {
 
 .toggle-link:hover {
   color: var(--vue-accent-blue-hover);
+}
+
+/* ========== Reduced Motion ========== */
+@media (prefers-reduced-motion: reduce) {
+  .auth-form-wrapper {
+    animation: none;
+  }
+  .form-slide-enter-active,
+  .form-slide-leave-active {
+    animation: none;
+  }
 }
 
 /* ========== Reduced Motion ========== */
