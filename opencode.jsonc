@@ -1,0 +1,49 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // Uses provider from global opencode.jsonc:
+  // provider id: open_router_presets
+  // model id: @preset/deepseekflashonly
+  "model": "open_router_presets/@preset/deepseekflashonly",
+
+  // Safe default.
+  // If software_engineering_team_lead.md has "mode: primary",
+  // you can change this to "software_engineering_team_lead".
+  "default_agent": "build",
+
+  // Do NOT add AGENTS.md here: OpenCode loads root AGENTS.md as project rules.
+  // Add only extra lightweight project workflow routers.
+  "instructions": [
+    ".specify/memory/workflow.md",
+    "docs/memory/INDEX.md"
+  ],
+
+  // Safe permissions for a capstone project.
+  // You keep control over edits and terminal commands.
+  "permission": {
+    "*": "ask",
+    "edit": "ask",
+    "bash": "ask",
+    "webfetch": "allow"
+  },
+
+  // Avoid watching noisy/generated/heavy folders.
+  "watcher": {
+    "ignore": [
+      "node_modules/**",
+      "frontend/node_modules/**",
+      "frontend/dist/**",
+      "backend/target/**",
+      "target/**",
+      "dist/**",
+      ".git/**",
+      "tempfiles/**",
+      ".playwright-mcp/**",
+      ".spec-kit-memory/**",
+      "**/*.log"
+    ]
+  },
+
+  "share": "manual",
+  "snapshot": true
+}

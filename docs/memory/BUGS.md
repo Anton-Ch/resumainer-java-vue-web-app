@@ -157,3 +157,29 @@ Always add a corresponding `@Bean` method in WebConfig.java.
 
 **Where to look next**
 backend/src/main/java/com/resumainer/config/WebConfig.java, any new class with @Controller, @ControllerAdvice, @RestController, etc.
+
+---
+
+### 2026-06-02 - FilterRegistrationBean is Spring Boot API — use getServletFilters() in pure Spring MVC
+
+**Status**
+Active
+
+**Symptoms**
+Adding `org.springframework.boot.web.servlet.FilterRegistrationBean` to register a custom filter (CsrfFilter, etc.) causes compilation errors because the class does not exist in pure Spring MVC. The import fails and Maven build breaks.
+
+**Root Cause**
+`FilterRegistrationBean` is a Spring Boot class. In pure Spring MVC (no Spring Boot), filters must be registered by overriding `AbstractAnnotationConfigDispatcherServletInitializer.getServletFilters()` which returns a `Filter[]` array.
+
+**Future mistake prevented**
+When adding any custom Filter (CsrfFilter, RateLimitFilter, etc.), always override `AppInitializer.getServletFilters()` — NOT `FilterRegistrationBean`.
+
+**Evidence**
+CsrfFilter for Feature 003 was originally planned with `FilterRegistrationBean` (Spring Boot API). The user rejected it per constitution "No Spring Boot". Fixed by overriding `getServletFilters()` in AppInitializer.
+
+**Prevention / Detection**
+- Never import anything from `org.springframework.boot` package
+- For filter registration: `AppInitializer.getServletFilters()` → `return new Filter[] { new CsrfFilter() }`
+
+**Where to look next**
+backend/src/main/java/com/resumainer/initializer/AppInitializer.java

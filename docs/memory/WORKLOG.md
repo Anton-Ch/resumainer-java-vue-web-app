@@ -9,6 +9,23 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-02 - Feature 003 Planning and Security Review Completed
+
+**Milestone**: Feature 003 (Vue Auth Page) reaches Spec + Plan + Tasks + Security Review complete.
+
+**What was achieved**:
+- Specification: 6 user stories, 28 FR, 10 SC, 3 clarifications rounds
+- Plan: 4 phases (Backend, Frontend, Docker, Integration) with hybrid UUID/BIGSERIAL strategy
+- Tasks: 63 tasks with [TDD], [P], [SUBAGENT], [REVIEW] execution markers
+- Diagrams: component diagram, system design, software architecture
+- Security review: 11 findings (1 High, 5 Medium, 3 Low, 2 Info)
+- Applied fixes: session regeneration on login (SEC-002), CSRF cookie-to-header filter (SEC-003)
+- Phase 1 (Setup) implemented: pom.xml dependencies, Vue 3 + Vite scaffold, Docker Compose PostgreSQL 17, application.properties
+
+**Next phase**: Phase 2 — Flyway migrations, Model/DTO classes, DAO layer.
+
 ### 2026-05-31 - Second Feature MVP Achieved: Thymeleaf Landing Page
 
 **Status**
