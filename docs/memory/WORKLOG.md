@@ -11,6 +11,56 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+---
+
+### 2026-06-03 - Feature 003 Phase 3 Registration Service and Controller Completed
+
+**Milestone**: Phase 3 (User Story 1 — Registration) of Feature 003 (Vue Auth Page) completed with TDD.
+
+**What was achieved**:
+- PasswordService: BCrypt hashing (cost=12) + password strength validation (9 TDD tests)
+- AuthService: registration with email uniqueness check, JDBC transaction (User + ContactDetail atomic), ServiceException with error codes (4 TDD tests)
+- AuthController: POST /api/auth/register with @Valid @RequestBody, session auto-login, proper HTTP status codes (409 for duplicate, 400 for invalid) (2 MockMvc tests)
+- DAO connection-accepting overloads for transaction support (D10)
+- i18n messages: 11 auth keys in EN + RU
+- jayway-jsonpath dependency added for MockMvc jsonPath assertions (B8)
+- ServiceException: custom exception with errorCode for i18n integration
+
+**Key lessons captured**:
+- B8: MockMvc jsonPath requires explicit jayway-jsonpath dependency
+- D10: DAO connection-accepting overloads for JDBC transaction management
+- Mockito mocks return default values for unstubbed methods (boolean -&gt; false) — always stub ALL method calls
+
+**Evidence**
+Commit pending. All 44 tests pass (BUILD SUCCESS). `mvn test` green.
+
+**Next phase**: Phase 4 — Login with rate limiting (5 fails -&gt; 15 min lockout), session regeneration, rememberMe support, AuthController.login/logout/status.
+
+### 2026-06-03 - Feature 003 Phase 2 Foundational Database and DAO Layer Completed
+
+**Milestone**: Phase 2 (Foundational — Database &amp; Backend Infrastructure) of Feature 003 (Vue Auth Page) completed.
+
+**What was achieved**:
+- 7 Flyway migrations (V1–V7) with hybrid UUID/BIGSERIAL PK strategy
+- 6 Model classes: User, Role, UserStatus, UserPermission, Language, ContactDetail
+- 4 DTO classes: RegisterRequest (@NotBlank/@Email/@Size), LoginRequest (+rememberMe), AuthResponse, UserSession
+- 6 DAO classes with PreparedStatement-only SQL: UserDao, RoleDao, UserStatusDao, UserPermissionDao, LanguageDao, ContactDetailDao
+- 6 TDD test classes — 26 tests, all passing
+- Educational documentation: Model/DTO/DAO architecture in dev-docs/learnings.md
+- JDK 21 installed and configured (resolved Mockito + JDK version mismatch)
+
+**Key lessons captured**:
+- D9: JDK version must match project target (Java 21) — avoid Mockito agent failures
+- TDD for DAO layer: mock DataSource/Connection/PreparedStatement/ResultSet pattern proven effective for all 6 DAOs
+- Hybrid PK strategy (D7) implemented in Flyway migrations: UUID for entities, BIGSERIAL for lookups
+
+**Evidence**
+Commit d7b70c7 — 33 files, 2484 insertions. All 26 DAO tests pass. `mvn clean compile` succeeds.
+
+**Next phase**: Phase 3 — PasswordService, AuthService (registration with transaction), AuthController, i18n messages.
+
 ### 2026-06-02 - Feature 003 Planning and Security Review Completed
 
 **Milestone**: Feature 003 (Vue Auth Page) reaches Spec + Plan + Tasks + Security Review complete.

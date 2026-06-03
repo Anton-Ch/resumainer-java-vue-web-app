@@ -279,3 +279,69 @@ Assuming SameSite=Lax alone is sufficient for CSRF protection, or trying to add 
 
 **Evidence**
 OWASP CSRF Cheat Sheet confirms SameSite is "defense-in-depth" not a replacement. SEC-003 from Feature 003 security review.
+
+---
+
+### 2026-06-03 - JDK version must match project target to avoid build and test failures
+
+**Status**
+Active
+
+**Why this is durable**
+pom.xml targets Java 21 (`<release>21</release>`, `<maven.compiler.source>21</maven.compiler.source>`). Installing a newer JDK (23+) causes subtle failures: Mockito 5.x inline mock maker cannot self-attach because JDK 23+ disables the Attach API. Every developer setting up this project will face this if their system JDK doesn't match.
+
+**Decision**
+The installed JDK version must match the project target version (Java 21). Do NOT use workarounds like `-Djdk.attach.allowAttachSelf=true` or manually adding `-javaagent` paths — these are fragile and version-specific. Instead:
+1. Install Eclipse Temurin JDK 21 (winget: EclipseAdoptium.Temurin.21.JDK)
+2. Set JAVA_HOME to the JDK 21 installation path
+3. Verify: `java -version` shows &quot;21.0.x&quot;, not &quot;25.0.x&quot; or later
+
+**Tradeoffs**
+- Gained: Mockito works out of the box, no argLine hacks, predictable test behavior
+- Made harder: Developer must install and configure a specific JDK version instead of using the latest system JDK
+- Reconsider: When the project upgrades its Java target version, update the dev JDK accordingly
+
+**Future mistake prevented**
+Wasting hours debugging Mockito failures, adding fragile argLine workarounds, or accidentally compiling with a different Java version than the project target.
+
+**Evidence**
+Phase 2 implementation: first test run failed with &quot;Failed to load interface org.mockito.plugins.MockMaker&quot; on JDK 25. After installing JDK 21 and setting JAVA_HOME, all 26 tests passed immediately with only a warning about future self-attach deprecation.
+
+**Where to look next**
+README.md (setup instructions), backend/pom.xml (`<release>21</release>`), CI/CD configuration
+
+---
+
+### 2026-06-03 - DAO connection-accepting overloads for JDBC transaction support
+
+**Status**
+Active
+
+**Why this is durable**
+Registration requires creating User + ContactDetail atomically. The standard DAO pattern (each method opens/closes its own Connection via DataSource) cannot support multi-table transactions. This pattern will repeat for every future feature that needs atomic multi-table operations.
+
+**Decision**
+Each DAO that participates in transactions MUST provide two `create` (or equivalent) methods:
+1. `create(Entity entity)` — auto-managed connection (convenience, uses DataSource internally)
+2. `create(Entity entity, Connection conn)` — uses an existing connection (called from service layer within a transaction)
+
+The service layer manages the transaction:
+1. Gets a Connection from DataSource
+2. Sets autoCommit(false)
+3. Calls DAO methods with the shared Connection
+4. Commits or rollbacks
+5. Closes the Connection
+
+**Tradeoffs**
+- Gained: Clean transaction support without ORM, minimal code duplication, backward compatible
+- Made harder: Each transactional DAO needs two overloads per transactional method
+- Reconsider: If the project adds Spring transaction management (@Transactional via AOP), these overloads become unnecessary
+
+**Future mistake prevented**
+Adding multi-table operations without transaction support, or trying to use Spring's @Transactional (which requires AOP configuration in pure Spring MVC).
+
+**Evidence**
+AuthService.register() needed atomic User + ContactDetail creation. UserDao and ContactDetailDao were extended with connection-accepting create() overloads. AuthService manages the transaction lifecycle. All 44 tests pass.
+
+**Where to look next**
+backend/src/main/java/com/resumainer/dao/UserDao.java, ContactDetailDao.java, backend/src/main/java/com/resumainer/service/AuthService.java

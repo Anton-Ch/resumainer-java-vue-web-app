@@ -746,3 +746,661 @@ flowchart LR
 | **Model** | 📋 Data blueprint | One Java class = one database table row |
 | **DTO** | 📦 Shipping box | Carries validated data between browser and server |
 | **DAO** | 🍳 Kitchen chef | Runs SQL, converts database rows to Java objects |
+| **Service** | 🧠 Brain of the operation | Business logic, validation, transaction management |
+| **Controller** | 🚪 Front door / Receptionist | Receives HTTP requests, delegates to Service, returns response |
+| **Exception** | 🚨 Alarm system | Carries error codes and messages when something goes wrong |
+
+---
+
+## Service Layer — What It Is and How It Works
+
+### What Is a Service?
+
+A **Service** is a Java class that contains **business logic**. It sits between the Controller (which handles HTTP) and the DAO (which handles the database). The Service decides WHAT should happen. The Controller decides WHEN to call the Service. The DAO decides HOW to store it.
+
+```java
+// AuthService.java — contains the business logic for registration
+public class AuthService {
+    
+    public User register(RegisterRequest request) {
+        // 1. Validate business rules
+        // 2. Check email uniqueness
+        // 3. Hash password (BCrypt)
+        // 4. Create User + ContactDetail in one transaction
+        // 5. Return created User
+    }
+}
+```
+
+### ELI5: Service is the *restaurant manager*
+
+Imagine a restaurant:
+```
+  Customer           Waiter (Controller)         Manager (Service)          Kitchen (DAO)
+     │                      │                          │                       │
+     │ "I'd like pasta"     │                          │                       │
+     │─────────────────────>│                          │                       │
+     │                      │  "Customer wants pasta"  │                       │
+     │                      │─────────────────────────>│                       │
+     │                      │                          │                       │
+     │                      │                          │  "Do we have pasta?"  │
+     │                      │                          │──────────────────────>│
+     │                      │                          │  "Yes, in stock"      │
+     │                      │                          │<──────────────────────│
+     │                      │                          │                       │
+     │                      │  "Make pasta + salad"    │                       │
+     │                      │  (two things, must be    │                       │
+     │                      │   ready together)        │                       │
+     │                      │─────────────────────────>│                       │
+     │                      │                          │─── Cook pasta ───────>│
+     │                      │                          │─── Make salad ───────>│
+     │                      │                          │                       │
+     │                      │                          │"Both ready, serve!"   │
+     │                      │<─────────────────────────│                       │
+     │    "Here's your meal"│                          │                       │
+     │<─────────────────────│                          │                       │
+```
+
+The **Manager (Service)** makes decisions: checks if the request is valid, coordinates multiple departments (UserDao + ContactDetailDao), ensures everything happens in the right order (transaction), and handles problems if something goes wrong.
+
+### What a Service Does
+
+| Job | Example |
+|-----|---------|
+| **Business rules** | "Password must be at least 8 characters with uppercase, lowercase, digit" |
+| **Validation logic** | "Email is already registered? Reject." |
+| **Transaction management** | "Create user AND profile — both or neither" |
+| **Coordination** | "Call UserDao, then ContactDetailDao, in order" |
+| **Error handling** | "Database error? Wrap in ServiceException with error code" |
+| **Security** | "Hash password before storing. Never log plaintext passwords." |
+
+### The Big Picture
+
+```mermaid
+flowchart LR
+    C[Controller] -->|"calls"| S[Service]
+    S -->|"calls"| D[DAO]
+    D -->|"returns Model"| S
+    S -->|"returns result"| C
+    
+    subgraph Service_Responsibilities [Service Does]
+        V[Validates business rules]
+        T[Manages transactions]
+        H[Handles errors]
+        L[Coordinates multiple DAOs]
+    end
+    
+    style S fill:#bfb,stroke:#333
+    style Service_Responsibilities fill:#e8f5e9,stroke:#81c784
+```
+
+### Code Example with Line-by-Line Explanation
+
+```java
+public class AuthService {
+
+    // === Dependencies (Injected via constructor) ===
+    private final UserDao userDao;             // To create/find users
+    private final RoleDao roleDao;             // To look up default role
+    private final ContactDetailDao contactDetailDao; // To create empty profile
+    private final PasswordService passwordService;   // To hash passwords
+    private final DataSource dataSource;       // For transaction management
+
+    public AuthService(UserDao userDao, RoleDao roleDao,
+                       ContactDetailDao contactDetailDao,
+                       PasswordService passwordService,
+                       DataSource dataSource) {
+        // Constructor injection — all dependencies are passed in
+        // This makes testing easy: pass mocks instead of real objects
+        this.userDao = userDao;
+        // ...
+    }
+
+    public User register(RegisterRequest request) {
+        // STEP 1: Validate business rules
+        if (!request.getPassword().equals(request.getPasswordConfirmation())) {
+            // Business rule: passwords must match
+            throw new ServiceException("auth.password.mismatch", "Passwords do not match");
+        }
+
+        // STEP 2: Check password strength (business rule)
+        if (!passwordService.isStrongPassword(request.getPassword())) {
+            throw new ServiceException("auth.password.weak", "Password too weak");
+        }
+
+        // STEP 3: Check email uniqueness
+        String email = request.getEmail().toLowerCase().trim();
+        User existing = userDao.findByEmail(email);
+        if (existing != null) {
+            throw new ServiceException("auth.email.alreadyRegistered", "Email taken");
+        }
+
+        // STEP 4: Hash the password (security — never store plaintext)
+        String passwordHash = passwordService.hashPassword(request.getPassword());
+
+        // STEP 5: Create User entity
+        User user = new User();
+        user.setEmail(email);
+        user.setPasswordHash(passwordHash);
+        user.setRoleId(userRole.getId());   // Default: USER role
+        user.setStatusId(1L);               // Default: ACTIVE status
+        user.setPermissionId(1L);           // Default: ALLOWED permission
+
+        // STEP 6: Execute in a JDBC TRANSACTION
+        // Both User and ContactDetail must be created ATOMICALLY
+        Connection conn = null;
+        try {
+            conn = dataSource.getConnection();       // Get DB connection
+            conn.setAutoCommit(false);               // START TRANSACTION
+
+            userDao.create(user, conn);              // 1st operation: create user
+            ContactDetail cd = ContactDetail.createEmpty(user.getId());
+            contactDetailDao.create(cd, conn);       // 2nd operation: create profile
+
+            conn.commit();                           // ✅ COMMIT — both saved
+            log.info("User registered: {}", email);
+            return user;
+
+        } catch (SQLException e) {
+            if (conn != null) conn.rollback();       // ❌ ROLLBACK — neither saved
+            throw new ServiceException("auth.registration.failed", "DB error", e);
+        } finally {
+            if (conn != null) conn.close();          // Always close connection
+        }
+    }
+}
+```
+
+### Why Service Exists (Not Just Put Logic in Controller)
+
+```java
+// ❌ WRONG: Business logic in Controller (fat controller anti-pattern)
+@PostMapping("/api/auth/register")
+public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
+    if (!req.getPassword().equals(req.getPasswordConfirmation())) {
+        return ResponseEntity.badRequest().body("Passwords don't match");
+    }
+    // ... 50 more lines of business logic ...
+    Connection conn = dataSource.getConnection();
+    // ... SQL code in controller ...
+}
+
+// ✅ RIGHT: Controller is thin, Service has the logic
+@PostMapping("/api/auth/register")
+public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest req) {
+    User user = authService.register(req);  // ONE LINE — delegate to service
+    // ... just session/response handling ...
+}
+```
+
+### Why Controller Calls Service, Not DAO Directly
+
+```mermaid
+flowchart LR
+    subgraph WRONG [❌ No Service Layer]
+        C1[Controller] -->|"directly"| D1[DAO]
+        C1 -->|"also"| D2[Another DAO]
+        C1 -.->|"transactions?"| X[❌ No transaction!]
+        C1 -.->|"duplicate code?"| Y[❌ In every controller!]
+    end
+    
+    subgraph RIGHT [✅ Service Layer]
+        C2[Controller] -->|"one call"| S[Service]
+        S -->|"coordinates"| D3[DAO 1]
+        S -->|"coordinates"| D4[DAO 2]
+        S -.->|"transaction ✓"| Z[✅ Atomic commit/rollback]
+    end
+    
+    style WRONG fill:#ffcccc,stroke:#f00
+    style RIGHT fill:#ccffcc,stroke:#0f0
+    style S fill:#bfb,stroke:#333
+```
+
+### Key Rules for Services
+
+1. **One method = one business operation** — `register()`, `authenticate()`, `logout()`
+2. **Service calls DAO, never the other way** — dependencies flow: Controller → Service → DAO
+3. **Service manages transactions** — gets Connection, setAutoCommit(false), commit/rollback
+4. **Service throws ServiceException** — with error codes for i18n
+5. **Service is testable** — all dependencies are injected via constructor (easy to mock)
+6. **Service never handles HTTP** — no `HttpServletRequest`, no `@RequestMapping`
+
+---
+
+## Controller Layer — What It Is and How It Works
+
+### What Is a Controller?
+
+A **Controller** is a Java class that handles HTTP requests. It's the "front door" of your backend. The browser sends an HTTP request → the Controller receives it → calls the Service → returns an HTTP response.
+
+```java
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(
+            @Valid @RequestBody RegisterRequest request,
+            HttpSession session) {
+        // 1. Receive HTTP request with JSON body
+        // 2. Validate it (@Valid)
+        // 3. Call Service
+        // 4. Create session
+        // 5. Return HTTP response
+    }
+}
+```
+
+### ELI5: Controller is the *receptionist at a company*
+
+```
+  Visitor (Browser)          Receptionist (Controller)       Manager (Service)
+        │                             │                          │
+        │ "I want to register"        │                          │
+        │ POST /api/auth/register     │                          │
+        │ {email, password}           │                          │
+        │────────────────────────────>│                          │
+        │                             │                          │
+        │                             │  "Processing..."         │
+        │                             │─────────────────────────>│
+        │                             │                          │
+        │                             │  "Done! Here's the       │
+        │                             │   result"                │
+        │                             │<─────────────────────────│
+        │                             │                          │
+        │ "200 OK"                    │                          │
+        │ {success: true,             │                          │
+        │  redirectUrl: '/home'}      │                          │
+        │<────────────────────────────│                          │
+```
+
+The **Receptionist (Controller)**:
+1. **Takes the request** (HTTP POST with JSON body)
+2. **Checks the form is filled correctly** (@Valid — "is the email field filled?")
+3. **Finds the right person** (calls AuthService)
+4. **Gets the result** and **writes a response** (HTTP 200 with JSON)
+5. **Never does the actual work** — that's for the Service/Manager
+
+### Controller Annotations Explained
+
+```java
+@RestController                    // 1: This class handles HTTP + returns JSON automatically
+@RequestMapping("/api/auth")       // 2: All URLs in this class start with /api/auth
+public class AuthController {
+
+    private final AuthService authService;  // 3: Service dependency
+
+    public AuthController(AuthService authService) {  // 4: Constructor injection
+        this.authService = authService;
+    }
+
+    @PostMapping("/register")      // 5: This method handles POST /api/auth/register
+    public ResponseEntity<AuthResponse> register(
+            @Valid @RequestBody RegisterRequest request,  // 6: @Valid = validate the JSON body
+                                                          //    @RequestBody = deserialize JSON → Java object
+            HttpSession session) {   // 7: Spring auto-injects the HTTP session
+
+        // 8: Delegate to Service
+        User user = authService.register(request);
+
+        // 9: Create session (auto-login)
+        UserSession userSession = new UserSession(user.getId(), user.getEmail(), "USER");
+        session.setAttribute("user", userSession);
+
+        // 10: Return response (Spring auto-serializes AuthResponse → JSON)
+        return ResponseEntity.ok(AuthResponse.success("USER", "/home"));
+    }
+}
+```
+
+### HTTP Status Codes — The Controller's Vocabulary
+
+| Code | Meaning | When to Use |
+|------|---------|-------------|
+| **200 OK** | Success | Registration successful, login successful |
+| **400 Bad Request** | Invalid input | Validation failed, passwords don't match |
+| **401 Unauthorized** | Not authenticated | Wrong password, expired session |
+| **409 Conflict** | Duplicate | Email already registered |
+| **423 Locked** | Temporarily blocked | Too many failed login attempts |
+| **500 Internal Server Error** | Server broken | Database connection failed |
+
+### Controller With Error Handling
+
+```java
+@PostMapping("/register")
+public ResponseEntity<AuthResponse> register(
+        @Valid @RequestBody RegisterRequest request,
+        HttpSession session) {
+
+    try {
+        User user = authService.register(request);
+        // Success → 200 OK
+        return ResponseEntity.ok(AuthResponse.success("USER", "/home"));
+
+    } catch (ServiceException e) {
+        // Business logic error → map to appropriate HTTP status
+        HttpStatus status = switch (e.getErrorCode()) {
+            case "auth.email.alreadyRegistered" -> HttpStatus.CONFLICT;     // 409
+            case "auth.password.weak",
+                 "auth.password.mismatch"       -> HttpStatus.BAD_REQUEST;  // 400
+            default                             -> HttpStatus.INTERNAL_SERVER_ERROR; // 500
+        };
+
+        return ResponseEntity.status(status)
+                .body(AuthResponse.failure(e.getMessage()));
+    }
+}
+```
+
+### The Controller Flow (Complete Picture)
+
+```mermaid
+sequenceDiagram
+    participant B as Browser (Vue)
+    participant C as AuthController
+    participant S as AuthService
+    participant D as DAO Layer
+    participant DB as PostgreSQL
+    
+    B->>C: POST /api/auth/register
+    Note over C: @Valid validates JSON body
+    Note over C: Jakarta Validation checks @NotBlank, @Email, @Size
+    
+    C->>S: register(RegisterRequest)
+    Note over S: Business logic: check email, hash password
+    
+    S->>D: create(User, conn)
+    D->>DB: INSERT INTO users ...
+    DB-->>D: RETURNING id (UUID)
+    D-->>S: void
+    
+    S->>D: create(ContactDetail, conn)
+    D->>DB: INSERT INTO contact_detail ...
+    DB-->>D: OK
+    D-->>S: void
+    
+    Note over S: conn.commit()
+    S-->>C: User object
+    
+    Note over C: Create HttpSession with UserSession
+    
+    C-->>B: 200 OK {success:true, role:USER, redirectUrl:'/home'}
+```
+
+### Controller Testing with MockMvc
+
+```java
+class AuthControllerTest {
+
+    private MockMvc mockMvc;
+    private AuthService authService;
+
+    @BeforeEach
+    void setUp() {
+        authService = mock(AuthService.class);           // Mock the Service
+
+        AuthController controller = new AuthController(authService);
+
+        // Standalone setup — only this controller, no full Spring context
+        mockMvc = standaloneSetup(controller)
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(new ObjectMapper()))
+                .build();
+    }
+
+    @Test
+    void register_validInput_returns200() throws Exception {
+        // Arrange: make the mock Service return a User
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        user.setEmail("test@example.com");
+        when(authService.register(any(RegisterRequest.class))).thenReturn(user);
+
+        // Act + Assert: send HTTP request, verify response
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""{"email":"test@example.com","password":"StrongPass1","passwordConfirmation":"StrongPass1"}"""))
+                .andExpect(status().isOk())                              // HTTP 200
+                .andExpect(jsonPath("$.success").value(true))            // JSON field check
+                .andExpect(jsonPath("$.role").value("USER"));
+    }
+}
+```
+
+### Key Rules for Controllers
+
+1. **Controller is thin** — one line to call Service, then handle response
+2. **No business logic in Controller** — that's the Service's job
+3. **No SQL in Controller** — that's the DAO's job
+4. **@Valid for input validation** — Jakarta Validation annotations on DTO fields
+5. **Controller returns HTTP-specific things** — status codes, response headers, sessions
+6. **One method per endpoint** — `@PostMapping("/register")`, `@PostMapping("/login")`, etc.
+
+---
+
+## Exception Layer — What It Is and How It Works
+
+### What Is an Exception?
+
+An **Exception** is a Java class that carries error information when something goes wrong. In a layered architecture, we create **custom exceptions** that carry error codes (for i18n) and structured error messages, instead of throwing generic `RuntimeException`.
+
+```java
+// ServiceException.java — a custom exception for business logic errors
+public class ServiceException extends RuntimeException {
+    
+    private final String errorCode;  // "auth.email.alreadyRegistered"
+    
+    public ServiceException(String errorCode, String message) {
+        super(message);           // Pass message to parent (RuntimeException)
+        this.errorCode = errorCode;
+    }
+    
+    public String getErrorCode() {
+        return errorCode;         // The Controller uses this to pick HTTP status
+    }
+}
+```
+
+### ELI5: Exception is a *fire alarm with a label*
+
+```
+Generic fire alarm:         🔔 BEEP BEEP BEEP! (What's on fire? Where?)
+
+Custom fire alarm:          🔔 "KITCHEN FIRE - Use extinguisher #3"
+                            🔔 "SERVER ROOM - Call electrician"
+                            🔔 "BASEMENT FLOOD - Call plumber"
+```
+
+A generic exception (`RuntimeException`) just says "Something broke! 💥".  
+A custom exception (`ServiceException`) says:
+
+```
+"Registration failed! 
+ → Error code: auth.email.alreadyRegistered 
+ → Message: 'Email already registered'
+ → For the UI: show this message in the user's language"
+```
+
+### The Three Exception Partners
+
+```mermaid
+flowchart LR
+    subgraph Service [Service Layer]
+        SE[ServiceException<br/>throws when business<br/>rule is violated]
+    end
+    
+    subgraph Controller [Controller Layer]
+        CE[Catches ServiceException<br/>Maps errorCode → HTTP status<br/>Returns JSON error response]
+    end
+    
+    subgraph User [Browser User]
+        UI["Sees error message<br/>in their language<br/>(EN or RU)"]
+    end
+    
+    Service -->|"throws ServiceException(auth.email.alreadyRegistered)"| Controller
+    Controller -->|"HTTP 409 {success:false, message:'Email already registered'}"| User
+    
+    style SE fill:#ffcccc,stroke:#f00
+    style CE fill:#bbf,stroke:#333
+```
+
+### Why Custom Exceptions (Not Just RuntimeException)
+
+```java
+// ❌ WITHOUT custom exception — the Controller doesn't know what went wrong
+throw new RuntimeException("Email already registered");
+// Controller catches it... but what status code? 400? 409? 500?
+// It has NO IDEA. So it returns 500 Internal Server Error. Wrong!
+
+// ✅ WITH ServiceException — the Controller knows exactly what to do
+throw new ServiceException("auth.email.alreadyRegistered", "Email already registered");
+// Controller catches it, reads getErrorCode() → "auth.email.alreadyRegistered"
+// → Maps to HttpStatus.CONFLICT (409)
+// → Returns JSON with the message
+// → Frontend shows the message in the user's language
+```
+
+### The Error Flow (End to End)
+
+```java
+// STEP 1: Service detects a problem and throws ServiceException
+if (existing != null) {
+    throw new ServiceException(
+        "auth.email.alreadyRegistered",  // error code (for i18n)
+        "Email already registered"        // default message (English)
+    );
+}
+
+// STEP 2: Controller catches it and maps to HTTP status + JSON
+try {
+    return authService.register(request);
+} catch (ServiceException e) {
+    HttpStatus status = switch (e.getErrorCode()) {
+        case "auth.email.alreadyRegistered" -> HttpStatus.CONFLICT;     // 409
+        // ...
+    };
+    return ResponseEntity.status(status)
+            .body(AuthResponse.failure(e.getMessage()));
+}
+
+// STEP 3: Frontend receives structured JSON error
+// HTTP 409
+// {
+//   "success": false,
+//   "role": null,
+//   "message": "Email already registered",
+//   "redirectUrl": null
+// }
+
+// STEP 4: Frontend uses i18n to show the message
+// If language = ru → shows "Email уже зарегистрирован"
+// If language = en → shows "Email already registered"
+```
+
+### Exception Hierarchy
+
+```
+java.lang.RuntimeException
+    └── ServiceException          ← Our custom exception
+            ├── errorCode: String  ← "auth.email.alreadyRegistered"
+            └── message: String   ← "Email already registered"
+```
+
+### Error Codes in This Project
+
+| Error Code | HTTP Status | Message (EN) | When |
+|-----------|-------------|--------------|------|
+| `auth.email.alreadyRegistered` | 409 Conflict | Email already registered | Duplicate registration |
+| `auth.password.mismatch` | 400 Bad Request | Passwords do not match | Confirmation != Password |
+| `auth.password.weak` | 400 Bad Request | Password too weak | Doesn't meet requirements |
+| `auth.registration.failed` | 500 Server Error | Registration failed | Database error during registration |
+| `auth.role.notFound` | 500 Server Error | Default role not found | Role table is empty (setup issue) |
+
+### Key Rules for Exceptions
+
+1. **Custom exceptions carry error codes** — the code is a string key for i18n message lookup
+2. **Service throws, Controller catches** — the boundary between business logic and HTTP
+3. **Never expose stack traces to the client** — return user-friendly messages only
+4. **Log the full error server-side** — stack traces in server logs, not in HTTP responses
+5. **One exception class per layer** — `ServiceException` for all business errors
+6. **Error codes are hierarchical** — `auth.email.alreadyRegistered`, `auth.password.weak`
+
+---
+
+## Final Summary: The Complete Request Flow
+
+```mermaid
+flowchart TB
+    subgraph Client [Browser]
+        FORM["Vue SPA form"]
+    end
+    
+    subgraph Layer1 [Layer 1: Controller]
+        CT["AuthController
+        • Receives HTTP POST
+        • @Valid validates JSON
+        • Creates session
+        • Returns HTTP response"]
+    end
+    
+    subgraph Layer2 [Layer 2: Service]
+        SV["AuthService
+        • Business rules
+        • Password hashing
+        • JDBC transaction
+        • Throws ServiceException"]
+    end
+    
+    subgraph Layer3 [Layer 3: DAO]
+        DAO1["UserDao
+        • INSERT users
+        • SELECT users"]
+        DAO2["ContactDetailDao
+        • INSERT contact_detail"]
+    end
+    
+    subgraph Layer4 [Database]
+        DB[(PostgreSQL)]
+    end
+    
+    subgraph Errors [Error Handling]
+        EX["ServiceException
+        • errorCode: 'auth.email.alreadyRegistered'
+        • message: 'Email already registered'"]
+        RESP["AuthResponse
+        • success: false
+        • message: translated to user's language"]
+    end
+    
+    FORM -->|"POST /api/auth/register {email, password}"| CT
+    CT -->|"RegisterRequest DTO"| SV
+    SV -->|"User + ContactDetail (transaction)"| DAO1
+    SV -->|"ContactDetail"| DAO2
+    DAO1 -->|"SQL INSERT"| DB
+    DAO2 -->|"SQL INSERT"| DB
+    DB -->|"OK"| DAO1
+    DB -->|"OK"| DAO2
+    DAO1 -->|"User object"| SV
+    DAO2 -->|"void"| SV
+    SV -->|"User object (or throws ServiceException)"| CT
+    CT -->|"200 OK {success, role, redirectUrl}"| FORM
+    
+    SV -.->|"on error"| EX
+    EX -.->|"caught by"| CT
+    CT -.->|"mapped to HTTP status + JSON"| RESP
+    RESP -.->|"displayed in"| FORM
+    
+    style Layer1 fill:#bbf,stroke:#333
+    style Layer2 fill:#bfb,stroke:#333
+    style Layer3 fill:#f96,stroke:#333
+    style Errors fill:#ffcccc,stroke:#f00
+```
+
+| Component | Tagline | Job | Lives in |
+|-----------|---------|-----|----------|
+| **Flyway** | 🏗️ DB architect | Creates tables in order | `db/migration/` |
+| **Model** | 📋 Data blueprint | One Java class = one DB row | `model/` |
+| **DTO** | 📦 Shipping box | Carries validated data between browser and server | `dto/` |
+| **DAO** | 🍳 Kitchen chef | Runs SQL, converts rows to Java objects | `dao/` |
+| **Service** | 🧠 Brain | Business logic, transactions, coordination | `service/` |
+| **Controller** | 🚪 Receptionist | Handles HTTP, validates, delegates, responds | `controller/` |
+| **Exception** | 🚨 Alarm | Error code + message for structured errors | `exception/` |

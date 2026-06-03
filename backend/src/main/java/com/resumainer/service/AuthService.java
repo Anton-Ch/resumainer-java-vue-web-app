@@ -1,0 +1,142 @@
+package com.resumainer.service;
+
+import com.resumainer.dao.ContactDetailDao;
+import com.resumainer.dao.RoleDao;
+import com.resumainer.dao.UserDao;
+import com.resumainer.dto.RegisterRequest;
+import com.resumainer.exception.ServiceException;
+import com.resumainer.model.ContactDetail;
+import com.resumainer.model.Role;
+import com.resumainer.model.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+/**
+ * Service for user authentication: registration, login, logout.
+ * <p>
+ * Registration uses JDBC transaction management (Constitution IV):
+ * User creation + ContactDetail creation in a single transaction.
+ */
+public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
+    private final UserDao userDao;
+    private final RoleDao roleDao;
+    private final ContactDetailDao contactDetailDao;
+    private final PasswordService passwordService;
+    private final DataSource dataSource;
+
+    public AuthService(UserDao userDao, RoleDao roleDao,
+                       ContactDetailDao contactDetailDao,
+                       PasswordService passwordService,
+                       DataSource dataSource) {
+        this.userDao = userDao;
+        this.roleDao = roleDao;
+        this.contactDetailDao = contactDetailDao;
+        this.passwordService = passwordService;
+        this.dataSource = dataSource;
+    }
+
+    /**
+     * Register a new user.
+     * <p>
+     * Validates input, checks email uniqueness, hashes password,
+     * then creates User + ContactDetail in a single JDBC transaction.
+     *
+     * @param request the registration request (validated DTO)
+     * @return the newly created User
+     * @throws ServiceException if email is taken, passwords don't match,
+     *                          password is weak, or database error occurs
+     */
+    public User register(RegisterRequest request) {
+        // Validate password match
+        if (!request.getPassword().equals(request.getPasswordConfirmation())) {
+            log.warn("Registration failed: password mismatch for email: {}", request.getEmail());
+            throw new ServiceException("auth.password.mismatch", "Passwords do not match");
+        }
+
+        // Validate password strength
+        if (!passwordService.isStrongPassword(request.getPassword())) {
+            log.warn("Registration failed: weak password for email: {}", request.getEmail());
+            throw new ServiceException("auth.password.weak", "Password does not meet strength requirements");
+        }
+
+        // Check email uniqueness
+        String email = request.getEmail().toLowerCase().trim();
+        User existing = userDao.findByEmail(email);
+        if (existing != null) {
+            log.warn("Registration failed: email already registered: {}", email);
+            throw new ServiceException("auth.email.alreadyRegistered", "Email already registered");
+        }
+
+        // Hash password
+        String passwordHash = passwordService.hashPassword(request.getPassword());
+
+        // Create user entity
+        User user = new User();
+        user.setEmail(email);
+        user.setPasswordHash(passwordHash);
+
+        // Look up default role (USER)
+        Role userRole = roleDao.findByCode("USER");
+        if (userRole == null) {
+            throw new ServiceException("auth.role.notFound", "Default role not found");
+        }
+        user.setRoleId(userRole.getId());
+        // Default status = ACTIVE (id 1), default permission = ALLOWED (id 1)
+        user.setStatusId(1L);
+        user.setPermissionId(1L);
+        user.setPrivileged(false);
+
+        // Execute in transaction
+        Connection conn = null;
+        try {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+
+            // Create user
+            userDao.create(user, conn);
+
+            // Create empty contact detail shell
+            ContactDetail contactDetail = ContactDetail.createEmpty(user.getId());
+            contactDetailDao.create(contactDetail, conn);
+
+            conn.commit();
+            log.info("User registered successfully: {}", email);
+            return user;
+
+        } catch (SQLException e) {
+            rollbackQuietly(conn);
+            log.error("Registration failed (rollback) for email: {}", email, e);
+            throw new ServiceException("auth.registration.failed", "Registration failed due to database error", e);
+
+        } finally {
+            closeQuietly(conn);
+        }
+    }
+
+    private void rollbackQuietly(Connection conn) {
+        if (conn != null) {
+            try {
+                conn.rollback();
+            } catch (SQLException e) {
+                log.warn("Rollback failed", e);
+            }
+        }
+    }
+
+    private void closeQuietly(Connection conn) {
+        if (conn != null) {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close connection", e);
+            }
+        }
+    }
+}

@@ -183,3 +183,61 @@ CsrfFilter for Feature 003 was originally planned with `FilterRegistrationBean` 
 
 **Where to look next**
 backend/src/main/java/com/resumainer/initializer/AppInitializer.java
+
+---
+
+### 2026-06-03 - Mockito-extensions config file with wrong content breaks all mock creation
+
+**Status**
+Active
+
+**Symptoms**
+All Mockito `mock()` calls fail with: &quot;Failed to load interface org.mockito.plugins.MockMaker implementation declared in java.lang.CompoundEnumeration&quot;. Tests error out immediately at mock creation, showing 0 failures but N errors.
+
+**Root Cause**
+Creating a file at `src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker` with content &quot;mock-maker-default&quot; (or any content that references a non-existent MockMaker). In Mockito 5.x, the inline mock maker is the only bundled implementation — &quot;mock-maker-default&quot; does NOT exist. Even after deleting the source file, the compiled copy remains in `target/test-classes/mockito-extensions/` and continues to break tests.
+
+**Future mistake prevented**
+Do NOT create `mockito-extensions/org.mockito.plugins.MockMaker` files manually. Mockito 5.x uses inline mock maker by default. If you need to configure it, use the official `-javaagent` approach in surefire argLine instead.
+
+If the config file was already created:
+1. Delete `src/test/resources/mockito-extensions/` (source)
+2. Delete `target/test-classes/mockito-extensions/` (stale compile output)
+3. Run `mvn clean test` to rebuild
+
+**Evidence**
+Phase 2 DAO tests failed after creating mockito-extensions file thinking we needed &quot;mock-maker-default&quot;. Even after removing the source file, `target/test-classes` still had the cached copy. Complete cleanup of both locations fixed all 16 lookup DAO tests.
+
+**Prevention / Detection**
+- After any change to test resources, run `mvn clean` to ensure no stale classpath files remain
+- If Mockito mocks fail with &quot;MockMaker implementation declared in CompoundEnumeration&quot;, check `target/test-classes/mockito-extensions/` for leftover config files
+
+**Where to look next**
+`src/test/resources/mockito-extensions/` (should not exist), `target/test-classes/mockito-extensions/` (stale artifact)
+
+---
+
+### 2026-06-03 - MockMvc jsonPath() assertions require explicit jayway-jsonpath dependency
+
+**Status**
+Active
+
+**Symptoms**
+MockMvc standalone test fails with: `java.lang.NoClassDefFoundError: com/jayway/jsonpath/TypeRef` when using `MockMvcResultMatchers.jsonPath()`. The error occurs at test method invocation, not at setup.
+
+**Root Cause**
+Spring MVC's `MockMvcResultMatchers.jsonPath()` internally delegates to `com.jayway.jsonpath` library, but it is an optional/compile-only dependency — not transitively included by spring-webmvc or spring-test. Without an explicit test-scoped dependency, the class is not on the test classpath.
+
+**Future mistake prevented**
+Always add `com.jayway.jsonpath:json-path` as a test-scope dependency before writing MockMvc tests with `jsonPath()` assertions. Without it, every `jsonPath()` call throws NoClassDefFoundError.
+
+**Evidence**
+AuthControllerTest.register_validInput_returns200() failed with NoClassDefFoundError for com/jayway/jsonpath/TypeRef. Adding json-path 2.9.0 as test dependency fixed both controller tests.
+
+**Prevention / Detection**
+- Add json-path to pom.xml before writing MockMvc jsonPath assertions
+- Version: 2.9.0+ (compatible with Spring MVC 6.2.x)
+- Scope: test
+
+**Where to look next**
+backend/pom.xml (test dependencies), any new controller test class using jsonPath()
