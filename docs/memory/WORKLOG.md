@@ -19,6 +19,28 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-03 - Feature 003 Phase 8 Bilingual Auth Forms with PrimeVue + Zod Completed
+
+**Milestone**: Phase 8 (User Story 5 — Bilingual Auth Forms with PrimeVue + Zod) of Feature 003 (Vue Auth Page) completed.
+
+**What was achieved**:
+- LoginForm.vue: PrimeVue 4 Form with Zod resolver, email (InputText + @Email), password (Password + toggleMask), rememberMe (Checkbox), inline Message errors, @success emit
+- RegisterForm.vue: PrimeVue 4 Form with Zod resolver, email (InputText), password (Password + feedback/strength meter), confirmPassword (Password + .refine() match), inline Message errors
+- AuthPage.vue refactored: inline forms replaced with LoginForm + RegisterForm components, ~310 lines removed, form-slide transition preserved
+- Zod schemas with bilingual error messages match backend validation rules
+
+**Key lessons captured**:
+- D12: PrimeVue 4 Form with Zod resolver standard validation pattern
+- PrimeVue 4 components imported individually (tree-shaking)
+- Zod .refine() for cross-field validation (password match)
+
+**Evidence**
+Commit 61713fa. All frontend builds pass (vue-tsc + vite, 2.60s).
+
+**Next phase**: Phase 9 — Docker &amp; Integration (Dockerfiles, docker-compose, integration tests).
+
 ### 2026-06-03 - Feature 003 Phase 5 Interceptor, CSRF Filter, and Configuration Completed
 
 **Milestone**: Phase 5 (Cross-cutting Backend — Interceptor &amp; Configuration) of Feature 003 (Vue Auth Page) completed.

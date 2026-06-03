@@ -31,6 +31,7 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - D8 | CSRF via OWASP cookie-to-header pattern in pure Spring MVC | csrf, security, spring-mvc, filter, owasp, cookie-to-header, vue, spa | [DECISIONS.md](DECISIONS.md) | active
 - D9 | JDK version must match project target to avoid build and test failures | jdk,java-version,mockito,testing,dev-env,setup | [DECISIONS.md](DECISIONS.md) | active
 - D10 | DAO connection-accepting overloads for JDBC transaction support | dao,jdbc,transaction,connection,service-layer,architecture | [DECISIONS.md](DECISIONS.md) | active
+- D12 | PrimeVue 4 Form with Zod resolver: standard validation pattern | primevue,vue3,form,validation,zod,resolver,frontend | [DECISIONS.md](DECISIONS.md) | active
 
 ## Workflow
 - W1 | First Feature MVP Achieved: Hello World Tomcat | milestone, mvp, hello-world, docker, spring-mvc, tomcat | [WORKLOG.md](WORKLOG.md) | active
@@ -40,3 +41,4 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - W5 | Feature 003 Phase 3 Registration Service and Controller Completed | milestone,feature-003,phase-3,registration,tdd | [WORKLOG.md](WORKLOG.md) | active
 - W6 | Feature 003 Phase 4 Login with Rate Limiting Completed | milestone,feature-003,phase-4,login,rate-limiting,security | [WORKLOG.md](WORKLOG.md) | active
 - W7 | Feature 003 Phase 5 Interceptor, CSRF Filter, and Configuration Completed | milestone,feature-003,phase-5,interceptor,csrf,webconfig | [WORKLOG.md](WORKLOG.md) | active
+- W8 | Feature 003 Phase 8 Bilingual Auth Forms with PrimeVue + Zod Completed | milestone,feature-003,phase-8,auth,primevue,zod,forms | [WORKLOG.md](WORKLOG.md) | active
