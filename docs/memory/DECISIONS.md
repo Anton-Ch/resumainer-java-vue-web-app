@@ -345,3 +345,49 @@ AuthService.register() needed atomic User + ContactDetail creation. UserDao and 
 
 **Where to look next**
 backend/src/main/java/com/resumainer/dao/UserDao.java, ContactDetailDao.java, backend/src/main/java/com/resumainer/service/AuthService.java
+
+---
+
+### 2026-06-03 - PrimeVue 4 Form with Zod resolver: standard validation pattern
+
+**Status**
+Active
+
+**Why this is durable**
+Every Vue SPA feature that accepts user input needs form validation. PrimeVue 4 introduced a new Form component with resolver-based validation. The pattern is non-obvious and differs from PrimeVue 3. All future forms must follow this pattern for consistency.
+
+**Decision**
+All form validation in the Vue SPA uses PrimeVue 4 Form component with Zod resolver:
+
+1. Define a Zod schema for the form data
+2. Wrap with `zodResolver` from `@primevue/forms/resolvers/zod`
+3. Pass as `:resolver` prop to `<Form>`
+4. Use `<FormField v-slot="$field" name="fieldName">` for each field
+5. Show errors via `<Message v-if="$field?.invalid" severity="error" size="small" variant="simple">`
+6. Handle submit via `@submit="onSubmit"` which receives `{ valid, values }`
+
+Import pattern:
+```typescript
+import { Form, FormField } from '@primevue/forms'
+import { zodResolver } from '@primevue/forms/resolvers/zod'
+import { z } from 'zod'
+import InputText from 'primevue/inputtext'
+import Password from 'primevue/password'
+import Message from 'primevue/message'
+```
+
+Components are imported individually (not from a barrel), following PrimeVue 4 tree-shaking conventions.
+
+**Tradeoffs**
+- Gained: Declarative validation with Zod schemas, field-level error messages, consistent across all forms, tree-shakeable imports
+- Made harder: Requires understanding Zod schema API and PrimeVue 4 Form resolver pattern
+- Reconsider: If the project switches to a different form library (e.g., VeeValidate), the resolver pattern changes
+
+**Future mistake prevented**
+Using PrimeVue 3 patterns (old InputText + manual validation) on PrimeVue 4, or using v-model directly without Form resolver. These patterns would bypass PrimeVue 4's built-in validation state management.
+
+**Evidence**
+LoginForm.vue and RegisterForm.vue successfully implement PrimeVue 4 Form + Zod resolver with email, password, confirmPassword, and rememberMe fields. All validation works with bilingual error messages.
+
+**Where to look next**
+frontend/src/components/LoginForm.vue, frontend/src/components/RegisterForm.vue
