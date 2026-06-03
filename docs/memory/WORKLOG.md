@@ -17,6 +17,29 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-03 - Feature 003 Phase 5 Interceptor, CSRF Filter, and Configuration Completed
+
+**Milestone**: Phase 5 (Cross-cutting Backend — Interceptor &amp; Configuration) of Feature 003 (Vue Auth Page) completed.
+
+**What was achieved**:
+- AuthInterceptor: HandlerInterceptor that checks HttpSession for "user" attribute on /api/** paths, returns 401 JSON for unauthenticated requests, excludes /api/auth/*
+- CsrfFilter: OncePerRequestFilter implementing OWASP cookie-to-header pattern with SecureRandom 32-byte tokens, Base64 URL-safe encoding, non-HTTP-only XSRF-TOKEN cookie, skips validation for /api/auth/* and /api/public/**
+- AppInitializer: CsrfFilter registered via getServletFilters() (per B6), session timeout set to 30 min
+- WebConfig: 12 new @Bean methods (DataSource, 6 DAOs, PasswordService, AuthService, AuthInterceptor, AuthController) + AuthInterceptor registered with path patterns
+- AuthExceptionHandler: @ControllerAdvice mapping ServiceException error codes to HTTP status (409/400/401/423/403/500)
+
+**Key lessons captured**:
+- B10: MockMvc standalone creates fresh session per perform() — use MockHttpSession for filter tests
+- CsrfFilter in pure Spring MVC uses getServletFilters() (B6), not FilterRegistrationBean
+- All @Beans must be explicit in WebConfig per B1/B5
+
+**Evidence**
+All 62 tests pass (BUILD SUCCESS). 7 new tests: AuthInterceptor (2), CsrfFilter (5).
+
+**Next phase**: Phase 6 — Vue Router guards, authService.ts, useAuth composable (T039-T041).
+
 ### 2026-06-03 - Feature 003 Phase 4 Login with Rate Limiting Completed
 
 **Milestone**: Phase 4 (User Story 2 — Login) of Feature 003 (Vue Auth Page) completed with TDD.

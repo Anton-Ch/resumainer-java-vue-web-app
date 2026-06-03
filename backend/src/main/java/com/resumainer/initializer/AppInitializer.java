@@ -1,6 +1,8 @@
 package com.resumainer.initializer;
 
 import com.resumainer.config.WebConfig;
+import com.resumainer.filter.CsrfFilter;
+import jakarta.servlet.Filter;
 import jakarta.servlet.ServletRegistration;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
@@ -12,9 +14,6 @@ import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatche
  * Bootstraps the DispatcherServlet without web.xml by extending
  * {@link AbstractAnnotationConfigDispatcherServletInitializer}.
  * Auto-discovered by Tomcat 10.1+ via the ServletContainerInitializer SPI.
- * <p>
- * No root config is needed for this feature — all Spring configuration
- * is contained in {@link WebConfig}.
  */
 public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
 
@@ -36,15 +35,28 @@ public class AppInitializer extends AbstractAnnotationConfigDispatcherServletIni
     @Override
     protected DispatcherServlet createDispatcherServlet(WebApplicationContext servletAppContext) {
         DispatcherServlet dispatcherServlet = new DispatcherServlet(servletAppContext);
-        // Throw NoHandlerFoundException for unhandled URLs so GlobalExceptionHandler
-        // can serve our custom bilingual 404 Thymeleaf template instead of Tomcat default.
         dispatcherServlet.setThrowExceptionIfNoHandlerFound(true);
         return dispatcherServlet;
     }
 
     @Override
     protected void customizeRegistration(ServletRegistration.Dynamic registration) {
-        // Enable case-sensitive REST-style mapping (default is true, explicit for clarity)
         registration.setInitParameter("spring.mvc.static-path-pattern", "/static/**");
+
+        // Session timeout: 30 minutes (1800 seconds)
+        registration.setInitParameter("spring.mvc.servlet.session-timeout", "1800");
+    }
+
+    /**
+     * Register servlet filters for all requests.
+     * <p>
+     * CsrfFilter: OWASP cookie-to-header CSRF protection.
+     * In pure Spring MVC, use getServletFilters() — NOT FilterRegistrationBean (see B6).
+     */
+    @Override
+    protected Filter[] getServletFilters() {
+        return new Filter[]{
+                new CsrfFilter()
+        };
     }
 }

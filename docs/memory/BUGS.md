@@ -280,3 +280,42 @@ AuthControllerTest.login_validInput_returns200() failed with NPE: `Cannot invoke
 
 **Where to look next**
 Any Java class that compares a Long getter result with a primitive literal. Common in Controller and Service layers.
+
+---
+
+### 2026-06-03 - MockMvc standalone: each perform() creates a fresh session — use MockHttpSession for filter tests
+
+**Status**
+Active
+
+**Symptoms**
+A filter sets a session attribute (e.g., CSRF token) during request processing. A subsequent test request that depends on that session attribute fails because the attribute is missing. For example: first perform() sets CSRF token in session and cookie. Second perform() reads the cookie and sends it as header, but the filter rejects it because the session doesn't have the matching token.
+
+**Root Cause**
+In standalone MockMvc setup (MockMvcBuilders.standaloneSetup), each perform() call creates a NEW MockHttpSession. Session state does NOT persist between requests. This is different from WebApplicationContext-based MockMvc testing where session state persists across requests within the same test method.
+
+**Future mistake prevented**
+When testing filters that read/write session attributes (CsrfFilter, AuthInterceptor, etc.) with standalone MockMvc, pre-configure the session with required attributes using MockHttpSession:
+
+```java
+MockHttpSession session = new MockHttpSession();
+session.setAttribute("CSRF_TOKEN", "known-token-value");
+
+mockMvc.perform(post("/api/test")
+        .session(session)
+        .header("X-CSRF-Token", "known-token-value"))
+    .andExpect(status().isOk());
+```
+
+Do NOT try to chain requests expecting session state to carry over between perform() calls.
+
+**Evidence**
+CsrfFilterTest.postWithValidCsrfToken_returns200 initially tried: perform GET → get cookie from response → perform POST with cookie value. The POST failed because the second perform() had a fresh session without the CSRF token. Fixed by using shared MockHttpSession with pre-set session attribute.
+
+**Prevention / Detection**
+- When testing filters with standalone MockMvc, always use `MockHttpSession` with pre-set attributes
+- If you need session state across requests, use WebApplicationContext-based MockMvc (SpringBootTest or SpringJUnitWebConfig)
+- For CsrfFilter specifically: pre-set "CSRF_TOKEN" session attribute + matching X-CSRF-Token header
+
+**Where to look next**
+Any test using standalone MockMvc + addFilters() that needs session state. CsrfFilterTest.java.
