@@ -307,32 +307,16 @@ function onAuthSuccess(redirectUrl: string) {
   .auth-form-wrapper {
     animation: none;
   }
-  .form-slide-enter-active,
-  .form-slide-leave-active {
-    animation: none;
-  }
-}
-
-/* ========== Reduced Motion ========== */
-@media (prefers-reduced-motion: reduce) {
   .gradient-bg {
     animation: none;
   }
-
-  .form-field {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-
-  .form-slide-enter-active,
-  .form-slide-leave-active {
-    animation: none;
-  }
-
   .info-fade-enter-active,
   .info-fade-leave-active {
     transition: none;
+  }
+  .form-slide-enter-active,
+  .form-slide-leave-active {
+    animation: none;
   }
 }
 
