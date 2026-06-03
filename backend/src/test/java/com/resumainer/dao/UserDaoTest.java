@@ -36,7 +36,10 @@ class UserDaoTest {
 
     @Test
     void create_user_persistsSuccessfully() throws Exception {
-        when(preparedStatement.executeUpdate()).thenReturn(1);
+        UUID generatedId = UUID.randomUUID();
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getObject("id", UUID.class)).thenReturn(generatedId);
 
         User user = new User();
         user.setEmail("test@example.com");
@@ -47,9 +50,7 @@ class UserDaoTest {
 
         userDao.create(user);
 
-        verify(connection).prepareStatement(
-            "INSERT INTO users (email, password_hash, role_id, status_id, permission_id, " +
-            "default_language_id, secondary_language_id, is_privileged) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        assertEquals(generatedId, user.getId());
         verify(preparedStatement).setString(1, "test@example.com");
         verify(preparedStatement).setString(2, "$2a$10$hash");
     }

@@ -15,6 +15,8 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - B4 | Shell scripts with CRLF line endings fail in Linux Docker containers | docker, crlf, shell, bash, linux, line-endings, windows, devops | [BUGS.md](BUGS.md) | active
 - B5 | All Spring stereotype annotations require explicit @Bean in pure Spring MVC | spring-mvc, bean, controller, controller-advice, component-scan, registration, configuration | [BUGS.md](BUGS.md) | active
 - B6 | FilterRegistrationBean is Spring Boot API — use getServletFilters() in pure Spring MVC | spring-mvc, filter, servlet, appinitializer, csrf, boot-vs-core, configuration | [BUGS.md](BUGS.md) | active
+- B7 | Mockito-extensions config file with wrong content breaks all mock creation | mockito,testing,mock-maker,configuration,classpath | [BUGS.md](BUGS.md) | active
+- B8 | MockMvc jsonPath() assertions require explicit jayway-jsonpath dependency | mockmvc,testing,jsonpath,spring-mvc,dependency | [BUGS.md](BUGS.md) | active
 
 ## Decisions
 - D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web.xml) | servlet, spring-mvc, jakarta-ee, tomcat, initialization, web.xml | [DECISIONS.md](DECISIONS.md) | active
@@ -25,8 +27,12 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - D6 | Custom 404 requires DispatcherServlet config + bean registration | spring-mvc, error-handling, 404, dispatcher-servlet, exception-resolver, thymeleaf | [DECISIONS.md](DECISIONS.md) | active
 - D7 | Hybrid PK strategy: gen_random_uuid() for entities, BIGSERIAL for lookups | postgresql, uuid, primary-key, database, schema, flyway, migration | [DECISIONS.md](DECISIONS.md) | active
 - D8 | CSRF via OWASP cookie-to-header pattern in pure Spring MVC | csrf, security, spring-mvc, filter, owasp, cookie-to-header, vue, spa | [DECISIONS.md](DECISIONS.md) | active
+- D9 | JDK version must match project target to avoid build and test failures | jdk,java-version,mockito,testing,dev-env,setup | [DECISIONS.md](DECISIONS.md) | active
+- D10 | DAO connection-accepting overloads for JDBC transaction support | dao,jdbc,transaction,connection,service-layer,architecture | [DECISIONS.md](DECISIONS.md) | active
 
 ## Workflow
 - W1 | First Feature MVP Achieved: Hello World Tomcat | milestone, mvp, hello-world, docker, spring-mvc, tomcat | [WORKLOG.md](WORKLOG.md) | active
 - W2 | Second Feature MVP Achieved: Thymeleaf Landing Page | milestone, mvp, landing-page, thymeleaf, i18n, feature-002, bilingual | [WORKLOG.md](WORKLOG.md) | active
 - W3 | Feature 003 Planning and Security Review Completed | milestone, feature-003, vue-auth, planning, security-review, specification | [WORKLOG.md](WORKLOG.md) | active
+- W4 | Feature 003 Phase 2 Foundational Database and DAO Layer Completed | milestone,feature-003,phase-2,flyway,dao,tdd | [WORKLOG.md](WORKLOG.md) | active
+- W5 | Feature 003 Phase 3 Registration Service and Controller Completed | milestone,feature-003,phase-3,registration,tdd | [WORKLOG.md](WORKLOG.md) | active

@@ -17,8 +17,10 @@ public class UserDao {
 
     private static final Logger log = LoggerFactory.getLogger(UserDao.class);
 
-    private static final String INSERT = "INSERT INTO users (email, password_hash, role_id, status_id, permission_id, " +
-            "default_language_id, secondary_language_id, is_privileged) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String INSERT =
+            "INSERT INTO users (email, password_hash, role_id, status_id, permission_id, " +
+            "default_language_id, secondary_language_id, is_privileged) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+            "RETURNING id";
 
     private static final String SELECT_BY_EMAIL =
             "SELECT id, email, password_hash, username, role_id, status_id, permission_id, " +
@@ -45,18 +47,32 @@ public class UserDao {
     }
 
     /**
-     * Create a new user.
+     * Create a new user (auto-managed connection).
      *
-     * @param user the user to create (must have email, passwordHash, roleId, statusId, permissionId set)
+     * @param user the user to create
      */
     public void create(User user) {
+        try (Connection conn = dataSource.getConnection()) {
+            create(user, conn);
+        } catch (SQLException e) {
+            log.error("Error creating user: {}", user.getEmail(), e);
+            throw new RuntimeException("Database error creating user", e);
+        }
+    }
+
+    /**
+     * Create a new user within an existing connection (for transaction support).
+     *
+     * @param user the user to create
+     * @param conn the existing database connection (transaction-managed)
+     */
+    public void create(User user, Connection conn) {
         if (user == null) {
             throw new IllegalArgumentException("User must not be null");
         }
         log.debug("Creating user: {}", user.getEmail());
 
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(INSERT)) {
+        try (PreparedStatement stmt = conn.prepareStatement(INSERT)) {
 
             stmt.setString(1, user.getEmail().toLowerCase().trim());
             stmt.setString(2, user.getPasswordHash());
@@ -67,11 +83,13 @@ public class UserDao {
             setLongOrNull(stmt, 7, user.getSecondaryLanguageId());
             stmt.setBoolean(8, user.isPrivileged());
 
-            int rows = stmt.executeUpdate();
-            if (rows != 1) {
-                throw new RuntimeException("Unexpected insert result: " + rows);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    throw new RuntimeException("Insert did not return a generated key");
+                }
+                user.setId(rs.getObject("id", UUID.class));
             }
-            log.debug("User created: {}", user.getEmail());
+            log.debug("User created: {}, id={}", user.getEmail(), user.getId());
 
         } catch (SQLException e) {
             log.error("Error creating user: {}", user.getEmail(), e);

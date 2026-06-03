@@ -26,11 +26,26 @@ public class ContactDetailDao {
     }
 
     /**
-     * Create an empty contact detail shell for a newly registered user.
+     * Create an empty contact detail shell (auto-managed connection).
      *
      * @param contactDetail the contact detail to create (must have userId set)
      */
     public void create(ContactDetail contactDetail) {
+        try (Connection conn = dataSource.getConnection()) {
+            create(contactDetail, conn);
+        } catch (SQLException e) {
+            log.error("Error creating contact detail for user: {}", contactDetail.getUserId(), e);
+            throw new RuntimeException("Database error creating contact detail", e);
+        }
+    }
+
+    /**
+     * Create contact detail within an existing connection (for transaction support).
+     *
+     * @param contactDetail the contact detail to create
+     * @param conn the existing database connection
+     */
+    public void create(ContactDetail contactDetail, Connection conn) {
         if (contactDetail == null) {
             throw new IllegalArgumentException("ContactDetail must not be null");
         }
@@ -40,8 +55,7 @@ public class ContactDetailDao {
 
         log.debug("Creating contact detail for user: {}", contactDetail.getUserId());
 
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(INSERT)) {
+        try (PreparedStatement stmt = conn.prepareStatement(INSERT)) {
 
             stmt.setObject(1, contactDetail.getUserId());
 
