@@ -1404,3 +1404,591 @@ flowchart TB
 | **Service** | 🧠 Brain | Business logic, transactions, coordination | `service/` |
 | **Controller** | 🚪 Receptionist | Handles HTTP, validates, delegates, responds | `controller/` |
 | **Exception** | 🚨 Alarm | Error code + message for structured errors | `exception/` |
+| **Interceptor** | 🛂 Security checkpoint | Checks session before controller, path-based rules | `interceptor/` |
+| **Filter** | 🚧 Metal detector | Low-level request/response preprocessing (CSRF, encoding) | `filter/` |
+
+---
+
+## Interceptor — What It Is and How It Works
+
+### What Is an Interceptor?
+
+An **Interceptor** (HandlerInterceptor in Spring) is a Java class that "intercepts" HTTP requests **before they reach your Controller**. It can decide: let the request through (return `true`) or block it and return an error (return `false`).
+
+```java
+// AuthInterceptor.java — checks if user is logged in before accessing protected routes
+public class AuthInterceptor implements HandlerInterceptor {
+
+    @Override
+    public boolean preHandle(HttpServletRequest request,
+                             HttpServletResponse response,
+                             Object handler) throws Exception {
+
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("user") != null) {
+            return true;  // ✅ Let the request through
+        }
+
+        // ❌ Block — send 401 Unauthorized
+        response.setStatus(401);
+        response.getWriter().write("{\"error\":\"Unauthorized\"}");
+        return false;
+    }
+}
+```
+
+### ELI5: Interceptor is a *security checkpoint at the office entrance*
+
+```
+  Visitor                     Security Checkpoint (Interceptor)         Office (Controller)
+    │                                │                                      │
+    │ "I want to see the            │                                      │
+    │  manager on floor 3"          │                                      │
+    │ ─────────────────────────────>│                                      │
+    │                                │                                      │
+    │                                │ "Do you have a badge?"               │
+    │                                │ (checks HttpSession for "user")      │
+    │                                │                                      │
+    │   "No, I don't"               │                                      │
+    │ <─────────────────────────────│                                      │
+    │    (401 Unauthorized)         │                                      │
+    │                                │                                      │
+    │                                │ vs.                                  │
+    │                                │                                      │
+    │ "I work here, here's          │                                      │
+    │  my badge"                    │                                      │
+    │ ─────────────────────────────>│                                      │
+    │                                │ "Badge valid! Proceed to floor 3"  │
+    │                                │ ───────────────────────────────────>│
+    │                                │       (Controller handles request)  │
+```
+
+The **Interceptor is the security checkpoint**. It checks your badge before letting you into the office. No badge? No entry.
+
+### Where Interceptor Sits in the Request Flow
+
+```mermaid
+flowchart LR
+    Browser -->|"HTTP Request"| F[Filter Layer]
+    F -->|"passes through"| I[Interceptor]
+    I -->|"preHandle() checks session"| C[Controller]
+    C -->|"returns response"| I
+    I -->|"postHandle()"| F
+    F -->|"response"| Browser
+    
+    style I fill:#ffe082,stroke:#333
+    style C fill:#bbf,stroke:#333
+```
+
+An Interceptor runs **between the Filter and the Controller**. It's closer to the Controller than a Filter is.
+
+### Path Pattern Matching
+
+Interceptors can be configured to only apply to certain URL paths:
+
+```java
+// In WebConfig.java — register interceptor with path rules
+@Override
+public void addInterceptors(InterceptorRegistry registry) {
+    registry.addInterceptor(authInterceptor())
+            .addPathPatterns("/api/**")              // Apply to /api/users, /api/resumes, etc.
+            .excludePathPatterns("/api/auth/**");     // But NOT to /api/auth/login, /api/auth/register
+}
+```
+
+Path patterns use Ant-style matchers:
+
+| Pattern | Matches | Doesn't Match |
+|---------|---------|---------------|
+| `/api/**` | `/api/users`, `/api/auth/login` | `/`, `/home` |
+| `/api/auth/*` | `/api/auth/login` | `/api/auth/login/extra` |
+| `/api/**` but exclude `/api/auth/**` | `/api/users/me` | `/api/auth/login` |
+
+### Interceptor vs Filter — The Differences at a Glance
+
+```mermaid
+flowchart TB
+    subgraph Request_Flow ["HTTP Request Flow"]
+        REQ[Browser Request]
+        F1[Filter 1<br/>CsrfFilter]
+        F2[Filter 2<br/>CharacterEncoding]
+        I1[Interceptor<br/>AuthInterceptor]
+        CT[Controller]
+    end
+    
+    REQ --> F1
+    F1 --> F2
+    F2 --> I1
+    I1 --> CT
+    
+    style F1 fill:#ffcdd2,stroke:#333
+    style F2 fill:#ffcdd2,stroke:#333
+    style I1 fill:#ffe082,stroke:#333
+    style CT fill:#bbf,stroke:#333
+```
+
+| Feature | Filter | Interceptor |
+|---------|--------|-------------|
+| **Level** | Servlet level (lower) | Spring MVC level (higher) |
+| **Knows about** | `ServletRequest`, `ServletResponse` | Controller, Handler mapping |
+| **Can access** | Request, Response, Session | Request, Response, Session, Model, View |
+| **Configured via** | `AppInitializer.getServletFilters()` | `WebMvcConfigurer.addInterceptors()` |
+| **Path patterns** | Applied to ALL requests (unless using Spring's FilterRegistrationBean — not available in pure Spring MVC) | Built-in `addPathPatterns()` / `excludePathPatterns()` |
+| **Use for** | Low-level: CSRF, encoding, CORS, compression | MVC-level: auth checks, logging, locale |
+| **Can modify** | Request and Response objects | Request, Response, Model, View |
+
+### AuthInterceptor in this Project
+
+```java
+public class AuthInterceptor implements HandlerInterceptor {
+
+    @Override
+    public boolean preHandle(HttpServletRequest request,
+                             HttpServletResponse response,
+                             Object handler) throws Exception {
+
+        // Allow CORS preflight requests through
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+
+        // Check for valid session with "user" attribute
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("user") != null) {
+            return true; // ✅ Authenticated — let through
+        }
+
+        // ❌ Not authenticated — return 401 JSON
+        log.warn("Unauthorized access: {} {}", request.getMethod(), request.getRequestURI());
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+        objectMapper.writeValue(response.getWriter(), Map.of(
+                "error", "Unauthorized",
+                "message", "Authentication required"
+        ));
+        return false;
+    }
+}
+```
+
+### How It's Registered
+
+```java
+// WebConfig.java — step 1: @Bean
+@Bean
+public AuthInterceptor authInterceptor() {
+    return new AuthInterceptor();
+}
+
+// WebConfig.java — step 2: register with path patterns
+@Override
+public void addInterceptors(InterceptorRegistry registry) {
+    registry.addInterceptor(authInterceptor())
+            .addPathPatterns("/api/**")           // All API paths
+            .excludePathPatterns("/api/auth/**");  // Except auth endpoints
+}
+```
+
+### Testing an Interceptor with MockMvc
+
+```java
+class AuthInterceptorTest {
+
+    private MockMvc mockMvc;
+
+    // A minimal controller for testing
+    @RestController
+    static class TestController {
+        @GetMapping("/api/users/me")
+        public String protectedEndpoint() { return "OK"; }
+    }
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = standaloneSetup(new TestController())
+                .addInterceptors(new AuthInterceptor()) // Add interceptor
+                .build();
+    }
+
+    @Test
+    void withoutSession_returns401() throws Exception {
+        mockMvc.perform(get("/api/users/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void withSession_returns200() throws Exception {
+        UserSession session = new UserSession(UUID.randomUUID(), "test@test.com", "USER");
+        mockMvc.perform(get("/api/users/me")
+                        .sessionAttr("user", session))
+                .andExpect(status().isOk());
+    }
+}
+```
+
+> **⚠️ Important**: In standalone MockMvc, `addInterceptors()` applies interceptors to ALL paths — path pattern exclusions configured in `WebConfig` are NOT applied here. They only work when the interceptor is registered via `WebMvcConfigurer.addInterceptors()` in the actual Spring context.
+
+### Key Rules for Interceptors
+
+1. **Interceptor checks, Controller does the work** — interceptor only verifies conditions, doesn't handle business logic
+2. **preHandle() returns boolean** — `true` = proceed, `false` = block
+3. **Path patterns are configured at registration** — not in the interceptor class itself
+4. **Keep interceptors thin** — one responsibility per interceptor
+5. **Always allow OPTIONS** — CORS preflight requests need to pass through
+6. **Interceptors run AFTER filters** — filters are lower level, interceptors are closer to controllers
+
+---
+
+## Filter — What It Is and How It Works
+
+### What Is a Filter?
+
+A **Filter** is a Java class that intercepts HTTP requests **at the Servlet level**, before they even reach Spring's DispatcherServlet. It's the outermost layer of request processing — the first thing that touches every incoming request.
+
+```java
+// CsrfFilter.java — protects against Cross-Site Request Forgery
+public class CsrfFilter extends OncePerRequestFilter {
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws IOException, ServletException {
+
+        // Generate CSRF token if missing
+        String token = (String) request.getSession().getAttribute("CSRF_TOKEN");
+        if (token == null) {
+            token = generateToken();
+            request.getSession().setAttribute("CSRF_TOKEN", token);
+        }
+
+        // Set cookie so frontend can read it
+        response.addCookie(new Cookie("XSRF-TOKEN", token));
+
+        // Validate for POST/PUT/DELETE
+        if (isStateChanging(request) && !tokenMatches(request, token)) {
+            response.setStatus(403);
+            response.getWriter().write("{\"error\":\"Invalid CSRF token\"}");
+            return; // ❌ Block the request
+        }
+
+        filterChain.doFilter(request, response); // ✅ Continue to next filter/interceptor
+    }
+}
+```
+
+### ELI5: Filter is a *metal detector at the building entrance*
+
+```
+  Visitor                  Metal Detector (Filter)         Security Checkpoint (Interceptor)    Office
+    │                              │                              │                              │
+    │ "I'm entering"              │                              │                              │
+    │ ───────────────────────────>│                              │                              │
+    │                              │                              │                              │
+    │                              │ "beep beep!                  │                              │
+    │                              │  CSRF token missing!"        │                              │
+    │   (403 Forbidden)           │                              │                              │
+    │ <───────────────────────────│                              │                              │
+    │                              │                              │                              │
+    │                              │ vs.                          │                              │
+    │                              │                              │                              │
+    │ "I have a token"            │                              │                              │
+    │ ───────────────────────────>│                              │                              │
+    │                              │ "Token valid. Move along."  │                              │
+    │                              │ ───────────────────────────>│                              │
+    │                              │                              │ "Badge?" → "Valid!"          │
+    │                              │                              │ ───────────────────────────>│
+    │                              │                              │       (Controller runs)      │
+```
+
+The **Filter is the metal detector** at the building entrance. Everyone must go through it, no exceptions. It's lower-level than the security checkpoint (Interceptor) — it catches problems before the person even reaches the elevator.
+
+### The Filter Chain
+
+```mermaid
+flowchart LR
+    subgraph Filters [Filter Chain — runs before everything]
+        F1[CsrfFilter<br/>Validates CSRF tokens]
+        F2[SecurityHeadersFilter<br/>Sets response headers]
+    end
+    
+    subgraph MVC [Spring MVC Layer]
+        I[AuthInterceptor]
+        C[Controller]
+    end
+    
+    Browser -->|"HTTP Request"| F1
+    F1 -->|"passes valid requests"| F2
+    F2 -->|"cleaned request"| I
+    I -->|"authenticated"| C
+    
+    style F1 fill:#ffcdd2,stroke:#c62828
+    style F2 fill:#ffcdd2,stroke:#c62828
+```
+
+Filters run in the order they are registered. Each filter can:
+1. **Block** the request (return error response)
+2. **Modify** the request/response (add headers, wrap streams)
+3. **Pass through** (call `filterChain.doFilter()`)
+
+### OncePerRequestFilter: Why It Matters
+
+```java
+// Spring's OncePerRequestFilter guarantees the filter runs exactly ONCE per request.
+// Without it, a filter might run multiple times if there are forward/error dispatches.
+
+public class CsrfFilter extends OncePerRequestFilter {
+    // doFilterInternal() is guaranteed to run once per request
+}
+```
+
+In a normal scenario: Browser → Filter A → Filter B → Servlet → done.  
+In a forwarding scenario: Browser → Filter A → Servlet → forward to error page → Filter A again! ❌
+
+`OncePerRequestFilter` prevents the double-run problem. This is why CsrfFilter extends it, not just `implements Filter`.
+
+### CsrfFilter in this Project
+
+```java
+public class CsrfFilter extends OncePerRequestFilter {
+
+    private static final SecureRandom secureRandom = new SecureRandom();
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws IOException, ServletException {
+
+        HttpSession session = request.getSession(true);
+
+        // STEP 1: Generate CSRF token if this is a new session
+        String sessionToken = (String) session.getAttribute("CSRF_TOKEN");
+        if (sessionToken == null) {
+            sessionToken = generateToken();                     // SecureRandom 32 bytes
+            session.setAttribute("CSRF_TOKEN", sessionToken);  // Store in session
+        }
+
+        // STEP 2: Set cookie for frontend (non-HTTP-only so JS can read it)
+        Cookie csrfCookie = new Cookie("XSRF-TOKEN", sessionToken);
+        csrfCookie.setPath("/");
+        csrfCookie.setHttpOnly(false);  // ❗ Must be false — Vue needs to read it via document.cookie
+        response.addCookie(csrfCookie);
+
+        // STEP 3: Validate for state-changing requests
+        String path = request.getRequestURI();
+        boolean isExcluded = path.startsWith("/api/auth/") || path.startsWith("/api/public/");
+
+        if (isStateChanging(request) && !isExcluded) {
+            String headerToken = request.getHeader("X-CSRF-Token");
+
+            if (headerToken == null || !sessionToken.equals(headerToken)) {
+                // ❌ Token missing or wrong
+                response.setStatus(403);
+                response.getWriter().write("{\"error\":\"Invalid or missing CSRF token\"}");
+                return;
+            }
+        }
+
+        // ✅ All checks passed — proceed to next filter/interceptor/controller
+        filterChain.doFilter(request, response);
+    }
+
+    private String generateToken() {
+        byte[] bytes = new byte[32];
+        secureRandom.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+}
+```
+
+### How It's Registered (Pure Spring MVC)
+
+In pure Spring MVC (no Spring Boot), filters are registered by overriding `getServletFilters()` in `AppInitializer`:
+
+```java
+// AppInitializer.java — registers filters for ALL requests
+@Override
+protected Filter[] getServletFilters() {
+    return new Filter[]{
+            new CsrfFilter()      // Runs on every request
+    };
+}
+```
+
+> **⚠️ Important**: In pure Spring MVC, do NOT use `FilterRegistrationBean` — that's a Spring Boot class and will cause compilation errors (see BUGS.md B6).
+
+### CSRF Explained Simply
+
+**CSRF (Cross-Site Request Forgery)** — Imagine you're logged into your bank. An attacker sends you a link to a "fun cat video" that actually contains:
+
+```html
+<img src="https://yourbank.com/transfer?amount=1000&to=attacker" />
+```
+
+Your browser automatically sends your bank's session cookie with this request (cookies are sent with any request to that domain). The bank sees a valid session and performs the transfer.
+
+**How the cookie-to-header pattern stops this:**
+
+1. The bank's website sets a special CSRF token as a **non-HTTP-only cookie**
+2. The bank's JavaScript reads this cookie and sends it as a **custom HTTP header** (X-CSRF-Token)
+3. The attacker's `<img>` tag can't read the cookie (different domain) and can't set the custom header
+4. The server validates: request has the header AND it matches the session → safe ✅
+
+```mermaid
+sequenceDiagram
+    participant B as Browser (Vue SPA)
+    participant S as Server
+    
+    Note over B,S: 1. First request — get CSRF token
+    B->>S: GET /api/auth/login
+    S-->>B: Set-Cookie: XSRF-TOKEN=abc123 (not HttpOnly)
+    Note over B: JS reads cookie: abc123
+    
+    Note over B,S: 2. State-changing request — send token
+    B->>S: POST /api/auth/register
+    Note over B: Header: X-CSRF-Token: abc123
+    Note over S: Compares: header abc123 == session abc123 ✅
+    S-->>B: 200 OK
+    
+    Note over B,S: 3. Attacker's site tries the same
+    AT[Attacker's Site] ->>S: POST /api/auth/register
+    Note over AT: ❌ No X-CSRF-Token header
+    Note over S: Can't read abc123 from different domain!
+    S-->>AT: 403 Forbidden
+```
+
+### Key Rules for Filters
+
+1. **Filters run before Interceptors** — they're lower level
+2. **OncePerRequestFilter** prevents double execution on forwards/errors
+3. **Filters can't use Spring beans** (easily) — they're Servlet level, not Spring level
+4. **Register via `getServletFilters()`** in pure Spring MVC — NOT `FilterRegistrationBean`
+5. **Filters apply to ALL requests** — you can't easily exclude paths (unlike Interceptors with `excludePathPatterns`)
+6. **Use `filterChain.doFilter()`** to pass the request to the next filter in the chain
+
+---
+
+## Filter vs Interceptor — When to Use What
+
+```mermaid
+flowchart TB
+    subgraph Legend ["Which One to Use?"]
+        Q["What do you need to do?"]
+        Q -->|"Check auth session?"| I[Interceptor ✅]
+        Q -->|"Protect against CSRF?"| F[Filter ✅]
+        Q -->|"Set response headers?"| F2[Filter ✅]
+        Q -->|"Log request timing?"| I2[Interceptor ✅]
+        Q -->|"Character encoding?"| F3[Filter ✅]
+        Q -->|"Check specific path patterns?"| I3[Interceptor ✅]
+        Q -->|"Modify request body?"| F4[Filter ✅]
+    end
+    
+    style I fill:#ffe082,stroke:#333
+    style I2 fill:#ffe082,stroke:#333
+    style I3 fill:#ffe082,stroke:#333
+    style F fill:#ffcdd2,stroke:#c62828
+    style F2 fill:#ffcdd2,stroke:#c62828
+    style F3 fill:#ffcdd2,stroke:#c62828
+    style F4 fill:#ffcdd2,stroke:#c62828
+```
+
+| Criteria | Filter | Interceptor |
+|----------|--------|-------------|
+| **Level** | Servlet (before Spring) | Spring MVC (after DispatcherServlet) |
+| **Path exclusion** | Not easily (applies to all) | Built-in `excludePathPatterns()` |
+| **Can access** | `ServletRequest`, `ServletResponse`, `HttpSession` | Same + Model, View, Exception |
+| **Configured in** | `AppInitializer.getServletFilters()` | `WebMvcConfigurer.addInterceptors()` |
+| **Use for** | CSRF, encoding, CORS, security headers | Auth, logging, locale, performance timing |
+| **Multiple runs?** | Can run multiple times per request | Always runs once per request |
+| **Spring beans** | Hard to inject | Easy — registered as @Bean in WebConfig |
+
+### Quick Decision Guide
+
+```
+Need to prevent cross-site attacks?        → Filter (CsrfFilter)
+Need to set charset/encoding?               → Filter
+Need to check if user is logged in?         → Interceptor (AuthInterceptor)
+Need to log how long requests take?         → Interceptor
+Need to add CORS headers?                   → Filter
+Need to redirect unauthenticated users?     → Interceptor
+Need to modify the response body?           → Filter
+Need to add data to the Model for views?    → Interceptor
+```
+
+---
+
+## Final Summary: The Complete Request Flow
+
+```mermaid
+flowchart TB
+    subgraph Layer0 [Layer 0: Servlet Container — Tomcat]
+        TC[Tomcat receives HTTP request]
+    end
+    
+    subgraph Layer1 [Layer 1: Filter Chain]
+        CF[CsrfFilter
+        • Sets CSRF cookie
+        • Validates X-CSRF-Token header
+        • Blocks 403 if invalid]
+        SHF[SecurityHeadersFilter
+        • X-Content-Type-Options
+        • X-Frame-Options
+        • CSP headers]
+    end
+    
+    subgraph Layer2 [Layer 2: Spring MVC — Interceptor]
+        AI[AuthInterceptor
+        • preHandle checks session
+        • 401 if no "user" attribute
+        • Allows /api/auth/* through]
+    end
+    
+    subgraph Layer3 [Layer 3: Controller]
+        CT[AuthController
+        • @Valid @RequestBody
+        • Calls Service
+        • Returns JSON response]
+    end
+    
+    subgraph Layer4 [Layer 4: Service]
+        SV[AuthService
+        • Business logic
+        • Transactions
+        • Throws ServiceException]
+    end
+    
+    subgraph Layer5 [Layer 5: Exception Handler]
+        EH[AuthExceptionHandler
+        • @ControllerAdvice
+        • Maps errorCode → HTTP status
+        • Returns JSON error body]
+    end
+    
+    TC --> CF
+    CF -->|"CSRF OK"| SHF
+    SHF --> AI
+    AI -->|"Session valid"| CT
+    CT --> SV
+    SV -.->|"on error"| EH
+    EH -->|"JSON error response"| TC
+    SV -->|"success"| CT
+    CT -->|"JSON 200 OK"| TC
+    
+    style Layer1 fill:#ffcdd2,stroke:#c62828
+    style Layer2 fill:#ffe082,stroke:#333
+    style Layer3 fill:#bbf,stroke:#333
+    style Layer4 fill:#bfb,stroke:#333
+    style Layer5 fill:#e1d5e7,stroke:#9673a6
+```
+
+| Component | Tagline | Job | Lives in |
+|-----------|---------|-----|----------|
+| **Flyway** | 🏗️ DB architect | Creates tables in order | `db/migration/` |
+| **Model** | 📋 Data blueprint | One Java class = one DB row | `model/` |
+| **DTO** | 📦 Shipping box | Carries validated data between browser and server | `dto/` |
+| **DAO** | 🍳 Kitchen chef | Runs SQL, converts rows to Java objects | `dao/` |
+| **Service** | 🧠 Brain | Business logic, transactions, coordination | `service/` |
+| **Controller** | 🚪 Receptionist | Handles HTTP, validates, delegates, responds | `controller/` |
+| **Exception** | 🚨 Alarm | Error code + message for structured errors | `exception/` |
+| **Interceptor** | 🛂 Security checkpoint | Checks session before controller, path-based rules | `interceptor/` |
+| **Filter** | 🚧 Metal detector | Low-level preprocessing (CSRF, encoding, headers) | `filter/` |

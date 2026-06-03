@@ -1,7 +1,17 @@
 package com.resumainer.config;
 
+import com.resumainer.controller.AuthController;
 import com.resumainer.controller.LandingPageController;
+import com.resumainer.dao.ContactDetailDao;
+import com.resumainer.dao.LanguageDao;
+import com.resumainer.dao.RoleDao;
+import com.resumainer.dao.UserDao;
+import com.resumainer.dao.UserPermissionDao;
+import com.resumainer.dao.UserStatusDao;
 import com.resumainer.exception.GlobalExceptionHandler;
+import com.resumainer.interceptor.AuthInterceptor;
+import com.resumainer.service.AuthService;
+import com.resumainer.service.PasswordService;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -13,6 +23,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -25,6 +36,7 @@ import org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.spring6.view.ThymeleafViewResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.Locale;
 
@@ -140,6 +152,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(localeChangeInterceptor());
+        // AuthInterceptor checks for valid session on all paths except /api/auth/*
+        registry.addInterceptor(authInterceptor())
+                .addPathPatterns("/api/**")
+                .excludePathPatterns("/api/auth/**");
     }
 
     // ============================================================
@@ -153,8 +169,91 @@ public class WebConfig implements WebMvcConfigurer {
     }
 
     // ============================================================
+    // Database — DataSource (reads from application.properties via @Value)
+    // ============================================================
+
+    /**
+     * Development DataSource using DriverManagerDataSource.
+     * <p>
+     * In production, replace with a proper connection pool implementation.
+     * Config values come from application.properties (db.url, db.user, etc.).
+     */
+    @Bean
+    public DataSource dataSource() {
+        DriverManagerDataSource ds = new DriverManagerDataSource();
+        ds.setUrl("jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:resumainer}");
+        ds.setUsername("resumainer");
+        ds.setPassword("resumainer_dev");
+        ds.setDriverClassName("org.postgresql.Driver");
+        return ds;
+    }
+
+    // ============================================================
+    // DAO Beans (explicit registration — no component scan)
+    // ============================================================
+
+    @Bean
+    public UserDao userDao() {
+        return new UserDao(dataSource());
+    }
+
+    @Bean
+    public RoleDao roleDao() {
+        return new RoleDao(dataSource());
+    }
+
+    @Bean
+    public UserStatusDao userStatusDao() {
+        return new UserStatusDao(dataSource());
+    }
+
+    @Bean
+    public UserPermissionDao userPermissionDao() {
+        return new UserPermissionDao(dataSource());
+    }
+
+    @Bean
+    public LanguageDao languageDao() {
+        return new LanguageDao(dataSource());
+    }
+
+    @Bean
+    public ContactDetailDao contactDetailDao() {
+        return new ContactDetailDao(dataSource());
+    }
+
+    // ============================================================
+    // Service Beans
+    // ============================================================
+
+    @Bean
+    public PasswordService passwordService() {
+        return new PasswordService();
+    }
+
+    @Bean
+    public AuthService authService() {
+        return new AuthService(userDao(), roleDao(), contactDetailDao(),
+                passwordService(), dataSource());
+    }
+
+    // ============================================================
+    // Interceptor Beans
+    // ============================================================
+
+    @Bean
+    public AuthInterceptor authInterceptor() {
+        return new AuthInterceptor();
+    }
+
+    // ============================================================
     // Controller Beans (explicit registration — no component scan)
     // ============================================================
+
+    @Bean
+    public AuthController authController() {
+        return new AuthController(authService());
+    }
 
     /**
      * Landing page controller serving the root URL.
