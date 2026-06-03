@@ -241,3 +241,42 @@ AuthControllerTest.register_validInput_returns200() failed with NoClassDefFoundE
 
 **Where to look next**
 backend/pom.xml (test dependencies), any new controller test class using jsonPath()
+
+---
+
+### 2026-06-03 - Long auto-unboxing NullPointerException when comparing with primitive
+
+**Status**
+Active
+
+**Symptoms**
+Comparison like `user.getRoleId() == 2L` throws `NullPointerException: Cannot invoke "java.lang.Long.longValue()" because the return value of "..." is null`. The getter returns null (object wasn't fully populated), and Java's auto-unboxing converts `Long` → `long` before comparing — which calls `.longValue()` on null.
+
+**Root Cause**
+In Java, `Long` (object) vs `long` (primitive) uses auto-unboxing. The expression `user.getRoleId() == 2L` is compiled as:
+1. `user.getRoleId()` → returns `Long` (may be null)
+2. `Long.longValue()` → called on the `Long` object (NPE if null)
+3. `==` → compares primitives
+
+This is silent at compile time and only fails at runtime when the value happens to be null. Common scenarios: a partially populated Model object from tests, or a ResultSet column that was NULL.
+
+**Future mistake prevented**
+Always check for null before comparing a `Long` (or any wrapper) with a primitive. Use one of:
+- `LongUtils.equals(user.getRoleId(), 2L)` (Apache Commons)
+- `Long.valueOf(2L).equals(user.getRoleId())`
+- `user.getRoleId() != null && user.getRoleId() == 2L`
+- `Long.valueOf(2L).equals(user.getRoleId())`
+Or ensure the field is always populated before comparison.
+
+In general: be paranoid about auto-unboxing when the source of the value could be null (database nullable column, partial object construction, mocked getters).
+
+**Evidence**
+AuthControllerTest.login_validInput_returns200() failed with NPE: `Cannot invoke "java.lang.Long.longValue()" because the return value of "com.resumainer.model.User.getRoleId()" is null`. The test created a User object without setting roleId, and the controller called `user.getRoleId() == 2L`. Fix: set roleId on the test User before passing it to the controller.
+
+**Prevention / Detection**
+- In tests: always fully populate Model objects that the controller/service will access
+- In production code: use `Long.valueOf(x).equals(y)` pattern for comparison
+- In DAO `mapRow()`: ensure all `getLong()` columns have a default or are non-null in the schema
+
+**Where to look next**
+Any Java class that compares a Long getter result with a primitive literal. Common in Controller and Service layers.

@@ -17,6 +17,7 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - B6 | FilterRegistrationBean is Spring Boot API — use getServletFilters() in pure Spring MVC | spring-mvc, filter, servlet, appinitializer, csrf, boot-vs-core, configuration | [BUGS.md](BUGS.md) | active
 - B7 | Mockito-extensions config file with wrong content breaks all mock creation | mockito,testing,mock-maker,configuration,classpath | [BUGS.md](BUGS.md) | active
 - B8 | MockMvc jsonPath() assertions require explicit jayway-jsonpath dependency | mockmvc,testing,jsonpath,spring-mvc,dependency | [BUGS.md](BUGS.md) | active
+- B9 | Long auto-unboxing NullPointerException when comparing with primitive | java,nullpointer,unboxing,long,primitive,common-mistake | [BUGS.md](BUGS.md) | active
 
 ## Decisions
 - D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web.xml) | servlet, spring-mvc, jakarta-ee, tomcat, initialization, web.xml | [DECISIONS.md](DECISIONS.md) | active
@@ -36,3 +37,4 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - W3 | Feature 003 Planning and Security Review Completed | milestone, feature-003, vue-auth, planning, security-review, specification | [WORKLOG.md](WORKLOG.md) | active
 - W4 | Feature 003 Phase 2 Foundational Database and DAO Layer Completed | milestone,feature-003,phase-2,flyway,dao,tdd | [WORKLOG.md](WORKLOG.md) | active
 - W5 | Feature 003 Phase 3 Registration Service and Controller Completed | milestone,feature-003,phase-3,registration,tdd | [WORKLOG.md](WORKLOG.md) | active
+- W6 | Feature 003 Phase 4 Login with Rate Limiting Completed | milestone,feature-003,phase-4,login,rate-limiting,security | [WORKLOG.md](WORKLOG.md) | active

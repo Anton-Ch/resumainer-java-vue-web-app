@@ -15,6 +15,29 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-03 - Feature 003 Phase 4 Login with Rate Limiting Completed
+
+**Milestone**: Phase 4 (User Story 2 — Login) of Feature 003 (Vue Auth Page) completed with TDD.
+
+**What was achieved**:
+- AuthService.authenticate(): email/password verification with BCrypt, account status check (ACTIVE/BLOCKED), lockout check, and rate limiting (5 failed attempts → 15 min lockout)
+- AuthController.login(): POST /api/auth/login with session regeneration (SEC-002 — invalidate old, create new), role-based redirect (USER→/home, ADMIN→/admin), rememberMe support (7 day TTL)
+- AuthController.logout(): POST /api/auth/logout with session invalidation
+- AuthController.status(): GET /api/auth/status — returns authenticated flag, email, role
+- No email enumeration: all auth failures return generic "Invalid email or password"
+- Proper HTTP status codes: 200 OK, 401 Unauthorized, 423 Locked, 403 Forbidden
+
+**Key lessons captured**:
+- B9: Long auto-unboxing NPE when comparing null Long with primitive literal
+- Session management in Spring MVC requires HttpServletRequest (not HttpSession) to call getSession(boolean)
+
+**Evidence**
+All 55 tests pass (BUILD SUCCESS). AuthService: 10 tests, AuthController: 7 tests.
+
+**Next phase**: Phase 5 — AuthInterceptor, CsrfFilter, WebConfig bean registration, AppInitializer filter registration, exception handler.
+
 ### 2026-06-03 - Feature 003 Phase 3 Registration Service and Controller Completed
 
 **Milestone**: Phase 3 (User Story 1 — Registration) of Feature 003 (Vue Auth Page) completed with TDD.
