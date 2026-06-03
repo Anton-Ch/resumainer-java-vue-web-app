@@ -391,3 +391,80 @@ LoginForm.vue and RegisterForm.vue successfully implement PrimeVue 4 Form + Zod 
 
 **Where to look next**
 frontend/src/components/LoginForm.vue, frontend/src/components/RegisterForm.vue
+
+---
+
+### 2026-06-03 - All user-facing strings must use i18n $t() — no hardcoded text in templates
+
+**Status**
+Active
+
+**Why this is durable**
+During manual testing, hardcoded English strings were found in AuthPage.vue (info panel text, subtitles) and in LoginForm/RegisterForm (Zod validation messages). These were not caught during implementation because they were "invisible" — the page looked correct in English, but switching to Russian revealed untranslated text. Every future feature with UI will have the same risk.
+
+**Decision**
+Every user-facing string in every Vue component MUST use `$t('key')` or `t('key')` from vue-i18n. This includes:
+
+1. **Visible text in templates** — headings, paragraphs, labels, placeholders, button text, link text
+2. **Info/instructional text** — info panels, help text, empty states, tooltips
+3. **Validation messages** — Zod schema error messages, inline form errors
+4. **Alt text and aria-labels** — for images, icons, accessibility
+
+The ONLY exceptions are:
+- Product name "ResumAIner" (must not be translated)
+- Brand taglines that are English-only by design
+- Technical/error codes (e.g., "auth.invalidCredentials")
+
+**Tradeoffs**
+- Gained: Bilingual pages work correctly in both languages, no hidden English strings, easier to add more languages later
+- Made harder: Requires discipline to never use a literal string, slightly more verbose templates
+- Reconsider: If the project drops i18n support, hardcoded strings would be simpler
+
+**Future mistake prevented**
+Adding a new Vue component with hardcoded strings that look correct in English but break the bilingual experience. This is invisible during development (dev always uses English) and only caught during manual testing with language switch.
+
+**Evidence**
+Manual testing found 6 hardcoded strings in AuthPage.vue (info panel, subtitle), 8 hardcoded Zod messages in LoginForm/RegisterForm, and duplicate toggle text caused by i18n key design. All fixed by moving strings to en.json/ru.json and using $t().
+
+**Where to look next**
+frontend/src/views/AuthPage.vue, frontend/src/components/LoginForm.vue, frontend/src/components/RegisterForm.vue, frontend/src/i18n/en.json, frontend/src/i18n/ru.json
+
+---
+
+### 2026-06-03 - Mandatory manual integration testing phase after all implementation phases
+
+**Status**
+Active
+
+**Why this is durable**
+Unit tests caught 0 of the 6 bugs found during manual testing of Feature 003. Bugs like missing Flyway bean, unresolved DataSource URL, unresponsive i18n validation messages, and duplicate toggle text were invisible to unit tests. They only appeared in the full Docker environment with actual PostgreSQL, Nginx, and browser interaction.
+
+Every future feature will have the same blind spots that unit tests can't cover: Docker deployment, real database interaction, browser rendering, i18n correctness, cross-component integration, and session management.
+
+**Decision**
+After ALL implementation phases of any feature, there MUST be a mandatory integration testing phase with the following checklist:
+
+1. **Rebuild Docker** — `docker compose build --no-cache` then `docker compose up -d`
+2. **Verify all containers healthy** — `docker compose ps` — db, app, frontend all running
+3. **API smoke test** — POST register, POST login, GET status, POST logout via curl/PowerShell
+4. **Frontend smoke test** — Open http://localhost in browser, verify page loads
+5. **Main user flow** — Register a new user → Login → Verify redirect to home page
+6. **Logout** → Verify redirect to login page
+7. **Login with registered user** → Verify redirect to home page
+8. **i18n verification** — Switch to Russian → Verify ALL text is translated on every page (including validation messages!)
+9. **Edge cases** — Login with wrong password (401), login with non-existent email (401), submit empty forms (validation errors shown), register duplicate email (409)
+10. **API error responses** — Verify error messages are user-friendly (not stack traces)
+
+**Tradeoffs**
+- Gained: Catches deployment issues, i18n problems, integration bugs, and DX issues that unit tests miss
+- Made harder: Takes 15-30 minutes per feature, requires Docker running, requires manual browser interaction (or Playwright automation)
+- Reconsider: For trivial features with no DB/UI changes, a lighter check may suffice
+
+**Future mistake prevented**
+Implementing a complete feature that looks perfect in unit tests but fails completely when deployed. This applies to ALL features, regardless of their complexity.
+
+**Evidence**
+Feature 003 had 62 unit tests all passing, but 6 critical bugs were found during manual integration testing: API 500 (DataSource + Flyway), unresponsive registration (same root cause), non-functional Russian validation messages, hardcoded English text, duplicate toggle links, and wrong brand logo.
+
+**Where to look next**
+Docker Compose configuration, CI/CD pipeline, feature completion checklist

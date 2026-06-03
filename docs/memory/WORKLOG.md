@@ -21,6 +21,34 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-03 - Feature 003 Bug-Fix and Integration Testing Completed
+
+**Milestone**: Feature 003 (Vue Auth Page) — all bugs found during manual integration testing fixed and verified.
+
+**Bugs found and fixed**:
+- B11: Flyway @Bean(initMethod="migrate") required in pure Spring MVC — migrations never ran, tables missing
+- B12: DataSource URL with ${...} placeholders not resolved — used System.getenv() instead
+- B13: PrimeVue 4 Zod resolver messages not reactive to locale changes — added watch(locale) + ref(resolver)
+- D13: Hardcoded English strings in AuthPage.vue info panel and subtitle — moved to i18n $t()
+- D13: Hardcoded Zod validation messages in LoginForm/RegisterForm — moved to i18n $t()
+- Duplicate toggle text ("Don't have an account? Register now! Register") — fixed i18n key design
+- Wrong brand logo (generic SVG instead of ResumAIner assets) — replaced with proper SVG from spec_input_files
+
+**Key lessons captured**:
+- B11, B12, B13: three new bug patterns for pure Spring MVC + PrimeVue 4
+- D13: all user-facing strings must use i18n $t() — no exceptions
+- D14: mandatory integration testing phase after all implementation — Docker rebuild, browser test, i18n check, edge cases
+- Playwright MCP is effective for automated frontend testing and i18n verification
+
+**Verification**
+- Playwright: Registration flow tested end-to-end (Vue → API → PostgreSQL) — 200 OK, redirect to /home
+- Playwright: Login flow tested — 200 OK, redirect to /home
+- Playwright: i18n verified in EN and RU — all labels, validation messages, info text translated correctly
+- Docker Compose: all 3 containers healthy (db + app + frontend)
+- Backend tests: 74/74 pass
+
 ### 2026-06-03 - Feature 003 Phase 8 Bilingual Auth Forms with PrimeVue + Zod Completed
 
 **Milestone**: Phase 8 (User Story 5 — Bilingual Auth Forms with PrimeVue + Zod) of Feature 003 (Vue Auth Page) completed.

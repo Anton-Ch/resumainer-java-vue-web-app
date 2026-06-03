@@ -70,7 +70,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Form, FormField } from '@primevue/forms'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
@@ -84,21 +85,30 @@ const emit = defineEmits<{
   success: [redirectUrl: string]
 }>()
 
+const { t, locale } = useI18n()
 const { login, loading } = useAuth()
 const submitting = ref(false)
+const resolver = ref(createResolver(t))
 
-const resolver = zodResolver(
-  z.object({
-    email: z
-      .string()
-      .min(1, { message: 'Email is required' })
-      .email({ message: 'Invalid email format' }),
-    password: z
-      .string()
-      .min(1, { message: 'Password is required' }),
-    rememberMe: z.boolean().optional()
-  })
-)
+// Re-create resolver when locale changes
+watch(locale, () => {
+  resolver.value = createResolver(t)
+})
+
+function createResolver(t: (key: string) => string) {
+  return zodResolver(
+    z.object({
+      email: z
+        .string()
+        .min(1, { message: t('auth.error.emailRequired') })
+        .email({ message: t('auth.error.emailInvalid') }),
+      password: z
+        .string()
+        .min(1, { message: t('auth.error.passwordRequired') }),
+      rememberMe: z.boolean().optional()
+    })
+  )
+}
 
 const initialValues = {
   email: '',

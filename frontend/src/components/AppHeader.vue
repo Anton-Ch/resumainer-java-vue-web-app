@@ -1,9 +1,11 @@
 <template>
   <header class="vue-topbar">
     <div class="topbar-left">
-      <svg class="topbar-logo-icon" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-        <rect x="2" y="2" width="24" height="24" rx="6" fill="#0F9D7A"/>
-        <path d="M8 10h12M8 14h12M8 18h8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      <svg class="topbar-logo-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true" shape-rendering="geometricPrecision">
+        <rect x="5" y="3.5" width="22" height="25" rx="4" fill="#FFFDF8" stroke="#17211D" stroke-width="2.4"/>
+        <circle cx="16" cy="12.2" r="5.8" fill="none" stroke="#17211D" stroke-width="1.9"/>
+        <circle cx="16" cy="12.2" r="2.8" fill="#0F8A6A"/>
+        <rect x="9.2" y="24" width="13.6" height="3" rx="0.9" fill="#0F8A6A"/>
       </svg>
       <span class="topbar-brand">ResumAIner</span>
       <span v-if="roleBadge" class="vue-chip" :class="roleBadgeClass">{{ roleBadge }}</span>

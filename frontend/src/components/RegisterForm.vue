@@ -80,7 +80,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Form, FormField } from '@primevue/forms'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
 import { z } from 'zod'
@@ -93,35 +94,44 @@ const emit = defineEmits<{
   success: [redirectUrl: string]
 }>()
 
+const { t, locale } = useI18n()
 const { register, loading } = useAuth()
 const submitting = ref(false)
+const resolver = ref(createResolver(t))
 
-const resolver = zodResolver(
-  z.object({
-    email: z
-      .string()
-      .min(1, { message: 'Email is required' })
-      .email({ message: 'Invalid email format' }),
-    password: z
-      .string()
-      .min(8, { message: 'Password must be at least 8 characters' })
-      .refine((val) => /[A-Z]/.test(val), {
-        message: 'Must contain an uppercase letter'
-      })
-      .refine((val) => /[a-z]/.test(val), {
-        message: 'Must contain a lowercase letter'
-      })
-      .refine((val) => /\d/.test(val), {
-        message: 'Must contain a digit'
-      }),
-    confirmPassword: z
-      .string()
-      .min(1, { message: 'Please confirm your password' })
-  }).refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword']
-  })
-)
+// Re-create resolver when locale changes
+watch(locale, () => {
+  resolver.value = createResolver(t)
+})
+
+function createResolver(t: (key: string) => string) {
+  return zodResolver(
+    z.object({
+      email: z
+        .string()
+        .min(1, { message: t('auth.error.emailRequired') })
+        .email({ message: t('auth.error.emailInvalid') }),
+      password: z
+        .string()
+        .min(8, { message: t('auth.error.passwordMinLength') })
+        .refine((val) => /[A-Z]/.test(val), {
+          message: t('auth.error.passwordStrength')
+        })
+        .refine((val) => /[a-z]/.test(val), {
+          message: t('auth.error.passwordStrength')
+        })
+        .refine((val) => /\d/.test(val), {
+          message: t('auth.error.passwordStrength')
+        }),
+      confirmPassword: z
+        .string()
+        .min(1, { message: t('auth.error.confirmPasswordRequired') })
+    }).refine((data) => data.password === data.confirmPassword, {
+      message: t('auth.error.passwordMismatch'),
+      path: ['confirmPassword']
+    })
+  )
+}
 
 const initialValues = {
   email: '',
