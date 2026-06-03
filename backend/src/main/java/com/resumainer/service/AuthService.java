@@ -3,6 +3,7 @@ package com.resumainer.service;
 import com.resumainer.dao.ContactDetailDao;
 import com.resumainer.dao.RoleDao;
 import com.resumainer.dao.UserDao;
+import com.resumainer.dto.LoginRequest;
 import com.resumainer.dto.RegisterRequest;
 import com.resumainer.exception.ServiceException;
 import com.resumainer.model.ContactDetail;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 
 /**
  * Service for user authentication: registration, login, logout.
@@ -118,6 +120,76 @@ public class AuthService {
         } finally {
             closeQuietly(conn);
         }
+    }
+
+    /**
+     * Authenticate a user by email and password.
+     * <p>
+     * Checks: account exists → account is ACTIVE → account is not locked →
+     * BCrypt password match. On failure: increments failed attempt counter,
+     * locks account after 5 consecutive failures for 15 minutes.
+     * On success: resets counter.
+     *
+     * @param request the login request (email + password)
+     * @return the authenticated User
+     * @throws ServiceException with generic error (no email enumeration)
+     */
+    public User authenticate(LoginRequest request) {
+        String email = request.getEmail().toLowerCase().trim();
+        log.debug("Login attempt for email: {}", email);
+
+        // Find user
+        User user = userDao.findByEmail(email);
+        if (user == null) {
+            log.warn("Login failed: user not found for email: {}", email);
+            throw new ServiceException("auth.invalidCredentials", "Invalid email or password");
+        }
+
+        // Check account status (statusId=1 = ACTIVE)
+        if (user.getStatusId() != 1L || user.isDeleted()) {
+            log.warn("Login failed: account blocked for email: {}", email);
+            throw new ServiceException("auth.account.blocked",
+                    "Your account is inactive. Contact support for assistance.");
+        }
+
+        // Check if account is locked
+        if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(LocalDateTime.now())) {
+            log.warn("Login failed: account locked for email: {}", email);
+            throw new ServiceException("auth.account.locked",
+                    "Too many failed attempts. Try again later.");
+        }
+
+        // Verify password
+        boolean passwordMatch = passwordService.verifyPassword(
+                request.getPassword(), user.getPasswordHash());
+
+        if (!passwordMatch) {
+            // Increment failed attempts
+            int newAttempts = user.getFailedLoginAttempts() + 1;
+            LocalDateTime lockTime = null;
+
+            if (newAttempts >= 5) {
+                lockTime = LocalDateTime.now().plusMinutes(15);
+                log.warn("Login failed: account locked after {} failed attempts for email: {}",
+                        newAttempts, email);
+            } else {
+                log.warn("Login failed: wrong password (attempt {}/{}) for email: {}",
+                        newAttempts, 5, email);
+            }
+
+            userDao.updateLoginAttempts(user.getId(), newAttempts, lockTime);
+
+            if (newAttempts >= 5) {
+                throw new ServiceException("auth.account.locked",
+                        "Too many failed attempts. Try again later.");
+            }
+            throw new ServiceException("auth.invalidCredentials", "Invalid email or password");
+        }
+
+        // Success — reset counter and lock
+        userDao.resetLoginAttempts(user.getId());
+        log.info("Login successful for email: {}", email);
+        return user;
     }
 
     private void rollbackQuietly(Connection conn) {

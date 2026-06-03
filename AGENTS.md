@@ -495,6 +495,11 @@ The active agent must stay aligned with:
 
 Specialized agents may improve execution quality, but they must not override project-level rules.
 
+#### Context7 MCP server usage
+In case of bugs, errors, failures, unusual or unexpected response from code or behaviour - first, consult and double check in context7 available MCP server. 
+
+Before writing any configs, properties, rules, important pieces of code - first, consult and double check best practices in context7 available MCP server. 
+
 ## Implementation Behavior
 
 ### Before editing:
