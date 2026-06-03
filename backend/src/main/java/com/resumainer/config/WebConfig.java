@@ -36,6 +36,7 @@ import org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.spring6.view.ThymeleafViewResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 
+import org.flywaydb.core.Flyway;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.Locale;
@@ -176,16 +177,46 @@ public class WebConfig implements WebMvcConfigurer {
      * Development DataSource using DriverManagerDataSource.
      * <p>
      * In production, replace with a proper connection pool implementation.
-     * Config values come from application.properties (db.url, db.user, etc.).
+     * Reads DB_HOST, DB_PORT, DB_USER, DB_PASSWORD from environment variables
+     * with sensible defaults for local development.
      */
     @Bean
     public DataSource dataSource() {
+        String host = getEnv("DB_HOST", "localhost");
+        String port = getEnv("DB_PORT", "5432");
+        String dbName = getEnv("DB_NAME", "resumainer");
+        String user = getEnv("DB_USER", "resumainer");
+        String password = getEnv("DB_PASSWORD", "resumainer_dev");
+
         DriverManagerDataSource ds = new DriverManagerDataSource();
-        ds.setUrl("jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:resumainer}");
-        ds.setUsername("resumainer");
-        ds.setPassword("resumainer_dev");
+        ds.setUrl("jdbc:postgresql://" + host + ":" + port + "/" + dbName);
+        ds.setUsername(user);
+        ds.setPassword(password);
         ds.setDriverClassName("org.postgresql.Driver");
         return ds;
+    }
+
+    /**
+     * Read an environment variable with a fallback default value.
+     */
+    private static String getEnv(String key, String defaultValue) {
+        String value = System.getenv(key);
+        return value != null && !value.isEmpty() ? value : defaultValue;
+    }
+
+    /**
+     * Flyway — runs database migrations on startup.
+     * <p>
+     * Uses the same DataSource as the application.
+     * initMethod="migrate" ensures migrations run at bean creation time,
+     * before any DAO or Service beans that depend on the database schema.
+     */
+    @Bean(initMethod = "migrate")
+    public Flyway flyway(DataSource dataSource) {
+        return Flyway.configure()
+                .dataSource(dataSource)
+                .locations("classpath:db/migration")
+                .load();
     }
 
     // ============================================================

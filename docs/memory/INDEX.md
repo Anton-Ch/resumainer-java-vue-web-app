@@ -19,6 +19,9 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - B8 | MockMvc jsonPath() assertions require explicit jayway-jsonpath dependency | mockmvc,testing,jsonpath,spring-mvc,dependency | [BUGS.md](BUGS.md) | active
 - B9 | Long auto-unboxing NullPointerException when comparing with primitive | java,nullpointer,unboxing,long,primitive,common-mistake | [BUGS.md](BUGS.md) | active
 - B10 | MockMvc standalone: each perform() creates a fresh session — use MockHttpSession for filter tests | mockmvc,testing,standalone,session,filter,csrffilter,spring-mvc | [BUGS.md](BUGS.md) | active
+- B11 | Flyway @Bean(initMethod="migrate") required in pure Spring MVC — no auto-migration | flyway,migration,spring-mvc,bean,database,pure-spring-mvc,boot-vs-core | [BUGS.md](BUGS.md) | active
+- B12 | DataSource URL with ${...} placeholders stays as literal string — use System.getenv() | datasource,spring-mvc,properties,placeholder,env-var,boot-vs-core | [BUGS.md](BUGS.md) | active
+- B13 | PrimeVue 4 Zod resolver validation messages not reactive to locale changes | primevue,vue3,i18n,locale,zod,resolver,form,validation,reactive | [BUGS.md](BUGS.md) | active
 
 ## Decisions
 - D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web.xml) | servlet, spring-mvc, jakarta-ee, tomcat, initialization, web.xml | [DECISIONS.md](DECISIONS.md) | active
@@ -32,6 +35,8 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - D9 | JDK version must match project target to avoid build and test failures | jdk,java-version,mockito,testing,dev-env,setup | [DECISIONS.md](DECISIONS.md) | active
 - D10 | DAO connection-accepting overloads for JDBC transaction support | dao,jdbc,transaction,connection,service-layer,architecture | [DECISIONS.md](DECISIONS.md) | active
 - D12 | PrimeVue 4 Form with Zod resolver: standard validation pattern | primevue,vue3,form,validation,zod,resolver,frontend | [DECISIONS.md](DECISIONS.md) | active
+- D13 | All user-facing strings must use i18n $t() — no hardcoded text in templates | i18n,internationalization,vue3,vue-i18n,frontend,best-practice | [DECISIONS.md](DECISIONS.md) | active
+- D14 | Mandatory manual integration testing phase after all implementation phases | testing,integration,manual-testing,playwright,docker,i18n,quality | [DECISIONS.md](DECISIONS.md) | active
 
 ## Workflow
 - W1 | First Feature MVP Achieved: Hello World Tomcat | milestone, mvp, hello-world, docker, spring-mvc, tomcat | [WORKLOG.md](WORKLOG.md) | active
@@ -42,3 +47,4 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - W6 | Feature 003 Phase 4 Login with Rate Limiting Completed | milestone,feature-003,phase-4,login,rate-limiting,security | [WORKLOG.md](WORKLOG.md) | active
 - W7 | Feature 003 Phase 5 Interceptor, CSRF Filter, and Configuration Completed | milestone,feature-003,phase-5,interceptor,csrf,webconfig | [WORKLOG.md](WORKLOG.md) | active
 - W8 | Feature 003 Phase 8 Bilingual Auth Forms with PrimeVue + Zod Completed | milestone,feature-003,phase-8,auth,primevue,zod,forms | [WORKLOG.md](WORKLOG.md) | active
+- W9 | Feature 003 Bug-Fix and Integration Testing Completed | milestone,feature-003,bug-fix,integration-testing,i18n,docker | [WORKLOG.md](WORKLOG.md) | active

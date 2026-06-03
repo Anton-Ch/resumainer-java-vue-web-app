@@ -8,17 +8,11 @@
           <Transition name="info-fade" mode="out-in">
             <div v-if="isLoginMode" key="login-info" class="info-texts">
               <h2 class="info-title">{{ $t('auth.loginTitle') }}</h2>
-              <p class="info-desc">
-                One profile. Tailored resumes for any role.<br />
-                Sign in to continue your career journey.
-              </p>
+              <p class="info-desc" style="white-space: pre-line">{{ $t('auth.loginInfo') }}</p>
             </div>
             <div v-else key="register-info" class="info-texts">
               <h2 class="info-title">{{ $t('auth.registerTitle') }}</h2>
-              <p class="info-desc">
-                One profile. Tailored resumes for any role.<br />
-                Create your account and get started.
-              </p>
+              <p class="info-desc" style="white-space: pre-line">{{ $t('auth.registerInfo') }}</p>
             </div>
           </Transition>
         </div>
@@ -29,9 +23,16 @@
         <!-- Top row: logo + language switcher -->
         <div class="auth-top-row">
           <div class="auth-logo">
-            <svg class="auth-logo-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <rect x="2" y="2" width="28" height="28" rx="7" fill="#0F9D7A"/>
-              <path d="M9 12h14M9 17h14M9 22h10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+            <svg class="auth-logo-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true" shape-rendering="geometricPrecision">
+              <rect x="5" y="3.5" width="22" height="25" rx="4" fill="#FFFDF8" stroke="#17211D" stroke-width="2.4"/>
+              <line x1="5.5" y1="21.8" x2="26.5" y2="21.8" stroke="#17211D" stroke-width="2.2" stroke-linecap="round"/>
+              <circle cx="16" cy="12.2" r="5.8" fill="none" stroke="#17211D" stroke-width="1.9"/>
+              <line x1="16" y1="4.8" x2="16" y2="7.4" stroke="#17211D" stroke-width="2.1" stroke-linecap="round"/>
+              <line x1="16" y1="17" x2="16" y2="19.6" stroke="#17211D" stroke-width="2.1" stroke-linecap="round"/>
+              <line x1="8.6" y1="12.2" x2="11.2" y2="12.2" stroke="#17211D" stroke-width="2.1" stroke-linecap="round"/>
+              <line x1="20.8" y1="12.2" x2="23.4" y2="12.2" stroke="#17211D" stroke-width="2.1" stroke-linecap="round"/>
+              <circle cx="16" cy="12.2" r="2.8" fill="#0F8A6A"/>
+              <rect x="9.2" y="24" width="13.6" height="3" rx="0.9" fill="#0F8A6A"/>
             </svg>
             <span class="auth-logo-text">ResumAIner</span>
           </div>
@@ -45,7 +46,7 @@
             {{ isLoginMode ? $t('auth.loginTitle') : $t('auth.registerTitle') }}
           </h1>
           <p class="auth-subtitle">
-            {{ isLoginMode ? 'Sign in to your account' : 'Create your account' }}
+            {{ isLoginMode ? $t('auth.loginDescription') : $t('auth.registerDescription') }}
           </p>
 
           <!-- Form with slide transition -->
@@ -62,11 +63,11 @@
           <p class="auth-toggle">
             <template v-if="isLoginMode">
               {{ $t('auth.registerLink') }}
-              <button class="toggle-link" @click="switchMode('register')">{{ $t('auth.register') }}</button>
+              <button class="toggle-link" @click="switchMode('register')"> {{ $t('auth.register') }}</button>
             </template>
             <template v-else>
               {{ $t('auth.loginLink') }}
-              <button class="toggle-link" @click="switchMode('login')">{{ $t('auth.login') }}</button>
+              <button class="toggle-link" @click="switchMode('login')"> {{ $t('auth.login') }}</button>
             </template>
           </p>
         </div>
