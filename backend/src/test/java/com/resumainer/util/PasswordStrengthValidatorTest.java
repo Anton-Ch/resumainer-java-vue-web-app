@@ -1,6 +1,9 @@
 package com.resumainer.util;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,9 +37,11 @@ class PasswordStrengthValidatorTest {
         assertFalse(PasswordStrengthValidator.isValid("Abcdefgh!"));
     }
 
-    @Test
-    void nullInput_returnsFalse() {
-        assertFalse(PasswordStrengthValidator.isValid(null));
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "   ", "\t", "\n"})
+    void nullEmptyAndBlank_returnsFalse(String input) {
+        assertFalse(PasswordStrengthValidator.isValid(input));
     }
 
     @Test
