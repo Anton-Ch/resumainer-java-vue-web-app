@@ -1,17 +1,6 @@
 package com.resumainer.config;
 
-import com.resumainer.controller.AuthController;
-import com.resumainer.controller.LandingPageController;
-import com.resumainer.dao.ContactDetailDao;
-import com.resumainer.dao.LanguageDao;
-import com.resumainer.dao.RoleDao;
-import com.resumainer.dao.UserDao;
-import com.resumainer.dao.UserPermissionDao;
-import com.resumainer.dao.UserStatusDao;
-import com.resumainer.exception.GlobalExceptionHandler;
 import com.resumainer.interceptor.AuthInterceptor;
-import com.resumainer.service.AuthService;
-import com.resumainer.service.PasswordService;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -21,9 +10,9 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -52,6 +41,7 @@ import java.util.Locale;
  * configuration — no component scanning.
  */
 @Configuration
+@ComponentScan("com.resumainer")
 @EnableWebMvc
 public class WebConfig implements WebMvcConfigurer {
 
@@ -170,47 +160,10 @@ public class WebConfig implements WebMvcConfigurer {
     }
 
     // ============================================================
-    // Database — DataSource (reads from application.properties via @Value)
+    // Flyway — runs database migrations on startup.
+    // Uses DataSource from DataSourceConfig.
     // ============================================================
 
-    /**
-     * Development DataSource using DriverManagerDataSource.
-     * <p>
-     * In production, replace with a proper connection pool implementation.
-     * Reads DB_HOST, DB_PORT, DB_USER, DB_PASSWORD from environment variables
-     * with sensible defaults for local development.
-     */
-    @Bean
-    public DataSource dataSource() {
-        String host = getEnv("DB_HOST", "localhost");
-        String port = getEnv("DB_PORT", "5432");
-        String dbName = getEnv("DB_NAME", "resumainer");
-        String user = getEnv("DB_USER", "resumainer");
-        String password = getEnv("DB_PASSWORD", "resumainer_dev");
-
-        DriverManagerDataSource ds = new DriverManagerDataSource();
-        ds.setUrl("jdbc:postgresql://" + host + ":" + port + "/" + dbName);
-        ds.setUsername(user);
-        ds.setPassword(password);
-        ds.setDriverClassName("org.postgresql.Driver");
-        return ds;
-    }
-
-    /**
-     * Read an environment variable with a fallback default value.
-     */
-    private static String getEnv(String key, String defaultValue) {
-        String value = System.getenv(key);
-        return value != null && !value.isEmpty() ? value : defaultValue;
-    }
-
-    /**
-     * Flyway — runs database migrations on startup.
-     * <p>
-     * Uses the same DataSource as the application.
-     * initMethod="migrate" ensures migrations run at bean creation time,
-     * before any DAO or Service beans that depend on the database schema.
-     */
     @Bean(initMethod = "migrate")
     public Flyway flyway(DataSource dataSource) {
         return Flyway.configure()
@@ -220,94 +173,12 @@ public class WebConfig implements WebMvcConfigurer {
     }
 
     // ============================================================
-    // DAO Beans (explicit registration — no component scan)
-    // ============================================================
-
-    @Bean
-    public UserDao userDao() {
-        return new UserDao(dataSource());
-    }
-
-    @Bean
-    public RoleDao roleDao() {
-        return new RoleDao(dataSource());
-    }
-
-    @Bean
-    public UserStatusDao userStatusDao() {
-        return new UserStatusDao(dataSource());
-    }
-
-    @Bean
-    public UserPermissionDao userPermissionDao() {
-        return new UserPermissionDao(dataSource());
-    }
-
-    @Bean
-    public LanguageDao languageDao() {
-        return new LanguageDao(dataSource());
-    }
-
-    @Bean
-    public ContactDetailDao contactDetailDao() {
-        return new ContactDetailDao(dataSource());
-    }
-
-    // ============================================================
-    // Service Beans
-    // ============================================================
-
-    @Bean
-    public PasswordService passwordService() {
-        return new PasswordService();
-    }
-
-    @Bean
-    public AuthService authService() {
-        return new AuthService(userDao(), roleDao(), contactDetailDao(),
-                passwordService(), dataSource());
-    }
-
-    // ============================================================
     // Interceptor Beans
     // ============================================================
 
     @Bean
     public AuthInterceptor authInterceptor() {
         return new AuthInterceptor();
-    }
-
-    // ============================================================
-    // Controller Beans (explicit registration — no component scan)
-    // ============================================================
-
-    @Bean
-    public AuthController authController() {
-        return new AuthController(authService());
-    }
-
-    /**
-     * Landing page controller serving the root URL.
-     * <p>
-     * Registered explicitly as a {@link Bean} because in pure Spring MVC
-     * (without Boot), {@code @Controller} alone does NOT register the
-     * controller as a Spring bean (see BUGS.md B1).
-     */
-    @Bean
-    public LandingPageController landingPageController() {
-        return new LandingPageController();
-    }
-
-    /**
-     * Global exception handler for 404/500 with bilingual Thymeleaf templates.
-     * <p>
-     * Registered explicitly as a {@link Bean} because in pure Spring MVC
-     * (without Boot), {@code @ControllerAdvice} alone does NOT register the
-     * handler (same pattern as BUGS.md B1 for {@code @Controller}).
-     */
-    @Bean
-    public GlobalExceptionHandler globalExceptionHandler() {
-        return new GlobalExceptionHandler();
     }
 
     // ============================================================

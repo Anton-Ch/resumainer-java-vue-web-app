@@ -3,6 +3,7 @@ package com.resumainer.service;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 /**
  * Service for password hashing and verification using BCrypt.
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
  * Uses {@code at.favre.lib:bcrypt} — a modern, actively maintained BCrypt fork.
  * Constitution V: BCrypt only, never log plaintext passwords.
  */
+@Service
 public class PasswordService {
 
     private static final Logger log = LoggerFactory.getLogger(PasswordService.class);
