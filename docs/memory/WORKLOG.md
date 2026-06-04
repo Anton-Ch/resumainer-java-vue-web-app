@@ -23,6 +23,27 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-04 - Feature 004 Custom JDBC Connection Pool Implementation Completed
+
+**Milestone**: Feature 004 (Custom JDBC Connection Pool) phases 1 and 2 completed.
+
+**What was achieved:**
+- 5 pool classes implemented with TDD: ConnectionPoolConfig, ConnectionFactory, ConnectionPoolException, PooledConnectionProxy (Java dynamic proxy), SimpleConnectionPool (ArrayBlockingQueue + AtomicInteger + AtomicBoolean)
+- DataSourceConfig — Spring @Bean with init/destroy lifecycle
+- Replaced DriverManagerDataSource with custom SimpleConnectionPool
+- Switched to @ComponentScan("com.resumainer") — eliminated 15+ explicit @Bean methods
+- 97/97 tests passing (23 new pool tests)
+- All pool classes implement DataSource interface for future HikariCP replacement
+- B5 (stereotype annotations) superseded by @ComponentScan resolution
+
+**Key decisions:**
+- @ComponentScan("com.resumainer") for bean discovery instead of explicit @Bean methods
+- @Repository/@Service annotations added to all DAOs and services
+- Controller constructor injection for @Value properties to enable standalone MockMvc tests
+- JDBC URL configured via System.getenv() (B2 guard), not ${...} placeholders
+
 ### 2026-06-03 - Feature 003 Bug-Fix and Integration Testing Completed
 
 **Milestone**: Feature 003 (Vue Auth Page) — all bugs found during manual integration testing fixed and verified.

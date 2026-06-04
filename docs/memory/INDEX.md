@@ -38,6 +38,8 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - D12 | PrimeVue 4 Form with Zod resolver: standard validation pattern | primevue,vue3,form,validation,zod,resolver,frontend | [DECISIONS.md](DECISIONS.md) | active
 - D13 | All user-facing strings must use i18n $t() — no hardcoded text in templates | i18n,internationalization,vue3,vue-i18n,frontend,best-practice | [DECISIONS.md](DECISIONS.md) | active
 - D14 | Mandatory manual integration testing phase after all implementation phases | testing,integration,manual-testing,playwright,docker,i18n,quality | [DECISIONS.md](DECISIONS.md) | active
+- D15 | Separate @Configuration for infrastructure beans via @ComponentScan | spring-mvc,configuration,component-scan,datasource,infrastructure,architecture | [DECISIONS.md](DECISIONS.md) | active
+- D16 | Controller tests: standalone MockMvc over full Spring context when no DB needed | testing,mockmvc,spring-mvc,controller,standalone,integration-testing | [DECISIONS.md](DECISIONS.md) | active
 
 ## Workflow
 - W1 | First Feature MVP Achieved: Hello World Tomcat | milestone, mvp, hello-world, docker, spring-mvc, tomcat | [WORKLOG.md](WORKLOG.md) | active
@@ -49,3 +51,4 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - W7 | Feature 003 Phase 5 Interceptor, CSRF Filter, and Configuration Completed | milestone,feature-003,phase-5,interceptor,csrf,webconfig | [WORKLOG.md](WORKLOG.md) | active
 - W8 | Feature 003 Phase 8 Bilingual Auth Forms with PrimeVue + Zod Completed | milestone,feature-003,phase-8,auth,primevue,zod,forms | [WORKLOG.md](WORKLOG.md) | active
 - W9 | Feature 003 Bug-Fix and Integration Testing Completed | milestone,feature-003,bug-fix,integration-testing,i18n,docker | [WORKLOG.md](WORKLOG.md) | active
+- W10 | Feature 004 Custom JDBC Connection Pool Implementation Completed | milestone,feature-004,jdbc-pool,tdd,component-scan,datasource | [WORKLOG.md](WORKLOG.md) | active
