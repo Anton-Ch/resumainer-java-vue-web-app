@@ -446,3 +446,47 @@ Manual testing after Phase 8: switching from EN to RU showed all labels and stat
 
 **Where to look next**
 frontend/src/components/LoginForm.vue, frontend/src/components/RegisterForm.vue, any future PrimeVue Form component
+
+---
+
+### 2026-06-03 - PR descriptions with backtick-escaped paths get mangled in gh CLI + PowerShell
+
+**Status**
+Active
+
+**Symptoms**
+GitHub PR description shows `\backend/\` and `\frontend/\` with literal backslash-plus-backtick instead of proper inline code formatting like `backend/`. The markdown is not rendering correctly.
+
+**Root Cause**
+When running `gh pr create --body "..."` from PowerShell, the body string contains markdown backticks for inline code (e.g., `` `backend/` ``). There are two compounding problems:
+
+1. **PowerShell escape confusion**: The string `\`` in PowerShell is interpreted as literal backslash followed by the start of a PowerShell escape sequence (backtick is PowerShell's escape character). The markdown `\` before backtick is NOT standard GitHub markdown syntax.
+2. **Incorrect markdown**: To escape a backtick inside a code span in GitHub markdown, use double backticks (`` ``foo`` ``), not backslash + backtick (`\`foo\``).
+
+The `\` + `` ` `` combination is rendered as-is in GitHub markdown, producing the ugly `\` characters.
+
+**Future mistake prevented**
+When writing PR descriptions via `gh pr create` from PowerShell:
+
+1. **Do not use backticks for inline code** in `gh` body strings unless absolutely necessary. Simple paths like `backend/` and `frontend/` are clear without formatting.
+2. **If you need backticks**, use a heredoc or file-based approach instead of inline string:
+   ```powershell
+   # Read body from file
+   gh pr create --title "..." --body-file pr-body.md
+   ```
+3. **Alternative**: Write backtick-free descriptions:
+   ```
+   - backend/ — 24 Java files
+   - frontend/ — 16 Vue/TS files
+   ```
+
+**Evidence**
+PR #5 showed `\backend/\`, `\frontend/\`, `\docker/\` instead of proper formatting. Fixed manually by removing backticks from path references.
+
+**Prevention / Detection**
+- Review PR body before submitting by echoing the string first
+- Use `--body-file` with a markdown file for complex PR descriptions
+- For simple path lists, omit backticks entirely — paths are readable without formatting
+
+**Where to look next**
+Any future `gh pr create` command with inline markdown containing backticks.

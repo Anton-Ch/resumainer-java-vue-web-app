@@ -1,0 +1,2 @@
+# Bash scripts must always use LF line endings for cross-platform compatibility
+.specify/scripts/bash/*.sh text eol=lf

@@ -237,6 +237,106 @@ Default execution pattern:
 6. Summarize files changed and verification result.
 7. Capture durable lessons only when useful.
 
+## Shared Implementation Method
+
+All ResumAIner agents must use this implementation method when executing tasks, especially during `/speckit.superpowers.execute` or any code/file implementation/editing work.
+
+### Documentation-First Implementation
+
+Before implementing important code, configuration, properties, integration logic, framework-specific behavior, or non-trivial files, consult the available Context7 MCP server documentation.
+
+Use Context7 to verify current official or near-official best practices for the specific technology, component, or library being used.
+
+This is required before work involving, for example:
+
+* Spring MVC configuration;
+* Java language or library usage;
+* Maven configuration;
+* Flyway migrations;
+* PostgreSQL-specific behavior;
+* JDBC behavior;
+* Vue 3 / Vite implementation;
+* Docker / Docker Compose configuration;
+* security-sensitive code;
+* validation behavior;
+* testing framework setup;
+* PDF generation libraries;
+* OpenRouter or external API integration.
+
+The agent must not rely only on own AI model memory when current documentation is available through Context7.
+
+### Context7 During Troubleshooting
+
+During implementation, actively use Context7 again when:
+
+* tests fail unexpectedly;
+* build errors occur;
+* framework behavior is unclear;
+* configuration does not work as expected;
+* bugs appear after changes;
+* generated code does not behave as intended;
+* there is uncertainty about the correct API, annotation, option, command, or lifecycle behavior.
+
+When troubleshooting, prefer this order:
+
+1. Check project source of truth: active `spec.md`, `plan.md`, `tasks.md`, constitution, and memory.
+2. Check current project code and configuration.
+3. Check Context7 documentation for the relevant technology.
+4. Only then rely on general model knowledge or assumptions.
+
+### KISS Principle Implementation Rule
+
+Follow KISS principle (Keep It Simple, Stupid): keep implementation simple, direct, and understandable because most systems and processes work best if they are kept simple rather than complicated.
+
+This means:
+
+* prefer straightforward code over clever overengineered abstractions;
+* avoid speculative architecture;
+* avoid unnecessary layers, factories, helpers, services, or utilities bringing low value;
+* avoid introducing libraries without clear current value;
+* keep components focused on one responsibility (Single Responsibility Principle);
+* keep configuration readable for a beginner;
+* prefer explicitness over hidden magic;
+* implement only what the active task requires.
+
+KISS must never be used as an excuse for weak quality.
+
+Do not simplify away:
+
+* security;
+* validation;
+* testability;
+* error handling;
+* data integrity;
+* clear naming;
+* maintainability;
+* project constraints;
+* Spec Kit acceptance criteria.
+
+The target is simple and clear professional code, not primitive code.
+
+### Implementation Discipline
+
+Before writing or editing files, the agent should briefly identify:
+1. what documentation or Context7 topic is relevant;
+2. what source-of-truth project files control the task;
+3. what minimal implementation path satisfies the requirement;
+4. what verification command or check will prove the change works.
+
+During implementation:
+* make surgical changes;
+* touch only necessary files;
+* keep changes inside the active task boundary;
+* do not refactor unrelated code;
+* do not introduce broad abstractions unless the current task clearly needs them;
+* re-check documentation when errors suggest incorrect API or framework usage.
+
+After implementation:
+* summarize files changed;
+* explain what changed;
+* show verification results or recommended verification commands;
+* mention risks, assumptions, and follow-ups.
+
 ## Shared Project Domain Summary
 
 ResumAIner is an AI-assisted resume adaptation platform.
@@ -494,11 +594,6 @@ The active agent must stay aligned with:
 5. shared project rules from this `AGENTS.md`
 
 Specialized agents may improve execution quality, but they must not override project-level rules.
-
-#### Context7 MCP server usage
-In case of bugs, errors, failures, unusual or unexpected response from code or behaviour - first, consult and double check in context7 available MCP server. 
-
-Before writing any configs, properties, rules, important pieces of code - first, consult and double check best practices in context7 available MCP server. 
 
 ## Implementation Behavior
 

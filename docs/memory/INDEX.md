@@ -22,6 +22,7 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - B11 | Flyway @Bean(initMethod="migrate") required in pure Spring MVC — no auto-migration | flyway,migration,spring-mvc,bean,database,pure-spring-mvc,boot-vs-core | [BUGS.md](BUGS.md) | active
 - B12 | DataSource URL with ${...} placeholders stays as literal string — use System.getenv() | datasource,spring-mvc,properties,placeholder,env-var,boot-vs-core | [BUGS.md](BUGS.md) | active
 - B13 | PrimeVue 4 Zod resolver validation messages not reactive to locale changes | primevue,vue3,i18n,locale,zod,resolver,form,validation,reactive | [BUGS.md](BUGS.md) | active
+- B14 | PR descriptions with backtick-escaped paths get mangled in gh CLI + PowerShell | pr,github,markdown,backtick,formatting,powershell,cli | [BUGS.md](BUGS.md) | active
 
 ## Decisions
 - D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web.xml) | servlet, spring-mvc, jakarta-ee, tomcat, initialization, web.xml | [DECISIONS.md](DECISIONS.md) | active
