@@ -11,22 +11,45 @@ permission:
   edit: ask
   bash:
     "*": ask
+    "pwd": allow
+    "ls": allow
+    "ls *": allow
+    "tree": allow
+    "tree *": allow
     "git status*": allow
     "git diff*": allow
     "git log*": allow
+    "git show*": allow
+    "git branch --show-current": allow
+    "git rev-parse *": allow
+    "git ls-files*": allow
     "grep *": allow
     "find *": allow
+    "rg *": allow
+    "wc *": allow
+    "head *": allow
+    "head -n *": allow
+    "cat *": allow
     "mvn test*": allow
     "mvn verify*": allow
+    "mvn -q test*": allow
+    "mvn -q verify*": allow
+    "mvn dependency:tree*": allow
+    "./mvnw test*": allow
+    "./mvnw verify*": allow
+    "./mvnw -q test*": allow
+    "./mvnw -q verify*": allow
     "npm test*": allow
     "npm run build*": allow
     "npm run lint*": allow
+    "npm run test*": allow
+    "npm run typecheck*": allow
     "docker compose config*": allow
     "docker compose ps*": allow
     "docker compose logs*": ask
   external_directory: deny
-  webfetch: ask
-  websearch: ask
+  webfetch: allow
+  websearch: allow
   task: ask
 ---
 
@@ -444,3 +467,46 @@ A good response or change from this agent is:
 - helpful for a beginner without being simplistic;
 - clear about which agent should work next;
 - focused on making the project safe, testable, and maintainable.
+
+## 14. Autonomy and Approval Policy
+
+Act autonomously for safe investigation and verification.
+
+You may proceed without asking for confirmation when the action is read-only or produces only temporary build/test artifacts, including:
+
+- reading files;
+- listing files and directories;
+- searching code with grep/rg/glob;
+- checking git status, git diff, git log, git show;
+- running tests;
+- running builds;
+- running linters;
+- checking Docker Compose configuration and container status;
+- using web search or web fetch for documentation and technical verification.
+
+Always ask before actions that can modify, delete, move, install, publish, commit, deploy, or expose sensitive data.
+
+You must ask before:
+
+- editing or writing files;
+- deleting files or directories;
+- moving or renaming files;
+- generating new source files;
+- changing migrations;
+- changing package files or dependencies;
+- running package installation or update commands;
+- changing database state;
+- starting or stopping Docker services;
+- committing, staging, pushing, rebasing, merging, or resetting Git history;
+- invoking another agent through the task tool;
+- reading full logs if they may contain secrets.
+
+When an action is safe and already allowed by permissions, do it directly instead of asking the user.
+
+When an action requires approval, explain briefly:
+
+1. what you want to do;
+2. why it is needed;
+3. what files or systems may be affected.
+
+Do not ask broad vague questions like “Should I proceed?” for safe read-only work.
