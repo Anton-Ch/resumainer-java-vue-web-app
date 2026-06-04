@@ -1,5 +1,6 @@
 package com.resumainer.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,8 +15,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class LandingPageController {
 
-    @Value("${landing.cta.url:/auth/login}")
-    private String ctaUrl;
+    private final String ctaUrl;
+
+    @Autowired
+    public LandingPageController(@Value("${landing.cta.url:/auth/login}") String ctaUrl) {
+        this.ctaUrl = ctaUrl;
+    }
 
     /**
      * Displays the Landing Page with all 8 sections (Header, Hero, Problem,

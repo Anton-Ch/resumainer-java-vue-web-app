@@ -4,15 +4,12 @@ import com.resumainer.model.Language;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.stereotype.Repository;
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.Optional;
 
-/**
- * DAO for the 'language' lookup table.
- */
+@Repository
 public class LanguageDao {
 
     private static final Logger log = LoggerFactory.getLogger(LanguageDao.class);

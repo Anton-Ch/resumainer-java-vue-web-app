@@ -4,15 +4,13 @@ import com.resumainer.model.ContactDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.stereotype.Repository;
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
-/**
- * DAO for the 'contact_detail' table (UUID PK).
- * Created as empty shell on user registration.
- */
+@Repository
 public class ContactDetailDao {
 
     private static final Logger log = LoggerFactory.getLogger(ContactDetailDao.class);

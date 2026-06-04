@@ -1,39 +1,27 @@
 package com.resumainer.controller;
 
-import com.resumainer.config.WebConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 /**
  * Tests for {@link LandingPageController}.
  * <p>
- * Verifies that the Landing Page is served correctly at the root URL,
- * contains the required model attributes, and supports locale switching.
+ * Uses standalone MockMvc setup — no Spring context needed.
+ * The LandingPageController has no DB dependencies.
  */
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = WebConfig.class)
-@WebAppConfiguration
 class LandingPageControllerTest {
-
-    @Autowired
-    private WebApplicationContext wac;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+        LandingPageController controller = new LandingPageController("/auth/login");
+        mockMvc = standaloneSetup(controller).build();
     }
 
     @Test
