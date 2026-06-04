@@ -468,3 +468,74 @@ Feature 003 had 62 unit tests all passing, but 6 critical bugs were found during
 
 **Where to look next**
 Docker Compose configuration, CI/CD pipeline, feature completion checklist
+
+---
+
+### 2026-06-04 - Separate @Configuration for infrastructure beans via @ComponentScan
+
+**Status**
+Active
+
+**Why this is durable**
+Every feature that adds infrastructure beans (DataSource, caching, messaging) needs a consistent pattern for configuration organization. Without a clear pattern, WebConfig becomes a dumping ground for unrelated beans.
+
+**Decision**
+Infrastructure beans belong in separate `@Configuration` classes (e.g., `DataSourceConfig`) discovered via `@ComponentScan("com.resumainer")`. WebConfig stays focused on web MVC configuration (interceptors, view resolvers, message sources, security filters).
+
+This replaces the previous pattern of lumping all `@Bean` methods into WebConfig. The component scan also eliminates the need for explicit `@Bean` methods for `@Repository`/`@Service`/`@Controller`/`@ControllerAdvice` annotated classes.
+
+**Tradeoffs**
+- Gained: Clean separation — infrastructure config is independently testable and replaceable
+- Gained: WebConfig stays focused on web concerns (~230 lines instead of ~320)
+- Gained: Adding new infrastructure (cache, messaging) follows the same pattern — new @Configuration class
+- Made harder: Must add @Repository/@Service annotations to all DAOs and services (was optional before)
+- Reconsider: If project grows to 10+ @Configuration classes, consider grouping by domain or using @Import for explicit ordering
+
+---
+
+### 2026-06-04 - Controller tests: standalone MockMvc over full Spring context when no DB needed
+
+**Status**
+Active
+
+**Why this is durable**
+Adding infrastructure beans (DataSource, Flyway) to the Spring context breaks any test that loads `@ContextConfiguration(classes = WebConfig.class)` because the DataSource initialization requires a real PostgreSQL connection. Controller tests that don't need database access should use standalone MockMvc setup to avoid this dependency.
+
+**Decision**
+Use `MockMvcBuilders.standaloneSetup(controller)` for controller tests that:
+- Test request mapping, view resolution, model attributes
+- Don't interact with database, services, or infrastructure beans
+- Need to mock service layer dependencies
+
+Use `@ContextConfiguration(classes = WebConfig.class)` only for integration tests that:
+- Need the full Spring context (interceptors, filters, property resolution)
+- Test end-to-end behavior through all layers
+
+**Impact on @Value properties**
+When using standalone setup, `@Value` annotations on controllers are not processed by Spring. Controllers must use constructor injection for `@Value` properties to remain testable:
+
+```java
+// Instead of field injection:
+// @Value("${landing.cta.url:/auth/login}")
+// private String ctaUrl;
+
+// Use constructor injection:
+private final String ctaUrl;
+
+public LandingPageController(@Value("${landing.cta.url:/auth/login}") String ctaUrl) {
+    this.ctaUrl = ctaUrl;
+}
+```
+
+Test then creates the controller directly:
+```java
+LandingPageController controller = new LandingPageController("/auth/login");
+mockMvc = standaloneSetup(controller).build();
+```
+
+**Tradeoffs**
+- Gained: Tests don't require PostgreSQL or any infrastructure to run
+- Gained: Tests run faster (standalone setup in ~150ms vs full context in ~3s)
+- Gained: Easy to inject mock services for controller testing
+- Made harder: Must use constructor injection for @Value (good practice anyway)
+- Reconsider: If a controller starts needing many infrastructure beans, consider whether standalone setup is still appropriate

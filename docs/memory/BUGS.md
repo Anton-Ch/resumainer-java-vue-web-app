@@ -135,7 +135,7 @@ docker/scripts/wait-for-it.sh, .specify/scripts/bash/*.sh, any new Docker shell 
 ### 2026-05-31 - All Spring stereotype annotations require explicit @Bean in pure Spring MVC
 
 **Status**
-Active
+Superseded-by-ComponentScan
 
 **Symptoms**
 `@ControllerAdvice` with `@ExceptionHandler` methods never gets invoked. Log shows: `ControllerAdvice beans: none` during DispatcherServlet init. 404 errors show Tomcat default page instead of custom Thymeleaf template.
@@ -143,20 +143,25 @@ Active
 **Root Cause**
 In pure Spring MVC with `@Configuration` + `@EnableWebMvc` and no `@ComponentScan`, Spring does NOT scan the classpath for stereotype annotations. This applies to ALL annotation-driven Spring beans: `@Controller` (B1), `@ControllerAdvice`, `@RestController`, `@Service`, `@Repository`, `@Component`.
 
-**Future mistake prevented**
-Every annotated class must be registered as an explicit `@Bean` in a `@Configuration` class (typically `WebConfig.java`). This is a project-wide constraint — not a one-off workaround. See also B1 for `@Controller`.
+**Resolution (Feature 004)**
+Added `@ComponentScan("com.resumainer")` to `WebConfig.java` combined with `@Repository`, `@Service`, `@Controller`, `@ControllerAdvice` annotations on all components. This eliminated the need for explicit `@Bean` methods for DAOs, services, controllers, and exception handlers.
 
-**Evidence**
-GlobalExceptionHandler (`@ControllerAdvice`) was never invoked despite correct `@ExceptionHandler` methods. Log showed `ControllerAdvice beans: none`. Adding `@Bean public GlobalExceptionHandler globalExceptionHandler()` to WebConfig.java fixed it immediately. 404 errors now serve our Thymeleaf template.
+**What changed**
+- Before: 20+ explicit `@Bean` methods in WebConfig for every DAO, service, and controller
+- After: `@ComponentScan("com.resumainer")` + stereotype annotations — no explicit beans needed
+- All 97 tests pass with the new approach
+
+**Why explicit @Bean was the wrong fix**
+The original workaround (adding `@Bean` methods) treated the symptom, not the cause. The actual missing piece was `@ComponentScan`. Using explicit `@Bean` methods is still valid for infrastructure beans (Flyway, interceptors, filters) but should NOT be the default pattern for annotated components.
 
 **Prevention / Detection**
-After adding any new annotated class, check the startup log for:
-- `ControllerAdvice beans: none` → @ControllerAdvice not registered
-- HandlerMapping with zero mappings → @Controller not registered
-Always add a corresponding `@Bean` method in WebConfig.java.
+When adding a new annotated class:
+1. First approach: add `@Repository`/`@Service`/`@Controller`/`@ControllerAdvice` — `@ComponentScan` will discover it
+2. Only if component scan doesn't apply (e.g., third-party classes): use explicit `@Bean`
+3. Check startup log for expected bean registration
 
 **Where to look next**
-backend/src/main/java/com/resumainer/config/WebConfig.java, any new class with @Controller, @ControllerAdvice, @RestController, etc.
+`@ComponentScan("com.resumainer")` in `WebConfig.java`. DAO classes in `com.resumainer.dao` with `@Repository`. Service classes in `com.resumainer.service` with `@Service`.
 
 ---
 
