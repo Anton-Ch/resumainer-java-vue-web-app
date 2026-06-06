@@ -33,22 +33,120 @@
       "loggedOut": "Logged out successfully"
     }
   },
-  "home": {
-    "userHome": "User Home",
-    "adminHome": "Admin Home",
-    "totalTokensSent": "Total tokens sent",
-    "totalTokensGenerated": "Total tokens generated",
-    "totalResumes": "Total resumes created",
-    "totalUsers": "Total users",
-    "editProfile": "Edit my profile",
-    "generateResume": "Generate new resume",
-    "noResumes": "You haven't created any resumes yet. Click 'Generate new resume' to get started.",
-    "users": "Users",
-    "aiModels": "AI Models",
-    "resumes": "Resumes"
-  },
   "nav": {
-    "logout": "Log out",
-    "language": "Language"
+    "home": "Home",
+    "myProfile": "My Profile",
+    "generateResume": "Generate Resume",
+    "admin": "Admin",
+    "language": "Language",
+    "logout": "Log out"
+  },
+  "home": {
+    "title": "Resume workspace",
+    "incomplete": {
+      "title": "Complete your profile first",
+      "text": "AI needs context about you. Add at least your contact details, work experience, and education. The more useful information you provide, the better resume you will get.",
+      "cta": "Complete Profile"
+    },
+    "checklist": {
+      "contact": "Contact details",
+      "experience": "Work experience",
+      "education": "Education",
+      "done": "Done",
+      "missing": "Missing"
+    },
+    "ready": {
+      "title": "Your next best step",
+      "generate": {
+        "title": "Generate your next resume",
+        "hint": "Start with a vacancy and get an adapted resume.",
+        "cta": "Generate Resume",
+        "tooltip": "Make a new awesome resume for a specific vacancy."
+      },
+      "update": {
+        "title": "Update your profile",
+        "hint": "Use this when your experience, education, skills, or contact details change.",
+        "cta": "Update Profile",
+        "tooltip": "Edit the profile data used for future resumes."
+      }
+    },
+    "summary": {
+      "savedResumes": "Saved resumes",
+      "profileStatus": "Profile status",
+      "ready": "Ready",
+      "needsInfo": "Needs info",
+      "readyHint": "You can generate resumes now.",
+      "needsInfoHint": "Add contact details, work experience, and education.",
+      "updateProfile": "Update profile",
+      "completeProfile": "Complete profile",
+      "lastResume": "Last resume",
+      "noLastResume": "No resumes yet"
+    },
+    "table": {
+      "title": "Saved resumes",
+      "searchPlaceholder": "Search by title, vacancy, or company",
+      "search": "Search",
+      "resumeTitle": "Resume title",
+      "vacancy": "Vacancy",
+      "company": "Company",
+      "language": "Language",
+      "adaptationLevel": "Adaptation level",
+      "created": "Created",
+      "loading": "Loading resumes. Please wait.",
+      "emptyTitle": "No resumes yet",
+      "noResultsTitle": "No resumes found",
+      "noResultsText": "Try another search or change filters.",
+      "pageReport": "Showing {first} to {last} of {totalRecords}",
+      "mobilePageReport": "Page {current} of {totalPages}"
+    }
+  },
+  "resumeDetails": {
+    "title": "Resume details",
+    "publicLink": "Public link",
+    "view": "View",
+    "downloadPdf": "Download PDF",
+    "copyLink": "Copy link",
+    "delete": "Delete",
+    "coverLetter": "Cover letter",
+    "copyCoverLetter": "Copy cover letter",
+    "noCoverLetter": "No cover letter for this resume.",
+    "copied": "Copied.",
+    "linkCopied": "Link copied.",
+    "coverLetterCopied": "Cover letter copied."
+  },
+  "deleteResume": {
+    "title": "Delete resume?",
+    "text": "This resume will no longer be available from your workspace or public link.",
+    "cancel": "Cancel",
+    "confirm": "Delete",
+    "success": "Resume deleted."
+  },
+  "generate": {
+    "steps": {
+      "vacancy": "Vacancy",
+      "settings": "Settings",
+      "review": "Review",
+      "export": "Export"
+    },
+    "disabledTooltip": "Generate a resume first.",
+    "loadingTitle": "Generating your resume...",
+    "loadingText": "This may take a moment. Please keep this page open."
+  },
+  "placeholder": {
+    "title": "Placeholder page",
+    "text": "This page is a placeholder for future work.",
+    "back": "Back to Home"
+  },
+  "language": {
+    "en": "English",
+    "ru": "Russian"
+  },
+  "adaptation": {
+    "minimal": "Minimal",
+    "balanced": "Balanced",
+    "maximum": "Maximum"
+  },
+  "common": {
+    "loading": "Loading..."
   }
 }

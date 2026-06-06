@@ -5,32 +5,88 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/login',
-      name: 'login',
+      path: '/app/auth',
+      name: 'auth',
       component: () => import('@/views/AuthPage.vue'),
       meta: { requiresGuest: true }
     },
     {
-      path: '/register',
-      name: 'register',
-      component: () => import('@/views/AuthPage.vue'),
-      meta: { requiresGuest: true }
-    },
-    {
-      path: '/home',
+      path: '/app/home',
       name: 'user-home',
       component: () => import('@/views/UserHomePage.vue'),
       meta: { requiresAuth: true }
     },
     {
-      path: '/admin',
+      path: '/app/admin',
       name: 'admin-home',
       component: () => import('@/views/AdminHomePage.vue'),
       meta: { requiresAuth: true, requiresAdmin: true }
     },
+    // Profile section placeholders
+    {
+      path: '/app/profile/contact',
+      name: 'profile-contact',
+      component: () => import('@/components/common/PlaceholderPage.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/app/profile/experience',
+      name: 'profile-experience',
+      component: () => import('@/components/common/PlaceholderPage.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/app/profile/education',
+      name: 'profile-education',
+      component: () => import('@/components/common/PlaceholderPage.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/app/profile/projects',
+      name: 'profile-projects',
+      component: () => import('@/components/common/PlaceholderPage.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/app/profile/courses',
+      name: 'profile-courses',
+      component: () => import('@/components/common/PlaceholderPage.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/app/profile/additional',
+      name: 'profile-additional',
+      component: () => import('@/components/common/PlaceholderPage.vue'),
+      meta: { requiresAuth: true }
+    },
+    // Generate resume placeholders
+    {
+      path: '/app/generate/vacancy',
+      name: 'generate-vacancy',
+      component: () => import('@/components/common/PlaceholderPage.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/app/generate/settings',
+      name: 'generate-settings',
+      component: () => import('@/components/common/PlaceholderPage.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/app/generate/review',
+      name: 'generate-review',
+      component: () => import('@/components/common/PlaceholderPage.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/app/generate/export',
+      name: 'generate-export',
+      component: () => import('@/components/common/PlaceholderPage.vue'),
+      meta: { requiresAuth: true }
+    },
     {
       path: '/:pathMatch(.*)*',
-      redirect: '/login'
+      redirect: '/app/auth'
     }
   ]
 })
@@ -38,9 +94,9 @@ const router = createRouter({
 /**
  * Global navigation guard.
  *
- * - Protected routes (requiresAuth): redirect to /login if not authenticated.
- * - Auth routes (requiresGuest): redirect to /home if already authenticated.
- * - Admin routes (requiresAdmin): redirect to /home if role is not ADMIN.
+ * - Protected routes (requiresAuth): redirect to /app/auth if not authenticated.
+ * - Auth routes (requiresGuest): redirect to /app/home if already authenticated.
+ * - Admin routes (requiresAdmin): redirect to /app/home if role is not ADMIN.
  */
 router.beforeEach(async (to, from, next) => {
   try {
@@ -50,19 +106,19 @@ router.beforeEach(async (to, from, next) => {
 
     // Route requires auth but user is not authenticated
     if (to.matched.some(r => r.meta.requiresAuth) && !isAuthenticated) {
-      next({ path: '/login', query: { redirect: to.fullPath } })
+      next({ path: '/app/auth', query: { redirect: to.fullPath } })
       return
     }
 
     // Route is for guests only but user is authenticated
     if (to.matched.some(r => r.meta.requiresGuest) && isAuthenticated) {
-      next({ path: role === 'ADMIN' ? '/admin' : '/home' })
+      next({ path: '/app/home' })
       return
     }
 
     // Route requires ADMIN role but user is not admin
     if (to.matched.some(r => r.meta.requiresAdmin) && role !== 'ADMIN') {
-      next({ path: '/home' })
+      next({ path: '/app/home' })
       return
     }
 
@@ -70,7 +126,7 @@ router.beforeEach(async (to, from, next) => {
   } catch {
     // Auth check failed (network error, etc.) — treat as not authenticated
     if (to.matched.some(r => r.meta.requiresAuth)) {
-      next({ path: '/login' })
+      next({ path: '/app/auth' })
     } else {
       next()
     }
