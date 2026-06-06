@@ -495,3 +495,21 @@ PR #5 showed `\backend/\`, `\frontend/\`, `\docker/\` instead of proper formatti
 
 **Where to look next**
 Any future `gh pr create` command with inline markdown containing backticks.
+
+---
+
+### 2026-06-06 — FK column type must match referenced entity PK — UUID for users(id), not BIGINT
+
+**Status**: Active
+
+**Symptoms**: Flyway migration fails at runtime with error:
+```
+ERROR: foreign key constraint "saved_resumes_user_id_fkey" cannot be implemented
+DETAIL: Key columns "user_id" and "id" are of incompatible types: bigint and uuid.
+```
+
+**Root Cause**: The project uses hybrid PK strategy (D7): entity tables like `users` use `UUID` PK, while lookup tables use `BIGSERIAL`. When creating a new entity table that references `users(id)`, the FK column was incorrectly defined as `BIGINT` (matching lookup table convention) instead of `UUID`.
+
+**Prevention**: Before writing any Flyway migration with a FK referencing `users.id` (or any other entity table), verify the FK column type matches `UUID`, not `BIGINT`. The `BIGINT` type is correct only for lookup/reference tables (e.g., `role_id`, `status_id`).
+
+**Evidence**: Feature 005 Phase 2 implementation — V8 migration initially had `user_id BIGINT NOT NULL REFERENCES users(id)`, which would fail at runtime. Caught during code review.
