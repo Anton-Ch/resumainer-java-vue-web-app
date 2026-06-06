@@ -58,3 +58,4 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - W9 | Feature 003 Bug-Fix and Integration Testing Completed | milestone,feature-003,bug-fix,integration-testing,i18n,docker | [WORKLOG.md](WORKLOG.md) | active
 - W10 | Feature 004 Custom JDBC Connection Pool Implementation Completed | milestone,feature-004,jdbc-pool,tdd,component-scan,datasource | [WORKLOG.md](WORKLOG.md) | active
 - W11 | Feature 005 Planning and All Artifacts Completed | milestone,feature-005,planning,user-home-page,spec,plan,tasks,security-review | [WORKLOG.md](WORKLOG.md) | active
+- W12 | Feature 005 Implementation — Backend and Frontend Core Completed | milestone,feature-005,implementation,backend,frontend,user-home-page | [WORKLOG.md](WORKLOG.md) | active
