@@ -27,6 +27,31 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-06 — Feature 005 Implementation — Backend and Frontend Core Completed
+
+**Status**: Active
+
+**Why this is durable**: Feature 005 (User Home Page &amp; Resume Workspace) implementation reached functional completeness across all layers:
+
+**Backend** (Phases 1-3):
+- Flyway migration V8 (saved_resumes table with soft-delete support)
+- ResumeDao with PreparedStatement, sort whitelist, owner filter, pagination
+- ResumeService with validation (page/size/sort params)
+- UserHomeService composing profile readiness + resume summary
+- UserHomeController (GET /api/user/home) + ResumeController (GET/DELETE /api/resumes)
+- 130+ backend tests passing (JUnit 5 + Mockito + standalone MockMvc)
+
+**Frontend** (Phases 4-9):
+- SPA routing restructured from / to /app/... with role-based guards
+- AppHeader with navigation (Home, Profile, Generate, Admin role-based)
+- Full i18n EN/RU matrix (home, resumeDetails, deleteResume, generate, placeholders)
+- UserHomePage with guided block, summary cards, lazy DataTable
+- PrimeVue DataTable in lazy mode with server-side search/filter/sort/pagination
+- ResumeDetailsDialog with View/Download/Copy Link/Delete actions
+- Placeholder pages for 6 profile + 4 generate routes
+
 ### 2026-06-06 — Feature 005 Planning and All Artifacts Completed
 
 **Status**: Active

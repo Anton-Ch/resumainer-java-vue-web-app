@@ -3,63 +3,144 @@
     <AppHeader />
 
     <main class="page-main">
-      <!-- Stats overview -->
-      <div class="stats-row">
-        <div class="stat-card vue-card">
-          <span class="stat-label">{{ $t('home.totalTokensSent') }}</span>
-          <span class="stat-value">0</span>
+      <h1 class="page-h1">{{ $t('home.title') }}</h1>
+
+      <!-- Guided block: loading / error / content -->
+      <div v-if="summaryLoading" class="skeleton-block">
+        <Skeleton width="60%" height="24px" />
+        <Skeleton width="100%" height="80px" style="margin-top: 1rem;" />
+      </div>
+      <div v-else-if="summaryError" class="inline-error">
+        <i class="pi pi-exclamation-triangle" style="color: #D97706; font-size: 1.25rem;"></i>
+        <span>{{ summaryError }}</span>
+        <Button icon="pi pi-refresh" label="Retry" class="p-button-text p-button-sm" @click="loadSummary" />
+      </div>
+      <GuidedNextStep
+        v-else-if="summary"
+        :profileReady="summary.profileReady"
+        :checklist="summary.profileChecklist"
+      />
+
+      <!-- Summary cards -->
+      <div v-if="summaryLoading" class="skeleton-block">
+        <div class="summary-skeleton-row">
+          <Skeleton width="100%" height="100px" v-for="i in 3" :key="i" />
         </div>
-        <div class="stat-card vue-card">
-          <span class="stat-label">{{ $t('home.totalTokensGenerated') }}</span>
-          <span class="stat-value">0</span>
-        </div>
-        <div class="stat-card vue-card">
-          <span class="stat-label">{{ $t('home.totalResumes') }}</span>
-          <span class="stat-value">0</span>
-        </div>
+      </div>
+      <SummaryCards
+        v-else-if="summary"
+        :savedResumesCount="summary.summary.savedResumesCount"
+        :profileReady="summary.profileReady"
+        :lastResume="summary.lastResume"
+        @openLastResume="openLastResume"
+      />
+
+      <!-- Saved Resumes section -->
+      <div class="section-header">
+        <h2>{{ $t('home.table.title') }}</h2>
+        <Button
+          v-if="summary?.profileReady"
+          :label="$t('home.ready.generate.cta')"
+          icon="pi pi-plus"
+          class="p-button-success p-button-outlined"
+          v-tooltip.top="$t('home.ready.generate.tooltip')"
+          @click="$router.push('/app/generate/vacancy')"
+        />
       </div>
 
-      <!-- Action buttons -->
-      <div class="action-row">
-        <button class="vue-btn vue-btn-secondary vue-btn-lg" @click="goToProfile">
-          {{ $t('home.editProfile') }}
-        </button>
-        <button class="vue-btn vue-btn-primary vue-btn-lg" @click="goToGenerate">
-          {{ $t('home.generateResume') }}
-        </button>
+      <!-- Table: loading / error / content -->
+      <div v-if="tableLoading && resumes.length === 0" class="skeleton-block">
+        <Skeleton width="100%" height="200px" />
       </div>
+      <div v-else-if="tableError" class="inline-error">
+        <i class="pi pi-exclamation-triangle" style="color: #C2410C; font-size: 1.25rem;"></i>
+        <span>{{ tableError }}</span>
+        <Button icon="pi pi-refresh" label="Retry" class="p-button-text p-button-sm" @click="loadResumes" />
+      </div>
+      <SavedResumesTable
+        v-else
+        :resumes="resumes"
+        :totalRecords="totalRecords"
+        :loading="tableLoading"
+        :first="firstRow"
+        :sortField="currentSortField"
+        :sortOrder="currentSortOrder"
+        :size="queryParams.size || 10"
+        @page="onPage"
+        @sort="onSort"
+        @filter="onFilter"
+        @search="onSearch"
+        @openResume="openResumeModal"
+      />
 
-      <!-- Resume table placeholder (empty state) -->
-      <div class="vue-card resume-section">
-        <div class="vue-empty">
-          <div class="vue-empty-icon">
-            <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-              <rect x="6" y="4" width="36" height="40" rx="4" stroke="currentColor" stroke-width="2" fill="none"/>
-              <line x1="14" y1="16" x2="34" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="14" y1="24" x2="34" y2="24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="14" y1="32" x2="28" y2="32" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <h3 class="vue-empty-title">{{ $t('home.noResumes') }}</h3>
-        </div>
-      </div>
+      <!-- Resume Details Modal -->
+      <ResumeDetailsDialog
+        v-model:visible="modalVisible"
+        :resume="selectedResume"
+        @delete="handleDelete"
+      />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
+import { onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserHome } from '@/composables/useUserHome'
 import AppHeader from '@/components/AppHeader.vue'
+import GuidedNextStep from '@/components/home/GuidedNextStep.vue'
+import SummaryCards from '@/components/home/SummaryCards.vue'
+import SavedResumesTable from '@/components/home/SavedResumesTable.vue'
+import ResumeDetailsDialog from '@/components/home/ResumeDetailsDialog.vue'
+import Button from 'primevue/button'
+import Skeleton from 'primevue/skeleton'
 
 const router = useRouter()
 
-function goToProfile() {
-  // Will be implemented in a future feature
+const {
+  summary,
+  summaryLoading,
+  summaryError,
+  resumes,
+  totalRecords,
+  tableLoading,
+  tableError,
+  queryParams,
+  selectedResume,
+  modalVisible,
+  fetchAll,
+  loadSummary,
+  loadResumes,
+  onPage,
+  onSort,
+  onFilter,
+  onSearch,
+  openResumeModal,
+  closeModal,
+  handleDelete
+} = useUserHome()
+
+const firstRow = computed(() => (queryParams.page || 0) * (queryParams.size || 10))
+
+const currentSortField = computed(() => {
+  const sort = queryParams.sort || 'createdAt,desc'
+  return sort.split(',')[0] || 'createdAt'
+})
+
+const currentSortOrder = computed(() => {
+  const sort = queryParams.sort || 'createdAt,desc'
+  return sort.split(',')[1] === 'asc' ? 1 : -1
+})
+
+function openLastResume() {
+  if (summary.value?.lastResume) {
+    openResumeModal(summary.value.lastResume)
+  }
 }
 
-function goToGenerate() {
-  // Will be implemented in a future feature
-}
+onMounted(() => {
+  fetchAll()
+})
 </script>
 
 <style scoped>
@@ -67,62 +148,62 @@ function goToGenerate() {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background: #F6F7FB;
 }
-
 .page-main {
   flex: 1;
-  max-width: 1200px;
+  max-width: 1280px;
   width: 100%;
   margin: 0 auto;
-  padding: var(--vue-space-6);
+  padding: 1.5rem 1.5rem 2rem;
   display: flex;
   flex-direction: column;
-  gap: var(--vue-space-6);
+  gap: 1.25rem;
 }
-
-.stats-row {
+.page-h1 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #10233F;
+  margin: 0;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+.section-header h2 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #10233F;
+  margin: 0;
+}
+.skeleton-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.summary-skeleton-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--vue-space-6);
+  gap: 1rem;
 }
-
-.stat-card {
+.inline-error {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #FFF7ED;
+  border: 1px solid #FDE68A;
+  border-radius: 8px;
+  color: #92400E;
+  font-size: 0.9rem;
 }
-
-.stat-label {
-  font-family: var(--vue-font-body);
-  font-size: var(--vue-text-sm);
-  color: var(--vue-text-secondary);
-  font-weight: 500;
-}
-
-.stat-value {
-  font-family: var(--vue-font-heading);
-  font-size: var(--vue-text-2xl);
-  font-weight: 700;
-  color: var(--vue-text-primary);
-}
-
-.action-row {
-  display: flex;
-  gap: var(--vue-space-4);
-  flex-wrap: wrap;
-}
-
-.resume-section {
-  flex: 1;
-}
-
 @media (max-width: 639px) {
-  .stats-row {
+  .summary-skeleton-row {
     grid-template-columns: 1fr;
-  }
-
-  .page-main {
-    padding: var(--vue-space-4);
   }
 }
 </style>
