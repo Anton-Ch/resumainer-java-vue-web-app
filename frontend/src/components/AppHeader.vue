@@ -1,53 +1,61 @@
 <template>
-  <header class="vue-topbar">
-    <div class="topbar-left">
-      <svg class="topbar-logo-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true" shape-rendering="geometricPrecision">
-        <rect x="5" y="3.5" width="22" height="25" rx="4" fill="#FFFDF8" stroke="#17211D" stroke-width="2.4"/>
-        <circle cx="16" cy="12.2" r="5.8" fill="none" stroke="#17211D" stroke-width="1.9"/>
-        <circle cx="16" cy="12.2" r="2.8" fill="#0F8A6A"/>
-        <rect x="9.2" y="24" width="13.6" height="3" rx="0.9" fill="#0F8A6A"/>
-      </svg>
-      <span class="topbar-brand">ResumAIner</span>
-      <span v-if="roleBadge" class="vue-chip" :class="roleBadgeClass">{{ roleBadge }}</span>
-    </div>
-    <div class="topbar-right">
-      <LanguageSwitcher />
-      <button
-        v-if="showLogout"
-        class="logout-btn"
-        @click="handleLogout"
-        :disabled="loggingOut"
-      >
-        {{ $t('nav.logout') }}
-      </button>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-left">
+        <router-link to="/app/home" class="header-logo-link">
+          <span class="header-brand">ResumAIner</span>
+        </router-link>
+        <nav class="header-nav">
+          <router-link to="/app/home" class="nav-item" active-class="nav-item-active">
+            {{ $t('nav.home') }}
+          </router-link>
+          <router-link to="/app/profile/contact" class="nav-item" active-class="nav-item-active">
+            {{ $t('nav.myProfile') }}
+          </router-link>
+          <router-link to="/app/generate/vacancy" class="nav-item" active-class="nav-item-active">
+            {{ $t('nav.generateResume') }}
+          </router-link>
+          <router-link v-if="isAdmin" to="/app/admin" class="nav-item" active-class="nav-item-active">
+            {{ $t('nav.admin') }}
+          </router-link>
+        </nav>
+      </div>
+      <div class="header-right">
+        <LanguageSwitcher />
+        <Button
+          icon="pi pi-sign-out"
+          class="p-button-text p-button-sm logout-btn"
+          :label="$t('nav.logout')"
+          @click="handleLogout"
+          :disabled="loggingOut"
+          v-tooltip.top="$t('nav.logout')"
+          :aria-label="$t('nav.logout')"
+        />
+      </div>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
-
-const props = withDefaults(defineProps<{
-  showLogout?: boolean
-}>(), {
-  showLogout: true
-})
+import Button from 'primevue/button'
 
 const router = useRouter()
+const { t } = useI18n()
 const { role, logout } = useAuth()
 const loggingOut = ref(false)
 
-const roleBadge = computed(() => role.value || null)
-const roleBadgeClass = computed(() => role.value === 'ADMIN' ? 'vue-chip-role' : '')
+const isAdmin = computed(() => role.value === 'ADMIN')
 
 async function handleLogout() {
   loggingOut.value = true
   try {
     await logout()
-    router.push('/login')
+    router.push('/app/auth')
   } finally {
     loggingOut.value = false
   }
@@ -55,51 +63,68 @@ async function handleLogout() {
 </script>
 
 <style scoped>
-.topbar-left {
+.app-header {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  height: 56px;
 }
-
-.topbar-logo-icon {
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
 }
-
-.topbar-brand {
-  font-family: var(--vue-font-heading);
-  font-size: 18px;
+.header-logo-link {
+  text-decoration: none;
+}
+.header-brand {
+  font-family: 'Manrope', sans-serif;
+  font-size: 1.25rem;
   font-weight: 700;
-  color: var(--vue-text-primary);
+  color: #10233F;
   letter-spacing: -0.3px;
 }
-
-.topbar-right {
+.header-nav {
+  display: flex;
+  gap: 0.25rem;
+}
+.nav-item {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #5D718B;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-item:hover {
+  background: #F3F4F6;
+  color: #10233F;
+}
+.nav-item-active {
+  background: #EFF6FF;
+  color: #2F6BFF;
+  font-weight: 600;
+}
+.header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
 }
-
 .logout-btn {
-  font-family: var(--vue-font-body);
-  font-size: var(--vue-text-base);
-  font-weight: 600;
-  color: var(--vue-accent-blue);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 6px 14px;
-  border-radius: 8px;
-  transition: background var(--vue-motion-fast) var(--vue-ease-standard);
+  color: #5D718B;
 }
-
 .logout-btn:hover {
-  background: var(--vue-accent-bg-blue);
-}
-
-.logout-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  color: #C2410C;
 }
 </style>
