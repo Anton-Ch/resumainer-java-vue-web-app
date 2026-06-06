@@ -6,17 +6,19 @@
 
 ### Frontend: Vue 3 + Vite + PrimeVue 4 DataTable
 
-**Decision**: Use PrimeVue DataTable with client-side sorting/filtering for MVP. Pagination handled via PrimeVue built-in paginator with `lazy` mode reserved for future large-scale data.
+**Decision**: Use PrimeVue DataTable in **lazy mode** (server-driven pagination) to match the backend paginated API. The `:lazy` prop triggers `@page`, `@sort`, and `@filter` callbacks that send parameterized requests to `GET /api/resumes`.
 
-**Rationale**: PrimeVue DataTable provides built-in sortable columns, removable sort, paginator with rowsPerPageOptions, filter support via MultiSelect/DatePicker/InputText, loading state, and skeleton integration. All requirements from the spec (FR-018 through FR-028) are natively supported without custom table implementation.
+**Rationale**: The backend API is designed for server-side pagination with LIMIT/OFFSET, search, multi-select filters, and sort. Using lazy mode means the DataTable only loads the current page's data from the server and relies on `:totalRecords` for the paginator UI. This avoids loading all resumes on every page change and eliminates client/server filter duplication.
 
 **Pattern**:
-- `DataTable` with `:sortable="true"` per column, `removableSort`
+- `DataTable` with `lazy`, `:totalRecords="totalRecords"`, `:loading="loading"`, `:first="first"`
+- `@page="onPage($event)"` — sends `page`/`size` to backend
+- `@sort="onSort($event)"` — sends `sortField`/`sortOrder` to backend (whitelist validated)
+- `@filter="onFilter($event)"` — sends language/adaptation/date filters to backend
+- Global search via InputText + 300ms debounce, min 3 chars — triggers backend search param
 - `paginator` with `rowsPerPageOptions="[10,20,50]"` and `currentPageReportTemplate`
-- Global search via `globalFilterFields` with custom InputText + debounce
-- Filters via `MultiSelect` for Language/AdaptationLevel, `DatePicker` for Created date
 - `@row-click` for opening Resume Details modal
-- Loading via DataTable `:loading` prop + Skeleton for initial load
+- Skeleton for initial load, DataTable `:loading` overlay for subsequent requests
 
 **Sources**: PrimeVue 4 DataTable documentation (Context7 verified).
 

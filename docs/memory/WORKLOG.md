@@ -25,6 +25,14 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-06 — Feature 005 Planning and All Artifacts Completed
+
+**Status**: Active
+
+**Why this is durable**: Feature 005 (User Home Page &amp; Resume Workspace) completed full planning cycle: spec → clarification → brainstorming → plan → research → data model → contracts → security review → component diagram → tasks. All 46 FRs, 11 SCs, 41 tasks, and 5 security findings documented. Tasks include [TDD], [SUBAGENT], and [REVIEW] execution markers. Routing restructure under /app/... was the key architectural decision.
+
 ### 2026-06-04 - Feature 004 Custom JDBC Connection Pool Implementation Completed
 
 **Milestone**: Feature 004 (Custom JDBC Connection Pool) phases 1 and 2 completed.

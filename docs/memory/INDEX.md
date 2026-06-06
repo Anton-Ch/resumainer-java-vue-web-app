@@ -7,6 +7,7 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 
 ## Architecture
 - A1 | Servlet Container Integration via Java SPI, Not XML Descriptor | servlet, tomcat, architecture, spi, jakarta-ee | [ARCHITECTURE.md](ARCHITECTURE.md) | active
+- A2 | SPA under /app/ routing with landing page at / | architecture,routing,nginx,spa,vue,thymeleaf,landing-page | [ARCHITECTURE.md](ARCHITECTURE.md) | active
 
 ## Bugs
 - B1 | Controller Without Registration Is Invisible to Spring MVC | spring-mvc, controller, configuration, component-scan, bean-registration | [BUGS.md](BUGS.md) | active
@@ -40,6 +41,8 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - D14 | Mandatory manual integration testing phase after all implementation phases | testing,integration,manual-testing,playwright,docker,i18n,quality | [DECISIONS.md](DECISIONS.md) | active
 - D15 | Separate @Configuration for infrastructure beans via @ComponentScan | spring-mvc,configuration,component-scan,datasource,infrastructure,architecture | [DECISIONS.md](DECISIONS.md) | active
 - D16 | Controller tests: standalone MockMvc over full Spring context when no DB needed | testing,mockmvc,spring-mvc,controller,standalone,integration-testing | [DECISIONS.md](DECISIONS.md) | active
+- D17 | PrimeVue DataTable lazy mode for server-paginated APIs | primevue,vue3,datatable,lazy,pagination,frontend,best-practice | [DECISIONS.md](DECISIONS.md) | active
+- D18 | Independent block loading for resilient page architecture | architecture,dashboard,resilience,failure-isolation,frontend,ux | [DECISIONS.md](DECISIONS.md) | active
 
 ## Workflow
 - W1 | First Feature MVP Achieved: Hello World Tomcat | milestone, mvp, hello-world, docker, spring-mvc, tomcat | [WORKLOG.md](WORKLOG.md) | active
@@ -52,3 +55,4 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - W8 | Feature 003 Phase 8 Bilingual Auth Forms with PrimeVue + Zod Completed | milestone,feature-003,phase-8,auth,primevue,zod,forms | [WORKLOG.md](WORKLOG.md) | active
 - W9 | Feature 003 Bug-Fix and Integration Testing Completed | milestone,feature-003,bug-fix,integration-testing,i18n,docker | [WORKLOG.md](WORKLOG.md) | active
 - W10 | Feature 004 Custom JDBC Connection Pool Implementation Completed | milestone,feature-004,jdbc-pool,tdd,component-scan,datasource | [WORKLOG.md](WORKLOG.md) | active
+- W11 | Feature 005 Planning and All Artifacts Completed | milestone,feature-005,planning,user-home-page,spec,plan,tasks,security-review | [WORKLOG.md](WORKLOG.md) | active

@@ -37,6 +37,7 @@ Implementation splits into:
 - User Home page render < 3s (SC-003) from navigation to interactive
 - Saved Resumes API pagination: SQL-level LIMIT/OFFSET with proper indexes
 - Debounced search (300ms) with min 3 characters
+- DataTable uses PrimeVue **lazy mode** — each page/sort/filter change triggers a backend API call
 
 **Constraints**: 
 - No Spring Boot, no JPA/Hibernate/ORM (per Constitution)
