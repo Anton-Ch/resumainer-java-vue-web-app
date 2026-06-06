@@ -106,7 +106,7 @@ Agents provide specialization.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the implementation
-plan at `specs/004-custom-jdbc-connection-pool/plan.md`.
+plan at `specs/005-user-home-page/plan.md`.
 <!-- SPECKIT END -->
 
 ### Spec Kit
