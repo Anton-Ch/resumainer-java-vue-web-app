@@ -14,6 +14,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.web.servlet.LocaleResolver;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -49,6 +50,27 @@ public class WebConfig implements WebMvcConfigurer {
 
     public WebConfig(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
+    }
+
+    // ============================================================
+    // CORS Configuration
+    // ============================================================
+
+    /**
+     * Allows cross-origin requests from the Vite dev server during development
+     * and from the production Nginx origin in Docker.
+     * <p>
+     * Credentials (cookies) are allowed so that authenticated session-based
+     * API calls work from the frontend origin.
+     */
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOriginPatterns("*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 
     // ============================================================
