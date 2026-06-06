@@ -7,29 +7,29 @@
 - Spec context: # Feature Specification : Custom JDBC Connection Pool **Feature Branch **: `004-custom-jdbc-connection-pool` **Created**: 2026-06-04 **Status**: Approved **Input**: User description : "rework database connections to use a thread-safe custom JDBC connection pool "...
 
 ## Relevant Project Context
-- [C1] constraint that affects many features constraint that an AI should respect before planning (Source: `docs/memory/PROJECT_CONTEXT.md`)
+- [none]
 
 ## Relevant Decisions
-- [D1] The following technology decisions are mandatory and MUST NOT be changed without a governance amendment. Layer Technology Constraint Language Java 21 LTS Required Web Framework Spring MVC (no Spring Boot) Required Data Access Plain JDBC with custom thread-safe Connection Pool Required. No ORM, JPA, Hibernate, or Spring Data Database PostgreSQL (3NF normalized) Required Migrations Flyway (versioned SQL scripts) Required Frontend SPA Vue 3 (Composition API) + Vite + PrimeVue Required Landing Page Thymeleaf Required AI Integration OpenRouter API behind AiClientFactory interface Required. (Source: `.specify/memory/constitution.md`)
+- [D1] Status Active Why this is durable Unit tests caught 0 of the 6 bugs found during manual testing of Feature 003. Bugs like missing Flyway bean, unresolved DataSource URL, unresponsive i18n validation messages, and duplicate toggle text were invisible to unit tests. They only appeared in the full Docker environment with actual PostgreSQL, Nginx, and browser interaction. (Source: `docs/memory/DECISIONS.md`)
 - [D2] Performance and reliability are cross-cutting concerns that affect every layer from database to frontend rendering. Database Access : All database queries MUST use PreparedStatement to prevent SQL injection and enable query plan reuse. Raw string concatenation for SQL is forbidden. (Source: `.specify/memory/constitution.md`)
+- [D3] Status Active Why this is durable Adding infrastructure beans (DataSource, Flyway) to the Spring context breaks any test that loads @ContextConfiguration(classes = WebConfig.class) because the DataSource initialization requires a real PostgreSQL connection. Controller tests that don't need database access should use standalone MockMvc setup to avoid this dependency. (Source: `docs/memory/DECISIONS.md`)
+- [D4] Context : Custom ConnectionFactory uses DriverManager.getConnection() to create physical database connections. In Tomcat with Java 9+, the DriverManager's ServiceLoader-based driver discovery fails to find the PostgreSQL driver in WEB-INF/lib because DriverManager's static initializer runs before the webapp classloader is active (classloader isolation in Java module system). Decision : Add Class.forName(&quot;org.postgresql.Driver&quot;) in ConnectionFactory's static initializer to force-load the driver class at webapp startup time. (Source: `docs/memory/DECISIONS.md`)
 
 ## Active Architecture Constraints
-- [A1] stable system boundaries ownership lines between modules or services integration constraints that affect many features (Source: `docs/memory/ARCHITECTURE.md`)
+- [none]
 
 ## Accepted Deviations
-- [V1] Every code change MUST preserve or improve the long-term maintainability of the codebase. Code quality is not negotiable and is verified through automated and manual review. Package Structure : Code MUST follow the standard Java layered architecture: controller/ , service/ , dao/ , model/ , config/ , util/ . (Source: `.specify/memory/constitution.md`)
-- [V2] Status Active Why this is durable Registration requires creating User + ContactDetail atomically. The standard DAO pattern (each method opens/closes its own Connection via DataSource) cannot support multi-table transactions. This pattern will repeat for every future feature that needs atomic multi-table operations. (Source: `docs/memory/DECISIONS.md`)
+- [V1] Status Active Why this is durable Registration requires creating User + ContactDetail atomically. The standard DAO pattern (each method opens/closes its own Connection via DataSource) cannot support multi-table transactions. This pattern will repeat for every future feature that needs atomic multi-table operations. (Source: `docs/memory/DECISIONS.md`)
 
 ## Relevant Security Constraints
-- [S1] Security MUST be integrated into every feature from design through implementation. Security is not an afterthought. Password Storage : All passwords MUST be hashed using BCrypt. (Source: `.specify/memory/constitution.md`)
-- [S2] &lt;!-- Sync Impact Report (v1.0.0) Version change: (template) → 1.0.0 Modified principles: - [PRINCIPLE_1_NAME] → I. Code Quality &amp; Maintainability - [PRINCIPLE_2_NAME] → II. Testing Excellence - [PRINCIPLE_3_NAME] → III. (Source: `.specify/memory/constitution.md`)
-- [S3] D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web .xml) | servlet , spring-mvc , jakarta-ee , tomcat , initialization , web .xml | DECISIONS .md | active D2 | Maven Wrapper Must Be at Same Directory Level as pom .xml | maven , wrapper , build , project-structure , best-practice | DECISIONS .md | active D3 | Docker Tomcat : Use bash /dev/tcp Instead of nc for TCP Health Checks | docker , tomcat , wait-for-it , networking ,... (Source: `docs/memory/INDEX.md`)
+- [none]
 
 ## Related Historical Lessons
-- [none]
+- [B1] Status Active Symptoms Application starts successfully, API endpoints return HTTP 500 with error: ERROR: relation &quot;users&quot; does not exist (or any other table). The SQL migration files exist in db/migration/ but Flyway never created the tables. Root Cause In pure Spring MVC (without Spring Boot), Flyway is NOT auto-configured. (Source: `docs/memory/BUGS.md`)
+- [B2] Status : Active Why this is durable : Any code using java.lang.reflect.Proxy with InvocationHandler will encounter this. Method.invoke() wraps the target method's exception in InvocationTargetException . Catching Exception generically (as catch (Exception e) ) wraps the InvocationTargetException in yet another exception, producing a 3-layer chain that breaks instanceof checks and getCause() traversal. (Source: `docs/memory/BUGS.md`)
 
 ## Conflict Warnings
-- [none]
+- [c] potentially stale memory surfaced from worklog / worklog / template / 2026-06-04 - feature 004 custom jdbc connection pool implementation completed (source: `docs/memory/worklog.md`)
 
 ## Retrieval Notes
 - Index entries considered: 10
