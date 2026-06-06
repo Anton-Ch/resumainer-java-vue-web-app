@@ -41,14 +41,14 @@ All tests: `backend/src/test/java/com/resumainer/infrastructure/db/`
 
 ### Task 001: Find existing connection-related code
 
-- [ ] **Step 1**: Search the codebase for keywords that indicate existing connection patterns
+- [x] **Step 1**: Search the codebase for keywords that indicate existing connection patterns
 
 ```bash
 # From backend/ directory:
 rg -n "DriverManager.getConnection|ConnectionManager|DatabaseConnection|DbConnection|ConnectionProvider|dataSource|DataSource" --type java
 ```
 
-- [ ] **Step 2**: Identify which files need to be removed, modified, or kept. Document findings:
+- [x] **Step 2**: Identify which files need to be removed, modified, or kept. Document findings:
 
 ```
 Files to DELETE:   (list full paths)
@@ -56,7 +56,7 @@ Files to MODIFY:   (list full paths, what changes)
 Files kept AS-IS:  (list full paths)
 ```
 
-- [ ] **Step 3**: Report findings and get approval before deleting anything
+- [x] **Step 3**: Report findings and get approval before deleting anything
 
 **Checkpoint**: Clear picture of existing connection architecture. Old artifacts identified.
 
@@ -64,7 +64,7 @@ Files kept AS-IS:  (list full paths)
 
 ### Task 002: Remove obsolete connection classes [P] [REVIEW]
 
-- [ ] **Step 1**: Delete identified obsolete files (get explicit confirmation per file)
+- [x] **Step 1**: Delete identified obsolete files (get explicit confirmation per file)
 
 ```bash
 # Example — adjust paths based on Task 001 findings:
@@ -72,21 +72,21 @@ git rm backend/src/main/java/com/resumainer/.../OldConnectionManager.java
 git rm backend/src/test/java/com/resumainer/.../OldConnectionManagerTest.java
 ```
 
-- [ ] **Step 2**: Remove any obsolete configuration or imports
+- [x] **Step 2**: Remove any obsolete configuration or imports
 
 ```bash
 rg -n "OldConnectionManager|oldConnectionManager|ConnectionProvider" --type java backend/src/
 # Remove any remaining references to deleted classes
 ```
 
-- [ ] **Step 3**: Verify the project still compiles
+- [x] **Step 3**: Verify the project still compiles
 
 ```bash
 cd backend && mvn compile -q
 # Expected: BUILD SUCCESS (or known pre-existing failures unrelated to cleanup)
 ```
 
-- [ ] **Step 4**: Commit
+- [x] **Step 4**: Commit
 
 ```bash
 git add -A && git commit -m "chore(004-jdbc-pool): remove obsolete connection management classes"
@@ -102,7 +102,7 @@ git add -A && git commit -m "chore(004-jdbc-pool): remove obsolete connection ma
 
 ### Task 003: Create ConnectionPoolConfig [P] [TDD] [SUBAGENT]
 
-- [ ] **Step 1: Create test directory and write failing test**
+- [x] **Step 1: Create test directory and write failing test**
 
 Create `backend/src/test/java/com/resumainer/infrastructure/db/ConnectionPoolConfigTest.java`:
 
@@ -132,14 +132,14 @@ class ConnectionPoolConfigTest {
 }
 ```
 
-- [ ] **Step 2: Run test — expect compilation failure**
+- [x] **Step 2: Run test — expect compilation failure**
 
 ```bash
 cd backend && mvn test-compile -q
 # Expected: compilation error — ConnectionPoolConfig does not exist
 ```
 
-- [ ] **Step 3: Implement ConnectionPoolConfig**
+- [x] **Step 3: Implement ConnectionPoolConfig**
 
 Create `backend/src/main/java/com/resumainer/infrastructure/db/ConnectionPoolConfig.java`:
 
@@ -211,14 +211,14 @@ public class ConnectionPoolConfig {
 }
 ```
 
-- [ ] **Step 4: Run test again — expect PASS**
+- [x] **Step 4: Run test again — expect PASS**
 
 ```bash
 cd backend && mvn test -Dtest=ConnectionPoolConfigTest -q
 # Expected: PASS (Tests run: 1, Failures: 0)
 ```
 
-- [ ] **Step 5: Add validation failure tests**
+- [x] **Step 5: Add validation failure tests**
 
 Extend `ConnectionPoolConfigTest.java`:
 
@@ -245,14 +245,14 @@ Extend `ConnectionPoolConfigTest.java`:
     }
 ```
 
-- [ ] **Step 6: Run all tests — expect PASS**
+- [x] **Step 6: Run all tests — expect PASS**
 
 ```bash
 cd backend && mvn test -Dtest=ConnectionPoolConfigTest -q
 # Expected: PASS (Tests run: 4, Failures: 0)
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/java/com/resumainer/infrastructure/db/ConnectionPoolConfig.java backend/src/test/java/com/resumainer/infrastructure/db/ConnectionPoolConfigTest.java
@@ -263,7 +263,7 @@ git commit -m "feat(004-jdbc-pool): add ConnectionPoolConfig with validation"
 
 ### Task 004: Create ConnectionPoolException [P] [TDD] [SUBAGENT]
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 Create `backend/src/test/java/com/resumainer/infrastructure/db/ConnectionPoolExceptionTest.java`:
 
@@ -291,8 +291,8 @@ class ConnectionPoolExceptionTest {
 }
 ```
 
-- [ ] **Step 2: Run test — expect compilation failure**
-- [ ] **Step 3: Implement ConnectionPoolException**
+- [x] **Step 2: Run test — expect compilation failure**
+- [x] **Step 3: Implement ConnectionPoolException**
 
 Create `backend/src/main/java/com/resumainer/infrastructure/db/ConnectionPoolException.java`:
 
@@ -311,14 +311,14 @@ public class ConnectionPoolException extends RuntimeException {
 }
 ```
 
-- [ ] **Step 4: Run test — expect PASS**
+- [x] **Step 4: Run test — expect PASS**
 
 ```bash
 cd backend && mvn test -Dtest=ConnectionPoolExceptionTest -q
 # Expected: PASS (Tests run: 2, Failures: 0)
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/main/java/com/resumainer/infrastructure/db/ConnectionPoolException.java backend/src/test/java/com/resumainer/infrastructure/db/ConnectionPoolExceptionTest.java
@@ -329,7 +329,7 @@ git commit -m "feat(004-jdbc-pool): add ConnectionPoolException"
 
 ### Task 005: Create ConnectionFactory [P] [TDD] [SUBAGENT]
 
-- [ ] **Step 1: Write failing test with mocked DriverManager**
+- [x] **Step 1: Write failing test with mocked DriverManager**
 
 Create `backend/src/test/java/com/resumainer/infrastructure/db/ConnectionFactoryTest.java`:
 
@@ -414,8 +414,8 @@ class ConnectionFactoryTest {
 }
 ```
 
-- [ ] **Step 2: Run test — expect compilation failure**
-- [ ] **Step 3: Implement ConnectionFactory**
+- [x] **Step 2: Run test — expect compilation failure**
+- [x] **Step 3: Implement ConnectionFactory**
 
 Create `backend/src/main/java/com/resumainer/infrastructure/db/ConnectionFactory.java`:
 
@@ -480,14 +480,14 @@ public class ConnectionFactory {
 }
 ```
 
-- [ ] **Step 4: Run tests — expect PASS**
+- [x] **Step 4: Run tests — expect PASS**
 
 ```bash
 cd backend && mvn test -Dtest=ConnectionFactoryTest -q
 # Expected: PASS (Tests run: 6, Failures: 0)
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/src/main/java/com/resumainer/infrastructure/db/ConnectionFactory.java backend/src/test/java/com/resumainer/infrastructure/db/ConnectionFactoryTest.java
@@ -498,7 +498,7 @@ git commit -m "feat(004-jdbc-pool): add ConnectionFactory with validation and cl
 
 ### Task 006: Create PooledConnectionProxy [P] [TDD] [SUBAGIENT]
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 Create `backend/src/test/java/com/resumainer/infrastructure/db/PooledConnectionProxyTest.java`:
 
@@ -563,8 +563,8 @@ class PooledConnectionProxyTest {
 }
 ```
 
-- [ ] **Step 2: Run test — expect compilation failure**
-- [ ] **Step 3: Implement PooledConnectionProxy**
+- [x] **Step 2: Run test — expect compilation failure**
+- [x] **Step 3: Implement PooledConnectionProxy**
 
 Create `backend/src/main/java/com/resumainer/infrastructure/db/PooledConnectionProxy.java`:
 
@@ -643,14 +643,14 @@ public class PooledConnectionProxy implements InvocationHandler {
 }
 ```
 
-- [ ] **Step 4: Run tests — expect PASS**
+- [x] **Step 4: Run tests — expect PASS**
 
 ```bash
 cd backend && mvn test -Dtest=PooledConnectionProxyTest -q
 # Expected: PASS (Tests run: 3, Failures: 0)
 ```
 
-- [ ] **Step 5: Fix test by adjusting close behavior**
+- [x] **Step 5: Fix test by adjusting close behavior**
 
 The test `close_delegatesToPhysicalWhenPoolClosed` currently verifies rollback is called twice (idempotent). Update it to also verify physical connection is NOT closed:
 
@@ -667,13 +667,13 @@ The test `close_delegatesToPhysicalWhenPoolClosed` currently verifies rollback i
     }
 ```
 
-- [ ] **Step 6: Run tests — expect PASS**
+- [x] **Step 6: Run tests — expect PASS**
 
 ```bash
 cd backend && mvn test -Dtest=PooledConnectionProxyTest -q
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/java/com/resumainer/infrastructure/db/PooledConnectionProxy.java backend/src/test/java/com/resumainer/infrastructure/db/PooledConnectionProxyTest.java
@@ -686,7 +686,7 @@ git commit -m "feat(004-jdbc-pool): add PooledConnectionProxy with dynamic proxy
 
 **Note**: This is the most complex class. It depends on Config, Factory, Exception, and Proxy being complete.
 
-- [ ] **Step 1: Write failing test for initialization**
+- [x] **Step 1: Write failing test for initialization**
 
 Create `backend/src/test/java/com/resumainer/infrastructure/db/SimpleConnectionPoolTest.java`:
 
@@ -831,8 +831,8 @@ class SimpleConnectionPoolTest {
 }
 ```
 
-- [ ] **Step 2: Run test — expect compilation failure**
-- [ ] **Step 3: Implement SimpleConnectionPool**
+- [x] **Step 2: Run test — expect compilation failure**
+- [x] **Step 3: Implement SimpleConnectionPool**
 
 Create `backend/src/main/java/com/resumainer/infrastructure/db/SimpleConnectionPool.java`:
 
@@ -1017,7 +1017,7 @@ public class SimpleConnectionPool implements DataSource {
 }
 ```
 
-- [ ] **Step 4: Create DataSourceConfig with init() call**
+- [x] **Step 4: Create DataSourceConfig with init() call**
 
 Create `backend/src/main/java/com/resumainer/infrastructure/db/DataSourceConfig.java`:
 
@@ -1060,21 +1060,21 @@ public class DataSourceConfig {
 }
 ```
 
-- [ ] **Step 5: Run all pool tests — expect PASS**
+- [x] **Step 5: Run all pool tests — expect PASS**
 
 ```bash
 cd backend && mvn test -Dtest="ConnectionPoolConfigTest,ConnectionPoolExceptionTest,ConnectionFactoryTest,PooledConnectionProxyTest,SimpleConnectionPoolTest" -q
 # Expected: PASS (Tests run: ~18, Failures: 0)
 ```
 
-- [ ] **Step 6: Run full Maven build**
+- [x] **Step 6: Run full Maven build**
 
 ```bash
 cd backend && mvn clean compile -q
 # Expected: BUILD SUCCESS
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add backend/src/main/java/com/resumainer/infrastructure/db/SimpleConnectionPool.java backend/src/test/java/com/resumainer/infrastructure/db/SimpleConnectionPoolTest.java backend/src/main/java/com/resumainer/infrastructure/db/DataSourceConfig.java
@@ -1102,7 +1102,7 @@ git commit -m "feat(004-jdbc-pool): add SimpleConnectionPool with DataSource bea
 - `AuthService.java` — already uses `DataSource` with manual transaction management
 - All other DAOs — already inject `DataSource`
 
-- [ ] **Step 1: Create DataSourceConfig with SimpleConnectionPool bean**
+- [x] **Step 1: Create DataSourceConfig with SimpleConnectionPool bean**
 
 Create `backend/src/main/java/com/resumainer/infrastructure/db/DataSourceConfig.java`:
 
@@ -1134,7 +1134,7 @@ public class DataSourceConfig {
 }
 ```
 
-- [ ] **Step 2: Remove old dataSource() bean from WebConfig.java**
+- [x] **Step 2: Remove old dataSource() bean from WebConfig.java**
 
 Edit `backend/src/main/java/com/resumainer/config/WebConfig.java` — delete the entire `dataSource()` method (approximately lines 183-197):
 
@@ -1156,27 +1156,27 @@ Edit `backend/src/main/java/com/resumainer/config/WebConfig.java` — delete the
 // }
 ```
 
-- [ ] **Step 3: Remove unused DriverManagerDataSource import from WebConfig.java**
+- [x] **Step 3: Remove unused DriverManagerDataSource import from WebConfig.java**
 
 ```java
 // DELETE: import org.springframework.jdbc.datasource.DriverManagerDataSource;
 ```
 
-- [ ] **Step 4: Verify build passes**
+- [x] **Step 4: Verify build passes**
 
 ```bash
 cd backend && mvn compile -q
 # Expected: BUILD SUCCESS
 ```
 
-- [ ] **Step 5: Run all project tests**
+- [x] **Step 5: Run all project tests**
 
 ```bash
 cd backend && mvn test -q
 # Expected: BUILD SUCCESS (all existing + new pool tests pass)
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/src/main/java/com/resumainer/infrastructure/db/DataSourceConfig.java backend/src/main/java/com/resumainer/config/WebConfig.java
@@ -1193,7 +1193,7 @@ git commit -m "feat(004-jdbc-pool): replace DriverManagerDataSource with SimpleC
 
 ### Task 009: Add Docker smoke test with real PostgreSQL [P] [SUBAGENT]
 
-- [ ] **Step 1**: Create a test that starts Docker Compose and verifies the pool connects
+- [x] **Step 1**: Create a test that starts Docker Compose and verifies the pool connects
 
 Create `backend/src/test/java/com/resumainer/infrastructure/db/PoolSmokeTest.java`:
 
@@ -1242,7 +1242,7 @@ class PoolSmokeTest {
 }
 ```
 
-- [ ] **Step 2: Run smoke test with Docker**
+- [x] **Step 2: Run smoke test with Docker**
 
 ```bash
 # From repo root — ensure Docker Compose is running with PostgreSQL:
@@ -1253,7 +1253,7 @@ cd backend && mvn test -Dtest=PoolSmokeTest -Dgroups=smoke -q
 # Expected: PASS (Tests run: 1, Failures: 0)
 ```
 
-- [ ] **Step 3: Run full test suite with JaCoCo coverage**
+- [x] **Step 3: Run full test suite with JaCoCo coverage**
 
 ```bash
 cd backend && mvn clean verify -q
@@ -1261,7 +1261,7 @@ cd backend && mvn clean verify -q
 # Check: backend/target/site/jacoco/index.html — verify pool classes covered
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add backend/src/test/java/com/resumainer/infrastructure/db/PoolSmokeTest.java
@@ -1274,7 +1274,7 @@ git commit -m "test(004-jdbc-pool): add Docker smoke test for pool with PostgreS
 
 ### Task 010: Add Javadoc to public classes [P]
 
-- [ ] **Step 1**: Add Javadoc to each public class explaining:
+- [x] **Step 1**: Add Javadoc to each public class explaining:
    - Purpose of the class
    - Thread-safety model (for `SimpleConnectionPool`)
    - Lifecycle (init, borrow, return, shutdown)
@@ -1305,14 +1305,14 @@ Example Javadoc for `SimpleConnectionPool`:
  */
 ```
 
-- [ ] **Step 2: Build with tests to verify**
+- [x] **Step 2: Build with tests to verify**
 
 ```bash
 cd backend && mvn clean test -q
 # Expected: BUILD SUCCESS
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A && git commit -m "docs(004-jdbc-pool): add Javadoc to pool classes"
@@ -1322,7 +1322,7 @@ git add -A && git commit -m "docs(004-jdbc-pool): add Javadoc to pool classes"
 
 ### Task 011: Final verification — mvn clean package [REVIEW]
 
-- [ ] **Step 1: Run full Maven lifecycle**
+- [x] **Step 1: Run full Maven lifecycle**
 
 ```bash
 cd backend && mvn clean package -q
@@ -1330,13 +1330,13 @@ cd backend && mvn clean package -q
 # All tests pass, JaCoCo report generated, WAR file created
 ```
 
-- [ ] **Step 2: Verify coverage report**
+- [x] **Step 2: Verify coverage report**
 
 Open `backend/target/site/jacoco/index.html` and verify:
 - Pool classes (infrastructure.db package) are covered
 - No shocking coverage gaps
 
-- [ ] **Step 3: Quickstart validation**
+- [x] **Step 3: Quickstart validation**
 
 ```bash
 # Follow quickstart.md steps:
@@ -1352,7 +1352,7 @@ docker compose logs backend | grep "Connection pool initialized"
 # Expected: "Connection pool initialized: initialSize=2, maxSize=10"
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A && git commit -m "chore(004-jdbc-pool): final build verification and quickstart validation"
