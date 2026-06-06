@@ -1,92 +1,94 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { checkAuthStatus } from '@/services/authService'
+import ProfilePlaceholderPage from '@/components/common/ProfilePlaceholderPage.vue'
+import GeneratePlaceholderPage from '@/components/common/GeneratePlaceholderPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/app/auth',
+      path: '/auth',
       name: 'auth',
       component: () => import('@/views/AuthPage.vue'),
       meta: { requiresGuest: true }
     },
     {
-      path: '/app/home',
+      path: '/home',
       name: 'user-home',
       component: () => import('@/views/UserHomePage.vue'),
       meta: { requiresAuth: true }
     },
     {
-      path: '/app/admin',
+      path: '/admin',
       name: 'admin-home',
       component: () => import('@/views/AdminHomePage.vue'),
       meta: { requiresAuth: true, requiresAdmin: true }
     },
-    // Profile section placeholders
+    // Profile section placeholders (with subnav)
     {
-      path: '/app/profile/contact',
+      path: '/profile/contact',
       name: 'profile-contact',
-      component: () => import('@/components/common/PlaceholderPage.vue'),
+      component: ProfilePlaceholderPage,
       meta: { requiresAuth: true }
     },
     {
-      path: '/app/profile/experience',
+      path: '/profile/experience',
       name: 'profile-experience',
-      component: () => import('@/components/common/PlaceholderPage.vue'),
+      component: ProfilePlaceholderPage,
       meta: { requiresAuth: true }
     },
     {
-      path: '/app/profile/education',
+      path: '/profile/education',
       name: 'profile-education',
-      component: () => import('@/components/common/PlaceholderPage.vue'),
+      component: ProfilePlaceholderPage,
       meta: { requiresAuth: true }
     },
     {
-      path: '/app/profile/projects',
+      path: '/profile/projects',
       name: 'profile-projects',
-      component: () => import('@/components/common/PlaceholderPage.vue'),
+      component: ProfilePlaceholderPage,
       meta: { requiresAuth: true }
     },
     {
-      path: '/app/profile/courses',
+      path: '/profile/courses',
       name: 'profile-courses',
-      component: () => import('@/components/common/PlaceholderPage.vue'),
+      component: ProfilePlaceholderPage,
       meta: { requiresAuth: true }
     },
     {
-      path: '/app/profile/additional',
+      path: '/profile/additional',
       name: 'profile-additional',
-      component: () => import('@/components/common/PlaceholderPage.vue'),
+      component: ProfilePlaceholderPage,
       meta: { requiresAuth: true }
     },
-    // Generate resume placeholders
+    // Generate resume placeholders (with stepper)
     {
-      path: '/app/generate/vacancy',
+      path: '/generate/vacancy',
       name: 'generate-vacancy',
-      component: () => import('@/components/common/PlaceholderPage.vue'),
+      component: GeneratePlaceholderPage,
       meta: { requiresAuth: true }
     },
     {
-      path: '/app/generate/settings',
+      path: '/generate/settings',
       name: 'generate-settings',
-      component: () => import('@/components/common/PlaceholderPage.vue'),
+      component: GeneratePlaceholderPage,
       meta: { requiresAuth: true }
     },
     {
-      path: '/app/generate/review',
+      path: '/generate/review',
       name: 'generate-review',
-      component: () => import('@/components/common/PlaceholderPage.vue'),
+      component: GeneratePlaceholderPage,
       meta: { requiresAuth: true }
     },
     {
-      path: '/app/generate/export',
+      path: '/generate/export',
       name: 'generate-export',
-      component: () => import('@/components/common/PlaceholderPage.vue'),
+      component: GeneratePlaceholderPage,
       meta: { requiresAuth: true }
     },
     {
       path: '/:pathMatch(.*)*',
-      redirect: '/app/auth'
+      redirect: '/auth'
     }
   ]
 })
@@ -106,19 +108,19 @@ router.beforeEach(async (to, from, next) => {
 
     // Route requires auth but user is not authenticated
     if (to.matched.some(r => r.meta.requiresAuth) && !isAuthenticated) {
-      next({ path: '/app/auth', query: { redirect: to.fullPath } })
+      next({ path: '/auth', query: { redirect: to.fullPath } })
       return
     }
 
     // Route is for guests only but user is authenticated
     if (to.matched.some(r => r.meta.requiresGuest) && isAuthenticated) {
-      next({ path: '/app/home' })
+      next({ path: '/home' })
       return
     }
 
     // Route requires ADMIN role but user is not admin
     if (to.matched.some(r => r.meta.requiresAdmin) && role !== 'ADMIN') {
-      next({ path: '/app/home' })
+      next({ path: '/home' })
       return
     }
 
@@ -126,7 +128,7 @@ router.beforeEach(async (to, from, next) => {
   } catch {
     // Auth check failed (network error, etc.) — treat as not authenticated
     if (to.matched.some(r => r.meta.requiresAuth)) {
-      next({ path: '/app/auth' })
+      next({ path: '/auth' })
     } else {
       next()
     }

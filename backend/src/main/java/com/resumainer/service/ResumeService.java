@@ -45,7 +45,8 @@ public class ResumeService {
      */
     public PagedResponse<SavedResume> listResumes(UUID userId, String search,
                                                    String language, String adaptationLevel,
-                                                   String createdDate, String sort,
+                                                   String createdDate, String dateFrom,
+                                                   String dateTo, String sort,
                                                    int page, int size) {
         if (page < 0) {
             throw new IllegalArgumentException("Page must be >= 0");
@@ -72,9 +73,9 @@ public class ResumeService {
                 userId, page, size, sortField, sortDir);
 
         List<SavedResume> items = resumeDao.findByUserId(userId, search, language,
-                adaptationLevel, createdDate, sortField, sortDir, page, size);
+                adaptationLevel, createdDate, dateFrom, dateTo, sortField, sortDir, page, size);
         long total = resumeDao.countByUserId(userId, search, language,
-                adaptationLevel, createdDate);
+                adaptationLevel, createdDate, dateFrom, dateTo);
 
         return new PagedResponse<>(items, page, size, total);
     }

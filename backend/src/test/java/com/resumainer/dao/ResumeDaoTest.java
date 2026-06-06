@@ -51,7 +51,7 @@ class ResumeDaoTest {
         when(resultSet.getString("pdf_url")).thenReturn("/pdf/1", "/pdf/2");
         when(resultSet.getString("cover_letter")).thenReturn("Letter 1", "Letter 2");
 
-        List<SavedResume> results = resumeDao.findByUserId(userId, null, null, null, null,
+        List<SavedResume> results = resumeDao.findByUserId(userId, null, null, null, null, null, null,
                 "created_at", "desc", 0, 10);
 
         assertEquals(2, results.size());
@@ -67,7 +67,7 @@ class ResumeDaoTest {
         when(statement.executeQuery()).thenReturn(resultSet);
         when(resultSet.next()).thenReturn(false);
 
-        resumeDao.findByUserId(userId, "analyst", null, null, null, "created_at", "desc", 0, 10);
+        resumeDao.findByUserId(userId, "analyst", null, null, null, null, null, "created_at", "desc", 0, 10);
 
         verify(statement).setString(2, "%analyst%");
         verify(statement).setString(3, "%analyst%");
@@ -80,7 +80,7 @@ class ResumeDaoTest {
         when(resultSet.next()).thenReturn(true);
         when(resultSet.getLong(1)).thenReturn(42L);
 
-        long count = resumeDao.countByUserId(userId, null, null, null, null);
+        long count = resumeDao.countByUserId(userId, null, null, null, null, null, null);
 
         assertEquals(42L, count);
         verify(statement).setObject(1, userId);
@@ -134,6 +134,6 @@ class ResumeDaoTest {
     @Test
     void findByUserId_withInvalidSortField_throwsException() {
         assertThrows(IllegalArgumentException.class, () ->
-                resumeDao.findByUserId(userId, null, null, null, null, "invalid", "desc", 0, 10));
+                resumeDao.findByUserId(userId, null, null, null, null, null, null, "invalid", "desc", 0, 10));
     }
 }

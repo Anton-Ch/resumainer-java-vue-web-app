@@ -50,6 +50,8 @@ public class ResumeController {
             @RequestParam(required = false) String language,
             @RequestParam(required = false) String adaptationLevel,
             @RequestParam(required = false) String createdDate,
+            @RequestParam(required = false) String dateFrom,
+            @RequestParam(required = false) String dateTo,
             @RequestParam(defaultValue = "createdAt,desc") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -63,7 +65,7 @@ public class ResumeController {
         try {
             PagedResponse<SavedResume> result = resumeService.listResumes(
                     userSession.getUserId(), search, language, adaptationLevel,
-                    createdDate, sort, page, size);
+                    createdDate, dateFrom, dateTo, sort, page, size);
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             log.warn("Invalid params for listResumes: {}", e.getMessage());

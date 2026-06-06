@@ -5,7 +5,7 @@
       <h2 class="guided-title">{{ $t('home.incomplete.title') }}</h2>
       <p class="guided-text">{{ $t('home.incomplete.text') }}</p>
       <div class="guided-cta">
-        <Button :label="$t('home.incomplete.cta')" icon="pi pi-user-edit" class="p-button-success" @click="$router.push('/app/profile/contact')" />
+        <Button :label="$t('home.incomplete.cta')" icon="pi pi-user-edit" class="p-button-success" @click="$router.push('/profile/contact')" />
       </div>
       <ProfileChecklistComponent :checklist="checklist" />
     </template>
@@ -24,7 +24,7 @@
             icon="pi pi-file-plus"
             class="p-button-success"
             v-tooltip.top="$t('home.ready.generate.tooltip')"
-            @click="$router.push('/app/generate/vacancy')"
+            @click="$router.push('/generate/vacancy')"
           />
         </div>
         <div class="guided-card">
@@ -37,7 +37,7 @@
             icon="pi pi-user-edit"
             class="p-button-success p-button-outlined"
             v-tooltip.top="$t('home.ready.update.tooltip')"
-            @click="$router.push('/app/profile/contact')"
+            @click="$router.push('/profile/contact')"
           />
         </div>
       </div>

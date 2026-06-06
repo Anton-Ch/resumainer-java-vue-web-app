@@ -18,7 +18,7 @@ public class LandingPageController {
     private final String ctaUrl;
 
     @Autowired
-    public LandingPageController(@Value("${landing.cta.url:/auth/login}") String ctaUrl) {
+    public LandingPageController(@Value("${landing.cta.url:/app/auth}") String ctaUrl) {
         this.ctaUrl = ctaUrl;
     }
 

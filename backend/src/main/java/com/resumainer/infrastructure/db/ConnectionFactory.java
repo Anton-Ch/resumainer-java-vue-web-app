@@ -9,6 +9,21 @@ import java.sql.SQLException;
 public class ConnectionFactory {
 
     private static final Logger log = LoggerFactory.getLogger(ConnectionFactory.class);
+
+    static {
+        // Force-load PostgreSQL driver before DriverManager can find it.
+        // In Tomcat with Java 9+, DriverManager's ServiceLoader-based driver discovery
+        // may fail because the driver jar is in WEB-INF/lib, not the system classpath.
+        // This is the standard approach — Spring's DriverManagerDataSource does the same
+        // via setDriverClassName() which internally calls Class.forName().
+        try {
+            Class.forName("org.postgresql.Driver");
+            log.debug("PostgreSQL JDBC driver registered successfully");
+        } catch (ClassNotFoundException e) {
+            log.error("PostgreSQL JDBC driver not found on classpath", e);
+        }
+    }
+
     private final ConnectionPoolConfig config;
 
     public ConnectionFactory(ConnectionPoolConfig config) {

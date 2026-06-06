@@ -1,55 +1,83 @@
 <template>
   <div>
-    <!-- Toolbar: search + filters -->
     <div class="table-toolbar">
-      <div class="toolbar-row">
-        <IconField>
-          <InputIcon>
-            <i class="pi pi-search" />
-          </InputIcon>
-          <InputText
-            v-model="searchText"
-            :placeholder="$t('home.table.searchPlaceholder')"
-            @keyup="onSearchInput"
-            class="search-input"
+      <div class="search-field">
+        <i class="pi pi-search"></i>
+        <InputText
+          v-model="searchText"
+          :placeholder="$t('home.table.searchPlaceholder')"
+          @keyup="onSearchInput"
+          class="search-input"
+        />
+      </div>
+      <div class="filter-group">
+        <div class="filter-field">
+          <span class="filter-label">{{ $t('home.table.filterLanguage') }}</span>
+          <MultiSelect
+            v-model="selectedLanguages"
+            :options="langOptions"
+            optionLabel="label"
+            optionValue="value"
+            :placeholder="$t('home.table.language')"
+            :maxSelectedLabels="2"
+            :showToggleAll="false"
+            :selectedItemsLabel="langAllSelectedLabel"
+            class="filter-select"
+            @change="onFiltersChange"
           />
-        </IconField>
-        <MultiSelect
-          v-model="selectedLanguages"
-          :options="languageOptions"
-          optionLabel="label"
-          optionValue="value"
-          :placeholder="$t('home.table.language')"
-          :maxSelectedLabels="2"
-          :showToggleAll="false"
-          class="filter-select"
-          @change="onFiltersChange"
-        />
-        <MultiSelect
-          v-model="selectedAdaptations"
-          :options="adaptationOptions"
-          optionLabel="label"
-          optionValue="value"
-          :placeholder="$t('home.table.adaptationLevel')"
-          :maxSelectedLabels="3"
-          :showToggleAll="false"
-          class="filter-select"
-          @change="onFiltersChange"
-        />
-        <Calendar
-          v-model="selectedDate"
-          :placeholder="$t('home.table.created')"
-          dateFormat="yy-mm-dd"
-          class="filter-date"
-          @date-select="onFiltersChange"
-          @clear="onFiltersChange"
-          showClear
+        </div>
+        <div class="filter-field">
+          <span class="filter-label">{{ $t('home.table.filterAdaptation') }}</span>
+          <MultiSelect
+            v-model="selectedAdaptations"
+            :options="adaptOptions"
+            optionLabel="label"
+            optionValue="value"
+            :placeholder="$t('home.table.adaptationLevel')"
+            :maxSelectedLabels="2"
+            :showToggleAll="false"
+            :selectedItemsLabel="adaptAllSelectedLabel"
+            class="filter-select"
+            @change="onFiltersChange"
+          />
+        </div>
+        <div class="filter-field">
+          <span class="filter-label">{{ $t('home.table.filterDate') }}</span>
+          <div class="date-range-group">
+            <DatePicker
+              v-model="dateFrom"
+              :placeholder="$t('home.table.dateFrom')"
+              dateFormat="yy-mm-dd"
+              class="filter-date"
+              @date-select="onFiltersChange"
+              @clear="onFiltersChange"
+              showClear
+            />
+            <span class="date-range-sep">–</span>
+            <DatePicker
+              v-model="dateTo"
+              :placeholder="$t('home.table.dateTo')"
+              dateFormat="yy-mm-dd"
+              class="filter-date"
+              @date-select="onFiltersChange"
+              @clear="onFiltersChange"
+              showClear
+            />
+          </div>
+        </div>
+        <Button
+          v-if="showClear"
+          :label="$t('home.table.clear')"
+          icon="pi pi-filter-slash"
+          class="p-button-success p-button-outlined"
+          v-tooltip.top="$t('home.table.clearTooltip')"
+          @click="onClear"
         />
       </div>
     </div>
 
-    <!-- DataTable -->
     <DataTable
+      ref="dt"
       :value="resumes"
       lazy
       paginator
@@ -65,36 +93,56 @@
       @page="onPage"
       @sort="onSort"
       @row-click="onRowClick"
-      :paginatorTemplate="paginatorTemplate"
       :currentPageReportTemplate="$t('home.table.pageReport')"
-      tableStyle="min-width: 50rem"
+      paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
       :responsiveLayout="isMobile ? 'scroll' : 'stack'"
+      :emptyMessage="$t('home.table.noResultsTitle')"
     >
-      <Column field="resumeTitle" :sortable="true" :header="$t('home.table.resumeTitle')" />
-      <Column field="vacancy" :sortable="true" :header="$t('home.table.vacancy')">
-        <template #body="{ data }">
-          <span v-tooltip.top="data.vacancy" class="truncate-cell">{{ data.vacancy }}</span>
+      <Column field="resumeTitle" :sortable="true">
+        <template #header>
+          <span class="p-column-title" v-tooltip.top="sortTooltip('resumeTitle')">{{ $t('home.table.resumeTitle') }}</span>
         </template>
       </Column>
-      <Column field="company" :sortable="true" :header="$t('home.table.company')">
+      <Column field="vacancy" :sortable="true">
+        <template #header>
+          <span class="p-column-title" v-tooltip.top="sortTooltip('vacancy')">{{ $t('home.table.vacancy') }}</span>
+        </template>
         <template #body="{ data }">
-          <span v-tooltip.top="data.company" class="truncate-cell">{{ data.company }}</span>
+          <span v-tooltip.top="data.vacancy" class="truncate-cell" style="max-width:220px">{{ data.vacancy }}</span>
         </template>
       </Column>
-      <Column field="language" :sortable="true" :header="$t('home.table.language')">
+      <Column field="company" :sortable="true">
+        <template #header>
+          <span class="p-column-title" v-tooltip.top="sortTooltip('company')">{{ $t('home.table.company') }}</span>
+        </template>
         <template #body="{ data }">
-          <Tag :value="data.language" :severity="data.language === 'EN' ? 'info' : 'success'" />
+          <span v-tooltip.top="data.company" class="truncate-cell" style="max-width:200px">{{ data.company }}</span>
         </template>
       </Column>
-      <Column field="adaptationLevel" :sortable="true" :header="$t('home.table.adaptationLevel')">
+      <Column field="language" :sortable="true">
+        <template #header>
+          <span class="p-column-title" v-tooltip.top="sortTooltip('language')">{{ $t('home.table.language') }}</span>
+        </template>
+        <template #body="{ data }">
+          <Tag :value="data.language === 'EN' ? 'EN' : 'RU'" :severity="data.language === 'EN' ? 'info' : 'success'" />
+        </template>
+      </Column>
+      <Column field="adaptationLevel" :sortable="true">
+        <template #header>
+          <span class="p-column-title" v-tooltip.top="sortTooltip('adaptationLevel')">{{ $t('home.table.adaptationLevel') }}</span>
+        </template>
         <template #body="{ data }">
           <Tag :value="$t('adaptation.' + data.adaptationLevel.toLowerCase())" :severity="getAdaptationSeverity(data.adaptationLevel)" />
         </template>
       </Column>
-      <Column field="createdAt" :sortable="true" :header="$t('home.table.created')" />
+      <Column field="createdAt" :sortable="true">
+        <template #header>
+          <span class="p-column-title" v-tooltip.top="sortTooltip('createdAt')">{{ $t('home.table.created') }}</span>
+        </template>
+      </Column>
       <template #empty>
         <div class="empty-state">
-          <i class="pi pi-file" style="font-size: 2rem; color: #8091A7; margin-bottom: 0.5rem;"></i>
+          <div class="empty-icon"><i class="pi pi-file"></i></div>
           <h3>{{ $t('home.table.emptyTitle') }}</h3>
           <p>{{ $t('home.table.noResultsText') }}</p>
         </div>
@@ -113,7 +161,8 @@ import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import MultiSelect from 'primevue/multiselect'
-import Calendar from 'primevue/calendar'
+import DatePicker from 'primevue/datepicker'
+import Button from 'primevue/button'
 import type { SavedResumeData } from '@/services/userHomeService'
 
 const props = defineProps<{
@@ -134,44 +183,73 @@ const emit = defineEmits<{
   openResume: [resume: SavedResumeData]
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const dt = ref()
 
-const isMobile = ref(window.innerWidth < 640)
-window.addEventListener('resize', () => {
-  isMobile.value = window.innerWidth < 640
-})
+// Reactive options — update when locale changes
+const languageOptions = [
+  { value: 'EN', en: 'English', ru: 'Английский' },
+  { value: 'RU', en: 'Russian', ru: 'Русский' }
+]
+const adaptationOptions = [
+  { value: 'MINIMAL', en: 'Minimal', ru: 'Минимальная' },
+  { value: 'BALANCED', en: 'Balanced', ru: 'Сбалансированная' },
+  { value: 'MAXIMUM', en: 'Maximum', ru: 'Максимальная' }
+]
 
-const paginatorTemplate = computed(() =>
-  isMobile.value
-    ? 'PrevPageLink PageLinks NextPageLink RowsPerPageDropdown'
-    : 'CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown'
+const langOptions = computed(() =>
+  languageOptions.map(o => ({ value: o.value, label: o[locale.value as keyof typeof o] }))
+)
+const adaptOptions = computed(() =>
+  adaptationOptions.map(o => ({ value: o.value, label: o[locale.value as keyof typeof o] }))
 )
 
-const languageOptions = [
-  { label: t('language.en'), value: 'EN' },
-  { label: t('language.ru'), value: 'RU' }
-]
+const langAllSelectedLabel = computed(() => {
+  if (selectedLanguages.value.length === 2) return locale.value === 'ru' ? 'Все языки' : 'All languages'
+  return undefined
+})
+const adaptAllSelectedLabel = computed(() => {
+  if (selectedAdaptations.value.length === 3) return locale.value === 'ru' ? 'Все уровни' : 'All levels'
+  return undefined
+})
 
-const adaptationOptions = [
-  { label: t('adaptation.minimal'), value: 'MINIMAL' },
-  { label: t('adaptation.balanced'), value: 'BALANCED' },
-  { label: t('adaptation.maximum'), value: 'MAXIMUM' }
-]
+const isMobile = ref(window.innerWidth < 640)
+window.addEventListener('resize', () => { isMobile.value = window.innerWidth < 640 })
 
 // --- Filter state ---
 const searchText = ref('')
 const selectedLanguages = ref(['EN', 'RU'])
 const selectedAdaptations = ref(['MINIMAL', 'BALANCED', 'MAXIMUM'])
-const selectedDate = ref<Date | null>(null)
+const dateFrom = ref<Date | null>(null)
+const dateTo = ref<Date | null>(null)
+
+// Track default date range for Clear
+const defaultDateFrom = ref<Date | null>(null)
+const defaultDateTo = ref<Date | null>(null)
+
+// Compute whether filters are in default state
+const showClear = computed(() => {
+  if (searchText.value) return true
+  if (selectedLanguages.value.length !== 2) return true
+  if (selectedAdaptations.value.length !== 3) return true
+  if (dateFrom.value !== null) return true
+  if (dateTo.value !== null) return true
+  return false
+})
+
+function formatDate(d: Date | null): string | null {
+  if (!d) return null
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
 function onSearchInput(e: KeyboardEvent) {
-  const target = e.target as HTMLInputElement
-  const val = target.value || ''
-
+  const val = (e.target as HTMLInputElement).value || ''
   if (debounceTimer) clearTimeout(debounceTimer)
-
   if (val.length >= 3 || val.length === 0) {
     debounceTimer = setTimeout(() => {
       emit('search', val)
@@ -183,21 +261,24 @@ function onFiltersChange() {
   emit('filter', {
     language: selectedLanguages.value,
     adaptationLevel: selectedAdaptations.value,
-    createdDate: selectedDate.value
+    dateFrom: formatDate(dateFrom.value),
+    dateTo: formatDate(dateTo.value)
   })
 }
 
-function onPage(event: any) {
-  emit('page', event)
+function onClear() {
+  searchText.value = ''
+  selectedLanguages.value = ['EN', 'RU']
+  selectedAdaptations.value = ['MINIMAL', 'BALANCED', 'MAXIMUM']
+  dateFrom.value = defaultDateFrom.value
+  dateTo.value = defaultDateTo.value
+  try { dt.value?.resetPage() } catch {}
+  onFiltersChange()
 }
 
-function onSort(event: any) {
-  emit('sort', event)
-}
-
-function onRowClick(event: any) {
-  emit('openResume', event.data as SavedResumeData)
-}
+function onPage(event: any) { emit('page', event) }
+function onSort(event: any) { emit('sort', event) }
+function onRowClick(event: any) { emit('openResume', event.data as SavedResumeData) }
 
 function getAdaptationSeverity(level: string): 'success' | 'info' | 'warn' | undefined {
   switch (level) {
@@ -207,30 +288,83 @@ function getAdaptationSeverity(level: string): 'success' | 'info' | 'warn' | und
     default: return undefined
   }
 }
+
+function sortTooltip(field: string): string {
+  const sf = props.sortField
+  const so = props.sortOrder
+  if (sf !== field) return t('home.table.sortNotSorted')
+  if (so === 1) return t('home.table.sortAsc')
+  if (so === -1) return t('home.table.sortDesc')
+  return t('home.table.sortNotSorted')
+}
 </script>
 
 <style scoped>
 .table-toolbar {
-  margin-bottom: 1rem;
-}
-.toolbar-row {
   display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 18px;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
+}
+.search-field {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+  max-width: 420px;
+}
+.search-field .pi {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8091A7;
+  font-size: 0.9rem;
+  z-index: 1;
+  pointer-events: none;
+}
+.search-field .p-inputtext {
+  padding-left: 40px !important;
+  width: 100%;
+}
+.filter-group {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #8091A7;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 .search-input {
-  min-width: 260px;
+  min-width: 220px;
 }
 .filter-select {
   min-width: 160px;
 }
 .filter-date {
-  min-width: 150px;
+  min-width: 130px;
+}
+.date-range-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.date-range-sep {
+  color: #8091A7;
+  font-size: 0.9rem;
 }
 .truncate-cell {
   display: block;
-  max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -239,24 +373,48 @@ function getAdaptationSeverity(level: string): 'success' | 'info' | 'warn' | und
 .empty-state {
   text-align: center;
   padding: 2rem;
-  color: #5D718B;
+}
+.empty-icon {
+  font-size: 2.5rem;
+  color: #8091A7;
+  margin-bottom: 0.5rem;
 }
 .empty-state h3 {
   font-family: 'Manrope', sans-serif;
+  font-size: 1.1rem;
   color: #10233F;
   margin: 0 0 0.25rem;
 }
 .empty-state p {
   margin: 0;
+  color: #5D718B;
   font-size: 0.9rem;
 }
-@media (max-width: 639px) {
-  .toolbar-row {
+@media (max-width: 640px) {
+  .table-toolbar {
     flex-direction: column;
     align-items: stretch;
   }
-  .search-input, .filter-select, .filter-date {
+  .search-field {
+    max-width: none;
+  }
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-field {
+    width: 100%;
+  }
+  .date-range-group {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .date-range-sep {
+    display: none;
+  }
+  .filter-select, .filter-date {
     min-width: 100%;
+    width: 100%;
   }
 }
 </style>

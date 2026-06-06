@@ -101,7 +101,8 @@ export function useUserHome() {
   function onFilter(filters: any) {
     queryParams.language = filters.language?.length ? filters.language.join(',') : undefined
     queryParams.adaptationLevel = filters.adaptationLevel?.length ? filters.adaptationLevel.join(',') : undefined
-    queryParams.createdDate = filters.createdDate || undefined
+    queryParams.dateFrom = filters.dateFrom || undefined
+    queryParams.dateTo = filters.dateTo || undefined
     queryParams.page = 0
     loadResumes()
   }

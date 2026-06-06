@@ -585,3 +585,61 @@ mockMvc = standaloneSetup(controller).build();
 - Gained: Consistent with Spring 6.x best practices (officially recommended in Spring 6.0 release notes)
 - Made harder: None — this is a one-time configuration change
 - Reconsider: If migrating to a different DI framework that doesn't need parameter names
+
+---
+
+### 2026-06-06 — PrimeVue 4: ToastService and ConfirmationService require app.use() plugin installation
+
+**Status**: Active
+
+**Why this is durable**: In PrimeVue 4, Toast and ConfirmDialog components require their corresponding services to be installed as Vue plugins via `app.use()`. Just placing `<Toast />` and `<ConfirmDialog />` in the template is not sufficient — without `app.use(ToastService)` and `app.use(ConfirmationService)`, the `useToast()` and `useConfirm()` composables throw "No PrimeVue Toast/Confirmation provided!".
+
+**Decision**: All PrimeVue 4 projects MUST install both services in `main.ts`:
+```typescript
+import ToastService from 'primevue/toastservice'
+import ConfirmationService from 'primevue/confirmationservice'
+app.use(ToastService)
+app.use(ConfirmationService)
+```
+
+**Tradeoffs**:
+- Gained: useToast() and useConfirm() work globally
+- Made harder: None — one-time setup
+- Reconsider: If PrimeVue changes this pattern in a future version
+
+---
+
+### 2026-06-06 — PrimeVue 4: Tooltip is a global directive requiring explicit registration
+
+**Status**: Active
+
+**Why this is durable**: In PrimeVue 4, the v-tooltip directive is NOT auto-registered by `app.use(PrimeVue)`. It must be explicitly registered via `app.directive('tooltip', Tooltip)`. Without this, `v-tooltip.top="..."` in templates silently fails — no tooltips appear, no errors in console, just invisible functionality.
+
+**Decision**: All PrimeVue 4 projects MUST register the Tooltip directive:
+```typescript
+import Tooltip from 'primevue/tooltip'
+app.directive('tooltip', Tooltip)
+```
+
+**Tradeoffs**:
+- Gained: v-tooltip works globally in all components
+- Made harder: One extra import line per project
+- Reconsider: If PrimeVue auto-registers directives in a future version
+
+---
+
+### 2026-06-06 — PrimeVue 4: PrimeIcons is a separate package requiring explicit CSS import
+
+**Status**: Active
+
+**Why this is durable**: In PrimeVue 4, PrimeIcons (`pi pi-*` classes) are NOT included with the core PrimeVue package. They require a separate `npm install primeicons` and explicit CSS import `import 'primeicons/primeicons.css'` in `main.ts`. Without this, all PrimeIcons render as invisible unicode characters — no errors, just blank space where icons should be.
+
+**Decision**: Every PrimeVue 4 project setup MUST include:
+1. `npm install primeicons`
+2. `import 'primeicons/primeicons.css'` in main.ts
+3. Vite handles font file paths correctly regardless of `base` config
+
+**Tradeoffs**:
+- Gained: All PrimeIcons render correctly
+- Made harder: One extra dependency and import
+- Reconsider: None — this is the documented PrimeVue 4 setup

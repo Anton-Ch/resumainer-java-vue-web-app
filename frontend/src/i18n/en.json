@@ -33,14 +33,6 @@
       "loggedOut": "Logged out successfully"
     }
   },
-  "nav": {
-    "home": "Home",
-    "myProfile": "My Profile",
-    "generateResume": "Generate Resume",
-    "admin": "Admin",
-    "language": "Language",
-    "logout": "Log out"
-  },
   "home": {
     "title": "Resume workspace",
     "incomplete": {
@@ -75,8 +67,12 @@
       "profileStatus": "Profile status",
       "ready": "Ready",
       "needsInfo": "Needs info",
-      "readyHint": "You can generate resumes now.",
+      "readyHint": "Go on with making strong resumes — sky is the limit!",
       "needsInfoHint": "Add contact details, work experience, and education.",
+      "incompleteResumesHint": "No resumes here so far. To make them, fill your profile first and add the required information.",
+      "emptyResumesHint": "Make your first strong resume — it\u0027s really nice and easy!",
+      "emptyStatusHint": "Start making awesome resumes — it\u0027s all in your hands!",
+      "readyStatusHint": "Profile is ready! But you can always update it and make it even better!",
       "updateProfile": "Update profile",
       "completeProfile": "Complete profile",
       "lastResume": "Last resume",
@@ -86,18 +82,28 @@
       "title": "Saved resumes",
       "searchPlaceholder": "Search by title, vacancy, or company",
       "search": "Search",
+      "clear": "Clear",
+      "clearTooltip": "Clear all filters",
       "resumeTitle": "Resume title",
       "vacancy": "Vacancy",
       "company": "Company",
       "language": "Language",
       "adaptationLevel": "Adaptation level",
       "created": "Created",
+      "filterLanguage": "Language",
+      "filterAdaptation": "Adaptation",
+      "filterDate": "Created date",
+      "dateFrom": "From",
+      "dateTo": "To",
       "loading": "Loading resumes. Please wait.",
       "emptyTitle": "No resumes yet",
       "noResultsTitle": "No resumes found",
       "noResultsText": "Try another search or change filters.",
       "pageReport": "Showing {first} to {last} of {totalRecords}",
-      "mobilePageReport": "Page {current} of {totalPages}"
+      "mobilePageReport": "Page {current} of {totalPages}",
+      "sortNotSorted": "Sort ascending",
+      "sortAsc": "Sort descending",
+      "sortDesc": "Clear sorting for this column"
     }
   },
   "resumeDetails": {
@@ -146,7 +152,26 @@
     "balanced": "Balanced",
     "maximum": "Maximum"
   },
+  "profile": {
+    "subnav": {
+      "contact": "Contacts",
+      "experience": "Experience",
+      "education": "Education",
+      "projects": "Projects",
+      "courses": "Courses",
+      "additional": "Additional"
+    }
+  },
   "common": {
     "loading": "Loading..."
+  },
+  "nav": {
+    "home": "Home",
+    "myProfile": "My Profile",
+    "generateResume": "Generate Resume",
+    "admin": "Admin",
+    "language": "Language",
+    "logout": "Log out",
+    "mobileMenu": "Menu"
   }
 }

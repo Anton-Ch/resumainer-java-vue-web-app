@@ -36,7 +36,7 @@ class ResumeControllerTest {
     void listResumes_returnsPagedResponse() throws Exception {
         List<SavedResume> items = List.of(new SavedResume(), new SavedResume());
         PagedResponse<SavedResume> response = new PagedResponse<>(items, 0, 10, 2);
-        when(resumeService.listResumes(eq(userId), isNull(), isNull(), isNull(), isNull(), eq("createdAt,desc"), eq(0), eq(10)))
+        when(resumeService.listResumes(eq(userId), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq("createdAt,desc"), eq(0), eq(10)))
                 .thenReturn(response);
 
         mockMvc.perform(get("/api/resumes")
@@ -52,7 +52,7 @@ class ResumeControllerTest {
 
     @Test
     void listResumes_withSearch_returnsFiltered() throws Exception {
-        when(resumeService.listResumes(eq(userId), eq("analyst"), isNull(), isNull(), isNull(), anyString(), anyInt(), anyInt()))
+        when(resumeService.listResumes(eq(userId), eq("analyst"), isNull(), isNull(), isNull(), isNull(), isNull(), anyString(), anyInt(), anyInt()))
                 .thenReturn(new PagedResponse<>(List.of(), 0, 10, 0));
 
         mockMvc.perform(get("/api/resumes")
@@ -63,7 +63,7 @@ class ResumeControllerTest {
 
     @Test
     void listResumes_withLanguageFilter() throws Exception {
-        when(resumeService.listResumes(eq(userId), isNull(), eq("EN,RU"), isNull(), isNull(), anyString(), anyInt(), anyInt()))
+        when(resumeService.listResumes(eq(userId), isNull(), eq("EN,RU"), isNull(), isNull(), isNull(), isNull(), anyString(), anyInt(), anyInt()))
                 .thenReturn(new PagedResponse<>(List.of(), 0, 10, 0));
 
         mockMvc.perform(get("/api/resumes")
@@ -74,8 +74,8 @@ class ResumeControllerTest {
 
     @Test
     void listResumes_withInvalidSize_returns400() throws Exception {
-        when(resumeService.listResumes(eq(userId), isNull(), isNull(), isNull(), isNull(), anyString(), eq(0), eq(7)))
-                .thenThrow(new IllegalArgumentException("Invalid size"));
+        when(resumeService.listResumes(eq(userId), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), anyString(), eq(0), eq(7)))
+                  .thenThrow(new IllegalArgumentException("Invalid size"));
 
         mockMvc.perform(get("/api/resumes")
                         .sessionAttr("user", userSession)

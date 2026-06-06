@@ -29,12 +29,12 @@ class ResumeServiceTest {
     @Test
     void listResumes_withValidParams_returnsPagedResponse() {
         List<SavedResume> items = List.of(new SavedResume(), new SavedResume());
-        when(resumeDao.findByUserId(eq(userId), isNull(), isNull(), isNull(), isNull(), anyString(), anyString(), anyInt(), anyInt()))
+        when(resumeDao.findByUserId(eq(userId), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), anyString(), anyString(), anyInt(), anyInt()))
                 .thenReturn(items);
-        when(resumeDao.countByUserId(eq(userId), isNull(), isNull(), isNull(), isNull())).thenReturn(25L);
+        when(resumeDao.countByUserId(eq(userId), isNull(), isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(25L);
 
         PagedResponse<SavedResume> result = resumeService.listResumes(
-                userId, null, null, null, null, "createdAt,desc", 0, 10);
+                userId, null, null, null, null, null, null, "createdAt,desc", 0, 10);
 
         assertEquals(2, result.getItems().size());
         assertEquals(25L, result.getTotalElements());
@@ -44,19 +44,19 @@ class ResumeServiceTest {
     @Test
     void listResumes_withInvalidSortField_throwsException() {
         assertThrows(IllegalArgumentException.class, () ->
-                resumeService.listResumes(userId, null, null, null, null, "invalidField,asc", 0, 10));
+                resumeService.listResumes(userId, null, null, null, null, null, null, "invalidField,asc", 0, 10));
     }
 
     @Test
     void listResumes_withNegativePage_throwsException() {
         assertThrows(IllegalArgumentException.class, () ->
-                resumeService.listResumes(userId, null, null, null, null, "createdAt,desc", -1, 10));
+                resumeService.listResumes(userId, null, null, null, null, null, null, "createdAt,desc", -1, 10));
     }
 
     @Test
     void listResumes_withInvalidSize_throwsException() {
         assertThrows(IllegalArgumentException.class, () ->
-                resumeService.listResumes(userId, null, null, null, null, "createdAt,desc", 0, 5));
+                resumeService.listResumes(userId, null, null, null, null, null, null, "createdAt,desc", 0, 5));
     }
 
     @Test
