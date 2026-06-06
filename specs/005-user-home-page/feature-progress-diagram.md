@@ -1,6 +1,6 @@
 # Feature Progress Dashboard
 
-**Generated**: 2026-06-06
+**Generated**: 2026-06-06 (updated)
 
 ## SDD Feature Progress
 
@@ -42,16 +42,16 @@ gantt
     Specify     :done, s5, 0, 1
     Plan        :done, p5, 1, 2
     Tasks       :done, t5, 2, 3
-    Implement   :active, i5, 3, 4
-    Verify      :v5, 4, 5
+    Implement   :done, i5, 3, 4
+    Verify      :active, v5, 4, 5
 ```
 
 ## Feature 005 Task Progress
 
 ```mermaid
-pie title Feature 005 — User Home Page (0/41 tasks done)
-    "Pending" : 41
-    "Completed" : 0
+pie title Feature 005 — User Home Page (41/41 tasks done)
+    "Completed" : 41
+    "Remaining" : 0
 ```
 
 ## Summary
@@ -62,7 +62,7 @@ pie title Feature 005 — User Home Page (0/41 tasks done)
 | 002-thymeleaf-landing-page | ✅ Complete | 27/27 | Merged to main |
 | 003-vue-auth-page | ✅ Complete | 63/63 | Merged to main |
 | 004-custom-jdbc-connection-pool | ✅ Complete | 55/55 | Merged to main |
-| **005-user-home-page** | 🔵 **Plan (ready for implement)** | **0/41** | **Active branch: feat/005-user-home-page** |
+| **005-user-home-page** | ✅ **Implement complete (in review)** | **41/41** | **Branch: feat/005-user-home-page** |
 
 ### Phase Legend
 
@@ -71,5 +71,5 @@ pie title Feature 005 — User Home Page (0/41 tasks done)
 | 🟢 Specify | spec.md exists |
 | 🟢 Plan | plan.md exists |
 | 🟢 Tasks | tasks.md exists |
-| 🔵 Implement | Tasks ready, implementation in progress |
-| 🟣 Verify | All tasks completed, ready for review |
+| 🔵 Implement | All 41 tasks implemented |
+| 🟣 Verify | Security review + QA review complete, awaiting PR |

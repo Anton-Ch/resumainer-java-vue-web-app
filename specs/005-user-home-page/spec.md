@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-06
 
-**Status**: Clarified
+**Status**: Approved
 
 **Input**: User description: "Let's create the User Home Page the resume workspace. We move the SPA to /app/, leaving the root directory for the landing page. We implement a welcome section with a guide on filling out the profile, summary cards, a table of saved resumes with search/filters/sorting/pagination, a resume details modal with PDF/link/delete options, and a general navigation bar."
 
