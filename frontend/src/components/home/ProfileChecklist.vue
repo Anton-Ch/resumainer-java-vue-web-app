@@ -31,19 +31,19 @@ const items = computed(() => [
     key: 'contact',
     label: t('home.checklist.contact'),
     done: props.checklist.contactDetails,
-    route: '/app/profile/contact'
+    route: '/profile/contact'
   },
   {
     key: 'experience',
     label: t('home.checklist.experience'),
     done: props.checklist.workExperience,
-    route: '/app/profile/experience'
+    route: '/profile/experience'
   },
   {
     key: 'education',
     label: t('home.checklist.education'),
     done: props.checklist.education,
-    route: '/app/profile/education'
+    route: '/profile/education'
   }
 ])
 </script>

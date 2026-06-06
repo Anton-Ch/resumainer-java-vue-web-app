@@ -4,8 +4,10 @@
     <div class="summary-card">
       <div class="card-label">{{ $t('home.summary.savedResumes') }}</div>
       <div class="card-value">{{ savedResumesCount }}</div>
-      <div class="card-hint" v-if="profileReady">{{ $t('home.summary.readyHint') }}</div>
-      <div class="card-hint" v-else>{{ $t('home.summary.needsInfoHint') }}</div>
+      <div class="card-hint">
+        <template v-if="profileReady">{{ $t('home.summary.readyHint') }}</template>
+        <template v-else>{{ $t('home.summary.incompleteResumesHint') }}</template>
+      </div>
     </div>
 
     <!-- Card 2: Profile status -->
@@ -15,12 +17,13 @@
         {{ profileReady ? $t('home.summary.ready') : $t('home.summary.needsInfo') }}
       </div>
       <div class="card-hint">
-        {{ profileReady ? $t('home.summary.readyHint') : $t('home.summary.needsInfoHint') }}
+        <template v-if="profileReady">{{ $t('home.summary.readyStatusHint') }}</template>
+        <template v-else>{{ $t('home.summary.needsInfoHint') }}</template>
       </div>
-      <router-link v-if="profileReady" to="/app/profile/contact" class="card-link">
+      <router-link v-if="profileReady" to="/profile/contact" class="card-link">
         <i class="pi pi-pencil"></i> {{ $t('home.summary.updateProfile') }}
       </router-link>
-      <router-link v-else to="/app/profile/contact" class="card-link">
+      <router-link v-else to="/profile/contact" class="card-link">
         <i class="pi pi-pencil"></i> {{ $t('home.summary.completeProfile') }}
       </router-link>
     </div>
@@ -33,7 +36,7 @@
         <div class="card-hint">{{ lastResume.createdAt }}</div>
       </template>
       <template v-else>
-        <div class="card-value">{{ $t('home.summary.noLastResume') }}</div>
+        <div class="card-value" style="font-size:1rem;font-weight:600">{{ $t('home.summary.noLastResume') }}</div>
       </template>
     </div>
   </div>
@@ -101,6 +104,7 @@ function onLastResumeClick() {
 .card-value.last-resume-title {
   font-size: 0.9rem;
   font-weight: 600;
+  font-family: var(--font-body, Inter, sans-serif);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

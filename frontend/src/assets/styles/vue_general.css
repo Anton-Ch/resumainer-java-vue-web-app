@@ -638,3 +638,37 @@ select.vue-input {
   background: var(--vue-accent-bg-blue) !important;
   border-color: var(--vue-accent-blue) !important;
 }
+
+/* ============================================================
+ * PrimeVue Button Overrides — ResumAIner accent color
+ * Matches prototype's --accent: #0F9D7A
+ * ============================================================ */
+.p-button.p-button-success {
+  background: #0F9D7A !important;
+  border-color: #0F9D7A !important;
+  color: #fff !important;
+}
+.p-button.p-button-success:hover {
+  background: #0C8467 !important;
+  border-color: #0C8467 !important;
+}
+.p-button.p-button-success.p-button-outlined {
+  background: transparent !important;
+  border-color: #0F9D7A !important;
+  color: #0F9D7A !important;
+}
+.p-button.p-button-success.p-button-outlined:hover {
+  background: rgba(15,157,122,0.08) !important;
+  border-color: #0C8467 !important;
+  color: #0C8467 !important;
+}
+.p-button.p-button-danger {
+  background: transparent !important;
+  border-color: #C2410C !important;
+  color: #C2410C !important;
+}
+.p-button.p-button-danger:hover {
+  background: #C2410C !important;
+  border-color: #C2410C !important;
+  color: #fff !important;
+}

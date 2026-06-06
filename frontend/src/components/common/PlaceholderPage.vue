@@ -6,7 +6,7 @@
         <i class="pi pi-building" style="font-size: 3rem; color: var(--muted-light, #8091A7); margin-bottom: 1rem;"></i>
         <h1>{{ $t('placeholder.title') }}</h1>
         <p class="placeholder-text">{{ $t('placeholder.text') }}</p>
-        <router-link to="/app/home">
+        <router-link to="/home">
           <Button :label="$t('placeholder.back')" icon="pi pi-arrow-left" class="p-button-text" />
         </router-link>
       </div>

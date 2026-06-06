@@ -41,7 +41,8 @@ public class ResumeDao {
      */
     public List<SavedResume> findByUserId(UUID userId, String search,
                                           String language, String adaptationLevel,
-                                          String createdDate, String sortField,
+                                          String createdDate, String dateFrom,
+                                          String dateTo, String sortField,
                                           String sortDir, int page, int size) {
         String sortColumn = validateSortField(sortField);
         String direction = validateSortDir(sortDir);
@@ -66,6 +67,15 @@ public class ResumeDao {
         if (isNotBlank(createdDate)) {
             sql.append(" AND created_at = ?");
             sql.addParam(Date.valueOf(createdDate.trim()));
+        } else {
+            if (isNotBlank(dateFrom)) {
+                sql.append(" AND created_at >= ?");
+                sql.addParam(Date.valueOf(dateFrom.trim()));
+            }
+            if (isNotBlank(dateTo)) {
+                sql.append(" AND created_at <= ?");
+                sql.addParam(Date.valueOf(dateTo.trim()));
+            }
         }
 
         int offset = page * size;
@@ -102,7 +112,8 @@ public class ResumeDao {
      * COUNT query with the same filters.
      */
     public long countByUserId(UUID userId, String search, String language,
-                              String adaptationLevel, String createdDate) {
+                              String adaptationLevel, String createdDate,
+                              String dateFrom, String dateTo) {
         SqlBuilder sql = new SqlBuilder("WHERE user_id = ? AND deleted_at IS NULL");
         sql.addParam(userId);
 
@@ -123,6 +134,15 @@ public class ResumeDao {
         if (isNotBlank(createdDate)) {
             sql.append(" AND created_at = ?");
             sql.addParam(Date.valueOf(createdDate.trim()));
+        } else {
+            if (isNotBlank(dateFrom)) {
+                sql.append(" AND created_at >= ?");
+                sql.addParam(Date.valueOf(dateFrom.trim()));
+            }
+            if (isNotBlank(dateTo)) {
+                sql.append(" AND created_at <= ?");
+                sql.addParam(Date.valueOf(dateTo.trim()));
+            }
         }
 
         String query = "SELECT COUNT(*) FROM saved_resumes " + sql.getWhere();

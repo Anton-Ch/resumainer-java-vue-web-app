@@ -33,14 +33,6 @@
       "loggedOut": "Вышел из аккаунта"
     }
   },
-  "nav": {
-    "home": "Главная",
-    "myProfile": "Профиль",
-    "generateResume": "Создать резюме",
-    "admin": "Админ",
-    "language": "Язык",
-    "logout": "Выйти"
-  },
   "home": {
     "title": "Рабочий центр",
     "incomplete": {
@@ -75,8 +67,12 @@
       "profileStatus": "Статус профиля",
       "ready": "Готов",
       "needsInfo": "Нужно заполнить",
-      "readyHint": "Теперь можно создавать резюме.",
+      "readyHint": "Продолжай создавать отличные резюме — нет ничего невозможного!",
       "needsInfoHint": "Добавь контакты, опыт работы и образование.",
+      "incompleteResumesHint": "Пока резюме тут нет. Чтобы их создать — сначала заполни профиль и добавь нужную информацию.",
+      "emptyResumesHint": "Создай своё первое сильное резюме — это легко и просто!",
+      "emptyStatusHint": "Начни создавать отличные резюме — всё в твоих руках!",
+      "readyStatusHint": "Профиль готов! Но всегда можешь его обновить и сделать ещё лучше!",
       "updateProfile": "Обновить профиль",
       "completeProfile": "Заполнить профиль",
       "lastResume": "Последнее резюме",
@@ -86,18 +82,28 @@
       "title": "Сохранённые резюме",
       "searchPlaceholder": "Найти по названию, вакансии или компании",
       "search": "Найти",
+      "clear": "Сброс",
+      "clearTooltip": "Сбросить все фильтры",
       "resumeTitle": "Название резюме",
       "vacancy": "Вакансия",
       "company": "Компания",
       "language": "Язык",
       "adaptationLevel": "Уровень адаптации",
       "created": "Создано",
+      "filterLanguage": "Язык",
+      "filterAdaptation": "Адаптация",
+      "filterDate": "Дата создания",
+      "dateFrom": "С",
+      "dateTo": "По",
       "loading": "Загружаем резюме. Подожди немного.",
       "emptyTitle": "Резюме пока нет",
       "noResultsTitle": "Ничего не найдено",
       "noResultsText": "Попробуй другой запрос или измени фильтры.",
       "pageReport": "Показано {first}–{last} из {totalRecords}",
-      "mobilePageReport": "Страница {current} из {totalPages}"
+      "mobilePageReport": "Страница {current} из {totalPages}",
+      "sortNotSorted": "Сортировать по возрастанию",
+      "sortAsc": "Сортировать по убыванию",
+      "sortDesc": "Сбросить сортировку по этой колонке"
     }
   },
   "resumeDetails": {
@@ -137,6 +143,15 @@
     "text": "Это страница-заглушка для будущей работы.",
     "back": "На главную"
   },
+  "nav": {
+    "home": "Главная",
+    "myProfile": "Профиль",
+    "generateResume": "Создать резюме",
+    "admin": "Админ",
+    "language": "Язык",
+    "logout": "Выйти",
+    "mobileMenu": "Меню"
+  },
   "language": {
     "en": "Английский",
     "ru": "Русский"
@@ -145,6 +160,16 @@
     "minimal": "Минимальная",
     "balanced": "Сбалансированная",
     "maximum": "Максимальная"
+  },
+  "profile": {
+    "subnav": {
+      "contact": "Контакты",
+      "experience": "Опыт работы",
+      "education": "Образование",
+      "projects": "Проекты",
+      "courses": "Курсы",
+      "additional": "Дополнительно"
+    }
   },
   "common": {
     "loading": "Загрузка..."

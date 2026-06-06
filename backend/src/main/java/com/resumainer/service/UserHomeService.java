@@ -48,8 +48,8 @@ public class UserHomeService {
         boolean profileReady = ProfileReadinessCalculator.isReady(checklist);
 
         List<SavedResume> firstPage = resumeDao.findByUserId(userId, null, null, null,
-                null, "created_at", "desc", 0, 1);
-        long totalResumes = resumeDao.countByUserId(userId, null, null, null, null);
+                null, null, null, "created_at", "desc", 0, 1);
+        long totalResumes = resumeDao.countByUserId(userId, null, null, null, null, null, null);
 
         SavedResume lastResume = firstPage.isEmpty() ? null : firstPage.get(0);
         Long lastResumeId = lastResume != null ? lastResume.getId() : null;

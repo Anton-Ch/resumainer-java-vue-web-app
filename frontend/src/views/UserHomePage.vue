@@ -44,7 +44,7 @@
           icon="pi pi-plus"
           class="p-button-success p-button-outlined"
           v-tooltip.top="$t('home.ready.generate.tooltip')"
-          @click="$router.push('/app/generate/vacancy')"
+          @click="$router.push('/generate/vacancy')"
         />
       </div>
 

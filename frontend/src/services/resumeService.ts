@@ -19,6 +19,8 @@ export interface ResumeQueryParams {
   language?: string
   adaptationLevel?: string
   createdDate?: string
+  dateFrom?: string
+  dateTo?: string
   sort?: string
   page?: number
   size?: number
@@ -30,6 +32,8 @@ export async function fetchResumes(params: ResumeQueryParams = {}): Promise<Page
   if (params.language) query.set('language', params.language)
   if (params.adaptationLevel) query.set('adaptationLevel', params.adaptationLevel)
   if (params.createdDate) query.set('createdDate', params.createdDate)
+  if (params.dateFrom) query.set('dateFrom', params.dateFrom)
+  if (params.dateTo) query.set('dateTo', params.dateTo)
   if (params.sort) query.set('sort', params.sort)
   if (params.page !== undefined) query.set('page', String(params.page))
   if (params.size !== undefined) query.set('size', String(params.size))
