@@ -8,7 +8,7 @@
 
 CREATE TABLE saved_resumes (
     id              BIGSERIAL       PRIMARY KEY,
-    user_id         BIGINT          NOT NULL REFERENCES users(id),
+    user_id         UUID            NOT NULL REFERENCES users(id),
     resume_title    VARCHAR(255)    NOT NULL,
     vacancy         VARCHAR(255)    NOT NULL,
     company         VARCHAR(255)    NOT NULL,
@@ -19,9 +19,9 @@ CREATE TABLE saved_resumes (
     pdf_url         VARCHAR(500),
     cover_letter    TEXT,
     deleted_at      TIMESTAMP,
-    created_by      BIGINT          NOT NULL REFERENCES users(id),
+    created_by      UUID            NOT NULL REFERENCES users(id),
     created_date    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      BIGINT          REFERENCES users(id),
+    updated_by      UUID            REFERENCES users(id),
     updated_date    TIMESTAMP
 );
 
