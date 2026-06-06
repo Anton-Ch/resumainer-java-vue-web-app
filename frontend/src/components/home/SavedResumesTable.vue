@@ -152,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -213,8 +213,20 @@ const adaptAllSelectedLabel = computed(() => {
   return undefined
 })
 
-const isMobile = ref(window.innerWidth < 640)
-window.addEventListener('resize', () => { isMobile.value = window.innerWidth < 640 })
+const isMobile = ref(false)
+
+function updateIsMobile() {
+  isMobile.value = window.innerWidth < 640
+}
+
+onMounted(() => {
+  updateIsMobile()
+  window.addEventListener('resize', updateIsMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateIsMobile)
+})
 
 // --- Filter state ---
 const searchText = ref('')
