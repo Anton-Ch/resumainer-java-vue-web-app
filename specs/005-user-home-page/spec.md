@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-06
 
-**Status**: Draft
+**Status**: Clarified
 
 **Input**: User description: "Let's create the User Home Page the resume workspace. We move the SPA to /app/, leaving the root directory for the landing page. We implement a welcome section with a guide on filling out the profile, summary cards, a table of saved resumes with search/filters/sorting/pagination, a resume details modal with PDF/link/delete options, and a general navigation bar."
 
@@ -105,8 +105,9 @@ The landing page remains at root `/`. All SPA pages live under `/app/...`. After
 
 ### Edge Cases
 
-- What happens when the API call for User Home data fails? → User sees an error state with a retry option.
+- What happens when the API call for User Home data fails? → User sees an inline error block inside the page container with an error icon, descriptive message, and a "Retry" button. Not a toast notification, not a full-screen overlay.
 - What happens during initial page load? → Loading state with skeleton placeholders.
+- What if one API endpoint succeeds and the other fails? → Each block (Guided+Summary and Saved Resumes Table) handles errors independently. A failed table does not block the guided block from rendering.
 - What if the user has no work experience or education records? → Profile is considered incomplete, guided block shows checklist.
 - What if search returns zero results? → Table shows "No resumes found" empty state with suggestion to try different search/filters.
 - What if a resume has no cover letter? → Modal shows a message "No cover letter for this resume."
@@ -134,16 +135,16 @@ The landing page remains at root `/`. All SPA pages live under `/app/...`. After
 - **FR-016**: User Home MUST display three summary cards: Saved resumes count, Profile status, and Last resume.
 - **FR-017**: The Last Resume card MUST be clickable and open the Resume Details modal for the most recent resume.
 - **FR-018**: The Saved Resumes section MUST use a table with columns: Resume title, Vacancy, Company, Language, Adaptation level, and Created date.
-- **FR-019**: Vacancy and Company columns MUST support text truncation with tooltip for long values.
+- **FR-019**: Vacancy and Company columns MUST truncate overflowing text using CSS (`max-width` percentage, `text-overflow: ellipsis`). The full value MUST be accessible via tooltip on hover or focus.
 - **FR-020**: Created date MUST be displayed in YYYY-MM-DD format.
 - **FR-021**: The table MUST support sorting on all six columns with removable sort (third click clears sorting).
 - **FR-022**: Default sort MUST be by Created date descending (newest first).
-- **FR-023**: The table MUST support text search across resume title, vacancy, and company fields.
+- **FR-023**: The table MUST support live text search with 300ms debounce across resume title, vacancy, and company fields. Search MUST activate only when at least 3 characters are entered.
 - **FR-024**: The table MUST support filtering by language (English/Russian) via multi-select.
 - **FR-025**: The table MUST support filtering by adaptation level (Minimal/Balanced/Maximum) via multi-select.
 - **FR-026**: The table MUST support filtering by exact created date via date picker.
 - **FR-027**: The table MUST support pagination with options for 10, 20, and 50 rows per page, defaulting to 10.
-- **FR-028**: The table MUST show loading state during initial load (skeleton or loading overlay).
+- **FR-028**: The header/navbar MUST render immediately on page navigation. The Guided+Summary block and Saved Resumes table MUST show skeleton/loading states independently. Each block transitions to content when its respective API response arrives.
 - **FR-029**: Empty states MUST be context-aware: different messages for incomplete profile with no resumes, ready profile with no resumes, and no search results.
 - **FR-030**: If the profile is ready, a Generate Resume button MUST appear in the Saved Resumes section header.
 - **FR-031**: If the profile is incomplete, no Generate Resume button MUST appear in the Saved Resumes section header.
@@ -160,6 +161,8 @@ The landing page remains at root `/`. All SPA pages live under `/app/...`. After
 - **FR-042**: Copy actions (link, cover letter) MUST show a confirmation toast.
 - **FR-043**: The Generate Resume stepper (Vacancy → Settings → Review → Export) MUST preserve user-entered data when navigating between steps.
 - **FR-044**: Placeholder pages MUST exist for all My Profile sections, Generate Resume steps, and Admin page, showing a clear placeholder indicator.
+- **FR-045**: When an API call for User Home data fails, the system MUST display an inline error block within the page container, showing an error icon, a user-readable message, and a "Retry" button.
+- **FR-046**: The Guided+Summary section and the Saved Resumes Table MUST load data independently. A failure in one MUST NOT block the other from rendering.
 
 ### Key Entities
 
@@ -201,6 +204,16 @@ This feature MUST comply with the ResumAIner Constitution principles:
 - [ ] PostgreSQL with Flyway migrations
 - [ ] Docker Compose for deployment
 - [ ] Dev + Prod Spring profiles
+
+## Clarifications
+
+### Session 2026-06-06
+
+- Q: How should API failure errors be displayed on User Home? → A: Inline error block inside the page container with an icon, descriptive message, and a "Retry" button. Not a toast, not a full-screen overlay.
+- Q: What truncation approach for Vacancy and Company columns in the DataTable? → A: CSS-based truncation with max-width percentage (responsive). No fixed character count.
+- Q: How to handle partial API failure when one endpoint succeeds and the other fails? → A: Guided+Summary block and Saved Resumes table load independently. If one fails, only that block shows an inline error with retry. The other block remains functional.
+- Q: What search trigger for the Saved Resumes table? → A: Live debounce search (300ms) with a minimum of 3 characters before triggering a search request. Hard rule: fewer than 3 characters does not trigger search.
+- Q: What loading sequence on initial page load? → A: Header renders immediately (static). Guided+Summary block shows skeleton. Saved Resumes table shows skeleton as well. Each block transitions to content independently when its API response arrives.
 
 ## Assumptions
 

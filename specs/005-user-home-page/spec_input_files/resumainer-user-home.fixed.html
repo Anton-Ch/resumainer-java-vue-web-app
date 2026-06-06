@@ -1,0 +1,764 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResumAIner — Resume Workspace</title>
+<link rel="stylesheet" href="https://unpkg.com/primevue@3.52.0/resources/themes/lara-light-green/theme.css">
+<link rel="stylesheet" href="https://unpkg.com/primevue@3.52.0/resources/primevue.min.css">
+<link rel="stylesheet" href="https://unpkg.com/primeicons@7.0.0/primeicons.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F6F7FB;
+  --surface: #FFFFFF;
+  --surface-subtle: #FBFCFE;
+  --fg: #10233F;
+  --muted: #5D718B;
+  --muted-light: #8091A7;
+  --border: #E2E6EE;
+  --accent: #0F9D7A;
+  --accent-hover: #0C8467;
+  --blue: #2F6BFF;
+  --warning: #D97706;
+  --warning-bg: #FFF7ED;
+  --success-bg: #F2FFF9;
+  --error: #C2410C;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(16,35,63,0.06), 0 1px 2px rgba(16,35,63,0.04);
+  --shadow-md: 0 4px 12px rgba(16,35,63,0.08);
+  --font-display: 'Manrope', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{font-family:var(--font-body);background:var(--bg);color:var(--fg);min-height:100vh;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{color:var(--accent-hover)}
+.resumainer-nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:64px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:32px}
+.nav-logo{font-family:var(--font-display);font-weight:800;font-size:1.25rem;color:var(--fg);display:flex;align-items:center;gap:8px;cursor:pointer}
+.nav-logo .logo-icon{width:32px;height:32px;background:var(--accent);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem;font-weight:700}
+.nav-links{display:flex;gap:4px;flex:1}
+.nav-links a{padding:8px 16px;border-radius:var(--radius-sm);font-size:0.875rem;font-weight:500;color:var(--muted);transition:all .15s}
+.nav-links a:hover,.nav-links a.active{background:var(--surface-subtle);color:var(--fg)}
+.nav-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+.lang-btn{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s;font-family:var(--font-body)}
+.lang-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.lang-btn:hover:not(.active){border-color:var(--muted-light)}
+.logout-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:8px;border-radius:var(--radius-sm);transition:all .15s;font-size:1.1rem;display:flex;align-items:center}
+.logout-btn:hover{background:var(--surface-subtle);color:var(--error)}
+.main-content{max-width:1280px;margin:0 auto;padding:32px 24px}
+.page-h1{font-family:var(--font-display);font-size:1.75rem;font-weight:700;color:var(--fg);margin-bottom:24px}
+.guided-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:24px;box-shadow:var(--shadow)}
+.guided-block h2{font-family:var(--font-display);font-size:1.15rem;font-weight:600;margin-bottom:8px}
+.guided-block p{color:var(--muted);font-size:0.9rem;line-height:1.5;margin-bottom:16px}
+.guided-actions{display:flex;gap:12px;flex-wrap:wrap}
+.guided-actions .p-button{font-family:var(--font-body)}
+.summary-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);transition:box-shadow .15s}
+.summary-card:hover{box-shadow:var(--shadow-md)}
+.summary-card .card-label{font-size:0.8rem;font-weight:600;color:var(--muted-light);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px}
+.summary-card .card-value{font-family:var(--font-display);font-size:1.5rem;font-weight:700;color:var(--fg);margin-bottom:4px}
+.summary-card .card-value.needs-info{color:var(--warning)}
+.summary-card .card-hint{font-size:0.85rem;color:var(--muted);margin-bottom:8px}
+.summary-card .card-link{font-size:0.85rem;font-weight:500;color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.summary-card .card-link:hover{color:var(--accent-hover)}
+.summary-card.clickable{cursor:pointer}
+.summary-card.clickable:hover{border-color:var(--accent)}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.section-header h2{font-family:var(--font-display);font-size:1.15rem;font-weight:600}
+.table-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.search-field{position:relative;flex:1;min-width:200px;max-width:400px}
+.search-field .pi{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted-light);font-size:0.9rem}
+.search-field input{padding-left:36px;width:100%}
+.filter-group{display:flex;gap:8px;flex-wrap:wrap}
+.filter-group .p-multiselect,.filter-group .p-calendar{min-width:140px}
+.inline-checklist{list-style:none;padding:0}
+.inline-checklist li{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.9rem;cursor:pointer;color:var(--fg);transition:color .15s}
+.inline-checklist li:last-child{border-bottom:none}
+.inline-checklist li:hover{color:var(--accent)}
+.inline-checklist .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.inline-checklist .status-dot.done{background:var(--accent)}
+.inline-checklist .status-dot.missing{background:var(--warning)}
+.inline-checklist .status-text{font-size:0.8rem;font-weight:500;margin-left:auto}
+.inline-checklist .status-text.done{color:var(--accent)}
+.inline-checklist .status-text.missing{color:var(--warning)}
+.resume-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.resume-detail-grid .detail-label{font-size:0.8rem;color:var(--muted-light);font-weight:500}
+.resume-detail-grid .detail-value{font-size:0.9rem;color:var(--fg);font-weight:500}
+.public-link-row{background:var(--surface-subtle);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.public-link-row .link-text{font-family:ui-monospace,monospace;font-size:0.8rem;color:var(--muted);word-break:break-all;flex:1}
+.modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.cover-letter-block{margin-top:12px}
+.cover-letter-preview{background:var(--surface-subtle);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:0.85rem;line-height:1.6;color:var(--muted);white-space:pre-wrap;margin-top:8px;max-height:200px;overflow-y:auto}
+.delete-dialog-mask{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
+.delete-dialog{background:var(--surface);border-radius:var(--radius);padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.15)}
+.delete-dialog h3{font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:12px}
+.delete-dialog p{font-size:0.9rem;color:var(--muted);line-height:1.5;margin-bottom:20px}
+.delete-dialog .dialog-actions{display:flex;gap:8px;justify-content:flex-end}
+.empty-state{text-align:center;padding:48px 24px}
+.empty-state .empty-icon{font-size:3rem;color:var(--muted-light);margin-bottom:16px}
+.empty-state h3{font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:8px}
+.empty-state p{font-size:0.9rem;color:var(--muted);margin-bottom:20px}
+.loading-state{padding:24px}
+.guided-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.guided-card{background:var(--surface-subtle);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:box-shadow .15s}
+.guided-card.primary{background:var(--surface);border-color:var(--accent);border-width:2px}
+.guided-card h3{font-family:var(--font-display);font-size:1rem;font-weight:600;margin-bottom:4px}
+.guided-card p{font-size:0.85rem;color:var(--muted);margin-bottom:12px}
+.toast-container{position:fixed;top:80px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:8px}
+.toast-item{background:var(--surface);border-radius:var(--radius);padding:14px 20px;box-shadow:0 8px 24px rgba(0,0,0,0.12);display:flex;align-items:center;gap:12px;min-width:280px;max-width:400px;animation:slideIn .2s ease-out;border-left:4px solid var(--accent)}
+.toast-item.error{border-left-color:var(--error)}
+.toast-item .toast-close{background:none;border:none;color:var(--muted-light);cursor:pointer;margin-left:auto;padding:4px;font-size:0.8rem}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+.stepper-container{display:flex;align-items:center;gap:0;margin-bottom:32px;padding:0 4px}
+.stepper-step{display:flex;align-items:center;gap:8px;flex:1;position:relative}
+.stepper-step:not(:last-child)::after{content:'';flex:1;height:2px;background:var(--border);margin:0 8px}
+.stepper-step.active:not(:last-child)::after{background:var(--accent)}
+.stepper-step.completed:not(:last-child)::after{background:var(--accent)}
+.stepper-step .step-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;flex-shrink:0;background:var(--border);color:var(--muted-light)}
+.stepper-step.active .step-circle{background:var(--accent);color:#fff}
+.stepper-step.completed .step-circle{background:var(--accent);color:#fff}
+.stepper-step.disabled .step-circle{opacity:0.5}
+.stepper-step .step-label{font-size:0.8rem;font-weight:500;color:var(--muted);white-space:nowrap}
+.stepper-step.active .step-label{color:var(--fg);font-weight:600}
+.stepper-step.completed .step-label{color:var(--accent)}
+.stepper-step.disabled .step-label{opacity:0.5;cursor:not-allowed}
+.generate-content{text-align:center;padding:48px 24px}
+.generate-content .pi-spin{font-size:2.5rem;color:var(--accent);margin-bottom:16px}
+.generate-content p{font-size:0.9rem;color:var(--muted)}
+@media(max-width:900px){.summary-cards{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){
+  .resumainer-nav{padding:0 16px;gap:16px}
+  .nav-links{gap:2px}
+  .nav-links a{padding:6px 10px;font-size:0.8rem}
+  .main-content{padding:20px 16px}
+  .summary-cards{grid-template-columns:1fr}
+  .guided-cards{grid-template-columns:1fr}
+  .table-toolbar{flex-direction:column;align-items:stretch}
+  .search-field{max-width:none}
+  .filter-group{flex-wrap:wrap}
+  .filter-group .p-multiselect,.filter-group .p-calendar{min-width:calc(50% - 4px);flex:1}
+  .resume-detail-grid{grid-template-columns:1fr}
+  .public-link-row{flex-direction:column;align-items:stretch}
+  .section-header{flex-direction:column;align-items:flex-start}
+  .stepper-container{overflow-x:auto;padding-bottom:8px;gap:4px}
+  .stepper-step .step-label{font-size:0.7rem}
+  .page-h1{font-size:1.4rem}
+}
+.p-datatable-wrapper{overflow-x:auto}
+.p-datatable .p-datatable-thead>tr>th{background:var(--surface-subtle);font-size:0.8rem;font-weight:600;color:var(--muted-light);text-transform:uppercase;letter-spacing:0.03em;padding:12px 16px;border-color:var(--border);white-space:nowrap}
+.p-datatable .p-datatable-tbody>tr>td{padding:12px 16px;font-size:0.875rem;border-color:var(--border)}
+.p-datatable .p-datatable-tbody>tr{cursor:pointer;transition:background .1s}
+.p-datatable .p-datatable-tbody>tr:hover{background:var(--surface-subtle)}
+.p-paginator{background:transparent;padding:12px 0;border:none;font-size:0.85rem}
+.p-paginator .p-paginator-current{font-size:0.85rem;color:var(--muted)}
+.p-dialog-header{padding:20px 24px 0}
+.p-dialog-content{padding:20px 24px}
+.p-dialog-footer{padding:0 24px 20px}
+.p-card{box-shadow:var(--shadow);border-radius:var(--radius)}
+.p-button.p-button-success{background:var(--accent);border-color:var(--accent)}
+.p-button.p-button-success:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.p-button.p-button-danger{background:transparent;border-color:var(--error);color:var(--error)}
+.p-button.p-button-danger:hover{background:var(--error);color:#fff}
+.p-button.p-button-text{color:var(--muted)}
+.p-button.p-button-text:hover{background:var(--surface-subtle);color:var(--fg)}
+.p-inputtext{border-color:var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);padding:8px 12px}
+.p-inputtext:enabled:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(15,157,122,0.15)}
+.p-multiselect{border-color:var(--border);border-radius:var(--radius-sm);min-width:140px}
+.p-multiselect:not(.p-disabled).p-focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(15,157,122,0.15)}
+.p-multiselect-panel .p-multiselect-items .p-multiselect-item.p-highlight{background:rgba(15,157,122,0.1);color:var(--accent)}
+.p-multiselect .p-multiselect-label{font-size:0.85rem;padding:6px 12px;font-family:var(--font-body)}
+.p-calendar .p-inputtext{font-size:0.85rem}
+.p-accordion .p-accordion-header .p-accordion-header-link{padding:12px 16px;font-size:0.9rem;font-weight:500;font-family:var(--font-body);border-color:var(--border);background:var(--surface-subtle)}
+.p-accordion .p-accordion-content{padding:12px 16px;border-color:var(--border);font-size:0.85rem}
+.p-tag{font-size:0.75rem;padding:2px 8px;font-weight:500}
+.p-tag.p-tag-info{background:rgba(47,107,255,0.1);color:var(--blue)}
+.p-tag.p-tag-success{background:rgba(15,157,122,0.1);color:var(--accent)}
+.p-tag.p-tag-warning{background:rgba(217,119,6,0.1);color:var(--warning)}
+.p-skeleton{border-radius:var(--radius-sm);margin-bottom:8px}
+.p-progressbar{height:4px;background:var(--border);border-radius:2px}
+.p-progressbar .p-progressbar-value{background:var(--accent);border-radius:2px}
+</style>
+</head>
+<body>
+<div id="app">
+  <nav class="resumainer-nav">
+    <div class="nav-logo" @click="goHome">
+      <div class="logo-icon">R</div>
+      <span>ResumAIner</span>
+    </div>
+    <div class="nav-links">
+      <a v-for="item in navItems" :key="item.route" :href="'#'+item.route"
+         :class="{ active: $route.path === item.route }"
+         @click.prevent="$router.push(item.route)">
+        {{ t(item.label) }}
+      </a>
+    </div>
+    <div class="nav-right">
+      <button :class="['lang-btn', { active: lang === 'en' }]" @click="setLang('en')" :aria-label="t('nav.language') + ' EN'">EN</button>
+      <button :class="['lang-btn', { active: lang === 'ru' }]" @click="setLang('ru')" :aria-label="t('nav.language') + ' RU'">RU</button>
+      <button class="logout-btn" v-tooltip.top="t('nav.logout')" :aria-label="t('nav.logout')" @click="onLogout">
+        <i class="pi pi-sign-out"></i>
+      </button>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <router-view :key="$route.path"></router-view>
+  </div>
+
+  <div class="toast-container" v-if="toasts.length">
+    <div v-for="(toast, i) in toasts" :key="i" :class="['toast-item', toast.severity === 'error' ? 'error' : '']">
+      <i :class="['pi', toast.severity === 'success' ? 'pi-check-circle' : 'pi-exclamation-circle']" :style="{ color: toast.severity === 'success' ? 'var(--accent)' : 'var(--error)' }"></i>
+      <span>{{ toast.detail }}</span>
+      <button class="toast-close" @click="toasts.splice(i,1)"><i class="pi pi-times"></i></button>
+    </div>
+  </div>
+
+  <Teleport to="body">
+    <p-dialog v-model:visible="showDetailsModal" :header="t('resumeDetails.title')" :modal="true" :style="{ maxWidth: '580px', width: '100%' }" :dismissableMask="true" @hide="showDetailsModal=false">
+      <template v-if="selectedResume">
+        <div class="resume-detail-grid">
+          <div><div class="detail-label">{{ t('home.table.resumeTitle') }}</div><div class="detail-value">{{ selectedResume.title }}</div></div>
+          <div><div class="detail-label">{{ t('home.table.vacancy') }}</div><div class="detail-value">{{ selectedResume.vacancy }}</div></div>
+          <div><div class="detail-label">{{ t('home.table.company') }}</div><div class="detail-value">{{ selectedResume.company }}</div></div>
+          <div><div class="detail-label">{{ t('home.table.language') }}</div><div class="detail-value">{{ t(selectedResume.language === 'English' ? 'language.en' : 'language.ru') }}</div></div>
+          <div><div class="detail-label">{{ t('home.table.adaptationLevel') }}</div><div class="detail-value">{{ t('adaptation.'+selectedResume.adaptationLevel.toLowerCase()) }}</div></div>
+          <div><div class="detail-label">{{ t('home.table.created') }}</div><div class="detail-value">{{ selectedResume.created }}</div></div>
+        </div>
+        <div class="public-link-row">
+          <i class="pi pi-link" style="color:var(--muted-light);font-size:0.9rem"></i>
+          <span class="link-text">{{ selectedResume.publicLink }}</span>
+          <p-button :label="t('resumeDetails.copyLink')" icon="pi pi-copy" class="p-button-text p-button-sm" @click="copyLink(selectedResume.publicLink)"></p-button>
+        </div>
+        <p-accordion :activeIndex="coverLetterOpen ? 0 : undefined">
+          <p-accordion-tab :header="t('resumeDetails.coverLetter')">
+            <div class="cover-letter-block">
+              <template v-if="selectedResume.coverLetter">
+                <div class="cover-letter-preview">{{ selectedResume.coverLetter }}</div>
+                <p-button :label="t('resumeDetails.copyCoverLetter')" icon="pi pi-copy" class="p-button-text p-button-sm" @click="copyCoverLetter(selectedResume.coverLetter)" style="margin-top:8px"></p-button>
+              </template>
+              <p v-else style="color:var(--muted);font-size:0.9rem">{{ t('resumeDetails.noCoverLetter') }}</p>
+            </div>
+          </p-accordion-tab>
+        </p-accordion>
+        <div class="modal-actions">
+          <p-button :label="t('resumeDetails.view')" icon="pi pi-external-link" class="p-button-success" @click="viewResume(selectedResume)"></p-button>
+          <p-button :label="t('resumeDetails.downloadPdf')" icon="pi pi-download" class="p-button-success p-button-outlined" @click="downloadPdf(selectedResume)"></p-button>
+          <p-button :label="t('resumeDetails.delete')" icon="pi pi-trash" class="p-button-danger p-button-outlined" style="margin-left:auto" @click="confirmDelete(selectedResume)"></p-button>
+        </div>
+      </template>
+    </p-dialog>
+  </Teleport>
+
+  <Teleport to="body">
+    <div class="delete-dialog-mask" v-if="showDeleteDialog" @click.self="showDeleteDialog=false">
+      <div class="delete-dialog">
+        <h3>{{ t('deleteResume.title') }}</h3>
+        <p>{{ t('deleteResume.text') }}</p>
+        <div class="dialog-actions">
+          <p-button :label="t('deleteResume.cancel')" class="p-button-text" @click="showDeleteDialog=false"></p-button>
+          <p-button :label="t('deleteResume.confirm')" icon="pi pi-trash" class="p-button-danger" @click="doDelete"></p-button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/vue-router@4/dist/vue-router.global.prod.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/core/core.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/datatable/datatable.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/column/column.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/dialog/dialog.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/multiselect/multiselect.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/calendar/calendar.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/button/button.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/tag/tag.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/card/card.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/inputtext/inputtext.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/accordion/accordion.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/skeleton/skeleton.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/tooltip/tooltip.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/inputswitch/inputswitch.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/iconfield/iconfield.min.js"></script>
+<script src="https://unpkg.com/primevue@3.52.0/inputicon/inputicon.min.js"></script>
+
+<script>
+const { createApp, ref, reactive, computed, watch, onMounted, provide, inject, toRefs, nextTick } = Vue;
+
+const messages = {
+  en: {
+    'nav.home':'Home','nav.myProfile':'My Profile','nav.generateResume':'Generate Resume','nav.admin':'Admin','nav.language':'Language','nav.logout':'Log out',
+    'home.title':'Resume workspace',
+    'home.incomplete.title':'Complete your profile first','home.incomplete.text':'AI needs context about you. Add at least your contact details, work experience, and education. The more useful information you provide, the better resume you will get.','home.incomplete.cta':'Complete Profile',
+    'home.checklist.contact':'Contact details','home.checklist.experience':'Work experience','home.checklist.education':'Education','home.checklist.done':'Done','home.checklist.missing':'Missing',
+    'home.ready.title':'Your next best step','home.ready.generate.title':'Generate your next resume','home.ready.generate.hint':'Start with a vacancy and get an adapted resume.','home.ready.generate.cta':'Generate Resume','home.ready.generate.tooltip':'Make a new awesome resume for a specific vacancy.',
+    'home.ready.update.title':'Update your profile','home.ready.update.hint':'Use this when your experience, education, skills, or contact details change.','home.ready.update.cta':'Update Profile','home.ready.update.tooltip':'Edit the profile data used for future resumes.',
+    'home.summary.savedResumes':'Saved resumes','home.summary.profileStatus':'Profile status','home.summary.ready':'Ready','home.summary.needsInfo':'Needs info','home.summary.readyHint':'You can generate resumes now.','home.summary.needsInfoHint':'Add contact details, work experience, and education.','home.summary.updateProfile':'Update profile','home.summary.completeProfile':'Complete profile','home.summary.lastResume':'Last resume','home.summary.noLastResume':'No resumes yet',
+    'home.table.title':'Saved resumes','home.table.searchPlaceholder':'Search by title, vacancy, or company','home.table.search':'Search','home.table.resumeTitle':'Resume title','home.table.vacancy':'Vacancy','home.table.company':'Company','home.table.language':'Language','home.table.adaptationLevel':'Adaptation level','home.table.created':'Created','home.table.loading':'Loading resumes. Please wait.','home.table.emptyTitle':'No resumes yet','home.table.noResultsTitle':'No resumes found','home.table.noResultsText':'Try another search or change filters.','home.table.pageReport':'Showing {first} to {last} of {totalRecords}','home.table.mobilePageReport':'Page {current} of {totalPages}',
+    'language.en':'English','language.ru':'Russian','adaptation.minimal':'Minimal','adaptation.balanced':'Balanced','adaptation.maximum':'Maximum',
+    'resumeDetails.title':'Resume details','resumeDetails.publicLink':'Public link','resumeDetails.view':'View','resumeDetails.downloadPdf':'Download PDF','resumeDetails.copyLink':'Copy link','resumeDetails.delete':'Delete','resumeDetails.coverLetter':'Cover letter','resumeDetails.copyCoverLetter':'Copy cover letter','resumeDetails.noCoverLetter':'No cover letter for this resume.','resumeDetails.copied':'Copied.','resumeDetails.linkCopied':'Link copied.','resumeDetails.coverLetterCopied':'Cover letter copied.',
+    'deleteResume.title':'Delete resume?','deleteResume.text':'This resume will no longer be available from your workspace or public link.','deleteResume.cancel':'Cancel','deleteResume.confirm':'Delete','deleteResume.success':'Resume deleted.',
+    'generate.steps.vacancy':'Vacancy','generate.steps.settings':'Settings','generate.steps.review':'Review','generate.steps.export':'Export','generate.disabledTooltip':'Generate a resume first.','generate.loadingTitle':'Generating your resume...','generate.loadingText':'This may take a moment. Please keep this page open.',
+    'placeholder.title':'Placeholder page','placeholder.text':'This page is a placeholder for future work.','placeholder.back':'Back to Home'
+  },
+  ru: {
+    'nav.home':'Главная','nav.myProfile':'Профиль','nav.generateResume':'Создать резюме','nav.admin':'Админ','nav.language':'Язык','nav.logout':'Выйти',
+    'home.title':'Рабочий центр',
+    'home.incomplete.title':'Сначала заполни профиль','home.incomplete.text':'ИИ нужен контекст о тебе. Добавь хотя бы контакты, опыт работы и образование. Чем больше полезной информации ты укажешь, тем точнее получится резюме.','home.incomplete.cta':'Заполнить профиль',
+    'home.checklist.contact':'Контакты','home.checklist.experience':'Опыт работы','home.checklist.education':'Образование','home.checklist.done':'Готово','home.checklist.missing':'Не заполнено',
+    'home.ready.title':'Следующий лучший шаг','home.ready.generate.title':'Создай новое резюме','home.ready.generate.hint':'Начни с вакансии и получи адаптированное резюме.','home.ready.generate.cta':'Создать резюме','home.ready.generate.tooltip':'Создать сильное резюме под конкретную вакансию.',
+    'home.ready.update.title':'Обнови профиль','home.ready.update.hint':'Используй, если изменились опыт, образование, навыки или контакты.','home.ready.update.cta':'Обновить профиль','home.ready.update.tooltip':'Изменить данные, которые будут использоваться в будущих резюме.',
+    'home.summary.savedResumes':'Сохранённые резюме','home.summary.profileStatus':'Статус профиля','home.summary.ready':'Готов','home.summary.needsInfo':'Нужно заполнить','home.summary.readyHint':'Теперь можно создавать резюме.','home.summary.needsInfoHint':'Добавь контакты, опыт работы и образование.','home.summary.updateProfile':'Обновить профиль','home.summary.completeProfile':'Заполнить профиль','home.summary.lastResume':'Последнее резюме','home.summary.noLastResume':'Резюме пока нет',
+    'home.table.title':'Сохранённые резюме','home.table.searchPlaceholder':'Найти по названию, вакансии или компании','home.table.search':'Найти','home.table.resumeTitle':'Название резюме','home.table.vacancy':'Вакансия','home.table.company':'Компания','home.table.language':'Язык','home.table.adaptationLevel':'Уровень адаптации','home.table.created':'Создано','home.table.loading':'Загружаем резюме. Подожди немного.','home.table.emptyTitle':'Резюме пока нет','home.table.noResultsTitle':'Ничего не найдено','home.table.noResultsText':'Попробуй другой запрос или измени фильтры.','home.table.pageReport':'Показано {first}–{last} из {totalRecords}','home.table.mobilePageReport':'Страница {current} из {totalPages}',
+    'language.en':'Английский','language.ru':'Русский','adaptation.minimal':'Минимальная','adaptation.balanced':'Сбалансированная','adaptation.maximum':'Максимальная',
+    'resumeDetails.title':'Детали резюме','resumeDetails.publicLink':'Публичная ссылка','resumeDetails.view':'Открыть','resumeDetails.downloadPdf':'Скачать PDF','resumeDetails.copyLink':'Скопировать ссылку','resumeDetails.delete':'Удалить','resumeDetails.coverLetter':'Сопроводительное письмо','resumeDetails.copyCoverLetter':'Скопировать письмо','resumeDetails.noCoverLetter':'Для этого резюме сопроводительное письмо не создано.','resumeDetails.copied':'Скопировано.','resumeDetails.linkCopied':'Ссылка скопирована.','resumeDetails.coverLetterCopied':'Сопроводительное письмо скопировано.',
+    'deleteResume.title':'Удалить резюме?','deleteResume.text':'Это резюме исчезнет из рабочего центра, а публичная ссылка перестанет работать.','deleteResume.cancel':'Отмена','deleteResume.confirm':'Удалить','deleteResume.success':'Резюме удалено.',
+    'generate.steps.vacancy':'Вакансия','generate.steps.settings':'Настройки','generate.steps.review':'Проверка','generate.steps.export':'Экспорт','generate.disabledTooltip':'Сначала создай резюме.','generate.loadingTitle':'Создаём резюме...','generate.loadingText':'Это может занять немного времени. Не закрывай страницу.',
+    'placeholder.title':'Страница-заглушка','placeholder.text':'Это страница-заглушка для будущей работы.','placeholder.back':'На главную'
+  }
+};
+
+const mockResumes = reactive([
+  { id:1, title:'Senior Frontend Engineer — Google', vacancy:'Senior Frontend Engineer', company:'Google LLC', language:'English', adaptationLevel:'Maximum', created:'2025-12-31', publicLink:'https://resumainer.example/john.doe/sfeg-2025', coverLetter:'Dear Hiring Manager,\n\nI am writing to express my strong interest in the Senior Frontend Engineer position at Google. With over 8 years of experience building scalable web applications and a deep expertise in React, TypeScript, and performance optimization, I am confident I can make an immediate contribution to your team.\n\nIn my current role at a fast-growing SaaS company, I led the migration of a legacy Angular app to React, resulting in a 40% improvement in page load times and a 25% reduction in bounce rate. I also established a component library that is now used by 3 product teams.\n\nI am particularly excited about Google\'s commitment to web standards and performance. I would welcome the opportunity to discuss how my experience aligns with your needs.\n\nBest regards,\nJohn Doe' },
+  { id:2, title:'Full-Stack Python Developer — Yandex', vacancy:'Full-Stack Developer (Python+React)', company:'Yandex Technologies', language:'Russian', adaptationLevel:'Balanced', created:'2025-12-28', publicLink:'https://resumainer.example/john.doe/fspy-2025', coverLetter:'Уважаемая команда Yandex,\n\nЯ пишу, чтобы выразить свой интерес к позиции Full-Stack разработчика. Имею более 6 лет опыта в разработке на Python и React, включая работу с высоконагруженными системами.\n\nВ своей текущей роли я разработал микросервисную архитектуру для обработки 1 млн запросов в день, что повысило надёжность системы до 99.9%.\n\nБуду рад обсудить детали на собеседовании.\n\nС уважением,\nИван Петров' },
+  { id:3, title:'Product Designer — Figma', vacancy:'Senior Product Designer', company:'Figma Inc.', language:'English', adaptationLevel:'Maximum', created:'2025-12-20', publicLink:'https://resumainer.example/john.doe/pd-figma-2025', coverLetter:'Dear Figma Team,\n\nI have been an avid Figma user since 2018 and would be thrilled to join the company that shaped modern product design. My 7 years of experience designing developer tools and design systems align perfectly with this role.\n\nI led the redesign of a B2B SaaS platform that increased user retention by 35% and reduced support tickets by 50% through clearer navigation and information architecture.' },
+  { id:4, title:'Backend Engineer — Stripe', vacancy:'Backend Software Engineer', company:'Stripe Payments Europe Ltd', language:'English', adaptationLevel:'Balanced', created:'2025-12-15', publicLink:'https://resumainer.example/john.doe/be-stripe-2025', coverLetter:'Dear Stripe Hiring Team,\n\nI am writing to apply for the Backend Software Engineer position. With expertise in distributed systems, Go, and PostgreSQL, I have built payment processing systems handling $50M+ in annual transaction volume.' },
+  { id:5, title:'ML Engineer — DeepMind', vacancy:'Machine Learning Engineer', company:'DeepMind Technologies (Alphabet)', language:'English', adaptationLevel:'Maximum', created:'2025-12-10', publicLink:'https://resumainer.example/john.doe/mle-dm-2025', coverLetter:'Dear DeepMind Team,\n\nI am a researcher and engineer with 5 years of experience in NLP and reinforcement learning. My work on efficient transformer architectures has been published at NeurIPS and ICML.\n\nI am particularly drawn to DeepMind\'s approach to fundamental AI research with real-world impact.' },
+  { id:6, title:'DevOps Lead — Cloudflare', vacancy:'Senior DevOps Engineer / SRE Lead', company:'Cloudflare Inc. (Global Infrastructure)', language:'English', adaptationLevel:'Balanced', created:'2025-12-05', publicLink:'https://resumainer.example/john.doe/devops-cf-2025', coverLetter:'Dear Cloudflare Team,\n\nWith 10 years of infrastructure experience and a passion for edge computing, I am excited about the opportunity to contribute to Cloudflare\'s global network. I have managed Kubernetes clusters spanning 3 regions serving 10M+ daily requests.' },
+  { id:7, title:'iOS Developer — Telegram', vacancy:'iOS Developer (Swift/UIKit)', company:'Telegram Messenger LLP', language:'Russian', adaptationLevel:'Minimal', created:'2025-11-28', publicLink:'https://resumainer.example/john.doe/ios-tg-2025', coverLetter:'Уважаемая команда Telegram,\n\nЯ iOS-разработчик с 5-летним опытом создания мессенджеров и социальных приложений. Участвовал в разработке приложения с 50M+ установок.\n\nОсобенно ценю подход Telegram к производительности и конфиденциальности пользователей.' },
+  { id:8, title:'Data Analyst — Avito', vacancy:'Data Analyst (Product Analytics)', company:'Avito (Internet Company)', language:'Russian', adaptationLevel:'Balanced', created:'2025-11-20', publicLink:'https://resumainer.example/john.doe/da-avito-2025', coverLetter:'' },
+  { id:9, title:'Frontend Tech Lead — Canva', vacancy:'Frontend Tech Lead (Design Tools)', company:'Canva Pty Ltd', language:'English', adaptationLevel:'Maximum', created:'2025-11-15', publicLink:'https://resumainer.example/john.doe/ftl-canva-2025', coverLetter:'Dear Canva Team,\n\nAs a frontend engineer who has built design tools for 6 years, Canva represents the perfect intersection of my skills and passion. I led the development of a real-time collaborative canvas editor serving 2M+ monthly active users.' }
+]);
+
+const { createRouter, createWebHashHistory } = VueRouter;
+
+const app = createApp({
+  setup() {
+    const lang = ref('en');
+    const showDetailsModal = ref(false);
+    const selectedResume = ref(null);
+    const showDeleteDialog = ref(false);
+    const resumeToDelete = ref(null);
+    const toasts = ref([]);
+    const coverLetterOpen = ref(false);
+    const isMobile = ref(window.innerWidth < 640);
+
+    const t = (key) => messages[lang.value]?.[key] || key;
+    const setLang = (l) => { lang.value = l; };
+
+    const navItems = [
+      { label: 'nav.home', route: '/home-ready' },
+      { label: 'nav.myProfile', route: '/profile/contact' },
+      { label: 'nav.generateResume', route: '/generate/vacancy' },
+      { label: 'nav.admin', route: '/admin' }
+    ];
+
+    const goHome = () => { router.push('/home-ready'); };
+
+    const onLogout = () => {
+      showToast('info', lang.value === 'ru' ? 'До встречи!' : 'See you soon!');
+    };
+
+    const showToast = (severity, detail) => {
+      toasts.value.push({ severity, detail });
+      setTimeout(() => { toasts.value.shift(); }, 4000);
+    };
+
+    const openResumeModal = (resume) => {
+      selectedResume.value = resume;
+      coverLetterOpen.value = false;
+      showDetailsModal.value = true;
+    };
+
+    const viewResume = (r) => { window.open(r.publicLink, '_blank'); };
+    const downloadPdf = (r) => {
+      showToast('success', lang.value === 'ru' ? 'PDF скачивается...' : 'Downloading PDF...');
+    };
+
+    const copyLink = async (link) => {
+      try {
+        await navigator.clipboard.writeText(link);
+        showToast('success', t('resumeDetails.linkCopied'));
+      } catch { showToast('error', lang.value === 'ru' ? 'Не удалось скопировать' : 'Failed to copy'); }
+    };
+
+    const copyCoverLetter = async (text) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('success', t('resumeDetails.coverLetterCopied'));
+      } catch { showToast('error', lang.value === 'ru' ? 'Не удалось скопировать' : 'Failed to copy'); }
+    };
+
+    const confirmDelete = (resume) => {
+      resumeToDelete.value = resume;
+      showDeleteDialog.value = true;
+    };
+
+    const doDelete = () => {
+      if (!resumeToDelete.value) return;
+      const idx = mockResumes.findIndex(r => r.id === resumeToDelete.value.id);
+      if (idx !== -1) mockResumes.splice(idx, 1);
+      showDeleteDialog.value = false;
+      showDetailsModal.value = false;
+      selectedResume.value = null;
+      resumeToDelete.value = null;
+      showToast('success', t('deleteResume.success'));
+    };
+
+    window.addEventListener('resize', () => {
+      isMobile.value = window.innerWidth < 640;
+    });
+
+    return {
+      lang, t, setLang, navItems, goHome, onLogout,
+      showDetailsModal, selectedResume, showDeleteDialog, resumeToDelete,
+      toasts, coverLetterOpen, isMobile,
+      openResumeModal, viewResume, downloadPdf, copyLink, copyCoverLetter,
+      confirmDelete, doDelete, showToast
+    };
+  }
+});
+
+app.use(primevue.config.default, { ripple: true });
+// PrimeVue 3 CDN globals are lowercase primevue.*
+app.component('p-datatable', primevue.datatable);
+app.component('p-column', primevue.column);
+app.component('p-dialog', primevue.dialog);
+app.component('p-multiselect', primevue.multiselect);
+app.component('p-calendar', primevue.calendar);
+app.component('p-button', primevue.button);
+app.component('p-tag', primevue.tag);
+app.component('p-card', primevue.card);
+app.component('p-inputtext', primevue.inputtext);
+app.component('p-accordion', primevue.accordion);
+app.component('p-accordion-tab', primevue.accordiontab);
+app.component('p-skeleton', primevue.skeleton);
+app.component('p-inputswitch', primevue.inputswitch);
+app.component('p-iconfield', primevue.iconfield);
+app.component('p-inputicon', primevue.inputicon);
+
+// PascalCase aliases for string templates if the prototype is later refactored.
+app.component('DataTable', primevue.datatable);
+app.component('Column', primevue.column);
+app.component('Dialog', primevue.dialog);
+app.component('MultiSelect', primevue.multiselect);
+app.component('Calendar', primevue.calendar);
+app.component('Button', primevue.button);
+app.component('Tag', primevue.tag);
+app.component('Card', primevue.card);
+app.component('InputText', primevue.inputtext);
+app.component('Accordion', primevue.accordion);
+app.component('AccordionTab', primevue.accordiontab);
+app.component('Skeleton', primevue.skeleton);
+app.component('InputSwitch', primevue.inputswitch);
+app.component('IconField', primevue.iconfield);
+app.component('InputIcon', primevue.inputicon);
+app.directive('tooltip', primevue.tooltip);
+
+const HomeReady = {
+  props: ['resumes', 'profileReady', 'hasResumes', 'loading'],
+  template: `
+    <div>
+      <h1 class="page-h1">{{ $root.t('home.title') }}</h1>
+      <div class="guided-block">
+        <h2>{{ $root.t('home.ready.title') }}</h2>
+        <p>{{ $root.t('home.ready.generate.hint') }}</p>
+        <div class="guided-cards">
+          <div class="guided-card primary">
+            <h3>{{ $root.t('home.ready.generate.title') }}</h3>
+            <p>{{ $root.t('home.ready.generate.hint') }}</p>
+            <p-button :label="$root.t('home.ready.generate.cta')" icon="pi pi-file-plus" class="p-button-success" v-tooltip.top="$root.t('home.ready.generate.tooltip')" @click="$router.push('/generate/vacancy')"></p-button>
+          </div>
+          <div class="guided-card">
+            <h3>{{ $root.t('home.ready.update.title') }}</h3>
+            <p>{{ $root.t('home.ready.update.hint') }}</p>
+            <p-button :label="$root.t('home.ready.update.cta')" icon="pi pi-user-edit" class="p-button-success p-button-outlined" v-tooltip.top="$root.t('home.ready.update.tooltip')" @click="$router.push('/profile/contact')"></p-button>
+          </div>
+        </div>
+      </div>
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="card-label">{{ $root.t('home.summary.savedResumes') }}</div>
+          <div class="card-value">{{ resumes.length }}</div>
+          <div class="card-hint">{{ $root.t('home.summary.readyHint') }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-label">{{ $root.t('home.summary.profileStatus') }}</div>
+          <div class="card-value">{{ $root.t('home.summary.ready') }}</div>
+          <div class="card-hint">{{ $root.t('home.summary.readyHint') }}</div>
+          <a class="card-link" @click="$router.push('/profile/contact')"><i class="pi pi-pencil"></i> {{ $root.t('home.summary.updateProfile') }}</a>
+        </div>
+        <div class="summary-card clickable" @click="openLastResume">
+          <div class="card-label">{{ $root.t('home.summary.lastResume') }}</div>
+          <div v-if="resumes.length" class="card-value" style="font-size:0.9rem;font-weight:600;font-family:var(--font-body)">{{ resumes[0].title }}</div>
+          <div v-if="resumes.length" class="card-hint">{{ resumes[0].created }}</div>
+          <div v-else><div class="card-value" style="font-size:1rem;font-weight:600">{{ $root.t('home.summary.noLastResume') }}</div></div>
+        </div>
+      </div>
+      <div class="section-header">
+        <h2>{{ $root.t('home.table.title') }}</h2>
+        <p-button :label="$root.t('home.ready.generate.cta')" icon="pi pi-plus" class="p-button-success p-button-outlined" v-tooltip.top="$root.t('home.ready.generate.tooltip')" @click="$router.push('/generate/vacancy')"></p-button>
+      </div>
+      <ResumeTable :resumes="resumes" :lang="$root.lang" :t="$root.t" :isMobile="$root.isMobile" @openResume="(r)=>$root.openResumeModal(r)" />
+    </div>
+  `,
+  methods: {
+    openLastResume() {
+      if (this.resumes && this.resumes.length) this.$root.openResumeModal(this.resumes[0]);
+    }
+  }
+};
+
+const HomeIncomplete = {
+  props: ['resumes', 'profileReady', 'hasResumes', 'loading'],
+  template: `
+    <div>
+      <h1 class="page-h1">{{ $root.t('home.title') }}</h1>
+      <div class="guided-block">
+        <h2>{{ $root.t('home.incomplete.title') }}</h2>
+        <p>{{ $root.t('home.incomplete.text') }}</p>
+        <div class="guided-actions">
+          <p-button :label="$root.t('home.incomplete.cta')" icon="pi pi-user-edit" class="p-button-success" @click="$router.push('/profile/contact')"></p-button>
+        </div>
+        <ul class="inline-checklist" style="margin-top:16px">
+          <li @click="$router.push('/profile/contact')">
+            <span class="status-dot" :class="profileData.contactComplete ? 'done' : 'missing'"></span>
+            <span>{{ $root.t('home.checklist.contact') }}</span>
+            <span class="status-text" :class="profileData.contactComplete ? 'done' : 'missing'">{{ profileData.contactComplete ? $root.t('home.checklist.done') : $root.t('home.checklist.missing') }}</span>
+          </li>
+          <li @click="$router.push('/profile/experience')">
+            <span class="status-dot" :class="profileData.hasWorkExperience ? 'done' : 'missing'"></span>
+            <span>{{ $root.t('home.checklist.experience') }}</span>
+            <span class="status-text" :class="profileData.hasWorkExperience ? 'done' : 'missing'">{{ profileData.hasWorkExperience ? $root.t('home.checklist.done') : $root.t('home.checklist.missing') }}</span>
+          </li>
+          <li @click="$router.push('/profile/education')">
+            <span class="status-dot" :class="profileData.hasEducation ? 'done' : 'missing'"></span>
+            <span>{{ $root.t('home.checklist.education') }}</span>
+            <span class="status-text" :class="profileData.hasEducation ? 'done' : 'missing'">{{ profileData.hasEducation ? $root.t('home.checklist.done') : $root.t('home.checklist.missing') }}</span>
+          </li>
+        </ul>
+      </div>
+      <div class="summary-cards">
+        <div class="summary-card"><div class="card-label">{{ $root.t('home.summary.savedResumes') }}</div><div class="card-value">0</div><div class="card-hint">{{ $root.t('home.summary.needsInfoHint') }}</div></div>
+        <div class="summary-card"><div class="card-label">{{ $root.t('home.summary.profileStatus') }}</div><div class="card-value needs-info">{{ $root.t('home.summary.needsInfo') }}</div><div class="card-hint">{{ $root.t('home.summary.needsInfoHint') }}</div><a class="card-link" @click="$router.push('/profile/contact')"><i class="pi pi-pencil"></i> {{ $root.t('home.summary.completeProfile') }}</a></div>
+        <div class="summary-card"><div class="card-label">{{ $root.t('home.summary.lastResume') }}</div><div class="card-value" style="font-size:1rem;font-weight:600">{{ $root.t('home.summary.noLastResume') }}</div></div>
+      </div>
+      <div class="section-header"><h2>{{ $root.t('home.table.title') }}</h2></div>
+      <div class="empty-state">
+        <div class="empty-icon"><i class="pi pi-file"></i></div>
+        <h3>{{ $root.t('home.table.emptyTitle') }}</h3>
+        <p>{{ $root.t('home.incomplete.text') }}</p>
+        <p-button :label="$root.t('home.incomplete.cta')" icon="pi pi-user-edit" class="p-button-success" @click="$router.push('/profile/contact')"></p-button>
+      </div>
+    </div>
+  `,
+  data() { return { profileData: { contactComplete: false, hasWorkExperience: false, hasEducation: false } } }
+};
+
+const HomeEmpty = {
+  props: ['resumes', 'profileReady', 'hasResumes', 'loading'],
+  template: `
+    <div>
+      <h1 class="page-h1">{{ $root.t('home.title') }}</h1>
+      <div class="guided-block">
+        <h2>{{ $root.t('home.ready.title') }}</h2>
+        <p>{{ $root.t('home.ready.generate.hint') }}</p>
+        <div class="guided-cards">
+          <div class="guided-card primary"><h3>{{ $root.t('home.ready.generate.title') }}</h3><p>{{ $root.t('home.ready.generate.hint') }}</p><p-button :label="$root.t('home.ready.generate.cta')" icon="pi pi-file-plus" class="p-button-success" v-tooltip.top="$root.t('home.ready.generate.tooltip')" @click="$router.push('/generate/vacancy')"></p-button></div>
+          <div class="guided-card"><h3>{{ $root.t('home.ready.update.title') }}</h3><p>{{ $root.t('home.ready.update.hint') }}</p><p-button :label="$root.t('home.ready.update.cta')" icon="pi pi-user-edit" class="p-button-success p-button-outlined" v-tooltip.top="$root.t('home.ready.update.tooltip')" @click="$router.push('/profile/contact')"></p-button></div>
+        </div>
+      </div>
+      <div class="summary-cards">
+        <div class="summary-card"><div class="card-label">{{ $root.t('home.summary.savedResumes') }}</div><div class="card-value">0</div><div class="card-hint">{{ $root.t('home.summary.readyHint') }}</div></div>
+        <div class="summary-card"><div class="card-label">{{ $root.t('home.summary.profileStatus') }}</div><div class="card-value">{{ $root.t('home.summary.ready') }}</div><div class="card-hint">{{ $root.t('home.summary.readyHint') }}</div><a class="card-link" @click="$router.push('/profile/contact')"><i class="pi pi-pencil"></i> {{ $root.t('home.summary.updateProfile') }}</a></div>
+        <div class="summary-card"><div class="card-label">{{ $root.t('home.summary.lastResume') }}</div><div class="card-value" style="font-size:1rem;font-weight:600">{{ $root.t('home.summary.noLastResume') }}</div></div>
+      </div>
+      <div class="section-header"><h2>{{ $root.t('home.table.title') }}</h2><p-button :label="$root.t('home.ready.generate.cta')" icon="pi pi-plus" class="p-button-success p-button-outlined" v-tooltip.top="$root.t('home.ready.generate.tooltip')" @click="$router.push('/generate/vacancy')"></p-button></div>
+      <div class="empty-state">
+        <div class="empty-icon"><i class="pi pi-file"></i></div>
+        <h3>{{ $root.t('home.table.emptyTitle') }}</h3>
+        <p>{{ $root.t('home.incomplete.text') }}</p>
+        <p-button :label="$root.t('home.ready.generate.cta')" icon="pi pi-file-plus" class="p-button-success" @click="$router.push('/generate/vacancy')"></p-button>
+      </div>
+    </div>
+  `
+};
+
+const HomeLoading = {
+  props: ['resumes', 'profileReady', 'hasResumes', 'loading'],
+  template: `
+    <div>
+      <h1 class="page-h1">{{ $root.t('home.title') }}</h1>
+      <div class="guided-block">
+        <p-skeleton width="40%" height="24px" borderRadius="6px"></p-skeleton>
+        <p-skeleton width="70%" height="16px" style="margin-top:12px"></p-skeleton>
+        <div style="display:flex;gap:12px;margin-top:16px"><p-skeleton width="160px" height="36px" borderRadius="6px"></p-skeleton><p-skeleton width="140px" height="36px" borderRadius="6px"></p-skeleton></div>
+      </div>
+      <div class="summary-cards">
+        <div v-for="i in 3" :key="i" class="summary-card">
+          <p-skeleton width="60%" height="14px" borderRadius="4px"></p-skeleton>
+          <p-skeleton width="40%" height="28px" borderRadius="6px" style="margin-top:8px"></p-skeleton>
+          <p-skeleton width="80%" height="14px" borderRadius="4px" style="margin-top:8px"></p-skeleton>
+        </div>
+      </div>
+      <div class="section-header"><p-skeleton width="180px" height="20px" borderRadius="4px"></p-skeleton><p-skeleton width="140px" height="36px" borderRadius="6px"></p-skeleton></div>
+      <p-datatable :value="[]" :loading="true">
+        <p-column field="title" :header="$root.t('home.table.resumeTitle')"><template #loading><p-skeleton width="70%" height="16px" borderRadius="4px"></p-skeleton></template></p-column>
+        <p-column field="vacancy" :header="$root.t('home.table.vacancy')"><template #loading><p-skeleton width="60%" height="16px" borderRadius="4px"></p-skeleton></template></p-column>
+        <p-column field="company" :header="$root.t('home.table.company')"><template #loading><p-skeleton width="50%" height="16px" borderRadius="4px"></p-skeleton></template></p-column>
+        <p-column field="language" :header="$root.t('home.table.language')"><template #loading><p-skeleton width="60px" height="20px" borderRadius="4px"></p-skeleton></template></p-column>
+        <p-column field="adaptationLevel" :header="$root.t('home.table.adaptationLevel')"><template #loading><p-skeleton width="70px" height="20px" borderRadius="4px"></p-skeleton></template></p-column>
+        <p-column field="created" :header="$root.t('home.table.created')"><template #loading><p-skeleton width="80px" height="16px" borderRadius="4px"></p-skeleton></template></p-column>
+      </p-datatable>
+    </div>
+  `
+};
+
+const ResumeTable = {
+  props: ['resumes', 'lang', 't', 'isMobile'],
+  emits: ['openResume'],
+  setup(props, { emit }) {
+    const filters = reactive({ global: null, language: null, adaptationLevel: null, created: null });
+    const globalSearch = ref('');
+    const selectedLanguages = ref(['English', 'Russian']);
+    const selectedAdaptations = ref(['Minimal', 'Balanced', 'Maximum']);
+    const dateFilter = ref(null);
+    const sortField = ref('created');
+    const sortOrder = ref(-1);
+    const tableLoading = ref(false);
+    const languageOptions = ref(['English', 'Russian']);
+    const adaptationOptions = ref(['Minimal', 'Balanced', 'Maximum']);
+
+    const filteredResumes = computed(() => {
+      let result = [...props.resumes];
+      if (globalSearch.value && globalSearch.value.length >= 2) {
+        const q = globalSearch.value.toLowerCase();
+        result = result.filter(r => r.title.toLowerCase().includes(q) || r.company.toLowerCase().includes(q) || r.vacancy.toLowerCase().includes(q));
+      }
+      if (selectedLanguages.value && selectedLanguages.value.length < 2) result = result.filter(r => selectedLanguages.value.includes(r.language));
+      if (selectedAdaptations.value && selectedAdaptations.value.length < 3) result = result.filter(r => selectedAdaptations.value.includes(r.adaptationLevel));
+      if (dateFilter.value) {
+        const d = dateFilter.value instanceof Date ? dateFilter.value : new Date(dateFilter.value);
+        const ds = d.toISOString().split('T')[0];
+        result = result.filter(r => r.created === ds);
+      }
+      return result;
+    });
+
+    const onSearch = () => { tableLoading.value = true; setTimeout(() => { tableLoading.value = false; }, 300); };
+    const searchOnEnter = (e) => { if (e.key === 'Enter') onSearch(); };
+    const openResume = (resume) => { emit('openResume', resume); };
+    const getAdaptationSeverity = (level) => { switch(level) { case 'Maximum': return 'success'; case 'Balanced': return 'info'; case 'Minimal': return 'warning'; default: return 'info'; } };
+    const getLanguageTag = (lang) => lang === 'English' ? 'EN' : 'RU';
+
+    return { filters, globalSearch, selectedLanguages, selectedAdaptations, dateFilter, sortField, sortOrder, tableLoading, languageOptions, adaptationOptions, filteredResumes, onSearch, searchOnEnter, openResume, getAdaptationSeverity, getLanguageTag };
+  },
+  template: `
+    <div>
+      <div class="table-toolbar">
+        <div class="search-field"><i class="pi pi-search"></i><p-inputtext v-model="globalSearch" :placeholder="$root.t('home.table.searchPlaceholder')" @keyup="searchOnEnter" style="width:100%"></p-inputtext></div>
+        <div class="filter-group">
+          <p-multiselect v-model="selectedLanguages" :options="languageOptions" :placeholder="$root.t('home.table.language')" :maxSelectedLabels="2" style="min-width:140px"></p-multiselect>
+          <p-multiselect v-model="selectedAdaptations" :options="adaptationOptions" :placeholder="$root.t('home.table.adaptationLevel')" :maxSelectedLabels="3" style="min-width:150px"></p-multiselect>
+          <p-calendar v-model="dateFilter" :placeholder="$root.t('home.table.created')" dateFormat="yy-mm-dd" :showIcon="true" style="min-width:140px"></p-calendar>
+          <p-button :label="$root.t('home.table.search')" icon="pi pi-search" class="p-button-success" @click="onSearch"></p-button>
+        </div>
+      </div>
+      <p-datatable :value="filteredResumes" :paginator="true" :rows="10" :rowsPerPageOptions="[10,20,50]" :sortField="sortField" :sortOrder="sortOrder" @sort="(e)=>{sortField=e.sortField;sortOrder=e.sortOrder}" :loading="tableLoading" dataKey="id" :removableSort="true" :currentPageReportTemplate="$root.t('home.table.pageReport')" paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown" :responsiveLayout="isMobile ? 'scroll' : 'stack'" @row-click="(e)=>openResume(e.data)" :globalFilterFields="['title','company','vacancy']" :emptyMessage="$root.t('home.table.noResultsTitle')">
+        <p-column field="title" :header="$root.t('home.table.resumeTitle')" :sortable="true"></p-column>
+        <p-column field="vacancy" :header="$root.t('home.table.vacancy')" :sortable="true"><template #body="s"><span v-tooltip.top="s.data.vacancy" style="cursor:help;display:block;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.data.vacancy }}</span></template></p-column>
+        <p-column field="company" :header="$root.t('home.table.company')" :sortable="true"><template #body="s"><span v-tooltip.top="s.data.company" style="cursor:help;display:block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.data.company }}</span></template></p-column>
+        <p-column field="language" :header="$root.t('home.table.language')" :sortable="true"><template #body="s"><p-tag :value="getLanguageTag(s.data.language)" :severity="s.data.language === 'English' ? 'info' : 'success'" style="font-weight:600"></p-tag></template></p-column>
+        <p-column field="adaptationLevel" :header="$root.t('home.table.adaptationLevel')" :sortable="true"><template #body="s"><p-tag :value="$root.t('adaptation.'+s.data.adaptationLevel.toLowerCase())" :severity="getAdaptationSeverity(s.data.adaptationLevel)"></p-tag></template></p-column>
+        <p-column field="created" :header="$root.t('home.table.created')" :sortable="true"></p-column>
+      </p-datatable>
+    </div>
+  `
+};
+
+const GeneratePlaceholder = {
+  template: `
+    <div>
+      <h1 class="page-h1">{{ $root.t('nav.generateResume') }}</h1>
+      <div class="guided-block">
+        <div class="stepper-container">
+          <div v-for="(step, i) in steps" :key="i" :class="['stepper-step', step.state]">
+            <div class="step-circle" v-tooltip.top="step.state === 'disabled' ? $root.t('generate.disabledTooltip') : ''"><template v-if="step.state==='completed'"><i class="pi pi-check" style="font-size:0.75rem"></i></template><template v-else>{{ i+1 }}</template></div>
+            <span class="step-label">{{ step.label }}</span>
+          </div>
+        </div>
+        <div class="generate-content">
+          <div v-if="generating">
+            <i class="pi pi-spin pi-spinner" style="font-size:2.5rem;color:var(--accent);margin-bottom:16px;display:block"></i>
+            <h3 style="font-family:var(--font-display);font-size:1.1rem;margin-bottom:8px">{{ $root.t('generate.loadingTitle') }}</h3>
+            <p style="color:var(--muted);font-size:0.9rem">{{ $root.t('generate.loadingText') }}</p>
+          </div>
+          <div v-else>
+            <p style="color:var(--muted);font-size:0.9rem;margin-bottom:16px">{{ $root.t('placeholder.text') }}</p>
+            <p-button :label="$root.t('home.ready.generate.cta')" icon="pi pi-file-plus" class="p-button-success" @click="startGenerate"></p-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  data() { return { currentStep: 0, generating: false, steps: [] }; },
+  methods: {
+    startGenerate() {
+      this.generating = true;
+      this.steps[0].state = 'completed'; this.steps[1].state = 'completed'; this.steps[2].state = 'active';
+      setTimeout(() => { this.steps[2].state = 'completed'; this.steps[3].state = 'active'; this.generating = false; }, 3000);
+    }
+  },
+  mounted() {
+    this.steps = [
+      { label: this.$root.t('generate.steps.vacancy'), state: 'active' },
+      { label: this.$root.t('generate.steps.settings'), state: 'disabled' },
+      { label: this.$root.t('generate.steps.review'), state: 'disabled' },
+      { label: this.$root.t('generate.steps.export'), state: 'disabled' }
+    ];
+  }
+};
+
+const PlaceholderPage = {
+  template: `
+    <div>
+      <h1 class="page-h1">{{ $root.t('placeholder.title') }}</h1>
+      <div class="guided-block" style="text-align:center;padding:48px 24px">
+        <i class="pi pi-building" style="font-size:3rem;color:var(--muted-light);margin-bottom:16px;display:block"></i>
+        <p style="color:var(--muted);font-size:1rem;margin-bottom:24px">{{ $root.t('placeholder.text') }}</p>
+        <p-button :label="$root.t('placeholder.back')" icon="pi pi-arrow-left" class="p-button-success p-button-outlined" @click="$router.push('/home-ready')"></p-button>
+      </div>
+    </div>
+  `
+};
+
+const routes = [
+  { path: '/', redirect: '/home-ready' },
+  { path: '/home-ready', component: HomeReady, props: { resumes: mockResumes, profileReady: true, hasResumes: true, loading: false } },
+  { path: '/home-incomplete', component: HomeIncomplete, props: { resumes: [], profileReady: false, hasResumes: false, loading: false } },
+  { path: '/home-empty', component: HomeEmpty, props: { resumes: [], profileReady: true, hasResumes: false, loading: false } },
+  { path: '/home-loading', component: HomeLoading, props: { resumes: [], profileReady: true, hasResumes: false, loading: true } },
+  { path: '/profile/contact', component: PlaceholderPage },
+  { path: '/profile/experience', component: PlaceholderPage },
+  { path: '/profile/education', component: PlaceholderPage },
+  { path: '/profile/projects', component: PlaceholderPage },
+  { path: '/profile/courses', component: PlaceholderPage },
+  { path: '/profile/additional', component: PlaceholderPage },
+  { path: '/generate/vacancy', component: GeneratePlaceholder },
+  { path: '/generate/settings', component: GeneratePlaceholder },
+  { path: '/generate/review', component: GeneratePlaceholder },
+  { path: '/generate/export', component: GeneratePlaceholder },
+  { path: '/admin', component: PlaceholderPage }
+];
+
+const router = createRouter({ history: createWebHashHistory(), routes });
+app.use(router);
+app.mount('#app');
+</script>
+</body>
+</html>
