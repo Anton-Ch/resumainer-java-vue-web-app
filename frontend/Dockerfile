@@ -25,8 +25,8 @@ RUN npm run build
 # ---------- Stage 2: Runtime ----------
 FROM nginx:${NGINX_VERSION}
 
-# Copy built assets from build stage
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copy built assets from build stage — under /app/ subdirectory for SPA routing
+COPY --from=build /app/dist /usr/share/nginx/html/app
 
 # Copy custom nginx config (for SPA routing and API proxy)
 COPY nginx.conf /etc/nginx/conf.d/default.conf

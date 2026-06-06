@@ -10,26 +10,26 @@
 - [none]
 
 ## Relevant Decisions
-- [D1] The following technology decisions are mandatory and MUST NOT be changed without a governance amendment. Layer Technology Constraint Language Java 21 LTS Required Web Framework Spring MVC (no Spring Boot) Required Data Access Plain JDBC with custom thread-safe Connection Pool Required. No ORM, JPA, Hibernate, or Spring Data Database PostgreSQL (3NF normalized) Required Migrations Flyway (versioned SQL scripts) Required Frontend SPA Vue 3 (Composition API) + Vite + PrimeVue Required Landing Page Thymeleaf Required AI Integration OpenRouter API behind AiClientFactory interface Required. (Source: `.specify/memory/constitution.md`)
-- [D2] Performance and reliability are cross-cutting concerns that affect every layer from database to frontend rendering. Database Access : All database queries MUST use PreparedStatement to prevent SQL injection and enable query plan reuse. Raw string concatenation for SQL is forbidden. (Source: `.specify/memory/constitution.md`)
-- [D3] Status Active Why this is durable Adding infrastructure beans (DataSource, Flyway) to the Spring context breaks any test that loads @ContextConfiguration(classes = WebConfig.class) because the DataSource initialization requires a real PostgreSQL connection. Controller tests that don't need database access should use standalone MockMvc setup to avoid this dependency. (Source: `docs/memory/DECISIONS.md`)
+- [D1] The user experience MUST be consistent across all screens, languages, and interaction patterns. Every user-facing interaction follows the same rules. Internationalization : All user-facing strings MUST be externalized into resource files ( messages_en.properties , messages_ru.properties ) for both Thymeleaf (Landing Page) and Vue SPA. (Source: `.specify/memory/constitution.md`)
+- [D2] Status Active Why this is durable Adding infrastructure beans (DataSource, Flyway) to the Spring context breaks any test that loads @ContextConfiguration(classes = WebConfig.class) because the DataSource initialization requires a real PostgreSQL connection. Controller tests that don't need database access should use standalone MockMvc setup to avoid this dependency. (Source: `docs/memory/DECISIONS.md`)
 
 ## Active Architecture Constraints
 - [none]
 
 ## Accepted Deviations
-- [none]
+- [V1] Status : Active Why this is durable : When backend paginates with SQL LIMIT/OFFSET, PrimeVue DataTable MUST use :lazy=&quot;true&quot; . Client-side mode loads ALL records into browser memory and defeats server-side search/filter/sort. This mistake is easy to make (lazy is not the default) and hard to catch early. (Source: `docs/memory/DECISIONS.md`)
 
 ## Relevant Security Constraints
-- [S1] Security MUST be integrated into every feature from design through implementation. Security is not an afterthought. Password Storage : All passwords MUST be hashed using BCrypt. (Source: `.specify/memory/constitution.md`)
-- [S2] Milestone : Feature 003 (Vue Auth Page) reaches Spec + Plan + Tasks + Security Review complete. (Source: `docs/memory/WORKLOG.md`)
-- [S3] D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web .xml) | servlet , spring-mvc , jakarta-ee , tomcat , initialization , web .xml | DECISIONS .md | active D17 | Explicit Class .forName for JDBC driver in Tomcat webapps (Java 9 +) | tomcat ,jdbc,classloader,postgresql,driver,java-9,module-system,architecture | DECISIONS .md | active D2 | Maven Wrapper Must Be at Same Directory Level as pom .xml | maven , wrapper , build , project-structure , best-practice | DECISIONS .md | active D3 |... (Source: `docs/memory/INDEX.md`)
+- [S1] D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web .xml) | servlet , spring-mvc , jakarta-ee , tomcat , initialization , web .xml | DECISIONS .md | active D2 | Maven Wrapper Must Be at Same Directory Level as pom .xml | maven , wrapper , build , project-structure , best-practice | DECISIONS .md | active D3 | Docker Tomcat : Use bash /dev/tcp Instead of nc for TCP Health Checks | docker , tomcat , wait-for-it , networking ,... (Source: `docs/memory/INDEX.md`)
+- [S2] W1 | First Feature MVP Achieved : Hello World Tomcat | milestone , mvp , hello-world , docker , spring-mvc , tomcat | WORKLOG .md | active W2 | Second Feature MVP Achieved : Thymeleaf Landing Page | milestone , mvp , landing-page , thymeleaf , i18n , feature-002 , bilingual | WORKLOG .md | active W3 | Feature 003 Planning and Security Review Completed | milestone , feature-003 , vue-auth , planning , security-review , specification | WORKLOG .md... (Source: `docs/memory/INDEX.md`)
+- [S3] Status : Active Why this is durable : Feature 005 (User Home Page &amp; Resume Workspace) completed full planning cycle: spec → clarification → brainstorming → plan → research → data model → contracts → security review → component diagram → tasks. All 46 FRs, 11 SCs, 41 tasks, and 5 security findings documented. Tasks include [TDD], [SUBAGENT], and [REVIEW] execution markers. (Source: `docs/memory/WORKLOG.md`)
 
 ## Related Historical Lessons
-- [none]
+- [B1] Status Superseded-by-ComponentScan Symptoms @ControllerAdvice with @ExceptionHandler methods never gets invoked. Log shows: ControllerAdvice beans: none during DispatcherServlet init. 404 errors show Tomcat default page instead of custom Thymeleaf template. (Source: `docs/memory/BUGS.md`)
+- [B2] Status Active Symptoms Controller displays &quot;Active Profile: default&quot; even though spring.profiles.active=dev is set in application.properties. The @Value(&quot;${spring.profiles.active:default}&quot;) annotation resolves correctly, but Environment.getActiveProfiles() returns an empty array. Root Cause In pure Spring MVC (without Spring Boot), Environment.getActiveProfiles() is populated only through programmatic profile activation in a WebApplicationInitializer or ApplicationContextInitializer. (Source: `docs/memory/BUGS.md`)
 
 ## Conflict Warnings
-- [none]
+- [c] potentially stale memory surfaced from bugs / recurring bug patterns (`docs/memory/`) / template / 2026-05-31 - all spring stereotype annotations require explicit @bean in pure spring mvc (source: `docs/memory/bugs.md`)
 
 ## Retrieval Notes
 - Index entries considered: 10
