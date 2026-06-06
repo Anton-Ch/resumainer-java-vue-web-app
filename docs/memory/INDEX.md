@@ -44,6 +44,7 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - D16 | Controller tests: standalone MockMvc over full Spring context when no DB needed | testing,mockmvc,spring-mvc,controller,standalone,integration-testing | [DECISIONS.md](DECISIONS.md) | active
 - D17 | PrimeVue DataTable lazy mode for server-paginated APIs | primevue,vue3,datatable,lazy,pagination,frontend,best-practice | [DECISIONS.md](DECISIONS.md) | active
 - D18 | Independent block loading for resilient page architecture | architecture,dashboard,resilience,failure-isolation,frontend,ux | [DECISIONS.md](DECISIONS.md) | active
+- D19 | Maven compiler -parameters flag required in Spring MVC 6 for controller parameter name resolution | spring-mvc,maven,compiler,parameters,controller,request-param,configuration,java-21 | [DECISIONS.md](DECISIONS.md) | active
 
 ## Workflow
 - W1 | First Feature MVP Achieved: Hello World Tomcat | milestone, mvp, hello-world, docker, spring-mvc, tomcat | [WORKLOG.md](WORKLOG.md) | active
