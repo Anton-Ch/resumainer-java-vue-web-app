@@ -1,0 +1,27 @@
+{
+  "resumes": [
+    { "id": 1, "title": "Senior Frontend Engineer — Google", "vacancy": "Senior Frontend Engineer", "company": "Google LLC", "language": "English", "adaptationLevel": "Maximum", "created": "2025-12-31", "publicLink": "https://resumainer.example/john.doe/sfeg-2025", "hasCoverLetter": true },
+    { "id": 2, "title": "Full-Stack Python Developer — Yandex", "vacancy": "Full-Stack Developer (Python+React)", "company": "Yandex Technologies", "language": "Russian", "adaptationLevel": "Balanced", "created": "2025-12-28", "publicLink": "https://resumainer.example/john.doe/fspy-2025", "hasCoverLetter": true },
+    { "id": 3, "title": "Product Designer — Figma", "vacancy": "Senior Product Designer", "company": "Figma Inc.", "language": "English", "adaptationLevel": "Maximum", "created": "2025-12-20", "publicLink": "https://resumainer.example/john.doe/pd-figma-2025", "hasCoverLetter": true },
+    { "id": 4, "title": "Backend Engineer — Stripe", "vacancy": "Backend Software Engineer", "company": "Stripe Payments Europe Ltd", "language": "English", "adaptationLevel": "Balanced", "created": "2025-12-15", "publicLink": "https://resumainer.example/john.doe/be-stripe-2025", "hasCoverLetter": true },
+    { "id": 5, "title": "ML Engineer — DeepMind", "vacancy": "Machine Learning Engineer", "company": "DeepMind Technologies (Alphabet)", "language": "English", "adaptationLevel": "Maximum", "created": "2025-12-10", "publicLink": "https://resumainer.example/john.doe/mle-dm-2025", "hasCoverLetter": true },
+    { "id": 6, "title": "DevOps Lead — Cloudflare", "vacancy": "Senior DevOps Engineer / SRE Lead", "company": "Cloudflare Inc. (Global Infrastructure)", "language": "English", "adaptationLevel": "Balanced", "created": "2025-12-05", "publicLink": "https://resumainer.example/john.doe/devops-cf-2025", "hasCoverLetter": true },
+    { "id": 7, "title": "iOS Developer — Telegram", "vacancy": "iOS Developer (Swift/UIKit)", "company": "Telegram Messenger LLP", "language": "Russian", "adaptationLevel": "Minimal", "created": "2025-11-28", "publicLink": "https://resumainer.example/john.doe/ios-tg-2025", "hasCoverLetter": true },
+    { "id": 8, "title": "Data Analyst — Avito", "vacancy": "Data Analyst (Product Analytics)", "company": "Avito (Internet Company)", "language": "Russian", "adaptationLevel": "Balanced", "created": "2025-11-20", "publicLink": "https://resumainer.example/john.doe/da-avito-2025", "hasCoverLetter": false },
+    { "id": 9, "title": "Frontend Tech Lead — Canva", "vacancy": "Frontend Tech Lead (Design Tools)", "company": "Canva Pty Ltd", "language": "English", "adaptationLevel": "Maximum", "created": "2025-11-15", "publicLink": "https://resumainer.example/john.doe/ftl-canva-2025", "hasCoverLetter": true }
+  ],
+  "profileReady": true,
+  "profileData": {
+    "contactComplete": false,
+    "hasWorkExperience": false,
+    "hasEducation": false
+  },
+  "i18n": {
+    "languages": ["en", "ru"],
+    "default": "en"
+  },
+  "user": {
+    "username": "john.doe",
+    "role": "ADMIN"
+  }
+}
