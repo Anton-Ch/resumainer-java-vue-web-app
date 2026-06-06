@@ -569,3 +569,19 @@ mockMvc = standaloneSetup(controller).build();
 - Gained: partial page functionality during API failures, independent loading
 - Made harder: more API calls (two instead of one), more complex state management
 - Reconsider: If blocks share the same data source, a single endpoint is simpler and appropriate
+
+---
+
+### 2026-06-06 — Maven compiler -parameters flag required in Spring MVC 6 for controller parameter name resolution
+
+**Status**: Active
+
+**Why this is durable**: Spring Framework 6.x requires the Java compiler `-parameters` flag to discover method parameter names via reflection. Without it, `@RequestParam`, `@PathVariable`, and `@SessionAttribute` annotations that omit explicit `name`/`value` attributes fail with: "Name for argument type not specified, and parameter name information not available via reflection." This affects every new controller added to the project.
+
+**Decision**: The `maven-compiler-plugin` MUST include `<parameters>true</parameters>` in its configuration. This is configured in `pom.xml`.
+
+**Tradeoffs**:
+- Gained: Spring MVC controllers can use concise `@RequestParam String search` without explicit `name` attribute
+- Gained: Consistent with Spring 6.x best practices (officially recommended in Spring 6.0 release notes)
+- Made harder: None — this is a one-time configuration change
+- Reconsider: If migrating to a different DI framework that doesn't need parameter names
