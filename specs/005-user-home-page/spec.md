@@ -144,7 +144,7 @@ The landing page remains at root `/`. All SPA pages live under `/app/...`. After
 - **FR-025**: The table MUST support filtering by adaptation level (Minimal/Balanced/Maximum) via multi-select.
 - **FR-026**: The table MUST support filtering by exact created date via date picker.
 - **FR-027**: The table MUST support pagination with options for 10, 20, and 50 rows per page, defaulting to 10.
-- **FR-028**: The header/navbar MUST render immediately on page navigation. The Guided+Summary block and Saved Resumes table MUST show skeleton/loading states independently. Each block transitions to content when its respective API response arrives.
+- **FR-028**: The header/navbar MUST render immediately on page navigation. The Guided+Summary block and Saved Resumes table MUST show skeleton/loading states independently. Each block transitions to content when its respective API response arrives. (Cross-reference: FR-046 defines failure isolation for the same independent blocks.)
 - **FR-029**: Empty states MUST be context-aware: different messages for incomplete profile with no resumes, ready profile with no resumes, and no search results.
 - **FR-030**: If the profile is ready, a Generate Resume button MUST appear in the Saved Resumes section header.
 - **FR-031**: If the profile is incomplete, no Generate Resume button MUST appear in the Saved Resumes section header.

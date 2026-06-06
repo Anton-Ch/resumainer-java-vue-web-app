@@ -539,3 +539,33 @@ mockMvc = standaloneSetup(controller).build();
 - Gained: Easy to inject mock services for controller testing
 - Made harder: Must use constructor injection for @Value (good practice anyway)
 - Reconsider: If a controller starts needing many infrastructure beans, consider whether standalone setup is still appropriate
+
+---
+
+### 2026-06-06 — PrimeVue DataTable lazy mode for server-paginated APIs
+
+**Status**: Active
+
+**Why this is durable**: When backend paginates with SQL LIMIT/OFFSET, PrimeVue DataTable MUST use `:lazy="true"`. Client-side mode loads ALL records into browser memory and defeats server-side search/filter/sort. This mistake is easy to make (lazy is not the default) and hard to catch early.
+
+**Decision**: All future features with server-paginated DataTable MUST use lazy mode: `:lazy="true"`, `:totalRecords`, `@page`/`@sort`/`@filter` callbacks that trigger backend API calls. Do NOT use client-side mode when the backend paginates.
+
+**Tradeoffs**:
+- Gained: server-side pagination, no data duplication, efficient filtering
+- Made harder: client-side instant search across all records (requires debounced backend calls instead)
+- Reconsider: For tiny datasets (&lt;50 rows, no backend pagination), client-side mode is acceptable
+
+---
+
+### 2026-06-06 — Independent block loading for resilient page architecture
+
+**Status**: Active
+
+**Why this is durable**: User Home page loads data from two independent API sources (profile summary + saved resumes). If one fails, the other block remains functional. This pattern prevents cascading failures and improves perceived performance.
+
+**Decision**: Dashboard-like pages with multiple independent data sources MUST use separate API endpoints per block, and each block MUST handle loading/error states independently. A failure in one block MUST NOT block other blocks from rendering.
+
+**Tradeoffs**:
+- Gained: partial page functionality during API failures, independent loading
+- Made harder: more API calls (two instead of one), more complex state management
+- Reconsider: If blocks share the same data source, a single endpoint is simpler and appropriate

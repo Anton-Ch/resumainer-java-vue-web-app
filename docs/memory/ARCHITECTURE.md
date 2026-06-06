@@ -50,3 +50,13 @@ Spring Framework 6.2 documentation. Tomcat 10.1+ requires Jakarta EE 10. Spec an
 
 **Where to look next**
 backend/src/main/java/com/resumainer/initializer/
+
+---
+
+### 2026-06-06 — SPA under /app/ routing with landing page at /
+
+**Status**: Active
+
+**Why this is durable**: The landing page (Thymeleaf) stays at `/`, while Vue SPA lives under `/app/...`. Nginx routes `/app/*` to SPA `index.html` and `/` to backend for Thymeleaf. All future feature routes MUST be added under `/app/...`, never at root.
+
+**Constraint**: `try_files $uri /app/index.html` (without `$uri/` directory fallback) with `autoindex off`. Backend AuthInterceptor protects `/api/**`. Vue Router guards handle auth redirects for `/app/*`.
