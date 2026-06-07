@@ -1,0 +1,674 @@
+/* ============================================================
+ * vue_general.css
+ * ResumAIner Vue SPA — shared tokens, base styles, components.
+ * Import order recommendation (in main.js / main.ts):
+ *   1. PrimeVue base/theme CSS
+ *   2. vue_general.css          ← this file
+ *   3. primevue-overrides.css   ← if separate
+ *   4. page-specific component styles (scoped)
+ *
+ * Import: import '@/assets/styles/vue_general.css'
+ * ============================================================ */
+
+/* ---- Design Tokens ---- */
+:root {
+  /* Canvas + Surfaces */
+  --vue-bg-canvas: #F6F7FB;
+  --vue-bg-surface: #FFFFFF;
+  --vue-bg-subtle: #FBFCFE;
+  --vue-bg-control: #F7FAFE;
+
+  /* Text */
+  --vue-text-primary: #10233F;
+  --vue-text-secondary: #5D718B;
+  --vue-text-muted: #8091A7;
+  --vue-text-inverse: #FFFFFF;
+
+  /* Borders */
+  --vue-border-default: #D8DEE9;
+  --vue-border-soft: #E3E8F0;
+  --vue-border-subtle: #E8EDF4;
+  --vue-border-control: #E5EAF2;
+
+  /* Accent — Emerald */
+  --vue-accent-primary: #0F9D7A;
+  --vue-accent-primary-hover: #0C8467;
+  --vue-accent-primary-active: #0A6F56;
+  --vue-accent-bg-primary: #F2FFF9;
+
+  /* Accent — Blue */
+  --vue-accent-blue: #2F6BFF;
+  --vue-accent-blue-hover: #1A54D9;
+  --vue-accent-bg-blue: #EEF4FF;
+
+  /* Accent — Violet (AI/system only) */
+  --vue-accent-violet: #7C3AED;
+  --vue-accent-bg-violet: #F5F3FF;
+
+  /* Accent — Warning */
+  --vue-accent-warning: #D97706;
+  --vue-accent-bg-warning: #FFF7ED;
+
+  /* Accent — Error */
+  --vue-accent-error: #C2410C;
+  --vue-accent-bg-error: #FFF5F0;
+  --vue-accent-border-error: #FDDCC8;
+
+  /* Accent — Success (same as primary) */
+  --vue-accent-success: #0F9D7A;
+  --vue-accent-bg-success: #F2FFF9;
+
+  /* Typography */
+  --vue-font-heading: 'Manrope', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --vue-font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --vue-font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
+
+  /* Font Sizes */
+  --vue-text-xs: 12px;
+  --vue-text-sm: 13px;
+  --vue-text-base: 14px;
+  --vue-text-md: 16px;
+  --vue-text-lg: 18px;
+  --vue-text-xl: 22px;
+  --vue-text-2xl: 28px;
+  --vue-text-3xl: 32px;
+
+  /* Line Heights */
+  --vue-leading-tight: 1.25;
+  --vue-leading-body: 1.5;
+  --vue-leading-relaxed: 1.6;
+
+  /* Spacing (4px base) */
+  --vue-space-1: 4px;
+  --vue-space-2: 8px;
+  --vue-space-3: 12px;
+  --vue-space-4: 16px;
+  --vue-space-5: 20px;
+  --vue-space-6: 24px;
+  --vue-space-8: 32px;
+  --vue-space-10: 40px;
+  --vue-space-12: 48px;
+  --vue-space-16: 64px;
+
+  /* Radius */
+  --vue-radius-sm: 6px;
+  --vue-radius-md: 8px;
+  --vue-radius-lg: 12px;
+  --vue-radius-xl: 16px;
+
+  /* Shadows */
+  --vue-shadow-card: 0 1px 3px rgba(16, 35, 63, 0.06), 0 1px 2px rgba(16, 35, 63, 0.04);
+  --vue-shadow-elevated: 0 4px 12px rgba(16, 35, 63, 0.08);
+  --vue-shadow-modal: 0 20px 60px rgba(16, 35, 63, 0.14);
+  --vue-shadow-focus: 0 0 0 3px rgba(47, 107, 255, 0.2);
+  --vue-shadow-error: 0 0 0 3px rgba(194, 65, 12, 0.10);
+
+  /* Motion */
+  --vue-motion-fast: 150ms;
+  --vue-motion-base: 240ms;
+  --vue-motion-slow: 420ms;
+  --vue-motion-panel: 900ms;
+  --vue-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --vue-ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---- Reset & Base ---- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--vue-bg-canvas);
+  color: var(--vue-text-primary);
+  font-family: var(--vue-font-body);
+  font-size: var(--vue-text-base);
+  line-height: var(--vue-leading-body);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img, svg { display: block; max-width: 100%; }
+a { color: var(--vue-accent-blue); text-decoration: none; }
+a:hover { color: var(--vue-accent-blue-hover); text-decoration: underline; }
+button { font: inherit; cursor: pointer; }
+p { margin: 0; text-wrap: pretty; }
+h1, h2, h3, h4, h5, h6 { margin: 0; text-wrap: balance; }
+
+/* ---- Typography Utilities ---- */
+.vue-h1 { font-family: var(--vue-font-heading); font-size: var(--vue-text-3xl); font-weight: 700; line-height: var(--vue-leading-tight); letter-spacing: -0.02em; }
+.vue-h2 { font-family: var(--vue-font-heading); font-size: var(--vue-text-2xl); font-weight: 700; line-height: var(--vue-leading-tight); letter-spacing: -0.015em; }
+.vue-h3 { font-family: var(--vue-font-heading); font-size: var(--vue-text-xl); font-weight: 600; line-height: var(--vue-leading-tight); letter-spacing: -0.01em; }
+.vue-h4 { font-family: var(--vue-font-heading); font-size: var(--vue-text-md); font-weight: 600; line-height: var(--vue-leading-tight); }
+
+.vue-body { font-family: var(--vue-font-body); font-size: var(--vue-text-base); line-height: var(--vue-leading-body); color: var(--vue-text-primary); }
+.vue-body-sm { font-family: var(--vue-font-body); font-size: var(--vue-text-sm); line-height: var(--vue-leading-body); color: var(--vue-text-secondary); }
+.vue-meta { font-family: var(--vue-font-body); font-size: var(--vue-text-xs); line-height: var(--vue-leading-body); color: var(--vue-text-muted); }
+.vue-mono { font-family: var(--vue-font-mono); font-variant-numeric: tabular-nums; }
+
+.vue-label { font-family: var(--vue-font-body); font-size: var(--vue-text-base); font-weight: 500; color: var(--vue-text-primary); margin-bottom: 4px; display: block; }
+.vue-label-sm { font-family: var(--vue-font-body); font-size: var(--vue-text-sm); font-weight: 500; color: var(--vue-text-secondary); margin-bottom: 4px; display: block; }
+
+/* ---- Layout Helpers ---- */
+.vue-page { max-width: 1200px; margin: 0 auto; padding: var(--vue-space-6) var(--vue-space-6); }
+
+.vue-page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--vue-space-4); margin-bottom: var(--vue-space-6);
+  flex-wrap: wrap;
+}
+
+.vue-row { display: flex; align-items: center; gap: var(--vue-space-4); }
+.vue-row-between { display: flex; align-items: center; justify-content: space-between; gap: var(--vue-space-4); }
+.vue-col { display: flex; flex-direction: column; gap: var(--vue-space-4); }
+.vue-col-gap { display: flex; flex-direction: column; }
+.vue-col-gap > * + * { margin-top: var(--vue-space-4); }
+
+.vue-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--vue-space-6); }
+.vue-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--vue-space-6); }
+.vue-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--vue-space-6); }
+
+.vue-flex-center { display: flex; align-items: center; justify-content: center; }
+.vue-flex-wrap { display: flex; flex-wrap: wrap; gap: var(--vue-space-3); }
+.vue-gap-2 { gap: var(--vue-space-2); }
+.vue-gap-3 { gap: var(--vue-space-3); }
+.vue-gap-4 { gap: var(--vue-space-4); }
+.vue-gap-6 { gap: var(--vue-space-6); }
+
+.vue-mt-4 { margin-top: var(--vue-space-4); }
+.vue-mt-6 { margin-top: var(--vue-space-6); }
+.vue-mt-8 { margin-top: var(--vue-space-8); }
+.vue-mb-4 { margin-bottom: var(--vue-space-4); }
+.vue-mb-6 { margin-bottom: var(--vue-space-6); }
+
+/* ---- Top Bar ---- */
+.vue-topbar {
+  height: 56px; background: var(--vue-bg-surface);
+  border-bottom: 1px solid var(--vue-border-soft);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--vue-space-6); position: sticky; top: 0; z-index: 100;
+}
+
+/* ---- Cards ---- */
+.vue-card {
+  background: var(--vue-bg-surface);
+  border: 1px solid var(--vue-border-soft);
+  border-radius: var(--vue-radius-lg);
+  box-shadow: var(--vue-shadow-card);
+  padding: var(--vue-space-5) var(--vue-space-6);
+}
+
+.vue-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--vue-space-4); gap: var(--vue-space-4);
+}
+
+.vue-card-elevated {
+  box-shadow: var(--vue-shadow-elevated);
+}
+
+.vue-card-flat {
+  background: transparent; border: none; box-shadow: none; padding: 0;
+}
+
+/* ---- Buttons ---- */
+.vue-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 0 20px; height: 38px;
+  border-radius: var(--vue-radius-md);
+  font-family: var(--vue-font-body);
+  font-size: var(--vue-text-base); font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background var(--vue-motion-fast) var(--vue-ease-standard),
+              border-color var(--vue-motion-fast) var(--vue-ease-standard),
+              box-shadow var(--vue-motion-fast) var(--vue-ease-standard);
+  white-space: nowrap;
+  user-select: none;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.vue-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--vue-shadow-focus);
+}
+
+.vue-btn:disabled {
+  opacity: 0.5; cursor: not-allowed; pointer-events: none;
+}
+
+.vue-btn-primary {
+  background: var(--vue-accent-primary); border-color: var(--vue-accent-primary);
+  color: var(--vue-text-inverse);
+}
+.vue-btn-primary:hover { background: var(--vue-accent-primary-hover); border-color: var(--vue-accent-primary-hover); }
+.vue-btn-primary:active { background: var(--vue-accent-primary-active); border-color: var(--vue-accent-primary-active); }
+
+.vue-btn-secondary {
+  background: var(--vue-bg-surface); border-color: var(--vue-border-default);
+  color: var(--vue-text-primary);
+}
+.vue-btn-secondary:hover { background: var(--vue-bg-subtle); border-color: var(--vue-border-control); color: var(--vue-text-primary); }
+
+.vue-btn-ghost {
+  background: transparent; border-color: transparent;
+  color: var(--vue-text-secondary);
+}
+.vue-btn-ghost:hover { background: var(--vue-bg-subtle); color: var(--vue-text-primary); }
+
+.vue-btn-danger {
+  background: var(--vue-accent-error); border-color: var(--vue-accent-error);
+  color: var(--vue-text-inverse);
+}
+.vue-btn-danger:hover { background: #A8380A; border-color: #A8380A; }
+
+.vue-btn-sm { height: 32px; padding: 0 14px; font-size: var(--vue-text-sm); }
+.vue-btn-lg { height: 44px; padding: 0 24px; font-size: var(--vue-text-md); }
+
+/* ---- Inputs ---- */
+.vue-input {
+  display: block; width: 100%;
+  background: var(--vue-bg-surface);
+  border: 1px solid var(--vue-border-control);
+  border-radius: var(--vue-radius-md);
+  padding: 10px 12px;
+  font-family: var(--vue-font-body);
+  font-size: var(--vue-text-base);
+  color: var(--vue-text-primary);
+  line-height: 1.4;
+  transition: border-color var(--vue-motion-fast) var(--vue-ease-standard),
+              box-shadow var(--vue-motion-fast) var(--vue-ease-standard);
+}
+
+.vue-input::placeholder { color: var(--vue-text-muted); }
+
+.vue-input:focus {
+  border-color: var(--vue-accent-blue);
+  box-shadow: var(--vue-shadow-focus);
+  outline: none;
+}
+
+.vue-input.error,
+.vue-input.vue-input-error {
+  border-color: var(--vue-accent-error);
+  box-shadow: var(--vue-shadow-error);
+}
+
+.vue-input:disabled {
+  background: var(--vue-bg-subtle);
+  color: var(--vue-text-muted);
+  cursor: not-allowed;
+}
+
+textarea.vue-input {
+  min-height: 100px;
+  resize: vertical;
+}
+
+select.vue-input {
+  appearance: auto;
+}
+
+/* ---- Form Groups ---- */
+.vue-form-group {
+  display: flex; flex-direction: column; gap: 4px;
+}
+
+.vue-form-label {
+  font-family: var(--vue-font-body);
+  font-size: var(--vue-text-base);
+  font-weight: 500;
+  color: var(--vue-text-primary);
+}
+
+.vue-form-label .vue-required {
+  color: var(--vue-accent-error);
+  margin-left: 2px;
+}
+
+.vue-form-hint {
+  font-family: var(--vue-font-body);
+  font-size: var(--vue-text-sm);
+  color: var(--vue-text-muted);
+}
+
+.vue-form-error {
+  font-family: var(--vue-font-body);
+  font-size: var(--vue-text-sm);
+  color: var(--vue-accent-error);
+}
+
+/* ---- Chips / Badges ---- */
+.vue-chip {
+  display: inline-flex; align-items: center;
+  padding: 2px 10px; height: 24px;
+  border-radius: 999px;
+  font-family: var(--vue-font-body);
+  font-size: var(--vue-text-xs); font-weight: 500;
+  border: 1px solid var(--vue-border-soft);
+  background: var(--vue-bg-subtle);
+  color: var(--vue-text-secondary);
+  white-space: nowrap;
+}
+
+.vue-chip-primary {
+  background: var(--vue-accent-bg-primary);
+  border-color: var(--vue-accent-primary);
+  color: var(--vue-accent-primary);
+}
+
+.vue-chip-success {
+  background: var(--vue-accent-bg-success);
+  border-color: var(--vue-accent-primary);
+  color: var(--vue-accent-primary);
+}
+
+.vue-chip-warning {
+  background: var(--vue-accent-bg-warning);
+  border-color: var(--vue-accent-warning);
+  color: var(--vue-accent-warning);
+}
+
+.vue-chip-error {
+  background: var(--vue-accent-bg-error);
+  border-color: var(--vue-accent-border-error);
+  color: var(--vue-accent-error);
+}
+
+.vue-chip-role {
+  background: var(--vue-accent-bg-violet);
+  border-color: var(--vue-accent-violet);
+  color: var(--vue-accent-violet);
+}
+
+/* ---- Alerts ---- */
+.vue-alert {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--vue-radius-md);
+  font-family: var(--vue-font-body);
+  font-size: var(--vue-text-base);
+  line-height: var(--vue-leading-body);
+  border: 1px solid transparent;
+}
+
+.vue-alert-success {
+  background: var(--vue-accent-bg-success);
+  border-color: var(--vue-accent-primary);
+  color: var(--vue-text-primary);
+}
+
+.vue-alert-error {
+  background: var(--vue-accent-bg-error);
+  border-color: var(--vue-accent-border-error);
+  color: var(--vue-text-primary);
+}
+
+.vue-alert-warning {
+  background: var(--vue-accent-bg-warning);
+  border-color: var(--vue-accent-warning);
+  color: var(--vue-text-primary);
+}
+
+.vue-alert-info {
+  background: var(--vue-accent-bg-blue);
+  border-color: var(--vue-accent-blue);
+  color: var(--vue-text-primary);
+}
+
+/* ---- Language Switcher ---- */
+.vue-lang-switch {
+  display: inline-flex;
+  font-family: var(--vue-font-body);
+  font-size: var(--vue-text-sm);
+  font-weight: 600;
+  border: 1px solid var(--vue-border-soft);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.vue-lang-switch button,
+.vue-lang-switch .vue-lang-btn {
+  padding: 4px 10px; height: 30px;
+  background: transparent; border: none;
+  color: var(--vue-text-muted);
+  cursor: pointer;
+  font-weight: 600; font-size: var(--vue-text-sm);
+  transition: background var(--vue-motion-fast) var(--vue-ease-standard),
+              color var(--vue-motion-fast) var(--vue-ease-standard);
+}
+
+.vue-lang-switch button:hover,
+.vue-lang-switch .vue-lang-btn:hover {
+  color: var(--vue-text-primary);
+}
+
+.vue-lang-switch button.active,
+.vue-lang-switch .vue-lang-btn.active {
+  background: var(--vue-accent-blue);
+  color: var(--vue-text-inverse);
+}
+
+/* ---- Empty States ---- */
+.vue-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  padding: var(--vue-space-12) var(--vue-space-6);
+  gap: var(--vue-space-3);
+}
+
+.vue-empty-icon {
+  width: 48px; height: 48px;
+  color: var(--vue-text-muted);
+  margin-bottom: var(--vue-space-2);
+}
+
+.vue-empty-title {
+  font-family: var(--vue-font-heading);
+  font-size: var(--vue-text-lg);
+  font-weight: 600;
+  color: var(--vue-text-primary);
+}
+
+.vue-empty-desc {
+  font-family: var(--vue-font-body);
+  font-size: var(--vue-text-base);
+  color: var(--vue-text-secondary);
+  max-width: 36ch;
+  line-height: var(--vue-leading-body);
+}
+
+/* ---- Page Section Spacing ---- */
+.vue-section { padding-block: var(--vue-space-8); }
+.vue-section-sm { padding-block: var(--vue-space-6); }
+
+/* ---- Divider ---- */
+.vue-divider { border: none; border-top: 1px solid var(--vue-border-soft); margin: 0; }
+
+/* ---- Auth gradient (reusable token reference) ---- */
+/* The Auth Page uses this gradient for its animated panel.
+   Other pages should NOT use it unless for a similarly premium accent.
+   Usage: background: var(--vue-gradient-auth); */
+:root {
+  --vue-gradient-auth: linear-gradient(135deg, #0F9D7A 0%, #2F6BFF 100%);
+  --vue-gradient-auth-soft: linear-gradient(135deg, rgba(15, 157, 122, 0.95), rgba(47, 107, 255, 0.88));
+}
+
+/* ---- Animation Utilities ---- */
+.vue-fade-in {
+  animation: vue-fade-in var(--vue-motion-base) var(--vue-ease-standard) both;
+}
+
+.vue-fade-in-up {
+  animation: vue-fade-in-up var(--vue-motion-base) var(--vue-ease-standard) both;
+}
+
+@keyframes vue-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes vue-fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Responsive Helpers ---- */
+.vue-hide-mobile { display: revert; }
+.vue-show-mobile { display: none; }
+
+@media (max-width: 639px) {
+  .vue-hide-mobile { display: none; }
+  .vue-show-mobile { display: revert; }
+  .vue-grid-2, .vue-grid-3, .vue-grid-4 { grid-template-columns: 1fr; }
+  .vue-page { padding: var(--vue-space-4) var(--vue-space-4); }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .vue-grid-3, .vue-grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .vue-page { padding: var(--vue-space-5) var(--vue-space-5); }
+}
+
+/* ---- Reduced Motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---- PrimeVue-friendly base overrides ---- */
+/* These provide a consistent foundation for PrimeVue components.
+   More specific overrides can go in primevue-overrides.css if needed. */
+
+.p-inputtext,
+.p-password-input {
+  font-family: var(--vue-font-body) !important;
+  font-size: var(--vue-text-base) !important;
+  background: var(--vue-bg-surface) !important;
+  border-color: var(--vue-border-control) !important;
+  color: var(--vue-text-primary) !important;
+  border-radius: var(--vue-radius-md) !important;
+  padding: 10px 12px !important;
+  transition: border-color var(--vue-motion-fast), box-shadow var(--vue-motion-fast) !important;
+}
+
+.p-inputtext:focus,
+.p-password-input:focus {
+  border-color: var(--vue-accent-blue) !important;
+  box-shadow: var(--vue-shadow-focus) !important;
+}
+
+.p-button {
+  font-family: var(--vue-font-body) !important;
+  font-weight: 600 !important;
+  border-radius: var(--vue-radius-md) !important;
+}
+
+.p-button.p-button-primary {
+  background: var(--vue-accent-primary) !important;
+  border-color: var(--vue-accent-primary) !important;
+}
+
+.p-button.p-button-primary:hover {
+  background: var(--vue-accent-primary-hover) !important;
+  border-color: var(--vue-accent-primary-hover) !important;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background: var(--vue-bg-subtle) !important;
+  color: var(--vue-text-secondary) !important;
+  font-family: var(--vue-font-body) !important;
+  font-size: var(--vue-text-sm) !important;
+  font-weight: 600 !important;
+  border-color: var(--vue-border-soft) !important;
+}
+
+.p-datatable .p-datatable-tbody > tr {
+  border-color: var(--vue-border-soft) !important;
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+  background: var(--vue-bg-subtle) !important;
+}
+
+.p-dialog-header {
+  border-bottom: 1px solid var(--vue-border-soft) !important;
+  padding: var(--vue-space-5) var(--vue-space-6) !important;
+}
+
+.p-dialog-content {
+  padding: var(--vue-space-5) var(--vue-space-6) !important;
+}
+
+.p-dialog-footer {
+  border-top: 1px solid var(--vue-border-soft) !important;
+  padding: var(--vue-space-4) var(--vue-space-6) !important;
+}
+
+.p-toast .p-toast-message {
+  border-radius: var(--vue-radius-lg) !important;
+}
+
+.p-toast .p-toast-message.p-toast-message-success {
+  background: var(--vue-accent-bg-success) !important;
+  border-color: var(--vue-accent-primary) !important;
+}
+
+.p-toast .p-toast-message.p-toast-message-error {
+  background: var(--vue-accent-bg-error) !important;
+  border-color: var(--vue-accent-border-error) !important;
+}
+
+.p-toast .p-toast-message.p-toast-message-warn {
+  background: var(--vue-accent-bg-warning) !important;
+  border-color: var(--vue-accent-warning) !important;
+}
+
+.p-toast .p-toast-message.p-toast-message-info {
+  background: var(--vue-accent-bg-blue) !important;
+  border-color: var(--vue-accent-blue) !important;
+}
+
+/* ============================================================
+ * PrimeVue Button Overrides — ResumAIner accent color
+ * Matches prototype's --accent: #0F9D7A
+ * ============================================================ */
+.p-button.p-button-success {
+  background: #0F9D7A !important;
+  border-color: #0F9D7A !important;
+  color: #fff !important;
+}
+.p-button.p-button-success:hover {
+  background: #0C8467 !important;
+  border-color: #0C8467 !important;
+}
+.p-button.p-button-success.p-button-outlined {
+  background: transparent !important;
+  border-color: #0F9D7A !important;
+  color: #0F9D7A !important;
+}
+.p-button.p-button-success.p-button-outlined:hover {
+  background: rgba(15,157,122,0.08) !important;
+  border-color: #0C8467 !important;
+  color: #0C8467 !important;
+}
+.p-button.p-button-danger {
+  background: transparent !important;
+  border-color: #C2410C !important;
+  color: #C2410C !important;
+}
+.p-button.p-button-danger:hover {
+  background: #C2410C !important;
+  border-color: #C2410C !important;
+  color: #fff !important;
+}
