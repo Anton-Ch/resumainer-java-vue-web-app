@@ -1,6 +1,6 @@
 # Feature Progress Dashboard
 
-**Generated**: 2026-06-04
+**Generated**: 2026-06-07
 
 ```mermaid
 gantt
@@ -29,48 +29,47 @@ gantt
     Implement   :done, i3, 3, 4
     Verify      :done, v3, 4, 5
 
-    section 004-custom-jdbc-connection-pool 🚧
+    section 004-custom-jdbc-pool
     Specify     :done, s4, 0, 1
     Plan        :done, p4, 1, 2
-    Tasks       :active, t4, 2, 3
-    Implement   :i4, 3, 4
-    Verify      :v4, 4, 5
+    Tasks       :done, t4, 2, 3
+    Implement   :done, i4, 3, 4
+    Verify      :done, v4, 4, 5
+
+    section 005-user-home-page
+    Specify     :done, s5, 0, 1
+    Plan        :done, p5, 1, 2
+    Tasks       :done, t5, 2, 3
+    Implement   :done, i5, 3, 4
+    Verify      :done, v5, 4, 5
+
+    section 006-user-profile
+    Specify     :done, s6, 0, 1
+    Plan        :done, p6, 1, 2
+    Tasks       :done, t6, 2, 3
+    Implement   :active, i6, 3, 4
+    Verify      :v6, 4, 5
+```
+
+```mermaid
+pie title Feature 006 — User Profile Page Task Progress (0/48)
+    "Planned (not started)" : 48
+    "Completed" : 0
 ```
 
 ## Summary
 
-| # | Feature | Phase | Tasks | Status | Branch |
-|---|---------|-------|-------|--------|--------|
-| 001 | Hello World Tomcat | ✅ Complete | 22/22 | Merged to `main` | `feat/001-hello-world-tomcat` |
-| 002 | Thymeleaf Landing Page | ✅ Complete | 27/27 | Merged to `main` | `feat/002-thymeleaf-landing-page` |
-| 003 | Vue Auth Page | ✅ Complete | 63/63 | Merged to `main` | `feat/003-vue-auth-page` |
-| 004 | **Custom JDBC Connection Pool** | 🔧 **Tasks** | 0/56 | 🚧 **Active** | `feat/004-custom-jdbc-connection-pool` |
+| Feature | Spec | Plan | Tasks | Progress | Phase | Branch |
+|---|---|---|---|---|---|---|
+| 001-hello-world-tomcat | ✅ | ✅ | ✅ | 22/22 (100%) | ✅ Complete | `main` |
+| 002-thymeleaf-landing-page | ✅ | ✅ | ✅ | 27/27 (100%) | ✅ Complete | `main` |
+| 003-vue-auth-page | ✅ | ✅ | ✅ | 63/63 (100%) | ✅ Complete | `main` |
+| 004-custom-jdbc-connection-pool | ✅ | ✅ | ✅ | 55/55 (100%) | ✅ Complete | `main` |
+| 005-user-home-page | ✅ | ✅ | ✅ | 41/41 (100%) | ✅ Complete | `main` |
+| **006-user-profile** | ✅ | ✅ | ✅ | **0/48 (0%)** | 🟡 **Tasks Ready** | `feat/006-profile-page` |
 
-## 004 Task Breakdown
+## Legend
 
-```mermaid
-pie title Feature 004 — Task Progress
-    "Pending (56)" : 56
-    "Completed" : 0
-```
-
-### Artifact Status
-
-| Artifact | 001 | 002 | 003 | 004 |
-|----------|-----|-----|-----|-----|
-| spec.md | ✅ | ✅ | ✅ | ✅ |
-| plan.md | ✅ | ✅ | ✅ | ✅ |
-| tasks.md | ✅ | ✅ | ✅ | ✅ |
-| research.md | ✅ | — | — | ✅ |
-| data-model.md | ✅ | — | ✅ | ✅ |
-| contracts/ | — | — | ✅ | ✅ |
-| quickstart.md | — | ✅ | ✅ | ✅ |
-| security-review | — | — | — | ✅ |
-| checklists | ✅ | ✅ | ✅ | ✅ |
-| All tasks done | ✅ | ✅ | ✅ | ⏳ 0/56 |
-
-### Suggested Next Steps
-
-1. **Phase 0**: Run Task 001 — inspect existing connection artifacts
-2. **Phase 1**: Dispatch parallel subagents for Tasks 003-006 (Config, Exception, Factory, Proxy)
-3. **Phase 1**: Task 007 — SimpleConnectionPool (depends on 003-006)
+- ✅ Complete — all SDD phases finished, feature merged to main
+- 🟡 In Progress — active feature on its branch
+- 🔴 Not Started — no artifacts exist
