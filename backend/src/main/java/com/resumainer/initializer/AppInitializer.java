@@ -43,8 +43,12 @@ public class AppInitializer extends AbstractAnnotationConfigDispatcherServletIni
     protected void customizeRegistration(ServletRegistration.Dynamic registration) {
         registration.setInitParameter("spring.mvc.static-path-pattern", "/static/**");
 
-        // Session timeout: 30 minutes (1800 seconds)
-        registration.setInitParameter("spring.mvc.servlet.session-timeout", "1800");
+        // Session timeout: 90 minutes (5400 seconds)
+        // Increased from 30m to 90m for profile editing UX (SEC-011):
+        // users fill multi-section forms without autosave — 30m risks data loss on save.
+        // 90m is safe for resume/profile apps: session is bound to HttpSession cookie
+        // with Secure+HttpOnly+SameSite attributes, CSRF protected, and timed out server-side.
+        registration.setInitParameter("spring.mvc.servlet.session-timeout", "5400");
     }
 
     /**
