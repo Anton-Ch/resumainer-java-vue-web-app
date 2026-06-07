@@ -13,6 +13,9 @@
 ### Session 2026-06-07
 
 - **Q1: Data volume per profile section** → A: Option B — Work Experience up to 20, Courses 50-300 (high-volume), other record-based sections up to 20-30. Courses require backend pagination with LIMIT/OFFSET. Confirmed from BA artifact: `docs/04_domain-and-data-model/data_dictionary.md` tables exist for all sections.
+- **Q2: Work format values** → A: Option A — Use BA data dictionary values (`work_format.code`): `full-time`, `part-time`, `rotational_schedule`, `internship`, `offline`, `remote`, `hybrid`, `on_project_site`. Prototype will be extended during implementation to match BA authoritative set.
+- **Q3: Willingness dropdown values** → A: Option A — Use `Yes / No / Negotiable` (match brief/prototype). DB column `ready_for_relocation` and `ready_for_business_trips` will accept these values.
+- **Q4: Date of Birth and Citizenship required vs optional** → A: Option C — Both required (NOT NULL). Matches BA data dictionary. Date of birth must be a valid full date; citizenship is a text field.
 - **Background confirmed from BA artifacts**: Error handling is already standardized per NFR-003/004/005 (global exception handler, user-friendly error responses, no stack traces). Username uniqueness enforced at DB level via UNIQUE constraint on `users.username`. Automatic sorting (end_date DESC) per DEC-012.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -122,7 +125,8 @@ As a logged-in user, I want to configure my username, resume language preference
 2. **Given** I enter a username with Cyrillic characters, **When** I try to save, **Then** validation rejects it (English letters, digits, underscores, and hyphens only).
 3. **Given** I change Default language to Russian, **When** the form updates, **Then** Additional language automatically changes to English (they are mutually exclusive).
 4. **Given** I set a date of birth, **When** I save, **Then** the full exact date is stored (not year-only).
-5. **Given** I fill required fields (username, default language, additional language) and save, **Then** the section status shows "Completed".
+5. **Given** I fill required fields (username, default language, additional language, date of birth, citizenship) and save, **Then** the section status shows "Completed".
+6. **Given** I leave date of birth or citizenship empty, **When** I try to save, **Then** validation errors appear and the section status remains "Incomplete".
 
 ---
 
@@ -132,6 +136,7 @@ As a logged-in user, I want to configure my username, resume language preference
 - What happens when user navigates between sections with unsaved changes? → Unsaved Changes dialog appears.
 - What happens when user refreshes the browser with unsaved changes? → Browser beforeunload warning fires.
 - What happens when the username is already taken by another user? → Inline validation error appears: "This username is already taken. Please try a different one." / "Это имя пользователя уже занято. Попробуйте другой вариант." User must choose a different username before saving.
+- What happens when date of birth or citizenship are empty? → Validation error prevents save, section status stays "Incomplete".
 - What happens when backend API returns an error during save? → User sees a descriptive error toast and data is not lost.
 - What happens when the mobile/tablet viewport is very narrow? → Sidebar becomes 2-row × 3-column grid tabs.
 - What happens when courses search returns no results? → "No records found" empty table state is displayed.
@@ -165,21 +170,22 @@ As a logged-in user, I want to configure my username, resume language preference
 - **FR-023**: System MUST require course name, provider, and start date for Course records.
 - **FR-024**: System MUST validate course date range (End Date cannot be before Start Date).
 - **FR-025**: System MUST display Additional Info in four visual blocks: Resume & Public Profile Preferences, Work Preferences, Professional Info, Personal Info.
-- **FR-026**: System MUST require username (English letters/digits/underscores/hyphens only, no Cyrillic, no spaces), default resume language, and additional resume language for Additional Info completion.
+- **FR-026**: System MUST require username (English letters/digits/underscores/hyphens only, no Cyrillic, no spaces), default resume language, additional resume language, date of birth (full exact date), and citizenship for Additional Info completion.
 - **FR-027**: System MUST enforce mutual exclusivity of default and additional resume languages: if one changes, the other switches automatically.
 - **FR-028**: System MUST validate username uniqueness: if the requested username is already taken, an inline error is shown ("This username is already taken. Please try a different one.") and the user must choose a different username before saving.
 - **FR-029**: System MUST provide a username helper text explaining it will be part of the public resume link.
-- **FR-030**: System MUST support three willingness-to-relocate/travel values: Yes, No, Negotiable.
-- **FR-031**: System MUST use full exact date pickers for all date fields (not month/year-only).
-- **FR-032**: System MUST validate that End Date is not earlier than Start Date where both exist.
-- **FR-033**: System MUST implement unsaved-changes warning for all forms when navigating away or refreshing the browser.
-- **FR-034**: System MUST reset dirty state after successful save, after cancel, or after confirmed leave.
-- **FR-035**: System MUST persist profile data via backend API calls to a PostgreSQL database, so data is durable across sessions and devices.
-- **FR-036**: System MUST use short save button labels: "Save" (EN) / "Сохранить" (RU).
-- **FR-037**: System MUST display "Fields marked with * are required" note near the save button, not at the top of the form.
-- **FR-038**: System MUST show toast notifications without a period at the end.
-- **FR-039**: System MUST validate all forms on blur and on submit, not aggressively on every keystroke.
-- **FR-040**: System MUST NOT save forms with invalid or missing required fields.
+- **FR-030**: System MUST provide acceptable work formats as a checkbox group with values from the BA data dictionary: `full-time`, `part-time`, `rotational_schedule`, `internship`, `offline`, `remote`, `hybrid`, `on_project_site`.
+- **FR-031**: System MUST support three willingness-to-relocate/travel dropdown values: Yes, No, Negotiable.
+- **FR-032**: System MUST use full exact date pickers for all date fields (not month/year-only).
+- **FR-033**: System MUST validate that End Date is not earlier than Start Date where both exist.
+- **FR-034**: System MUST implement unsaved-changes warning for all forms when navigating away or refreshing the browser.
+- **FR-035**: System MUST reset dirty state after successful save, after cancel, or after confirmed leave.
+- **FR-036**: System MUST persist profile data via backend API calls to a PostgreSQL database, so data is durable across sessions and devices.
+- **FR-037**: System MUST use short save button labels: "Save" (EN) / "Сохранить" (RU).
+- **FR-038**: System MUST display "Fields marked with * are required" note near the save button, not at the top of the form.
+- **FR-039**: System MUST show toast notifications without a period at the end.
+- **FR-040**: System MUST validate all forms on blur and on submit, not aggressively on every keystroke.
+- **FR-041**: System MUST NOT save forms with invalid or missing required fields.
 
 ### Key Entities *(include if feature involves data)*
 
