@@ -48,12 +48,12 @@ description: "Task breakdown for User Profile Page feature"
 
 **Purpose**: Create Java model classes for all new entities — needed by DAO layer
 
-- [ ] T008 [TDD] [P] Create WorkExperience.java model class in backend/src/main/java/com/resumainer/model/WorkExperience.java. (Constitution I)
-- [ ] T009 [TDD] [P] Create Education.java model class in backend/src/main/java/com/resumainer/model/Education.java. (Constitution I)
-- [ ] T010 [TDD] [P] Create Project.java model class in backend/src/main/java/com/resumainer/model/Project.java. (Constitution I)
-- [ ] T011 [TDD] [P] Create CourseCertificate.java model class in backend/src/main/java/com/resumainer/model/CourseCertificate.java. (Constitution I)
-- [ ] T012 [TDD] [P] Create AdditionalProfileInfo.java model class in backend/src/main/java/com/resumainer/model/AdditionalProfileInfo.java. (Constitution I)
-- [ ] T013 [TDD] [P] Create WorkFormat.java model class in backend/src/main/java/com/resumainer/model/WorkFormat.java. (Constitution I)
+- [x] T008 [TDD] [P] Create WorkExperience.java model class in backend/src/main/java/com/resumainer/model/WorkExperience.java. (Constitution I)
+- [x] T009 [TDD] [P] Create Education.java model class in backend/src/main/java/com/resumainer/model/Education.java. (Constitution I)
+- [x] T010 [TDD] [P] Create Project.java model class in backend/src/main/java/com/resumainer/model/Project.java. (Constitution I)
+- [x] T011 [TDD] [P] Create CourseCertificate.java model class in backend/src/main/java/com/resumainer/model/CourseCertificate.java. (Constitution I)
+- [x] T012 [TDD] [P] Create AdditionalProfileInfo.java model class in backend/src/main/java/com/resumainer/model/AdditionalProfileInfo.java. (Constitution I)
+- [x] T013 [TDD] [P] Create WorkFormat.java model class in backend/src/main/java/com/resumainer/model/WorkFormat.java. (Constitution I)
 
 **Checkpoint**: All model classes compile with `mvn compile`
 
