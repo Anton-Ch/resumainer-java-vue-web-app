@@ -92,11 +92,11 @@ description: "Task breakdown for User Profile Page feature"
 
 **Purpose**: Frontend types, API service, i18n, and routing for profile feature
 
-- [ ] T025 [P] Create profile.ts TypeScript types in frontend/src/types/profile.ts — match backend DTOs (use BA field names: gpaGrade, courseFocus, description not comment). (Constitution I)
-- [ ] T026 [P] Create profileService.ts in frontend/src/services/profileService.ts — REST API methods for all 6 sections + status endpoint. Include error handling. (Constitution I, V)
-- [ ] T027 [P] Merge profile namespace into frontend/src/i18n/en.json — add all Profile UI strings from prototype. No hardcoded text (D13). Verify JSON validity. (Constitution III)
-- [ ] T028 [P] Merge profile namespace into frontend/src/i18n/ru.json — add all Profile RU translations from prototype. Preserve manually reviewed RU text. (Constitution III)
-- [ ] T029 Update frontend/src/router/index.ts — add /profile/* routes with requiresAuth meta guard. /profile redirects to /profile/contact. (Constitution III, V)
+- [x] T025 [P] Create profile.ts TypeScript types in frontend/src/types/profile.ts — match backend DTOs (use BA field names: gpaGrade, courseFocus, description not comment). (Constitution I)
+- [x] T026 [P] Create profileService.ts in frontend/src/services/profileService.ts — REST API methods for all 6 sections + status endpoint. Include error handling. (Constitution I, V)
+- [x] T027 [P] Merge profile namespace into frontend/src/i18n/en.json — add all Profile UI strings from prototype. No hardcoded text (D13). Verify JSON validity. (Constitution III)
+- [x] T028 [P] Merge profile namespace into frontend/src/i18n/ru.json — add all Profile RU translations from prototype. Preserve manually reviewed RU text. (Constitution III)
+- [x] T029 Update frontend/src/router/index.ts — add /profile/* routes with requiresAuth meta guard. /profile redirects to /profile/contact. (Constitution III, V)
 
 **Checkpoint**: Frontend compiles with `npm run build`
 
