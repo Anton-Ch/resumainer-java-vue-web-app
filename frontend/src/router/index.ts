@@ -24,6 +24,11 @@ const router = createRouter({
       component: () => import('@/views/AdminHomePage.vue'),
       meta: { requiresAuth: true, requiresAdmin: true }
     },
+    // Profile redirect
+    {
+      path: '/profile',
+      redirect: '/profile/contact'
+    },
     // Profile section placeholders (with subnav)
     {
       path: '/profile/contact',
