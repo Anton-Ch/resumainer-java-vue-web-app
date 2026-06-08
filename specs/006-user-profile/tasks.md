@@ -138,9 +138,9 @@ description: "Task breakdown for User Profile Page feature"
 
 ## Phase 9: Frontend — Education (US4) + Courses (US5) + Additional Info (US6)
 
-- [ ] T041 [TDD] [SUBAGENT] Implement EducationSection.vue in frontend/src/components/profile/sections/EducationSection.vue — card list + inline form. "Currently studying" hides End Date. Empty state guidance text from spec. Card displays: institution, date range, location, degree, field. (Constitution II, III)
-- [ ] T042 [TDD] [SUBAGENT] Implement CoursesSection.vue + CoursesTable.vue + CourseDialog.vue in frontend/src/components/profile/courses/ — PrimeVue DataTable lazy mode (D17), server-side pagination 10/20/50, search (3+ chars), date filter range, 3-state column sorting, row-click details dialog, add/edit/delete. (Constitution II, III, IV)
-- [ ] T043 [TDD] [SUBAGENT] Implement AdditionalInfoSection.vue in frontend/src/components/profile/sections/AdditionalInfoSection.vue — 4 visual blocks: Resume Preferences, Work Preferences, Professional Info, Personal Info. Username validation (English/digits/underscores/hyphens), language mutual exclusivity, DOB/citizenship required. (Constitution II, III)
+- [x] T041 [TDD] [SUBAGENT] Implement EducationSection.vue in frontend/src/components/profile/sections/EducationSection.vue — card list + inline form. "Currently studying" hides End Date. Empty state guidance text from spec. Card displays: institution, date range, location, degree, field. BA field names (description, gpaGrade). Real REST API. (Constitution II, III)
+- [x] T042 [TDD] [SUBAGENT] Implement CoursesSection.vue + CoursesTable.vue + CourseDialog.vue in frontend/src/components/profile/courses/ — PrimeVue DataTable lazy mode (D17), server-side pagination 10/20/50, search (3+ chars), date filter range, 3-state column sorting, row-click details dialog, add/edit/delete. Real REST API with pagination params. (Constitution II, III, IV)
+- [x] T043 [TDD] [SUBAGENT] Implement AdditionalInfoSection.vue in frontend/src/components/profile/sections/AdditionalInfoSection.vue — 4 visual blocks: Resume Preferences, Work Preferences, Professional Info, Personal Info. Username validation (English/digits/underscores/hyphens), language mutual exclusivity (number IDs), DOB/citizenship required. Real REST API. (Constitution II, III)
 
 **Checkpoint**: All 6 profile sections implemented and independently testable
 
