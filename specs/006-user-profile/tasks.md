@@ -119,8 +119,8 @@ description: "Task breakdown for User Profile Page feature"
 
 ## Phase 7: Frontend — Contact Details (US1)
 
-- [ ] T036 [TDD] [P] Implement ContactDetailsSection.vue in frontend/src/components/profile/sections/ContactDetailsSection.vue — form fields matching data-model, Zod validation (email, URL with/without protocol), save with dirty-state tracking. (Constitution II, III)
-- [ ] T037 [P] Implement RecordCard.vue and EmptyRecordsState.vue in frontend/src/components/profile/ — shared UI patterns. (Constitution III)
+- [x] T036 [TDD] [P] Implement ContactDetailsSection.vue in frontend/src/components/profile/sections/ContactDetailsSection.vue — form fields matching data-model, Zod validation (email, URL with/without protocol), save with dirty-state tracking. (Constitution II, III)
+- [x] T037 [P] Implement RecordCard.vue and EmptyRecordsState.vue in frontend/src/components/profile/ — shared UI patterns. (Constitution III)
 
 **Checkpoint**: Contact Details section — save, validate, dirty state all work
 
