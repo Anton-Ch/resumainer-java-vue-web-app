@@ -7,6 +7,7 @@ import com.resumainer.exception.ServiceException;
 import com.resumainer.model.*;
 import com.resumainer.service.ProfileService;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;
@@ -66,7 +67,7 @@ public class ProfileController {
 
     @PutMapping("/contact")
     public ResponseEntity<?> updateContactDetails(HttpSession session,
-                                                   @RequestBody ContactDetail contact) {
+                                                   @Valid @RequestBody ContactDetail contact) {
         UUID userId = getUserId(session);
         log.debug("PUT /api/profile/contact — userId={}", userId);
         try {

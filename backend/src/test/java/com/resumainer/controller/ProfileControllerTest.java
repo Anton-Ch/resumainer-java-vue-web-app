@@ -87,7 +87,7 @@ class ProfileControllerTest {
         mockMvc.perform(put("/api/profile/contact")
                         .sessionAttr("user", userSession)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"fullName\":\"Jane\"}"))
+                        .content("{\"fullName\":\"Jane\",\"professionalTitle\":\"Dev\",\"phone\":\"+123\",\"resumeEmail\":\"jane@test.com\",\"location\":\"NYC\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.fullName").value("Jane"));
     }

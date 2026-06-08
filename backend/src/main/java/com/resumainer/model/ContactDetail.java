@@ -1,5 +1,7 @@
 package com.resumainer.model;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -13,10 +15,20 @@ public class ContactDetail {
 
     private UUID id;
     private UUID userId;
+
+    @NotBlank
     private String fullName;
+
+    @NotBlank
     private String professionalTitle;
+
+    @NotBlank
     private String phone;
+
+    @NotBlank
     private String resumeEmail;
+
+    @NotBlank
     private String location;
     private String linkedinUrl;
     private String portfolioUrl;
