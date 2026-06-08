@@ -29,6 +29,32 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-08 - Feature 006 Profile Page DAO and Service/Controller Layers Completed
+
+**Status**
+Active
+
+**Milestone**
+Phases 3-4 of Feature 006 (User Profile Page) completed with TDD.
+
+Phase 3 (DAO layer):
+- 6 new DAOs: WorkExperienceDao, EducationDao, ProjectDao, CourseCertificateDao (pagination), AdditionalProfileInfoDao (upsert), WorkFormatDao
+- All with connection-accepting overloads (D10), owner-scoped WHERE user_id=? (SEC-001), soft-delete filter is_deleted=FALSE (SEC-003)
+- 52 new DAO tests (Mockito)
+- Extended ContactDetailDao with UPDATE + new BA fields
+- Added V16 migration for missing contact_detail columns
+
+Phase 4 (Service + Controller):
+- ProfileService: business logic for all 6 sections, manual JDBC transaction for AdditionalInfo save (username + additional_info + work_formats atomic)
+- ProfileController: 15 REST endpoints under /api/profile/*, Cache-Control: no-store private (SEC-005)
+- 39 new tests (21 service + 18 controller), standalone MockMvc
+- Total: 224/224 tests passing
+
+**Evidence**
+mvn test: 224/224, BUILD SUCCESS. All endpoints tested via standalone MockMvc.
+
 ### 2026-06-06 — Feature 005 Implementation — Backend and Frontend Core Completed
 
 **Status**: Active

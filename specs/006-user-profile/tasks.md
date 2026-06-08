@@ -78,11 +78,11 @@ description: "Task breakdown for User Profile Page feature"
 
 **Purpose**: Business logic layer and REST API endpoints
 
-- [ ] T020 [TDD] Create ProfileSectionStatus.java and ProfileData.java DTOs in backend/src/main/java/com/resumainer/dto/. (Constitution I)
-- [ ] T021 [TDD] Create CoursePage.java — paginated response DTO with content, totalElements, totalPages, number, size. (Constitution I)
-- [ ] T022 [TDD] [SUBAGENT] Create ProfileService.java — business logic for all 6 sections, transaction management for atomic operations (e.g., AdditionalInfo + WorkFormat). Methods MUST NOT log PII (SEC-002). (Constitution I, II, V)
-- [ ] T023 [TDD] [SUBAGENT] Create ProfileController.java — REST endpoints for all sections under /api/profile/*. Extract userId from session, pass to service. Return Cache-Control: no-store, private (SEC-005). (Constitution I, II, III, V)
-- [ ] T024 [TDD] Update WebConfig.java — register ProfileService, ProfileController, and all new DAOs via @Bean (B1/B5 guard). (Constitution I)
+- [x] T020 [TDD] Create ProfileSectionStatus.java and ProfileData.java DTOs in backend/src/main/java/com/resumainer/dto/. (Constitution I)
+- [x] T021 [TDD] Create CoursePage.java — paginated response DTO with content, totalElements, totalPages, number, size. (Constitution I)
+- [x] T022 [TDD] [SUBAGENT] Create ProfileService.java — business logic for all 6 sections, transaction management for atomic operations (e.g., AdditionalInfo + WorkFormat). Methods MUST NOT log PII (SEC-002). (Constitution I, II, V)
+- [x] T023 [TDD] [SUBAGENT] Create ProfileController.java — REST endpoints for all sections under /api/profile/*. Extract userId from session, pass to service. Return Cache-Control: no-store, private (SEC-005). (Constitution I, II, III, V)
+- [x] T024 [TDD] Update WebConfig.java — register ProfileService, ProfileController, and all new DAOs via @Bean (B1/B5 guard). (Constitution I)
 
 **Checkpoint**: All backend tests pass with `mvn test`. Backend API testable via curl/Postman.
 
