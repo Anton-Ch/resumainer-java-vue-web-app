@@ -16,7 +16,7 @@ import type {
   Project,
   Course,
   CoursePage,
-  SectionStatus
+  ProfileSectionStatus
 } from '@/types/profile'
 
 const BASE = '/api/profile'
@@ -41,8 +41,8 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 // Section Status
 // ========================================================================
 
-export function fetchSectionStatus(): Promise<SectionStatus> {
-  return request<SectionStatus>(`${BASE}/status`)
+export function fetchSectionStatus(): Promise<ProfileSectionStatus> {
+  return request<ProfileSectionStatus>(`${BASE}/status`)
 }
 
 // ========================================================================
