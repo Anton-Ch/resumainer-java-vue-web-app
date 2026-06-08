@@ -25,6 +25,7 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - B13 | PrimeVue 4 Zod resolver validation messages not reactive to locale changes | primevue,vue3,i18n,locale,zod,resolver,form,validation,reactive | [BUGS.md](BUGS.md) | active
 - B14 | PR descriptions with backtick-escaped paths get mangled in gh CLI + PowerShell | pr,github,markdown,backtick,formatting,powershell,cli | [BUGS.md](BUGS.md) | active
 - B15 | FK column type must match referenced entity PK — UUID for users(id), not BIGINT | database,migration,postgresql,foreign-key,uuid,bigint,schema,flyway | [BUGS.md](BUGS.md) | active
+- B16 | vue-i18n @ character in message values causes runtime SyntaxError | vue-i18n,i18n,frontend,syntax-error,special-characters,escaping | [BUGS.md](BUGS.md) | active
 
 ## Decisions
 - D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web.xml) | servlet, spring-mvc, jakarta-ee, tomcat, initialization, web.xml | [DECISIONS.md](DECISIONS.md) | active

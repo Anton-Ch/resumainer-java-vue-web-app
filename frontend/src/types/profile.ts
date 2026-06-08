@@ -7,7 +7,7 @@
 export interface ContactDetails {
   fullName: string
   professionalTitle: string
-  email: string
+  resumeEmail: string
   phone: string
   location: string
   linkedinUrl: string
