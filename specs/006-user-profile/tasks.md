@@ -32,13 +32,13 @@ description: "Task breakdown for User Profile Page feature"
 
 **⚠️ CRITICAL**: No backend or frontend work can begin until this phase is complete
 
-- [ ] T001 [TDD] [SUBAGENT] Create Flyway migration V9__create_work_experience_table.sql — work_experience table with is_deleted + deleted_at (SEC-003). (Constitution I, IV, V)
-- [ ] T002 [TDD] [P] Create Flyway migration V10__create_education_table.sql — education table with is_deleted + deleted_at. (Constitution I, IV, V)
-- [ ] T003 [TDD] [P] Create Flyway migration V11__create_project_table.sql — project table with is_deleted + deleted_at. (Constitution I, IV, V)
-- [ ] T004 [TDD] [P] Create Flyway migration V12__create_course_certificate_table.sql — course_certificate table with is_deleted + deleted_at. (Constitution I, IV, V)
-- [ ] T005 [TDD] [P] Create Flyway migration V13__create_additional_profile_info_table.sql — additional_profile_info table (1:1 with users). (Constitution I, IV)
-- [ ] T006 [TDD] [P] Create Flyway migration V14__create_work_format_tables.sql — work_format + user_work_format tables. (Constitution I, IV)
-- [ ] T007 [TDD] [P] Create Flyway migration V15__seed_work_format_data.sql — seed 8 work format values from BA data dictionary. (Constitution I)
+- [x] T001 [TDD] [SUBAGENT] Create Flyway migration V9__create_work_experience_table.sql — work_experience table with is_deleted + deleted_at (SEC-003). (Constitution I, IV, V)
+- [x] T002 [TDD] [P] Create Flyway migration V10__create_education_table.sql — education table with is_deleted + deleted_at. (Constitution I, IV, V)
+- [x] T003 [TDD] [P] Create Flyway migration V11__create_project_table.sql — project table with is_deleted + deleted_at. (Constitution I, IV, V)
+- [x] T004 [TDD] [P] Create Flyway migration V12__create_course_certificate_table.sql — course_certificate table with is_deleted + deleted_at. (Constitution I, IV, V)
+- [x] T005 [TDD] [P] Create Flyway migration V13__create_additional_profile_info_table.sql — additional_profile_info table (1:1 with users). (Constitution I, IV)
+- [x] T006 [TDD] [P] Create Flyway migration V14__create_work_format_tables.sql — work_format + user_work_format tables. (Constitution I, IV)
+- [x] T007 [TDD] [P] Create Flyway migration V15__seed_work_format_data.sql — seed 8 work format values from BA data dictionary. (Constitution I)
 
 **Checkpoint**: All profile tables created in PostgreSQL — migrations verified with `mvn flyway:migrate`
 

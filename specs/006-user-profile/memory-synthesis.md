@@ -1,41 +1,39 @@
 # Memory Synthesis
 
 ## Current Scope
-Feature 006 — User Profile Page (6 sections: Contact Details, Work Experience, Projects, Education, Courses, Additional Info). Backend REST APIs + PostgreSQL persistence alongside frontend Vue 3 + PrimeVue implementation.
+- Feature: 006-user-profile
+- Spec: Feature Specification: User Profile Page
+- Feature folder: specs\006-user-profile
+- Spec context: # Feature Specification : User Profile Page **Feature Branch **: `feat/006-profile-page` **Created**: 2026-06-07 **Status**: Approved **Input**: User description from `tempfiles/prototype/profile_brief_opencode.md` ## Clarifications ### Session 2026-06-07 - **Q1: Data volume per profile section...
+
+## Relevant Project Context
+- [none]
 
 ## Relevant Decisions
-- **D10: DAO connection-accepting overloads for JDBC transaction support** (Status: Active) — Profile sections require atomic multi-table saves (e.g., ContactDetails + user, or AdditionalInfo + user_work_format). DAOs must expose connection-accepting overloads for service-level transaction management.
-- **D12: PrimeVue 4 Form with Zod resolver** (Status: Active) — Standard validation pattern for all Profile forms (Contact, AdditionalInfo, inline record forms). Uses zod for schema + vue-i18n for error messages.
-- **D13: All user-facing strings must use i18n $t()** (Status: Active) — Critical for Profile. No hardcoded labels, placeholders, toasts, validation messages, status text.
-- **D14: Mandatory manual integration testing phase** (Status: Active) — Applies after Profile implementation.
-- **D17: PrimeVue DataTable lazy mode for server-paginated APIs** (Status: Active) — Required for Courses DataTable with up to 300 records. Lazy mode with server-side LIMIT/OFFSET.
-- **D18: Independent block loading for resilient page architecture** (Status: Active) — Each profile section loads independently; failure in one section does not block others.
-- **D20: PrimeVue 4 ToastService + ConfirmationService require app.use()** (Status: Active) — Needed for save success/error toasts and delete confirmations.
-- **D21: PrimeVue 4 Tooltip is a global directive requiring explicit registration** (Status: Active) — For Courses table sort-header tooltips.
-- **D15: Separate @Configuration for infrastructure beans via @ComponentScan** (Status: Active) — Profile DAOs, Services, Controllers registered via @Repository/@Service/@Controller + @ComponentScan.
+- [D1] Status Active Why this is durable During manual testing, hardcoded English strings were found in AuthPage.vue (info panel text, subtitles) and in LoginForm/RegisterForm (Zod validation messages). These were not caught during implementation because they were &quot;invisible&quot; — the page looked correct in English, but switching to Russian revealed untranslated text. Every future feature with UI will have the same risk. (Source: `docs/memory/DECISIONS.md`)
+- [D2] The user experience MUST be consistent across all screens, languages, and interaction patterns. Every user-facing interaction follows the same rules. Internationalization : All user-facing strings MUST be externalized into resource files ( messages_en.properties , messages_ru.properties ) for both Thymeleaf (Landing Page) and Vue SPA. (Source: `.specify/memory/constitution.md`)
+- [D3] Status Active Why this is durable Unit tests caught 0 of the 6 bugs found during manual testing of Feature 003. Bugs like missing Flyway bean, unresolved DataSource URL, unresponsive i18n validation messages, and duplicate toggle text were invisible to unit tests. They only appeared in the full Docker environment with actual PostgreSQL, Nginx, and browser interaction. (Source: `docs/memory/DECISIONS.md`)
+- [D4] Status Active Why this is durable pom.xml targets Java 21 ( &lt;release&gt;21&lt;/release&gt; , &lt;maven.compiler.source&gt;21&lt;/maven.compiler.source&gt; ). Installing a newer JDK (23+) causes subtle failures: Mockito 5.x inline mock maker cannot self-attach because JDK 23+ disables the Attach API. Every developer setting up this project will face this if their system JDK doesn't match. (Source: `docs/memory/DECISIONS.md`)
+- [D5] Status Active Why this is durable Adding infrastructure beans (DataSource, Flyway) to the Spring context breaks any test that loads @ContextConfiguration(classes = WebConfig.class) because the DataSource initialization requires a real PostgreSQL connection. Controller tests that don't need database access should use standalone MockMvc setup to avoid this dependency. (Source: `docs/memory/DECISIONS.md`)
 
 ## Active Architecture Constraints
-- **A2: SPA under /app/ routing** (Source: ARCHITECTURE.md) — All SPA routes should be under `/app/*`. Profile routes are currently at `/profile/*` in prototype — must align with project routing convention (verify if `/app/profile/*` or standalone `/profile/*` is correct based on existing setup).
+- [none]
 
 ## Accepted Deviations
-- No accepted deviations apply to this feature.
+- [V1] Status Active Why this is durable Every Vue SPA feature that accepts user input needs form validation. PrimeVue 4 introduced a new Form component with resolver-based validation. The pattern is non-obvious and differs from PrimeVue 3. (Source: `docs/memory/DECISIONS.md`)
+- [V2] Status Active Why this is durable Registration requires creating User + ContactDetail atomically. The standard DAO pattern (each method opens/closes its own Connection via DataSource) cannot support multi-table transactions. This pattern will repeat for every future feature that needs atomic multi-table operations. (Source: `docs/memory/DECISIONS.md`)
 
 ## Relevant Security Constraints
-- Backend validation is authoritative — all Profile form submissions must be validated server-side even if frontend validates first.
-- No secrets in logs or builds — applies to any profile data handling.
-- Username validation: English letters/digits/underscores/hyphens only, no Cyrillic, no spaces. Unique enforced at DB level (UNIQUE constraint on `users.username`).
+- [S1] Status Active Why this is durable Every feature with form submissions needs CSRF protection. Without Spring Security, there is no built-in CSRF filter. This pattern must be reused for all future POST/PUT/DELETE endpoints. (Source: `docs/memory/DECISIONS.md`)
+- [S2] Security MUST be integrated into every feature from design through implementation. Security is not an afterthought. Password Storage : All passwords MUST be hashed using BCrypt. (Source: `.specify/memory/constitution.md`)
 
 ## Related Historical Lessons
-- **Feature 005 User Home**: Established pattern for PrimeVue DataTable lazy mode + server pagination + independent block loading. Same pattern applies to Profile sections.
-- **Feature 003 Auth**: Established i18n patterns, DAO/service/controller layers, and test patterns. Profile follows same architecture.
-- **Feature 004 Connection Pool**: @ComponentScan pattern for bean discovery — Profile DAOs/services/controllers follow same registration.
+- [none]
 
 ## Conflict Warnings
-- (none) — Routing verified: existing router uses `/profile/*` directly (aligned with prototype). Memory entry A2 about `/app/` prefix does not match current implementation — resolved as soft conflict, existing route pattern takes precedence.
-- **Date of Birth NOT NULL**: Data dictionary requires DOB as NOT NULL, confirmed by user as required field. Must ensure frontend validation and DB constraint are aligned.
+- [none]
 
 ## Retrieval Notes
-- Index entries considered: 20 (all in INDEX.md)
-- Source sections read: BUGS.md, DECISIONS.md, ARCHITECTURE.md, WORKLOG.md (selected entries only)
-- Max synthesis budget: 900 words (current: ~580)
-- Optimizer: enabled (SQLite cache)
+- Index entries considered: 10
+- Source sections read: 10
+- Budget status: within limit
