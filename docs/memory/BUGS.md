@@ -548,3 +548,132 @@ ContactDetailsSection.vue in Feature 006 rendered as blank <!----> because profi
 
 **Where to look next**
 frontend/src/i18n/en.json, frontend/src/i18n/ru.json
+
+---
+
+### 2026-06-08 - New frontend API services must include CSRF token handling for unsafe methods
+
+**Status**
+Active
+
+**Symptoms**
+POST, PUT, PATCH, or DELETE requests to any /api/* endpoint return 403 with: {"error":"Invalid or missing CSRF token"}. The XSRF-TOKEN cookie is present in document.cookie, but the X-CSRF-Token header is missing from the request.
+
+**Root Cause**
+The backend CsrfFilter implements OWASP cookie-to-header pattern: it sets a non-HTTP-only cookie XSRF-TOKEN and validates the X-CSRF-Token header for unsafe methods (POST, PUT, PATCH, DELETE). The authService.ts already handles this correctly with getCsrfToken() + buildOptions(), but newly created API services (like profileService.ts) were built without CSRF handling.
+
+**Future mistake prevented**
+Every new frontend API service that sends state-changing requests must include CSRF token handling. The recommended approach is to use a shared HTTP client (httpClient.ts) that:
+1. Reads XSRF-TOKEN from document.cookie via regex
+2. Adds X-CSRF-Token header for unsafe methods only (not GET/HEAD/OPTIONS)
+3. Uses new Headers() to safely merge with existing headers
+4. Sets Content-Type: application/json for requests with body
+5. Handles 204 No Content safely
+
+**Evidence**
+profileService.ts was created with a local request() function that only handled credentials: 'include' without CSRF token. All 6 profile section save/update/delete operations returned 403. After refactoring to use shared httpClient.ts with CSRF handling, all operations returned 200.
+
+**Prevention / Detection**
+1. All new API service files must use the shared httpClient.ts instead of raw fetch()
+2. The shared client automatically adds X-CSRF-Token for POST/PUT/PATCH/DELETE
+3. Test state-changing operations during development — if they return 403, CSRF token is missing
+4. Code review: check that unsafe HTTP methods include X-CSRF-Token header
+
+**Where to look next**
+frontend/src/services/httpClient.ts, frontend/src/services/a*.ts (all API services)
+
+---
+
+### 2026-06-08 - Java Set.contains() with toLowerCase() — Set values must be lowercase too
+
+**Status**
+Active
+
+**Symptoms**
+A validateSortField() method converts the input to lowercase (field.trim().toLowerCase()) and then checks Set.contains(f). Even though the input value is in the ALLOWED list, the check fails and throws IllegalArgumentException. Error message shows the allowed values including the expected value, but contains() still returns false.
+
+Example error:
+Invalid sort field: courseName. Allowed: [courseName, provider, ...]
+
+The value courseName IS in the allowed list but validation fails.
+
+**Root Cause**
+Java's Set.contains() is case-sensitive. If the method does .toLowerCase() on the input before checking, the ALLOWED_SORT_FIELDS Set must also contain lowercase strings. If the Set contains "courseName" (camelCase) but the check is against "coursename" (lowercased), contains() returns false.
+
+Similarly, SORT_FIELDS_NEEDING_MAP must use lowercase keys when the input has been lowercased before the map check.
+
+**Future mistake prevented**
+When implementing field validation with the pattern:
+1. Convert input to lowercase
+2. Check Set.contains()
+
+Make sure ALL entries in the Set are also lowercase. Otherwise validation fails for valid inputs.
+
+Wrong:
+ALLOWED = Set.of("courseName", "startDate")
+input = "courseName".toLowerCase() // "coursename"
+ALLOWED.contains(input) // false!
+
+Correct:
+ALLOWED = Set.of("coursename", "startdate")
+
+**Evidence**
+CourseCertificateDao.validateSortField() in Feature 006 had ALLOWED_SORT_FIELDS with camelCase values ("courseName", "startDate") but the method did field.toLowerCase() before contains(). Sorting by any column failed with 500 Internal Server Error. Fixing the Set values to all lowercase resolved the issue.
+
+**Prevention / Detection**
+1. When using toLowerCase() before Set.contains(), ALWAYS use lowercase values in the Set
+2. Code review: check that Set values match the case of the comparison
+3. Test sorting by every column during development
+4. Check that IllegalArgumentException mentions the field is in the allowed list but still fails
+
+**Where to look next**
+Backend DAO classes with validateSortField() methods: CourseCertificateDao, ResumeDao
+
+---
+
+### 2026-06-08 - PrimeVue Form onSubmit try without catch silently swallows API errors
+
+**Status**
+Active
+
+**Symptoms**
+After submitting a form (login/register), the API returns a non-2xx response (409, 401, etc.) with a descriptive error message. The request fails on the network level but the user sees NO error message on the page. The form just resets or stays unchanged with no feedback.
+
+The browser console shows the error response body being thrown as an unhandled exception: {success: false, message: "..."}
+
+**Root Cause**
+The PrimeVue Form onSubmit handler uses try { ... } finally { ... } or try { ... } without a catch block. When the async API call throws (via throw data as T in handleResponse), the catch block is missing, so the error propagates up to Vue's global error handler and never reaches the user-visible UI.
+
+The authService.ts handleResponse() throws the parsed error object on non-ok responses, which is correct behavior. But the consuming component (LoginForm.vue or RegisterForm.vue) must catch it and display the message.
+
+**Future mistake prevented**
+Every Vue form component with async API calls in onSubmit MUST have:
+1. A catch block that extracts the error message
+2. A generalError ref to store the message
+3. A Message component in the template to display it
+4. Clear the error on each new submission
+
+Pattern:
+try {
+  submitting.value = true
+  generalError.value = ''
+  const response = await apiCall(...)
+  if (response.success) emit('success')
+} catch (err) {
+  const data = err as { message?: string }
+  generalError.value = data.message || t('error.serverError')
+} finally {
+  submitting.value = false
+}
+
+**Evidence**
+Both LoginForm.vue and RegisterForm.vue had try {} finally {} without catch. Registration with existing email returned 409 with message "Email already registered" but the user saw nothing. Login with wrong password also showed no error. Adding catch blocks with generalError display fixed both.
+
+**Prevention / Detection**
+1. Code review: every async form onSubmit must have try/catch/finally or try/catch
+2. Test: submit forms with intentionally invalid data and verify error messages appear
+3. Search for try { without catch { in form components
+4. Test failed API responses show user-friendly messages
+
+**Where to look next**
+frontend/src/components/LoginForm.vue, frontend/src/components/RegisterForm.vue

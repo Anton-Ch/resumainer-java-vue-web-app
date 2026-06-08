@@ -56,6 +56,15 @@
         </div>
       </FormField>
 
+      <!-- General error message -->
+      <Message
+        v-if="generalError"
+        severity="error"
+        size="small"
+        variant="simple"
+        class="general-error"
+      >{{ generalError }}</Message>
+
       <!-- Submit button -->
       <button
         type="submit"
@@ -88,6 +97,7 @@ const emit = defineEmits<{
 const { t, locale } = useI18n()
 const { login, loading } = useAuth()
 const submitting = ref(false)
+const generalError = ref('')
 const resolver = ref(createResolver(t))
 
 // Re-create resolver when locale changes
@@ -120,6 +130,7 @@ async function onSubmit({ valid, values }: { valid: boolean; values: Record<stri
   if (!valid) return
 
   submitting.value = true
+  generalError.value = ''
   try {
     // Access values from PrimeVue Form - they come as snake_case from field names
     const formValues = values as { email: string; password: string; rememberMe: boolean }
@@ -127,6 +138,9 @@ async function onSubmit({ valid, values }: { valid: boolean; values: Record<stri
     if (response.success) {
       emit('success', response.redirectUrl || '/home')
     }
+  } catch (err: unknown) {
+    const data = err as { message?: string }
+    generalError.value = data.message || t('auth.error.serverError')
   } finally {
     submitting.value = false
   }
@@ -176,6 +190,10 @@ async function onSubmit({ valid, values }: { valid: boolean; values: Record<stri
   width: 100%;
   height: 48px;
   margin-top: 4px;
+}
+
+.general-error {
+  margin-bottom: 12px;
 }
 
 .spinner {

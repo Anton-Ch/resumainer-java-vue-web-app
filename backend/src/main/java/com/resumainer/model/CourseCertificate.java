@@ -1,5 +1,6 @@
 package com.resumainer.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -51,10 +52,12 @@ public class CourseCertificate {
         this.userId = userId;
     }
 
+    @JsonProperty("courseName")
     public String getName() {
         return name;
     }
 
+    @JsonProperty("courseName")
     public void setName(String name) {
         this.name = name;
     }

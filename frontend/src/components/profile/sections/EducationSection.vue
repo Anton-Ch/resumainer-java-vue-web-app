@@ -45,7 +45,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">{{ $t('profile.education.startDate') }} <span class="required">*</span></label>
-          <DatePicker v-model="formData.startDate" class="form-input" :showIcon="true" :maxDate="formData.endDate || undefined" />
+          <DatePicker v-model="formData.startDate" class="form-input" :showIcon="true" :maxDate="formData.endDate && formData.endDate < new Date() ? formData.endDate : new Date()" />
           <small v-if="dateError" class="field-error">{{ dateError }}</small>
           <small v-if="formErrors.startDate" class="field-error">{{ formErrors.startDate }}</small>
         </div>
@@ -205,7 +205,14 @@ function formatDate(dateStr: string | null | undefined): string {
 
 function formatMeta(rec: Education): string {
   const start = formatDate(rec.startDate)
-  const end = rec.currentlyStudying ? t('profile.education.present') : formatDate(rec.endDate)
+  let end = ''
+  if (rec.currentlyStudying) {
+    end = t('profile.education.present')
+  } else if (rec.endDate) {
+    end = formatDate(rec.endDate)
+  } else if (rec.startDate) {
+    end = t('profile.education.present')
+  }
   const dateStr = start + ' — ' + end
   return (rec.location ? dateStr + ' · ' + rec.location : dateStr)
 }

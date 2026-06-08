@@ -5,7 +5,7 @@
     </transition>
   </router-view>
   <Toast />
-  <ConfirmDialog />
+  <ConfirmDialog acceptClass="p-button-danger" />
 </template>
 
 <script setup lang="ts">

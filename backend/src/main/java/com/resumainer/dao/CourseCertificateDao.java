@@ -25,7 +25,12 @@ public class CourseCertificateDao {
     private static final Logger log = LoggerFactory.getLogger(CourseCertificateDao.class);
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
-            "name", "provider", "start_date", "end_date"
+            "name", "provider", "start_date", "end_date", "course_focus",
+            "coursename", "startdate", "enddate", "coursefocus"
+    );
+
+    private static final Set<String> SORT_FIELDS_NEEDING_MAP = Set.of(
+            "coursename", "startdate", "enddate", "coursefocus"
     );
 
     private static final String SELECT_BASE =
@@ -282,6 +287,16 @@ public class CourseCertificateDao {
         if (!ALLOWED_SORT_FIELDS.contains(f)) {
             throw new IllegalArgumentException("Invalid sort field: " + field
                     + ". Allowed: " + ALLOWED_SORT_FIELDS);
+        }
+        // Map frontend camelCase field names to DB column names
+        if (SORT_FIELDS_NEEDING_MAP.contains(f)) {
+            switch (f) {
+                case "coursename": return "name";
+                case "startdate": return "start_date";
+                case "enddate": return "end_date";
+                case "coursefocus": return "course_focus";
+                default: return f;
+            }
         }
         return f;
     }

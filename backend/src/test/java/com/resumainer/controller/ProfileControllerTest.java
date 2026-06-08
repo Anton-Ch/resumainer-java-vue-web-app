@@ -222,9 +222,9 @@ class ProfileControllerTest {
         mockMvc.perform(post("/api/profile/courses")
                         .sessionAttr("user", userSession)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"AWS\",\"provider\":\"Coursera\",\"startDate\":\"2025-01-01\"}"))
+                        .content("{\"courseName\":\"AWS\",\"provider\":\"Coursera\",\"startDate\":\"2025-01-01\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("AWS"));
+                .andExpect(jsonPath("$.courseName").value("AWS"));
     }
 
     // ========================================================================

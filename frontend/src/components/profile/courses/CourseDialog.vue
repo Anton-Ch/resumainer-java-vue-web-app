@@ -60,7 +60,7 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">{{ $t('profile.courses.startDate') }} <span class="required">*</span></label>
-            <DatePicker v-model="editForm.startDate" class="form-input" :showIcon="true" :maxDate="editForm.endDate || undefined" />
+            <DatePicker v-model="editForm.startDate" class="form-input" :showIcon="true" :maxDate="editForm.endDate && editForm.endDate < new Date() ? editForm.endDate : new Date()" />
             <small v-if="errors.startDate" class="field-error">{{ errors.startDate }}</small>
           </div>
           <div class="form-group">

@@ -661,3 +661,33 @@ Manual JDBC transaction methods (getConnection → setAutoCommit(false) → oper
 - Gained: Reliable rollback on all error types, including DAO RuntimeExceptions
 - Made harder: Slightly broader catch block
 - Reconsider: If Spring's TransactionTemplate is adopted, this pattern is replaced entirely
+
+---
+
+### 2026-06-08 - Sort field names must be mapped between frontend and backend in lazy DataTable
+
+**Status**
+Active
+
+**Why this is durable**
+PrimeVue DataTable lazy mode sends sortField from Column field prop directly to server. The frontend uses camelCase field names (courseName, startDate) but the DB uses snake_case column names (name, start_date). Without explicit mapping, sort requests fail with IllegalArgumentException and data disappears when user clicks a column header to sort.
+
+This complements D17 (PrimeVue DataTable lazy mode) which mandates lazy loading but does not cover field name mapping.
+
+**Decision**
+Every DAO with pagination and sort support MUST:
+1. Define ALLOWED_SORT_FIELDS containing both frontend field names (camelCase) and DB column names (snake_case)
+2. Implement a mapping from frontend field names to DB column names in validateSortField()
+3. Add SORT_FIELDS_NEEDING_MAP with the frontend-only names that need translation
+4. Test that sorting by each column returns correct results
+
+Example mapping pattern:
+- courseName -> name
+- startDate -> start_date
+- endDate -> end_date
+- courseFocus -> course_focus
+
+**Tradeoffs**
+- Gained: Sort works correctly regardless of naming convention differences
+- Made harder: DAO needs an additional mapping structure and switch/case or Map
+- Reconsider: If frontend and DB column names are identical, mapping is not needed

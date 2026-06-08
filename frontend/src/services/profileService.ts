@@ -5,10 +5,10 @@
  * Contact Details, Work Experience, Education, Projects,
  * Courses & Certificates, Additional Info.
  *
- * All requests include credentials (session cookie) for authentication.
- * Error handling: non-OK responses throw descriptive Error messages.
+ * Uses shared httpClient for CSRF token handling (OWASP cookie-to-header pattern).
  */
 
+import { apiRequest } from './httpClient'
 import type {
   ContactDetails,
   WorkExperience,
@@ -21,28 +21,12 @@ import type {
 
 const BASE = '/api/profile'
 
-async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, { credentials: 'include', ...options })
-  if (!res.ok) {
-    const body = await res.text()
-    let message = `HTTP ${res.status}`
-    try {
-      const json = JSON.parse(body)
-      message = json.message || message
-    } catch { /* use default message */ }
-    throw new Error(message)
-  }
-  // 204 No Content
-  if (res.status === 204) return undefined as T
-  return res.json()
-}
-
 // ========================================================================
 // Section Status
 // ========================================================================
 
 export function fetchSectionStatus(): Promise<ProfileSectionStatus> {
-  return request<ProfileSectionStatus>(`${BASE}/status`)
+  return apiRequest<ProfileSectionStatus>(`${BASE}/status`)
 }
 
 // ========================================================================
@@ -50,13 +34,12 @@ export function fetchSectionStatus(): Promise<ProfileSectionStatus> {
 // ========================================================================
 
 export function fetchContactDetails(): Promise<ContactDetails> {
-  return request<ContactDetails>(`${BASE}/contact`)
+  return apiRequest<ContactDetails>(`${BASE}/contact`)
 }
 
 export function updateContactDetails(data: ContactDetails): Promise<ContactDetails> {
-  return request<ContactDetails>(`${BASE}/contact`, {
+  return apiRequest<ContactDetails>(`${BASE}/contact`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   })
 }
@@ -66,27 +49,25 @@ export function updateContactDetails(data: ContactDetails): Promise<ContactDetai
 // ========================================================================
 
 export function fetchExperiences(): Promise<WorkExperience[]> {
-  return request<WorkExperience[]>(`${BASE}/experience`)
+  return apiRequest<WorkExperience[]>(`${BASE}/experience`)
 }
 
 export function createExperience(data: Omit<WorkExperience, 'id'>): Promise<WorkExperience> {
-  return request<WorkExperience>(`${BASE}/experience`, {
+  return apiRequest<WorkExperience>(`${BASE}/experience`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   })
 }
 
 export function updateExperience(id: number, data: WorkExperience): Promise<WorkExperience> {
-  return request<WorkExperience>(`${BASE}/experience/${id}`, {
+  return apiRequest<WorkExperience>(`${BASE}/experience/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   })
 }
 
 export function deleteExperience(id: number): Promise<void> {
-  return request<void>(`${BASE}/experience/${id}`, { method: 'DELETE' })
+  return apiRequest<void>(`${BASE}/experience/${id}`, { method: 'DELETE' })
 }
 
 // ========================================================================
@@ -94,27 +75,25 @@ export function deleteExperience(id: number): Promise<void> {
 // ========================================================================
 
 export function fetchEducations(): Promise<Education[]> {
-  return request<Education[]>(`${BASE}/education`)
+  return apiRequest<Education[]>(`${BASE}/education`)
 }
 
 export function createEducation(data: Omit<Education, 'id'>): Promise<Education> {
-  return request<Education>(`${BASE}/education`, {
+  return apiRequest<Education>(`${BASE}/education`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   })
 }
 
 export function updateEducation(id: number, data: Education): Promise<Education> {
-  return request<Education>(`${BASE}/education/${id}`, {
+  return apiRequest<Education>(`${BASE}/education/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   })
 }
 
 export function deleteEducation(id: number): Promise<void> {
-  return request<void>(`${BASE}/education/${id}`, { method: 'DELETE' })
+  return apiRequest<void>(`${BASE}/education/${id}`, { method: 'DELETE' })
 }
 
 // ========================================================================
@@ -122,27 +101,25 @@ export function deleteEducation(id: number): Promise<void> {
 // ========================================================================
 
 export function fetchProjects(): Promise<Project[]> {
-  return request<Project[]>(`${BASE}/projects`)
+  return apiRequest<Project[]>(`${BASE}/projects`)
 }
 
 export function createProject(data: Omit<Project, 'id'>): Promise<Project> {
-  return request<Project>(`${BASE}/projects`, {
+  return apiRequest<Project>(`${BASE}/projects`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   })
 }
 
 export function updateProject(id: number, data: Project): Promise<Project> {
-  return request<Project>(`${BASE}/projects/${id}`, {
+  return apiRequest<Project>(`${BASE}/projects/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   })
 }
 
 export function deleteProject(id: number): Promise<void> {
-  return request<void>(`${BASE}/projects/${id}`, { method: 'DELETE' })
+  return apiRequest<void>(`${BASE}/projects/${id}`, { method: 'DELETE' })
 }
 
 // ========================================================================
@@ -169,27 +146,25 @@ export function fetchCourses(params?: CourseQuery): Promise<CoursePage> {
   if (params?.dateFrom) query.set('dateFrom', params.dateFrom)
   if (params?.dateTo) query.set('dateTo', params.dateTo)
   const qs = query.toString()
-  return request<CoursePage>(`${BASE}/courses${qs ? '?' + qs : ''}`)
+  return apiRequest<CoursePage>(`${BASE}/courses${qs ? '?' + qs : ''}`)
 }
 
 export function createCourse(data: Omit<Course, 'id'>): Promise<Course> {
-  return request<Course>(`${BASE}/courses`, {
+  return apiRequest<Course>(`${BASE}/courses`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   })
 }
 
 export function updateCourse(id: number, data: Course): Promise<Course> {
-  return request<Course>(`${BASE}/courses/${id}`, {
+  return apiRequest<Course>(`${BASE}/courses/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   })
 }
 
 export function deleteCourse(id: number): Promise<void> {
-  return request<void>(`${BASE}/courses/${id}`, { method: 'DELETE' })
+  return apiRequest<void>(`${BASE}/courses/${id}`, { method: 'DELETE' })
 }
 
 // ========================================================================
@@ -197,13 +172,12 @@ export function deleteCourse(id: number): Promise<void> {
 // ========================================================================
 
 export function fetchAdditionalInfo(): Promise<Record<string, unknown>> {
-  return request<Record<string, unknown>>(`${BASE}/additional`)
+  return apiRequest<Record<string, unknown>>(`${BASE}/additional`)
 }
 
 export function updateAdditionalInfo(data: Record<string, unknown>): Promise<Record<string, unknown>> {
-  return request<Record<string, unknown>>(`${BASE}/additional`, {
+  return apiRequest<Record<string, unknown>>(`${BASE}/additional`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   })
 }

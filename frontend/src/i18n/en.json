@@ -241,6 +241,7 @@
       "cancel": "Cancel",
       "projectName": "Project name",
       "role": "Role",
+      "location": "Location",
       "startDate": "Start date",
       "endDate": "End date",
       "isOngoing": "This project is ongoing",
