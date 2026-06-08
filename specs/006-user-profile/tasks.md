@@ -63,12 +63,12 @@ description: "Task breakdown for User Profile Page feature"
 
 **Purpose**: Implement data access layer with PreparedStatement, owner-scoped queries (SEC-001), and soft-delete (SEC-003)
 
-- [ ] T014 [TDD] [SUBAGENT] Create WorkExperienceDao.java — CRUD with PreparedStatement, WHERE user_id = ? (SEC-001), is_deleted = FALSE filter (SEC-003), soft-delete UPDATE. Test: mock DataSource/Connection/PreparedStatement/ResultSet. (Constitution I, II, IV, V)
-- [ ] T015 [TDD] [P] [SUBAGENT] Create EducationDao.java — same pattern. Test: all CRUD methods. (Constitution I, II, IV, V)
-- [ ] T016 [TDD] [P] [SUBAGENT] Create ProjectDao.java — same pattern. Test: all CRUD methods. (Constitution I, II, IV, V)
-- [ ] T017 [TDD] [P] [SUBAGENT] Create CourseCertificateDao.java — same pattern + pagination with LIMIT/OFFSET + search/filter. Test: pagination params, search (3+ chars), date range filter. (Constitution I, II, IV, V)
-- [ ] T018 [TDD] [P] Create AdditionalProfileInfoDao.java — upsert pattern (INSERT ON CONFLICT UPDATE) for 1:1 relation. Test: first save creates, second save updates. (Constitution I, II, IV)
-- [ ] T019 [TDD] [P] Create WorkFormatDao.java — findAll lookup + findByUserId + saveUserFormats (delete + insert). Test: round-trip save/read. (Constitution I, II, IV)
+- [x] T014 [TDD] [SUBAGENT] Create WorkExperienceDao.java — CRUD with PreparedStatement, WHERE user_id = ? (SEC-001), is_deleted = FALSE filter (SEC-003), soft-delete UPDATE. Test: mock DataSource/Connection/PreparedStatement/ResultSet. (Constitution I, II, IV, V)
+- [x] T015 [TDD] [P] [SUBAGENT] Create EducationDao.java — same pattern. Test: all CRUD methods. (Constitution I, II, IV, V)
+- [x] T016 [TDD] [P] [SUBAGENT] Create ProjectDao.java — same pattern. Test: all CRUD methods. (Constitution I, II, IV, V)
+- [x] T017 [TDD] [P] [SUBAGENT] Create CourseCertificateDao.java — same pattern + pagination with LIMIT/OFFSET + search/filter. Test: pagination params, search (3+ chars), date range filter. (Constitution I, II, IV, V)
+- [x] T018 [TDD] [P] Create AdditionalProfileInfoDao.java — upsert pattern (INSERT ON CONFLICT UPDATE) for 1:1 relation. Test: first save creates, second save updates. (Constitution I, II, IV)
+- [x] T019 [TDD] [P] Create WorkFormatDao.java — findAll lookup + findByUserId + saveUserFormats (delete + insert). Test: round-trip save/read. (Constitution I, II, IV)
 
 **Checkpoint**: All DAO tests pass with `mvn test`
 
