@@ -1,5 +1,6 @@
 package com.resumainer.dao;
 
+import com.resumainer.exception.ServiceException;
 import com.resumainer.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -230,6 +231,13 @@ public class UserDao {
                 throw new RuntimeException("User not found: " + userId);
             }
             log.debug("Username updated: userId={}", userId);
+        } catch (SQLException e) {
+            // PostgreSQL unique violation error code is 23505
+            if ("23505".equals(e.getSQLState())) {
+                throw new ServiceException("username.taken",
+                        "This username is already taken. Please try a different one.", e);
+            }
+            throw e;
         }
     }
 
