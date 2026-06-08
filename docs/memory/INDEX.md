@@ -48,6 +48,7 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - D20 | PrimeVue 4: ToastService and ConfirmationService require app.use() plugin installation | primevue,vue3,toast,confirmdialog,plugin,service,configuration,frontend | [DECISIONS.md](DECISIONS.md) | active
 - D21 | PrimeVue 4: Tooltip is a global directive requiring explicit registration | primevue,vue3,tooltip,directive,configuration,frontend | [DECISIONS.md](DECISIONS.md) | active
 - D22 | PrimeVue 4: PrimeIcons is a separate package requiring explicit CSS import | primevue,vue3,primeicons,icons,css,package,frontend | [DECISIONS.md](DECISIONS.md) | active
+- D23 | Manual JDBC transaction must catch Exception, not just SQLException | transaction,jdbc,rollback,spring-mvc,service | [DECISIONS.md](DECISIONS.md) | active
 
 ## Workflow
 - W1 | First Feature MVP Achieved: Hello World Tomcat | milestone, mvp, hello-world, docker, spring-mvc, tomcat | [WORKLOG.md](WORKLOG.md) | active
@@ -62,3 +63,4 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - W10 | Feature 004 Custom JDBC Connection Pool Implementation Completed | milestone,feature-004,jdbc-pool,tdd,component-scan,datasource | [WORKLOG.md](WORKLOG.md) | active
 - W11 | Feature 005 Planning and All Artifacts Completed | milestone,feature-005,planning,user-home-page,spec,plan,tasks,security-review | [WORKLOG.md](WORKLOG.md) | active
 - W12 | Feature 005 Implementation — Backend and Frontend Core Completed | milestone,feature-005,implementation,backend,frontend,user-home-page | [WORKLOG.md](WORKLOG.md) | active
+- W13 | Feature 006 Profile Page DAO and Service/Controller Layers Completed | milestone,feature-006,dao,service,controller,profile | [WORKLOG.md](WORKLOG.md) | active

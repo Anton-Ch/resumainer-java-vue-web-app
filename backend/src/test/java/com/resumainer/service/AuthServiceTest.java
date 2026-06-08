@@ -46,7 +46,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void register_validInput_createsUserAndContactDetail() {
+    void register_validInput_createsUserAndContactDetail() throws Exception {
         // Arrange
         RegisterRequest request = new RegisterRequest("test@example.com", "StrongPass1", "StrongPass1");
         when(passwordService.isStrongPassword("StrongPass1")).thenReturn(true);

@@ -643,3 +643,21 @@ app.directive('tooltip', Tooltip)
 - Gained: All PrimeIcons render correctly
 - Made harder: One extra dependency and import
 - Reconsider: None — this is the documented PrimeVue 4 setup
+
+---
+
+### 2026-06-08 - Manual JDBC transaction methods must catch Exception, not just SQLException
+
+**Status**
+Active
+
+**Why this is durable**
+DAO connection-overloads declare throws SQLException, but DAO auto-managed methods wrap SQLException in RuntimeException. In pure Spring MVC without @Transactional, manual transaction blocks that only catch SQLException will miss RuntimeExceptions thrown by auto-managed DAO methods, causing the transaction to leak without rollback.
+
+**Decision**
+Manual JDBC transaction methods (getConnection → setAutoCommit(false) → operations → commit/rollback) MUST catch Exception (not just SQLException) to ensure rollback on all error types. This applies to all ProfileService and future Service classes that manage JDBC transactions manually.
+
+**Tradeoffs**
+- Gained: Reliable rollback on all error types, including DAO RuntimeExceptions
+- Made harder: Slightly broader catch block
+- Reconsider: If Spring's TransactionTemplate is adopted, this pattern is replaced entirely

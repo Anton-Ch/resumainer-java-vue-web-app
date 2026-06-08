@@ -205,6 +205,34 @@ public class UserDao {
         }
     }
 
+    /**
+     * Update username for a user (with connection overload for transaction support).
+     */
+    public void updateUsername(UUID userId, String username) {
+        try (Connection conn = dataSource.getConnection()) {
+            updateUsername(userId, username, conn);
+        } catch (SQLException e) {
+            log.error("Error updating username for user: {}", userId, e);
+            throw new RuntimeException("Database error updating username", e);
+        }
+    }
+
+    /**
+     * Update username within an existing connection (for transaction support).
+     */
+    public void updateUsername(UUID userId, String username, Connection conn) throws SQLException {
+        String sql = "UPDATE users SET username = ?, updated_at = NOW() WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.setObject(2, userId);
+            int affected = stmt.executeUpdate();
+            if (affected == 0) {
+                throw new RuntimeException("User not found: " + userId);
+            }
+            log.debug("Username updated: userId={}", userId);
+        }
+    }
+
     private User mapRow(ResultSet rs) throws SQLException {
         User user = new User();
         user.setId(rs.getObject("id", UUID.class));
