@@ -106,12 +106,12 @@ description: "Task breakdown for User Profile Page feature"
 
 **Purpose**: Profile shell, sidebar, mobile tabs, and navigation structure — shared by ALL sections
 
-- [ ] T030 Implement ProfilePage.vue in frontend/src/views/ProfilePage.vue — route-level view: loads ProfileShell, tracks dirty state across sections, handles UnsavedChangesDialog, browser beforeunload warning. (Constitution III)
-- [ ] T031 [P] Implement ProfileShell.vue in frontend/src/components/profile/ProfileShell.vue — layout wrapper with sidebar + main content area. (Constitution III)
-- [ ] T032 [P] Implement ProfileSidebar.vue in frontend/src/components/profile/ProfileSidebar.vue — desktop left sidebar with section list and status indicators (completed/incomplete, record counts). EN: "Completed ✓", "Incomplete !", "{count} records", "No records". RU from i18n. (Constitution III)
-- [ ] T033 [P] Implement ProfileMobileTabs.vue in frontend/src/components/profile/ProfileMobileTabs.vue — mobile 2-row × 3-column grid tabs at breakpoint < 768px. (Constitution III)
-- [ ] T034 [P] Implement ProfileSectionHeader.vue in frontend/src/components/profile/ProfileSectionHeader.vue — section title, purpose text, and required-fields note near save button. (Constitution III)
-- [ ] T035 [P] Implement UnsavedChangesDialog.vue in frontend/src/components/profile/UnsavedChangesDialog.vue — PrimeVue Dialog with "Leave without saving?" / "Stay on this page" buttons. EN and RU variants. (Constitution III)
+- [x] T030 Implement ProfilePage.vue in frontend/src/views/ProfilePage.vue — route-level view: loads ProfileShell, tracks dirty state across sections, handles UnsavedChangesDialog, browser beforeunload warning. (Constitution III)
+- [x] T031 [P] Implement ProfileShell.vue in frontend/src/components/profile/ProfileShell.vue — layout wrapper with sidebar + main content area. (Constitution III)
+- [x] T032 [P] Implement ProfileSidebar.vue in frontend/src/components/profile/ProfileSidebar.vue — desktop left sidebar with section list and status indicators (completed/incomplete, record counts). EN: "Completed ✓", "Incomplete !", "{count} records", "No records". RU from i18n. (Constitution III)
+- [x] T033 [P] Implement ProfileMobileTabs.vue in frontend/src/components/profile/ProfileMobileTabs.vue — mobile 2-row × 3-column grid tabs at breakpoint < 768px. (Constitution III)
+- [x] T034 [P] Implement ProfileSectionHeader.vue in frontend/src/components/profile/ProfileSectionHeader.vue — section title, purpose text, and required-fields note near save button. (Constitution III)
+- [x] T035 [P] Implement UnsavedChangesDialog.vue in frontend/src/components/profile/UnsavedChangesDialog.vue — PrimeVue Dialog with "Leave without saving?" / "Stay on this page" buttons. EN and RU variants. (Constitution III)
 
 **Checkpoint**: Profile layout renders with sidebar navigation and section switching
 

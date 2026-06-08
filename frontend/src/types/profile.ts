@@ -80,13 +80,29 @@ export interface AdditionalInfo {
   citizenship: string
 }
 
-export interface SectionStatus {
+/**
+ * API response type for section status endpoint.
+ * Matches backend ProfileSectionStatus DTO.
+ */
+export interface ProfileSectionStatus {
   contact: 'completed' | 'incomplete'
   experience: { count: number; label: string }
   education: { count: number; label: string }
   projects: { count: number; label: string }
   courses: { count: number; label: string }
   additional: 'completed' | 'incomplete'
+}
+
+/**
+ * UI type for sidebar/tab section items.
+ * Used by ProfileSidebar, ProfileMobileTabs, ProfileShell.
+ */
+export interface SidebarSection {
+  key: string
+  label: string
+  route: string
+  statusText: string
+  statusType: 'completed' | 'incomplete' | 'count' | 'no-records' | 'empty'
 }
 
 export interface CoursePage {

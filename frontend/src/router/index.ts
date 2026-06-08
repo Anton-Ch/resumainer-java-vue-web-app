@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { checkAuthStatus } from '@/services/authService'
-import ProfilePlaceholderPage from '@/components/common/ProfilePlaceholderPage.vue'
 import GeneratePlaceholderPage from '@/components/common/GeneratePlaceholderPage.vue'
+import ProfilePage from '@/views/ProfilePage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -29,41 +29,41 @@ const router = createRouter({
       path: '/profile',
       redirect: '/profile/contact'
     },
-    // Profile section placeholders (with subnav)
+    // Profile section pages (all use ProfilePage as container)
     {
       path: '/profile/contact',
       name: 'profile-contact',
-      component: ProfilePlaceholderPage,
+      component: ProfilePage,
       meta: { requiresAuth: true }
     },
     {
       path: '/profile/experience',
       name: 'profile-experience',
-      component: ProfilePlaceholderPage,
+      component: ProfilePage,
       meta: { requiresAuth: true }
     },
     {
       path: '/profile/education',
       name: 'profile-education',
-      component: ProfilePlaceholderPage,
+      component: ProfilePage,
       meta: { requiresAuth: true }
     },
     {
       path: '/profile/projects',
       name: 'profile-projects',
-      component: ProfilePlaceholderPage,
+      component: ProfilePage,
       meta: { requiresAuth: true }
     },
     {
       path: '/profile/courses',
       name: 'profile-courses',
-      component: ProfilePlaceholderPage,
+      component: ProfilePage,
       meta: { requiresAuth: true }
     },
     {
       path: '/profile/additional',
       name: 'profile-additional',
-      component: ProfilePlaceholderPage,
+      component: ProfilePage,
       meta: { requiresAuth: true }
     },
     // Generate resume placeholders (with stepper)
