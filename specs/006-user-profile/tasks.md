@@ -128,9 +128,9 @@ description: "Task breakdown for User Profile Page feature"
 
 ## Phase 8: Frontend — Work Experience (US2) + Projects (US3)
 
-- [ ] T038 [TDD] [SUBAGENT] Implement WorkExperienceSection.vue in frontend/src/components/profile/sections/WorkExperienceSection.vue — card list + inline Add/Edit form. "I currently work here" hides End Date. Card shows "Present" chip. Smooth scroll to form. (Constitution II, III)
-- [ ] T039 [P] Implement InlineRecordForm.vue in frontend/src/components/profile/InlineRecordForm.vue — shared inline form component for add/edit. Emits save/cancel events with dirty state. (Constitution III)
-- [ ] T040 [TDD] [SUBAGENT] [P] Implement ProjectsSection.vue in frontend/src/components/profile/sections/ProjectsSection.vue — same card + inline form pattern. "Ongoing" checkbox hides End Date. (Constitution II, III)
+- [x] T038 [TDD] [SUBAGENT] Implement WorkExperienceSection.vue in frontend/src/components/profile/sections/WorkExperienceSection.vue — card list + inline Add/Edit form. "I currently work here" hides End Date. Card shows "Present" chip. Smooth scroll to form. Real REST API. (Constitution II, III)
+- [x] T039 [P] Implement InlineRecordForm.vue in frontend/src/components/profile/InlineRecordForm.vue — shared inline form component for add/edit. Emits save/cancel events with dirty state. (Constitution III)
+- [x] T040 [TDD] [SUBAGENT] [P] Implement ProjectsSection.vue in frontend/src/components/profile/sections/ProjectsSection.vue — same card + inline form pattern. "Ongoing" checkbox hides End Date. Real REST API. (Constitution II, III)
 
 **Checkpoint**: Work Experience and Projects sections — add/edit/delete/validate all work
 
