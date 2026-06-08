@@ -1,7 +1,9 @@
 package com.resumainer.service;
 
 import com.resumainer.dao.ContactDetailDao;
+import com.resumainer.dao.EducationDao;
 import com.resumainer.dao.ResumeDao;
+import com.resumainer.dao.WorkExperienceDao;
 import com.resumainer.model.SavedResume;
 import com.resumainer.model.UserHomeSummary;
 import com.resumainer.model.UserHomeSummary.ProfileChecklist;
@@ -27,10 +29,15 @@ public class UserHomeService {
 
     private final ContactDetailDao contactDetailDao;
     private final ResumeDao resumeDao;
+    private final WorkExperienceDao workExperienceDao;
+    private final EducationDao educationDao;
 
-    public UserHomeService(ContactDetailDao contactDetailDao, ResumeDao resumeDao) {
+    public UserHomeService(ContactDetailDao contactDetailDao, ResumeDao resumeDao,
+                           WorkExperienceDao workExperienceDao, EducationDao educationDao) {
         this.contactDetailDao = contactDetailDao;
         this.resumeDao = resumeDao;
+        this.workExperienceDao = workExperienceDao;
+        this.educationDao = educationDao;
     }
 
     /**
@@ -82,11 +89,21 @@ public class UserHomeService {
     }
 
     private boolean hasWorkExperience(UUID userId) {
-        return false; // TODO: implement when WorkExperience feature is built
+        try {
+            return !workExperienceDao.findByUserId(userId).isEmpty();
+        } catch (Exception e) {
+            log.warn("Failed to check work experience for user: {}", userId, e);
+            return false;
+        }
     }
 
     private boolean hasEducation(UUID userId) {
-        return false; // TODO: implement when Education feature is built
+        try {
+            return !educationDao.findByUserId(userId).isEmpty();
+        } catch (Exception e) {
+            log.warn("Failed to check education for user: {}", userId, e);
+            return false;
+        }
     }
 
     private boolean isNotBlank(String s) {

@@ -48,7 +48,11 @@ public class PooledConnectionProxy implements InvocationHandler {
         }
         closed = true;
         try {
-            physicalConnection.rollback();
+            // Rollback only if a transaction is active (autoCommit was disabled).
+            // PostgreSQL throws: Cannot rollback when autoCommit is enabled.
+            if (!physicalConnection.getAutoCommit()) {
+                physicalConnection.rollback();
+            }
         } catch (SQLException e) {
             log.warn("Failed to rollback connection on return", e);
         }

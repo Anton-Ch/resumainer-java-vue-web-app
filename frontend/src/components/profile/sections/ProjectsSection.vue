@@ -39,8 +39,12 @@
           <small v-if="formErrors.location" class="field-error">{{ formErrors.location }}</small>
         </div>
         <div class="form-group">
+          <label class="form-label">{{ $t('profile.projects.projectUrl') }}</label>
+          <InputText v-model="formData.projectUrl" class="form-input" />
+        </div>
+        <div class="form-group">
           <label class="form-label">{{ $t('profile.projects.startDate') }} <span class="required">*</span></label>
-          <DatePicker v-model="formData.startDate" class="form-input" :showIcon="true" :maxDate="formData.endDate || undefined" />
+          <DatePicker v-model="formData.startDate" class="form-input" :showIcon="true" :maxDate="formData.endDate && formData.endDate < new Date() ? formData.endDate : new Date()" />
           <small v-if="dateError" class="field-error">{{ dateError }}</small>
           <small v-if="formErrors.startDate" class="field-error">{{ formErrors.startDate }}</small>
         </div>
@@ -57,10 +61,6 @@
           <label class="form-label">{{ $t('profile.projects.description') }} <span class="required">*</span></label>
           <Textarea v-model="formData.description" class="form-input" rows="3" @blur="validateField('description')" :class="{ 'p-invalid': formErrors.description }" />
           <small v-if="formErrors.description" class="field-error">{{ formErrors.description }}</small>
-        </div>
-        <div class="form-group field-full">
-          <label class="form-label">{{ $t('profile.projects.projectUrl') }}</label>
-          <InputText v-model="formData.projectUrl" class="form-input" />
         </div>
       </div>
       <div class="form-actions">
@@ -202,7 +202,14 @@ function formatMeta(rec: Project): string {
   const parts: string[] = []
   if (rec.role) parts.push(rec.role)
   const start = formatDate(rec.startDate)
-  const end = rec.isOngoing ? t('profile.projects.present') : formatDate(rec.endDate)
+  let end = ''
+  if (rec.isOngoing) {
+    end = t('profile.projects.present')
+  } else if (rec.endDate) {
+    end = formatDate(rec.endDate)
+  } else if (rec.startDate) {
+    end = t('profile.projects.present')
+  }
   if (start || end) parts.push(start + ' — ' + end)
   return parts.join(' · ')
 }

@@ -26,6 +26,9 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - B14 | PR descriptions with backtick-escaped paths get mangled in gh CLI + PowerShell | pr,github,markdown,backtick,formatting,powershell,cli | [BUGS.md](BUGS.md) | active
 - B15 | FK column type must match referenced entity PK — UUID for users(id), not BIGINT | database,migration,postgresql,foreign-key,uuid,bigint,schema,flyway | [BUGS.md](BUGS.md) | active
 - B16 | vue-i18n @ character in message values causes runtime SyntaxError | vue-i18n,i18n,frontend,syntax-error,special-characters,escaping | [BUGS.md](BUGS.md) | active
+- B17 | New frontend API services must include CSRF token handling for unsafe methods | csrf,frontend,service,http-client,security,profile | [BUGS.md](BUGS.md) | active
+- B18 | Java Set.contains() with toLowerCase() — Set values must be lowercase too | java,set,contains,case-sensitive,sort,validation,common-mistake | [BUGS.md](BUGS.md) | active
+- B19 | PrimeVue Form onSubmit try without catch silently swallows API errors | primevue,vue3,form,error-handling,try,catch,async,common-mistake | [BUGS.md](BUGS.md) | active
 
 ## Decisions
 - D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web.xml) | servlet, spring-mvc, jakarta-ee, tomcat, initialization, web.xml | [DECISIONS.md](DECISIONS.md) | active
@@ -50,6 +53,7 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - D21 | PrimeVue 4: Tooltip is a global directive requiring explicit registration | primevue,vue3,tooltip,directive,configuration,frontend | [DECISIONS.md](DECISIONS.md) | active
 - D22 | PrimeVue 4: PrimeIcons is a separate package requiring explicit CSS import | primevue,vue3,primeicons,icons,css,package,frontend | [DECISIONS.md](DECISIONS.md) | active
 - D23 | Manual JDBC transaction must catch Exception, not just SQLException | transaction,jdbc,rollback,spring-mvc,service | [DECISIONS.md](DECISIONS.md) | active
+- D24 | Sort field names must be mapped between frontend and backend in lazy DataTable | datatable,sort,pagination,frontend,backend,mapping,primevue | [DECISIONS.md](DECISIONS.md) | active
 
 ## Workflow
 - W1 | First Feature MVP Achieved: Hello World Tomcat | milestone, mvp, hello-world, docker, spring-mvc, tomcat | [WORKLOG.md](WORKLOG.md) | active
@@ -65,3 +69,4 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - W11 | Feature 005 Planning and All Artifacts Completed | milestone,feature-005,planning,user-home-page,spec,plan,tasks,security-review | [WORKLOG.md](WORKLOG.md) | active
 - W12 | Feature 005 Implementation — Backend and Frontend Core Completed | milestone,feature-005,implementation,backend,frontend,user-home-page | [WORKLOG.md](WORKLOG.md) | active
 - W13 | Feature 006 Profile Page DAO and Service/Controller Layers Completed | milestone,feature-006,dao,service,controller,profile | [WORKLOG.md](WORKLOG.md) | active
+- W14 | Feature 006 bug fixes — CSRF, connection pool, favicon | milestone,feature-006,bugfix,csrf,rollback,favicon | [WORKLOG.md](WORKLOG.md) | active

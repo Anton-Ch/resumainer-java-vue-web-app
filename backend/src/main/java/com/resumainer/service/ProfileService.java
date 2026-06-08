@@ -387,23 +387,23 @@ public class ProfileService {
     private AdditionalProfileInfo mapToAdditionalInfo(UUID userId, Map<String, Object> data) {
         AdditionalProfileInfo info = new AdditionalProfileInfo();
         info.setUserId(userId);
-        info.setSkills((String) data.get("skills"));
-        info.setLanguages((String) data.get("spokenLanguages"));
-        info.setProfessionalAspirations((String) data.get("professionalAspirations"));
-        info.setAchievements((String) data.get("achievements"));
-        info.setGeneralInformation((String) data.get("additionalContextForAI"));
+        info.setSkills(nullIfBlank((String) data.get("skills")));
+        info.setLanguages(nullIfBlank((String) data.get("spokenLanguages")));
+        info.setProfessionalAspirations(nullIfBlank((String) data.get("professionalAspirations")));
+        info.setAchievements(nullIfBlank((String) data.get("achievements")));
+        info.setGeneralInformation(nullIfBlank((String) data.get("additionalContextForAI")));
 
         Number defaultLang = (Number) data.get("defaultResumeLanguage");
         if (defaultLang != null) info.setDefaultResumeLanguageId(defaultLang.longValue());
         Number additionalLang = (Number) data.get("additionalResumeLanguage");
         if (additionalLang != null) info.setAdditionalResumeLanguageId(additionalLang.longValue());
 
-        info.setReadyForRelocation((String) data.get("willingnessToRelocate"));
-        info.setReadyForBusinessTrips((String) data.get("willingnessForBusinessTravel"));
+        info.setReadyForRelocation(nullIfBlank((String) data.get("willingnessToRelocate")));
+        info.setReadyForBusinessTrips(nullIfBlank((String) data.get("willingnessForBusinessTravel")));
 
         // Date of birth and citizenship are required
         String dobStr = (String) data.get("dateOfBirth");
-        if (dobStr != null) {
+        if (dobStr != null && !dobStr.isBlank()) {
             info.setDateOfBirth(java.time.LocalDate.parse(dobStr));
         }
         info.setCitizenship((String) data.get("citizenship"));
@@ -445,5 +445,13 @@ public class ProfileService {
                 log.warn("Failed to close connection", e);
             }
         }
+    }
+
+    /**
+     * Converts a blank string to null to avoid CHECK constraint violations
+     * and unnecessary empty string storage in optional fields.
+     */
+    private String nullIfBlank(String value) {
+        return (value != null && !value.trim().isEmpty()) ? value.trim() : null;
     }
 }

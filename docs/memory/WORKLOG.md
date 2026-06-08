@@ -31,6 +31,40 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-08 - Feature 006 bug fixes — CSRF, connection pool, favicon
+
+**Status**
+Active
+
+**Milestone**
+Three bugs found during manual integration testing of Feature 006 (User Profile Page) were fixed:
+
+Bug 1 (CRITICAL) - CSRF token missing in profileService.ts:
+- Created shared httpClient.ts with getCsrfToken() and apiRequest()
+- Refactored profileService.ts to use the shared client for all 20 endpoints
+- All POST/PUT/DELETE operations now send X-CSRF-Token header
+- Verified: PUT /api/profile/contact returns 200 with X-CSRF-Token header matching cookie
+
+Bug 2 (LOW) - Connection pool rollback warning:
+- PooledConnectionProxy.handleClose() was calling rollback() even when autoCommit=true
+- PostgreSQL throws: Cannot rollback when autoCommit is enabled
+- Fixed: check physicalConnection.getAutoCommit() before rollback
+- Verified: no rollback warnings in Docker logs after fix
+
+Bug 3 (LOW) - favicon.svg 404:
+- Copied favicon from backend static assets to frontend/public/
+- Vite serves it at /favicon.svg via nginx
+- Verified: no more 404 in browser console
+
+Evidence:
+- mvn test: 224/224, BUILD SUCCESS
+- npm run build: 0 errors
+- PUT /api/profile/contact: 200 with X-CSRF-Token header
+- Docker logs: no rollback warnings
+- Console errors: 0 (including favicon)
+
 ### 2026-06-08 - Feature 006 Profile Page DAO and Service/Controller Layers Completed
 
 **Status**
