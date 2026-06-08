@@ -54,14 +54,16 @@ public class UserHomeSummary {
         private boolean contactDetails;
         private boolean workExperience;
         private boolean education;
+        private boolean additionalInfo;
 
         public ProfileChecklist() {
         }
 
-        public ProfileChecklist(boolean contactDetails, boolean workExperience, boolean education) {
+        public ProfileChecklist(boolean contactDetails, boolean workExperience, boolean education, boolean additionalInfo) {
             this.contactDetails = contactDetails;
             this.workExperience = workExperience;
             this.education = education;
+            this.additionalInfo = additionalInfo;
         }
 
         public boolean isContactDetails() { return contactDetails; }
@@ -70,6 +72,8 @@ public class UserHomeSummary {
         public void setWorkExperience(boolean workExperience) { this.workExperience = workExperience; }
         public boolean isEducation() { return education; }
         public void setEducation(boolean education) { this.education = education; }
+        public boolean isAdditionalInfo() { return additionalInfo; }
+        public void setAdditionalInfo(boolean additionalInfo) { this.additionalInfo = additionalInfo; }
     }
 
     /**
