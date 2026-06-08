@@ -44,6 +44,12 @@ const items = computed(() => [
     label: t('home.checklist.education'),
     done: props.checklist.education,
     route: '/profile/education'
+  },
+  {
+    key: 'additional',
+    label: t('profile.subnav.additional'),
+    done: props.checklist.additionalInfo,
+    route: '/profile/additional'
   }
 ])
 </script>

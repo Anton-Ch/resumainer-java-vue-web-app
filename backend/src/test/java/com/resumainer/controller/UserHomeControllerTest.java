@@ -41,7 +41,7 @@ class UserHomeControllerTest {
 
         UserHomeSummary summary = new UserHomeSummary();
         summary.setProfileReady(false);
-        summary.setProfileChecklist(new ProfileChecklist(false, false, false));
+        summary.setProfileChecklist(new ProfileChecklist(false, false, false, false));
         summary.setSummary(new Summary(0, "INCOMPLETE", null));
         when(userHomeService.getHomeSummary(userId)).thenReturn(summary);
 
@@ -69,7 +69,7 @@ class UserHomeControllerTest {
 
         UserHomeSummary summary = new UserHomeSummary();
         summary.setProfileReady(true);
-        summary.setProfileChecklist(new ProfileChecklist(true, true, true));
+        summary.setProfileChecklist(new ProfileChecklist(true, true, true, true));
         summary.setSummary(new Summary(3, "READY", 5L));
         summary.setLastResume(lastResume);
         when(userHomeService.getHomeSummary(userId)).thenReturn(summary);

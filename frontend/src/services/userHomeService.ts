@@ -8,6 +8,7 @@ export interface ProfileChecklist {
   contactDetails: boolean
   workExperience: boolean
   education: boolean
+  additionalInfo: boolean
 }
 
 export interface HomeSummary {

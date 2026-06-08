@@ -1,9 +1,11 @@
 package com.resumainer.service;
 
+import com.resumainer.dao.AdditionalProfileInfoDao;
 import com.resumainer.dao.ContactDetailDao;
 import com.resumainer.dao.EducationDao;
 import com.resumainer.dao.ResumeDao;
 import com.resumainer.dao.WorkExperienceDao;
+import com.resumainer.model.AdditionalProfileInfo;
 import com.resumainer.model.SavedResume;
 import com.resumainer.model.UserHomeSummary;
 import com.resumainer.model.UserHomeSummary.ProfileChecklist;
@@ -31,13 +33,16 @@ public class UserHomeService {
     private final ResumeDao resumeDao;
     private final WorkExperienceDao workExperienceDao;
     private final EducationDao educationDao;
+    private final AdditionalProfileInfoDao additionalProfileInfoDao;
 
     public UserHomeService(ContactDetailDao contactDetailDao, ResumeDao resumeDao,
-                           WorkExperienceDao workExperienceDao, EducationDao educationDao) {
+                           WorkExperienceDao workExperienceDao, EducationDao educationDao,
+                           AdditionalProfileInfoDao additionalProfileInfoDao) {
         this.contactDetailDao = contactDetailDao;
         this.resumeDao = resumeDao;
         this.workExperienceDao = workExperienceDao;
         this.educationDao = educationDao;
+        this.additionalProfileInfoDao = additionalProfileInfoDao;
     }
 
     /**
@@ -49,9 +54,10 @@ public class UserHomeService {
         boolean contactComplete = isContactComplete(userId);
         boolean hasWorkExperience = hasWorkExperience(userId);
         boolean hasEducation = hasEducation(userId);
+        boolean hasAdditionalInfo = hasAdditionalInfo(userId);
 
         ProfileChecklist checklist = ProfileReadinessCalculator.calculateChecklist(
-                contactComplete, hasWorkExperience, hasEducation);
+                contactComplete, hasWorkExperience, hasEducation, hasAdditionalInfo);
         boolean profileReady = ProfileReadinessCalculator.isReady(checklist);
 
         List<SavedResume> firstPage = resumeDao.findByUserId(userId, null, null, null,
@@ -102,6 +108,18 @@ public class UserHomeService {
             return !educationDao.findByUserId(userId).isEmpty();
         } catch (Exception e) {
             log.warn("Failed to check education for user: {}", userId, e);
+            return false;
+        }
+    }
+
+    private boolean hasAdditionalInfo(UUID userId) {
+        try {
+            AdditionalProfileInfo info = additionalProfileInfoDao.findByUserId(userId);
+            if (info == null) return false;
+            // Additional info is complete when both required fields are filled
+            return info.getDateOfBirth() != null && isNotBlank(info.getCitizenship());
+        } catch (Exception e) {
+            log.warn("Failed to check additional info for user: {}", userId, e);
             return false;
         }
     }
