@@ -138,14 +138,14 @@ const languageOptions = computed(() => [
 ])
 
 const workFormatOptions = computed(() => [
-  { value: 'full-time', label: t('profile.additional.office') },
+  { value: 'full-time', label: t('profile.additional.fullTime') },
+  { value: 'part-time', label: t('profile.additional.partTime') },
+  { value: 'rotational_schedule', label: t('profile.additional.rotationalSchedule') },
+  { value: 'internship', label: t('profile.additional.internship') },
+  { value: 'offline', label: t('profile.additional.offline') },
   { value: 'remote', label: t('profile.additional.remote') },
   { value: 'hybrid', label: t('profile.additional.hybrid') },
-  { value: 'relocation', label: t('profile.additional.relocation') },
-  { value: 'rotational_schedule', label: t('profile.additional.rotationalSchedule') },
-  { value: 'part-time', label: 'Part-time' },
-  { value: 'internship', label: 'Internship' },
-  { value: 'on_project_site', label: 'On-site project based' }
+  { value: 'on_project_site', label: t('profile.additional.onProjectSite') }
 ])
 
 const willingnessOptions = computed(() => [

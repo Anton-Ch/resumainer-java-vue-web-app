@@ -513,3 +513,38 @@ DETAIL: Key columns "user_id" and "id" are of incompatible types: bigint and uui
 **Prevention**: Before writing any Flyway migration with a FK referencing `users.id` (or any other entity table), verify the FK column type matches `UUID`, not `BIGINT`. The `BIGINT` type is correct only for lookup/reference tables (e.g., `role_id`, `status_id`).
 
 **Evidence**: Feature 005 Phase 2 implementation — V8 migration initially had `user_id BIGINT NOT NULL REFERENCES users(id)`, which would fail at runtime. Caught during code review.
+
+---
+
+### 2026-06-08 - vue-i18n @ character in message values causes runtime SyntaxError
+
+**Status**
+Active
+
+**Symptoms**
+A Vue component does not render (shows <!----> in slot). Browser console shows: SyntaxError: 10 with a parser/nextToken/parse stack trace originating from the vue-i18n message compiler (inside the JS bundle). The error occurs at runtime, not at build time. npm run build passes with 0 errors.
+
+The component renders correctly when certain translation keys are NOT used in the template, and breaks when they ARE used.
+
+**Root Cause**
+vue-i18n interprets the @ character as a linked message reference syntax (@:message.key). When translation values contain literal @ (e.g., johndoe@example.com, @johndoe, @example), the message compiler fails with a SyntaxError because it tries to parse text after @ as a message key.
+
+The error message '10' is the character position in the message where the parser fails (at the @ sign).
+
+**Future mistake prevented**
+When adding translation values to en.json or ru.json, any value containing literal @ (email addresses, Telegram handles, Twitter/X handles) must use vue-i18n literal interpolation syntax {'@'} instead of raw @.
+
+Correct: johndoe{'@'}example.com
+Wrong: johndoe@example.com
+
+**Evidence**
+ContactDetailsSection.vue in Feature 006 rendered as blank <!----> because profile.contact.emailPlaceholder and profile.contact.telegramPlaceholder contained @. All other profile sections rendered correctly because they did not reference those translation keys. Fixing all 4 occurrences of @ in en.json and ru.json restored rendering.
+
+**Prevention / Detection**
+1. Before adding any translation value, check for @ in the string
+2. Search i18n JSON files for raw @: grep -rn '@' frontend/src/i18n/*.json
+3. Use {'@'} instead of @ in all vue-i18n translation values
+4. After adding new translations, test the component in both EN and RU modes
+
+**Where to look next**
+frontend/src/i18n/en.json, frontend/src/i18n/ru.json

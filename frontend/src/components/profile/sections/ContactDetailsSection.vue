@@ -21,8 +21,8 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">{{ $t('profile.contact.email') }} <span class="required">*</span></label>
-          <InputText v-model="form.email" :placeholder="$t('profile.contact.emailPlaceholder')" class="form-input" @blur="validateField('email')" :class="{ 'p-invalid': errors.email }" />
-          <small v-if="errors.email" class="field-error">{{ errors.email }}</small>
+          <InputText v-model="form.resumeEmail" :placeholder="$t('profile.contact.emailPlaceholder')" class="form-input" @blur="validateField('resumeEmail')" :class="{ 'p-invalid': errors.resumeEmail }" />
+          <small v-if="errors.resumeEmail" class="field-error">{{ errors.resumeEmail }}</small>
         </div>
         <div class="form-group">
           <label class="form-label">{{ $t('profile.contact.phone') }} <span class="required">*</span></label>
@@ -94,7 +94,7 @@ const emit = defineEmits<{
 const form = reactive<ContactDetails>({
   fullName: '',
   professionalTitle: '',
-  email: '',
+  resumeEmail: '',
   phone: '',
   location: '',
   linkedinUrl: '',
@@ -108,7 +108,7 @@ const original = ref('')
 const errors = reactive<Record<string, string>>({
   fullName: '',
   professionalTitle: '',
-  email: '',
+  resumeEmail: '',
   phone: '',
   location: '',
   linkedinUrl: '',
@@ -125,30 +125,26 @@ function isValidUrl(url: string): boolean {
 }
 
 function validateField(field: keyof typeof errors) {
-  const v = form[field as keyof ContactDetails] as string
+  const val = form[field as keyof ContactDetails] as string
   errors[field] = ''
-  if (field === 'email') {
-    if (!v) errors.email = t('profile.contact.emailRequired')
-    else if (!isValidEmail(v)) errors.email = t('profile.contact.emailInvalid')
+  if (field === 'resumeEmail') {
+    if (!val) errors.resumeEmail = t('profile.contact.emailRequired')
+    else if (!isValidEmail(val)) errors.resumeEmail = t('profile.contact.emailInvalid')
   } else if (field === 'linkedinUrl' || field === 'portfolioUrl') {
-    if (v && !isValidUrl(v)) errors[field] = t('profile.contact.urlInvalid')
+    if (val && !isValidUrl(val)) errors[field] = t('profile.contact.urlInvalid')
   } else if (['fullName', 'professionalTitle', 'phone', 'location'].includes(field)) {
-    if (!v) errors[field] = t('profile.contact.fieldRequired')
+    if (!val) errors[field] = t('profile.contact.fieldRequired')
   }
 }
 
 function validateAll(): boolean {
   let valid = true
-  const fields = ['fullName', 'professionalTitle', 'email', 'phone', 'location', 'linkedinUrl', 'portfolioUrl'] as const
+  const fields = ['fullName', 'professionalTitle', 'resumeEmail', 'phone', 'location', 'linkedinUrl', 'portfolioUrl'] as const
   for (const f of fields) {
     validateField(f)
     if (errors[f]) valid = false
   }
   return valid
-}
-
-function serialize(data: ContactDetails): string {
-  return JSON.stringify(data)
 }
 
 async function loadData() {
@@ -157,9 +153,17 @@ async function loadData() {
   try {
     const data = await fetchContactDetails()
     if (data) {
-      Object.assign(form, data)
+      form.fullName = data.fullName || ''
+      form.professionalTitle = data.professionalTitle || ''
+      form.resumeEmail = data.resumeEmail || ''
+      form.phone = data.phone || ''
+      form.location = data.location || ''
+      form.linkedinUrl = data.linkedinUrl || ''
+      form.portfolioUrl = data.portfolioUrl || ''
+      form.telegram = data.telegram || ''
+      form.whatsapp = data.whatsapp || ''
     }
-    original.value = serialize({ ...form })
+    original.value = JSON.stringify({ ...form })
   } catch {
     loadError.value = true
   } finally {
@@ -168,7 +172,7 @@ async function loadData() {
 }
 
 function isDirty(): boolean {
-  return serialize({ ...form }) !== original.value
+  return JSON.stringify({ ...form }) !== original.value
 }
 
 watch(form, () => {
@@ -180,7 +184,7 @@ async function handleSave() {
   saving.value = true
   try {
     await updateContactDetails({ ...form })
-    original.value = serialize({ ...form })
+    original.value = JSON.stringify({ ...form })
     emit('saved')
     emit('dirty-change', false)
     toast.add({ severity: 'success', summary: '', detail: t('profile.saveSuccess'), life: 3000 })
