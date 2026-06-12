@@ -1,8 +1,8 @@
 // ResumAIner — Entity-Relationship Data Model
 // Format: DBML for dbdiagram.io
 // Project ID: resumainer
-// File: dbml_erd.md (v2.0)
-// Date: 2026-05-23
+// File: dbml_erd.md (v4.0)
+// Date: 2026-06-12
 // Author: Anton
 // Status: Approved — MVP Baseline
 
@@ -45,6 +45,14 @@ Table language {
   id integer [primary key]
   code varchar(10) [not null, unique]      // EN, RU
   name varchar(50) [not null]              // English, Russian
+}
+
+// DEC-063: Fixed set of supported generation language modes.
+// UI labels: "English only", "Russian only", "Bilingual".
+Enum resume_language_mode {
+  ENGLISH_ONLY
+  RUSSIAN_ONLY
+  BILINGUAL
 }
 
 Table adaptation_level {
@@ -158,21 +166,28 @@ Table work_experience {
   updated_at timestamp
 }
 
+// DEC-070: Education is profile-owned, not AI-generated, but final resumes can be EN/RU.
+// Therefore education stores mandatory bilingual profile fields.
+// Resume Review does not edit Education; template rendering selects *_en or *_ru by response language.
 Table education {
   id integer [primary key]
   user_id integer [not null, ref: > users.id]
 
-  institution_name varchar(255) [not null]
-  degree varchar(100) [not null]               // Bachelor, Master, PhD, etc. (free text)
-  field_of_study varchar(255) [not null]       // "Information Systems"
-  education_type varchar(150)                  // Optional: "University", "College", etc.
-  description text
+  institution_name_ru varchar(255) [not null]
+  institution_name_en varchar(255) [not null]
+  degree_ru varchar(100) [not null]              // Bachelor, Master, PhD, etc. as localized free text
+  degree_en varchar(100) [not null]              // Bachelor, Master, PhD, etc. as localized free text
+  field_of_study_ru varchar(255) [not null]
+  field_of_study_en varchar(255) [not null]
 
-  start_date date [not null]                   // Confirmed: required
-  end_date date                                // NULL = still studying; allows future dates (planned graduation)
+  education_type varchar(150)                    // Optional: University, College, Bootcamp, etc.
+  description text                               // Optional profile note, not rendered in compact MVP template
+
+  start_date date [not null]                     // Confirmed: required
+  end_date date                                  // NULL = still studying; allows future planned graduation
 
   location varchar(255)
-  gpa_grade varchar(20)                        // "3.75" — stored as text for flexible formats
+  gpa_grade varchar(20)                          // Flexible text format: 3.75, A, 4.8/5, etc.
 
   created_at timestamp [not null, default: `now()`]
   updated_at timestamp
@@ -288,6 +303,97 @@ Table ai_model {
   updated_at timestamp
 }
 
+// ----- Section: AI Prompt Configs -----
+
+// DEC-064: AI prompt configuration is stored as a versioned prompt bundle.
+// Backend assembles the final prompt from modular fragments:
+// system prompt + language mode + adaptation selection + cover letter rule.
+// Only one prompt config should be active at a time in production.
+Table ai_prompt_config {
+  id integer [primary key]
+
+  name varchar(255) [not null]                  // Example: "Default Resume Generation Prompt Set v1"
+  description text                              // Admin-facing explanation of this prompt config
+  is_active boolean [not null, default: false]  // Only one active config at a time
+
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
+}
+
+// DEC-065: System prompt stores stable global rules that do not depend on user settings.
+// Examples: role of the model, strict JSON-only output, no hallucination,
+// sourceId preservation, tone constraints, safety rules.
+// There should be exactly one system prompt per ai_prompt_config.
+Table ai_system_prompt {
+  id integer [primary key]
+  prompt_config_id integer [not null, ref: > ai_prompt_config.id]
+
+  prompt text [not null]                        // Global system prompt text
+
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
+}
+
+// DEC-066: Language prompt stores only language-mode-specific instructions.
+// It prevents duplication of bilingual/single-language rules across many full prompts.
+// Expected active rows per config: ENGLISH_ONLY, RUSSIAN_ONLY, BILINGUAL.
+Table ai_request_prompt_language {
+  id integer [primary key]
+  prompt_config_id integer [not null, ref: > ai_prompt_config.id]
+
+  language_mode varchar(50) [not null]          // ENGLISH_ONLY, RUSSIAN_ONLY, BILINGUAL
+  prompt text [not null]                        // Language-specific output and JSON structure rules
+
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
+}
+
+// DEC-067: Adaptation prompt stores only adaptation-selection-specific instructions.
+// ALL is a request selection, not a final saved resume level.
+// If adaptation_selection = ALL, AI must return Minimal, Balanced, and Maximum variants.
+Table ai_request_prompt_adaptation {
+  id integer [primary key]
+  prompt_config_id integer [not null, ref: > ai_prompt_config.id]
+
+  adaptation_selection varchar(50) [not null]   // MINIMAL, BALANCED, MAXIMUM, ALL
+  prompt text [not null]                        // Adaptation-level instruction fragment
+
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
+}
+
+// DEC-068: Cover letter prompt stores cover-letter-specific generation rules.
+// Two rows per config are recommended:
+// include_cover_letter = true  -> require cover letter text
+// include_cover_letter = false -> explicitly forbid/return null for cover letter
+// This prevents the model from generating a cover letter when the user disabled it.
+Table ai_request_prompt_cover_letter {
+  id integer [primary key]
+  prompt_config_id integer [not null, ref: > ai_prompt_config.id]
+
+  include_cover_letter boolean [not null]       // true = generate cover letter; false = do not generate
+  prompt text [not null]                        // Cover-letter instruction fragment
+
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
+}
+
+// DEC-069: Prompt render log stores the exact prompt assembled for a generation request.
+// This is useful for debugging, reproducibility, QA, and later comparison of AI results.
+// For production, access to this table must be restricted because rendered prompts may contain profile data.
+Table ai_prompt_render_log {
+  id integer [primary key]
+  generation_request_id integer [not null, ref: > resume_generation_request.id]
+  prompt_config_id integer [not null, ref: > ai_prompt_config.id]
+
+  system_prompt_rendered text [not null]        // Final system prompt sent to AI
+  request_prompt_rendered text [not null]       // Final user/request prompt sent to AI
+  profile_payload_json text                     // Optional: profile/vacancy payload used for prompt rendering
+  prompt_hash varchar(128)                      // Optional checksum for debugging and reproducibility
+
+  created_at timestamp [not null, default: `now()`]
+}
+
 // ----- Section: Resume Budget Configuration -----
 
 // DB-backed configuration for resume template budgets.
@@ -387,18 +493,23 @@ Table resume_generation_request {
 
   user_id integer [not null, ref: > users.id]
   ai_model_id integer [not null, ref: > ai_model.id]
+  prompt_config_id integer [ref: > ai_prompt_config.id]  // save id of used prompt configs
 
   // Generation input
+  vacancy_title text [not null]                 // Pasted vacancy title
   vacancy_description text [not null]           // Pasted vacancy text
-  company_description text
+  company_name text                             // Pasted company name
+  company_description text                      // Pasted company text
   additional_comments text                      // "Focus on my courses"
   include_cover_letter boolean [not null, default: false]
 
   // Generation parameters
-  language_id integer [not null, ref: > language.id]
+  language_mode resume_language_mode [not null]
+  // Values: ENGLISH_ONLY, RUSSIAN_ONLY, BILINGUAL
+  // UI labels: "English only", "Russian only", "Bilingual"
+  // DEC-063: language choice belongs to the request as a mode, not as a single language FK.
+  // A single request can produce one or two language-specific responses.
   adaptation_level_id integer [not null, ref: > adaptation_level.id]
-  language_mode varchar(20) [not null, default: 'default']
-  // Values: 'default' (Default English), 'additional' (Additional Russian), 'both'
 
   // Budget config used for generation (DB-backed budget configuration)
   budget_config_id bigint [ref: > resume_budget_configs.id]
@@ -420,8 +531,13 @@ Table resume_generation_request {
 Table resume_generation_response {
   id integer [primary key]
 
-  generation_request_id integer [not null, unique, ref: > resume_generation_request.id]
-  // 1:1 — one response per request
+  generation_request_id integer [not null, ref: > resume_generation_request.id]
+  // DEC-063: many-to-one. One request creates one response for single-language mode
+  // or two responses for BILINGUAL mode.
+
+  language_id integer [not null, ref: > language.id]
+  // Actual language of this response row: EN or RU.
+  // Kept here to preserve 3NF: language is a property of the response, not of a bilingual request.
 
   status_id integer [not null, ref: > response_status.id]
   // DRAFT = AI output, waiting for user review
@@ -429,12 +545,17 @@ Table resume_generation_response {
 
   // Top-level single-value fields (reviewed/edited by user)
   professional_title varchar(250) [not null]
+  value_line varchar(500)                      // DEC-063: AI-generated positioning / keyword line
   professional_summary text [not null]
   professional_aspirations text [not null]
   cover_letter text                            // DEC-016: Final edited cover letter
 
   created_at timestamp [not null, default: `now()`]
   updated_at timestamp
+
+  indexes {
+    (generation_request_id, language_id) [unique]
+  }  
 }
 
 // DEC-028: Reviewed/edited work experience items from the generation response.
@@ -527,6 +648,27 @@ Table generation_response_skill {
   updated_at timestamp
 }
 
+// DEC-071: Reviewed/edited Personal Information generated per response language/adaptation.
+// Profile stores raw/default personal data once, but AI returns localized resume-ready values.
+// This table gives users editable intermediate values before final HTML/PDF generation.
+Table generation_response_personal {
+  id integer [primary key]
+  response_id integer [not null, unique, ref: > resume_generation_response.id]
+
+  location varchar(255) [not null]
+  spoken_languages varchar(100) [not null]
+  willingness_to_relocate varchar(50) [not null]
+  willingness_for_business_trips varchar(50) [not null]
+  citizenship varchar(50) [not null]
+  date_of_birth date [not null]
+  work_formats varchar(255)
+  gpa_grade varchar(20)
+  order_in_resume integer [not null, default: 0]
+
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
+}
+
 // ----- Section: Saved Resumes -----
 
 // DEC-028: Finalized resume record. Stores metadata and path to generated PDF.
@@ -534,6 +676,9 @@ Table generation_response_skill {
 // All resumes are public by design — no is_public flag needed (DEC-028).
 // Top-level text fields (professional_summary, professional_aspirations, cover_letter)
 // live in resume_generation_response table.
+// DEC-073: Filled HTML is persisted before PDF conversion.
+// Java backend renders and saves HTML first, then calls HtmlToPdfConverter.
+// Both HTML and PDF paths are stored for traceability and future download actions.
 Table saved_resume {
   id integer [primary key]
 
@@ -549,7 +694,8 @@ Table saved_resume {
   public_code varchar(4) [not null]            // 4-char: QWRYUPASEDFGHJKZXCVBNM
   public_url_link varchar(200) [not null]      // Full ready-made public resume URL
 
-  // Path to generated PDF file on server
+  // Path to generated PDF and HTML files on server
+  html_file_path varchar(500) [not null]       // DEC-073: HTML shoud be stored and be downloadable
   pdf_file_path varchar(500) [not null]        // DEC-017: HTML-to-PDF on Java backend
 
   is_deleted boolean [not null, default: false]
@@ -577,13 +723,25 @@ Table ai_usage_log {
   user_id integer [not null, ref: > users.id]
   ai_model_id integer [not null, ref: > ai_model.id]
   generation_request_id integer [not null, ref: > resume_generation_request.id]
-  generation_response_id integer [not null, ref: > resume_generation_response.id]
 
   tokens_sent integer [not null, default: 0]          // Prompt tokens
   tokens_generated integer [not null, default: 0]     // Completion tokens
   cost decimal [note: 'Post-MVP: cost per request']
 
   created_at timestamp [not null, default: `now()`]   // When API call completed
+}
+
+// DEC-063: One API call may create one or two response rows.
+// Junction table avoids duplicating usage-log facts and keeps monitoring in 3NF.
+Table ai_usage_log_response {
+  id integer [primary key]
+
+  ai_usage_log_id integer [not null, ref: > ai_usage_log.id]
+  generation_response_id integer [not null, ref: > resume_generation_response.id]
+
+  indexes {
+    (ai_usage_log_id, generation_response_id) [unique]
+  }
 }
 
 // ============================================================
@@ -613,8 +771,9 @@ Table ai_usage_log {
 // === GENERATION ===
 // users → resume_generation_request:       one-to-many
 // ai_model → resume_generation_request:    one-to-many
-// resume_generation_request → resume_generation_response: one-to-one
+// resume_generation_request → resume_generation_response: one-to-many (1 response for ENGLISH_ONLY/RUSSIAN_ONLY, 2 responses for BILINGUAL)
 // response_status → resume_generation_response: many-to-one
+// language → resume_generation_response: many-to-one
 // resume_generation_response → generation_response_experience: one-to-many
 // resume_generation_response → generation_response_education: one-to-many
 // resume_generation_response → generation_response_course: one-to-many
@@ -628,7 +787,7 @@ Table ai_usage_log {
 
 // === SAVED ===
 // users → saved_resume:              one-to-many
-// resume_generation_request → saved_resume: one-to-one
+// resume_generation_request → saved_resume: one-to-many
 // resume_generation_response → saved_resume: one-to-one
 // resume_template → saved_resume:    one-to-many (Post-MVP)
 
@@ -636,10 +795,11 @@ Table ai_usage_log {
 // users → ai_usage_log:              one-to-many
 // ai_model → ai_usage_log:           one-to-many
 // resume_generation_request → ai_usage_log: one-to-many
-// resume_generation_response → ai_usage_log: one-to-many
+// ai_usage_log → ai_usage_log_response: one-to-many
+// resume_generation_response → ai_usage_log_response: one-to-many
 
 // ============================================================
-// TOTAL TABLE COUNT: 30 tables
+// TOTAL TABLE COUNT: 31 tables
 // ============================================================
 // Reference Data (8):     role, user_status, user_permission, response_status,
 //                          language, adaptation_level, work_format, resume_template
@@ -654,7 +814,7 @@ Table ai_usage_log {
 // Budget Config (4):     resume_budget_configs, resume_template_selection_rules,
 //                        resume_work_experience_distribution_rules, resume_section_budget_rules
 // Saved (1):              saved_resume
-// Monitoring (1):         ai_usage_log
+// Monitoring (2):         ai_usage_log, ai_usage_log_response
 
 // ============================================================
 // KEY CHANGES FROM v0.1 TO v0.2
@@ -719,3 +879,101 @@ Table ai_usage_log {
 // 5. New table: resume_section_budget_rules — section-level min/max budget rules.
 // 6. resume_generation_request: added budget_config_id, budget_config_version_used.
 // 7. Total table count: 25 → 30.
+
+// ============================================================
+// KEY CHANGES FROM v2.0 TO v3.0
+// ============================================================
+//
+// 1. Added enum resume_language_mode with values ENGLISH_ONLY, RUSSIAN_ONLY, BILINGUAL.
+//    UI labels: "English only", "Russian only", "Bilingual".
+// 2. resume_generation_request.language_id removed.
+//    Reason: a request can now represent one-language or bilingual generation.
+// 3. resume_generation_request.language_mode changed from varchar/default/additional/both
+//    to fixed enum resume_language_mode.
+// 4. resume_generation_response.language_id added.
+//    Reason: actual generated language is a property of each response row.
+// 5. resume_generation_response.generation_request_id is no longer unique.
+//    Instead, unique index is now (generation_request_id, language_id).
+// 6. One resume_generation_request can now have one or two resume_generation_response rows.
+//    ENGLISH_ONLY/RUSSIAN_ONLY create one response; BILINGUAL creates two responses.
+// 7. resume_generation_response.value_line added for AI-generated resume positioning line.
+// 8. ai_usage_log.generation_response_id removed.
+//    Reason: one API call may produce two response rows in bilingual mode.
+// 9. ai_usage_log_response junction table added to keep API usage tracking normalized and 3NF-compliant.
+// 10. Relationships overview and total table count updated: 30 → 31.
+
+// ============================================================
+// KEY CHANGES FROM v3.0 TO v4.0
+// ============================================================
+//
+// 1. Added DB-backed modular AI prompt configuration (DEC-064).
+//    Instead of storing 16 duplicated full request prompts, backend now builds
+//    the final prompt from reusable prompt fragments.
+//
+// 2. New table: ai_prompt_config.
+//    Stores versioned prompt bundle metadata and controls which prompt set is active.
+//
+// 3. New table: ai_system_prompt.
+//    Stores stable global system prompt rules that do not depend on generation settings.
+//
+// 4. New table: ai_request_prompt_language.
+//    Stores language-mode-specific prompt fragments for ENGLISH_ONLY,
+//    RUSSIAN_ONLY, and BILINGUAL generation modes.
+//
+// 5. New table: ai_request_prompt_adaptation.
+//    Stores adaptation-specific prompt fragments for MINIMAL, BALANCED,
+//    MAXIMUM, and ALL generation scenarios.
+//
+// 6. New table: ai_request_prompt_cover_letter.
+//    Stores cover-letter-specific prompt fragments for include_cover_letter = true/false.
+//    This prevents the AI model from generating a cover letter when the user disabled it.
+//
+// 7. New table: ai_prompt_render_log.
+//    Stores final rendered system/request prompts for debugging, QA,
+//    reproducibility, and future AI result comparison.
+//
+// 8. resume_generation_request: added prompt_config_id FK to ai_prompt_config.
+//    Reason: each generation request must be traceable to the exact prompt bundle
+//    used at generation time.
+//
+// 9. Education model updated to bilingual profile-owned fields (DEC-070).
+//    institution_name, degree, and field_of_study were replaced by mandatory
+//    RU/EN pairs: institution_name_ru/en, degree_ru/en, field_of_study_ru/en.
+//    Reason: Education is not AI-generated/reviewed, but final resumes can be
+//    rendered in Russian or English.
+//
+// 10. generation_response_personal table added (DEC-071).
+//     Personal Information is now AI-generated/localized per response language
+//     and available for user review/edit before final HTML/PDF generation.
+//
+// 11. Resume Review flow updated conceptually (DEC-072).
+//     Personal Information is added as the last Review section after Skills.
+//     Education remains outside Review because it is now bilingual profile-owned data.
+//
+// 12. saved_resume: added html_file_path (DEC-073).
+//     Filled HTML is now persisted before PDF conversion.
+//     Java backend will render and save HTML first, then call HtmlToPdfConverter.
+//
+// 13. Generated artifact storage convention introduced (DEC-073).
+//     Final generated files should be stored under:
+//     generated_results/{username}/{public_code}/
+//     Each saved resume language version has its own public_code and folder.
+//
+// 14. Export flow expanded conceptually to support HTML download.
+//     In addition to PDF download/open actions, frontend should expose
+//     "Download HTML" for saved filled HTML files.
+//
+// 15. Relationships overview updated:
+//     ai_prompt_config → ai_system_prompt: one-to-one
+//     ai_prompt_config → ai_request_prompt_language: one-to-many
+//     ai_prompt_config → ai_request_prompt_adaptation: one-to-many
+//     ai_prompt_config → ai_request_prompt_cover_letter: one-to-many
+//     ai_prompt_config → ai_prompt_render_log: one-to-many
+//     resume_generation_request → ai_prompt_render_log: one-to-many
+//     resume_generation_response → generation_response_personal: one-to-one
+//
+// 16. Total table count updated: 31 → 38.
+//     Added 7 tables:
+//     ai_prompt_config, ai_system_prompt, ai_request_prompt_language,
+//     ai_request_prompt_adaptation, ai_request_prompt_cover_letter,
+//     ai_prompt_render_log, generation_response_personal.

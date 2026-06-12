@@ -1,10 +1,10 @@
-Project Path: agent-input
+Project Path: ba dump
 
 Source Tree:
 
 ```txt
-ba-docs
-├── README.md
+ba dump
+├── code2prompt.exe
 └── docs
     ├── 01_project-overview
     │   ├── business_goals_and_kpis.md
@@ -42,378 +42,6 @@ ba-docs
     │   └── traceability_matrix.md
     └── 09_decisions
         └── decision_log.md
-
-```
-
-`README.md`:
-
-```md
-# ResumAIner — Resume AI Aligner
-
-## Business & System Analysis Repository
-
-> **Business Analysis and System Analysis case for an AI-assisted resume adaptation web application.**
-
----
-
-## Overview
-
-**ResumAIner**: *Resume AI Aligner* is an Java Capstone project focused on designing and implementing a web application for **AI-assisted resume adaptation**.
-
-The application allows users to:
-- maintain a structured professional profile;
-- generate vacancy-specific resume versions with AI assistance;
-- review and edit generated drafts;
-- save final resume versions;
-- download print-friendly PDFs;
-- share public resume links with recruiters.
-
-This repository contains the **business analysis and system analysis** consisting of requirements, domain modeling, UI/UX planning, architecture constraints, and other artifacts for the project.
-
----
-
-## Why This Repository Exists
-
-This repository is not only a preparation space for a Java Capstone project.
-
-It is designed as a **professional showcase of analytical work**, demonstrating how a product idea can be transformed into structured requirements, system design inputs, and development-ready documentation.
-
-The repository is intended to demonstrate:
-- business problem understanding;
-- stakeholder and persona analysis;
-- MVP scoping;
-- functional and non-functional requirements;
-- user workflows and use cases;
-- domain and data modeling;
-- UI/UX requirements;
-- technical and architecture constraints;
-- risk, assumption, and open question management;
-- traceability between requirements and future implementation.
-
----
-
-## Product Summary
-
-**Resume AI Aligner** helps job seekers create adapted resume versions for specific vacancies to highlight the most relevant skills, experience, achievements, and professional positioning.
-
-The user enters full profile information once, then provides a target vacancy description and generation settings. The system uses an AI model to generate one or more adapted resume drafts. The user can review, edit, save, download, and share the final resume version.
-
-
----
-
-## Core Product Idea
-
-The product is built around the following workflow:
-1. The user creates a structured career profile once.
-2. The user provides a target vacancy description.
-3. The system generates adapted resume drafts using AI.
-4. The user reviews and edits the result.
-5. The final resume is saved, exported as PDF, and can be shared through a public link.
-
-### Simplified Process Flow
-```mermaid
-graph LR
-    A[Setup Profile] --> B[Input Vacancy Description]
-    B --> C{AI Aligned Resume Adaptation}
-    C --> D[Review & Finalize]
-    D --> E((Resume Ready))
-
-    style C fill:#f9f,stroke:#333,stroke-width:2px
-    style E fill:#00ff00,stroke:#333
-
-```
-
----
-
-## Educational Context
-
-This project is designed as a Java web application Capstone project finalizing a seven-month Java course.
-
-The future implementation is expected to follow the required Java course stack and architecture constraints:
-- Servlets
-- Spring Core
-- Spring MVC
-- JDBC
-- PostgreSQL
-- Flyway
-- Maven
-- Layered Architecture
-- MVC pattern
-- DAO pattern
-- Internationalization
-- Unit testing
-- Documentation
-
----
-
-## Repository Status
-
-**Current stage:** Business Analysis / System Analysis Complete — Ready for Development Handoff
-
-Current repository state:
-
-- [x]  Initial project concept defined
-- [x]  Draft input documents prepared
-- [x]  MVP direction identified
-- [x]  Course technical constraints collected
-- [x]  BA/SA analysis completed
-- [x]  Reviewed BA/SA documentation prepared
-- [x]  ERD finalized
-- [x]  UI flows and wireframes prepared
-- [x]  Development handoff package prepared
-- [ ]  Implementation repository created
-
----
-
-## Skills Applied
-
-This repository demonstrates practical application of the following skills.
-
-### Business Analysis
-
-- Business problem framing
-- Stakeholder identification
-- Persona analysis
-- Scope definition
-- MVP planning
-- Functional requirements writing
-- Non-functional requirements writing
-- Risk and assumption management
-- Open question tracking
-- Acceptance criteria preparation
-
-### System Analysis
-
-- Domain modeling
-- Data model preparation
-- Entity relationship analysis
-- Technical constraints analysis
-- Architecture requirements preparation
-- Integration context analysis
-- Security and access control considerations
-- System boundary definition
-
-### Product & UX Thinking
-
-- User workflow design
-- Basic information architecture
-- UI scenario planning
-- Public user journey analysis
-- Admin workflow planning
-- Recruiter-facing public resume flow
-
-### Technical Understanding
-
-- Java web application architecture
-- Spring MVC constraints
-- JDBC-based persistence
-- PostgreSQL schema planning
-- Docker Compose deployment planning
-- AI provider integration planning
-- PDF export requirements
-- Internationalization requirements
-
----
-
-## Methodology & Approach
-
-The project follows a structured analysis-first approach:
-
-1. **Discovery** — clarify the product idea, users, goals, and constraints.
-2. **Business Analysis** — define scope, stakeholders, workflows, and requirements.
-3. **System Analysis** — transform business needs into system, data, and architecture requirements.
-4. **Design Preparation** — prepare ERD, UI flows, wireframes, and development handoff.
-5. **Implementation Planning** — prepare the future Java/Vue implementation repository.
-6. **Portfolio Packaging** — present the project as a complete BA/SA and development case.
-
----
-
-## Repository Scope
-
-This repository focuses on **analysis and design preparation**.
-It does not contain the final application source code.
-
-The future implementation will be stored in a separate repository:
-- `resumainer-java-vue-webapp` — implementation repository
-
-The final portfolio hub will be stored in a separate repository:
-- `resumainer-capstone-project` — final portfolio and case study hub
-
----
-
-## Repository Structure
-
-```
-drafts/                     Initial draft input documents for full analysis
-docs/                       Reviewed and curated BA/SA documentation
-assets/                     Diagrams, wireframes, screenshots
-```
-
-Current docs structure:
-```
-docs/
-├── 01_project-overview/
-├── 02_requirements/
-│   └── elicitation/
-├── 03_processes-and-workflows/
-├── 04_domain-and-data-model/
-├── 05_ui-ux/
-├── 07_project-management/
-│   └── ba-planning-and-monitoring/
-├── 08_traceability/
-└── 09_decisions/
-```
-
----
-
-## Current Documentation Areas
-
-The current documentation covers:
-- Project overview and strategic context
-- Business goals with SMART KPIs
-- Stakeholder analysis and engagement plan
-- Methodology decision (Hybrid approach)
-- Governance plan with change control workflows
-- Information management plan
-- BA process improvement plan
-- Confirmed elicitation results
-- 7 user workflows with extensions
-- 5 functional requirements (profile, generation, management, admin)
-- 32 non-functional requirements (error handling, code quality, testing, security, deployment)
-- 3 business and stakeholder requirements
-- Detailed wireframe descriptions and field-level requirements
-- Resume template details with AI prompt contract and content budgets
-- ERD (25 entities, 3NF) and data dictionary
-- Traceability matrix with 47 trace rows
-- Decision log with 59 decisions
-- Change request log with 30 CRs
-- Risk register with 14 risks
-- Open questions log (all closed)
-
----
-
-## Completed Deliverables
-
-### Business Analysis Deliverables
-
-- Strategic Context and Gap Analysis (docs/01_project-overview/)
-- Business Goals and KPIs with SMART criteria (docs/01_project-overview/)
-- Stakeholder Engagement Plan (Power/Interest Grid) (docs/07_project-management/ba-planning-and-monitoring/)
-- Project Approach Decision (Hybrid methodology) (docs/07_project-management/ba-planning-and-monitoring/)
-- Requirements Log with 40 requirements and acceptance criteria (docs/02_requirements/)
-- Confirmed Elicitation Results (docs/02_requirements/elicitation/)
-- Governance Plan with RACI matrix and change control workflows (docs/07_project-management/ba-planning-and-monitoring/)
-- BA Process Improvement Plan (docs/07_project-management/ba-planning-and-monitoring/)
-
-### System Analysis Deliverables
-
-- Entity Relationship Diagram — DBML format (docs/04_domain-and-data-model/)
-- Entity Relationship Diagram — Mermaid format (docs/04_domain-and-data-model/)
-- Data Dictionary — 26 entities with field-level descriptions (docs/04_domain-and-data-model/)
-- Requirements Traceability Matrix — 47 trace rows (docs/08_traceability/)
-- Decision Log — 59 architecture, scope, and requirement decisions (docs/09_decisions/)
-- Error Handling, DB Layer, UI Security, and Testing NFRs (docs/02_requirements/)
-
-### UX/UI Deliverables
-
-- User Workflows — 7 complete workflows with extensions (docs/03_processes-and-workflows/)
-- Wireframes Detailed Description — 14 screens and modal (docs/05_ui-ux/)
-- Wireframe Field Requirements — field-level validation and error messages (docs/05_ui-ux/)
-- Resume Template Details and Logic — AI prompt contract, content budgets, template rules (docs/05_ui-ux/)
-- HTML Templates — one-page and two-page resume variants (docs/05_ui-ux/)
-
-### Project Management Deliverables
-
-- Change Request Log — 30 tracked changes (docs/07_project-management/)
-- Risk Register — 14 identified risks with mitigation plans (docs/07_project-management/)
-- Open Questions Log — all questions closed with decisions (docs/07_project-management/)
-- Information Management Plan (docs/07_project-management/ba-planning-and-monitoring/)
-- Development Handoff Package — all artifacts approved and ready
-
----
-
-## High-Level Roadmap
-
-```mermaid
-flowchart TD  
-A["Initial product idea"] --> B["Draft input documents"]  
-B --> C["Business and System Analysis"]  
-C --> D["BA/SA artifact review"]  
-D --> E["Requirements baseline"]  
-E --> F["ERD and data dictionary"]  
-F --> G["Architecture requirements"]  
-G --> H["UX/UI design"]  
-H --> I["MVP backlog"]  
-I --> J["Development handoff"]  
-J --> K["Implementation repository"]  
-K --> L["Deployed MVP"]  
-L --> M["Final portfolio case"]
-
-style J fill:#4CAF50,stroke:#333,stroke-width:2px
-```
-
-## Target MVP Scope
-
-The MVP includes:
-- user registration and login (email + BCrypt password);
-- structured profile management (contact, experience, education, projects, courses);
-- customizable additional profile info and settings;
-- AI model selection and management (admin);
-- adaptation level selection (Minimal, Balanced, Maximum) with all variants;
-- AI-generated resume draft with mock and real OpenRouter integration;
-- cover letter generation;
-- editable generated resume content with review and final save;
-- saved resume versions with search, sort, and pagination;
-- soft-delete of resumes with HTTP 410;
-- public recruiter resume links with direct PDF open;
-- PDF download with A4 layout and selectable text;
-- admin user, resume, and AI model management;
-- AI usage statistics;
-- Docker Compose deployment (3 containers);
-- Swagger/OpenAPI documentation (ADMIN-only in prod);
-- bilingual English and Russian UI.
-
----
-
-## Future Implementation Direction
-
-The future implementation is expected to use:
-- Java
-- Servlets
-- Spring Core
-- Spring MVC
-- JDBC (plain, with custom thread-safe Connection Pool)
-- PostgreSQL (3NF normalized)
-- Flyway
-- Vue 3 (Composition API) + Vite + PrimeVue
-- Thymeleaf (Landing Page)
-- Docker Compose (backend + frontend + database)
-- OpenRouter API
-- PDF generation library
-- SLF4J + Logback
-- Swagger/OpenAPI (springdoc-openapi)
-- JUnit 5 + Mockito + JaCoCo
-
-The implementation must respect the course requirement to use **plain JDBC** instead of ORM frameworks, and **no Spring Boot** — only pure Spring MVC.
-
----
-
-## Author’s Role
-
-In this project, I act as:
-- Business Analyst
-- System Analyst
-- Java Developer
-- Product Designer for the initial MVP scope
-- Project owner responsible for documentation, design decisions, and implementation planning
-
----
-
-## Notes
-
-This repository is focused on analytical documentation and project preparation.
-
-The goal is to demonstrate not only the final product idea, but also the structured thinking process behind it: from raw concept to requirements, system design, implementation planning, and future development handoff.
 
 ```
 
@@ -6205,8 +5833,8 @@ This document defines the key user workflows for the ResumAIner system. Each wor
 // ResumAIner — Entity-Relationship Data Model
 // Format: DBML for dbdiagram.io
 // Project ID: resumainer
-// File: dbml_erd.md (v2.0)
-// Date: 2026-05-23
+// File: dbml_erd.md (v4.0)
+// Date: 2026-06-12
 // Author: Anton
 // Status: Approved — MVP Baseline
 
@@ -6249,6 +5877,14 @@ Table language {
   id integer [primary key]
   code varchar(10) [not null, unique]      // EN, RU
   name varchar(50) [not null]              // English, Russian
+}
+
+// DEC-063: Fixed set of supported generation language modes.
+// UI labels: "English only", "Russian only", "Bilingual".
+Enum resume_language_mode {
+  ENGLISH_ONLY
+  RUSSIAN_ONLY
+  BILINGUAL
 }
 
 Table adaptation_level {
@@ -6362,21 +5998,28 @@ Table work_experience {
   updated_at timestamp
 }
 
+// DEC-070: Education is profile-owned, not AI-generated, but final resumes can be EN/RU.
+// Therefore education stores mandatory bilingual profile fields.
+// Resume Review does not edit Education; template rendering selects *_en or *_ru by response language.
 Table education {
   id integer [primary key]
   user_id integer [not null, ref: > users.id]
 
-  institution_name varchar(255) [not null]
-  degree varchar(100) [not null]               // Bachelor, Master, PhD, etc. (free text)
-  field_of_study varchar(255) [not null]       // "Information Systems"
-  education_type varchar(150)                  // Optional: "University", "College", etc.
-  description text
+  institution_name_ru varchar(255) [not null]
+  institution_name_en varchar(255) [not null]
+  degree_ru varchar(100) [not null]              // Bachelor, Master, PhD, etc. as localized free text
+  degree_en varchar(100) [not null]              // Bachelor, Master, PhD, etc. as localized free text
+  field_of_study_ru varchar(255) [not null]
+  field_of_study_en varchar(255) [not null]
 
-  start_date date [not null]                   // Confirmed: required
-  end_date date                                // NULL = still studying; allows future dates (planned graduation)
+  education_type varchar(150)                    // Optional: University, College, Bootcamp, etc.
+  description text                               // Optional profile note, not rendered in compact MVP template
+
+  start_date date [not null]                     // Confirmed: required
+  end_date date                                  // NULL = still studying; allows future planned graduation
 
   location varchar(255)
-  gpa_grade varchar(20)                        // "3.75" — stored as text for flexible formats
+  gpa_grade varchar(20)                          // Flexible text format: 3.75, A, 4.8/5, etc.
 
   created_at timestamp [not null, default: `now()`]
   updated_at timestamp
@@ -6492,6 +6135,97 @@ Table ai_model {
   updated_at timestamp
 }
 
+// ----- Section: AI Prompt Configs -----
+
+// DEC-064: AI prompt configuration is stored as a versioned prompt bundle.
+// Backend assembles the final prompt from modular fragments:
+// system prompt + language mode + adaptation selection + cover letter rule.
+// Only one prompt config should be active at a time in production.
+Table ai_prompt_config {
+  id integer [primary key]
+
+  name varchar(255) [not null]                  // Example: "Default Resume Generation Prompt Set v1"
+  description text                              // Admin-facing explanation of this prompt config
+  is_active boolean [not null, default: false]  // Only one active config at a time
+
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
+}
+
+// DEC-065: System prompt stores stable global rules that do not depend on user settings.
+// Examples: role of the model, strict JSON-only output, no hallucination,
+// sourceId preservation, tone constraints, safety rules.
+// There should be exactly one system prompt per ai_prompt_config.
+Table ai_system_prompt {
+  id integer [primary key]
+  prompt_config_id integer [not null, ref: > ai_prompt_config.id]
+
+  prompt text [not null]                        // Global system prompt text
+
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
+}
+
+// DEC-066: Language prompt stores only language-mode-specific instructions.
+// It prevents duplication of bilingual/single-language rules across many full prompts.
+// Expected active rows per config: ENGLISH_ONLY, RUSSIAN_ONLY, BILINGUAL.
+Table ai_request_prompt_language {
+  id integer [primary key]
+  prompt_config_id integer [not null, ref: > ai_prompt_config.id]
+
+  language_mode varchar(50) [not null]          // ENGLISH_ONLY, RUSSIAN_ONLY, BILINGUAL
+  prompt text [not null]                        // Language-specific output and JSON structure rules
+
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
+}
+
+// DEC-067: Adaptation prompt stores only adaptation-selection-specific instructions.
+// ALL is a request selection, not a final saved resume level.
+// If adaptation_selection = ALL, AI must return Minimal, Balanced, and Maximum variants.
+Table ai_request_prompt_adaptation {
+  id integer [primary key]
+  prompt_config_id integer [not null, ref: > ai_prompt_config.id]
+
+  adaptation_selection varchar(50) [not null]   // MINIMAL, BALANCED, MAXIMUM, ALL
+  prompt text [not null]                        // Adaptation-level instruction fragment
+
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
+}
+
+// DEC-068: Cover letter prompt stores cover-letter-specific generation rules.
+// Two rows per config are recommended:
+// include_cover_letter = true  -> require cover letter text
+// include_cover_letter = false -> explicitly forbid/return null for cover letter
+// This prevents the model from generating a cover letter when the user disabled it.
+Table ai_request_prompt_cover_letter {
+  id integer [primary key]
+  prompt_config_id integer [not null, ref: > ai_prompt_config.id]
+
+  include_cover_letter boolean [not null]       // true = generate cover letter; false = do not generate
+  prompt text [not null]                        // Cover-letter instruction fragment
+
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
+}
+
+// DEC-069: Prompt render log stores the exact prompt assembled for a generation request.
+// This is useful for debugging, reproducibility, QA, and later comparison of AI results.
+// For production, access to this table must be restricted because rendered prompts may contain profile data.
+Table ai_prompt_render_log {
+  id integer [primary key]
+  generation_request_id integer [not null, ref: > resume_generation_request.id]
+  prompt_config_id integer [not null, ref: > ai_prompt_config.id]
+
+  system_prompt_rendered text [not null]        // Final system prompt sent to AI
+  request_prompt_rendered text [not null]       // Final user/request prompt sent to AI
+  profile_payload_json text                     // Optional: profile/vacancy payload used for prompt rendering
+  prompt_hash varchar(128)                      // Optional checksum for debugging and reproducibility
+
+  created_at timestamp [not null, default: `now()`]
+}
+
 // ----- Section: Resume Budget Configuration -----
 
 // DB-backed configuration for resume template budgets.
@@ -6591,18 +6325,23 @@ Table resume_generation_request {
 
   user_id integer [not null, ref: > users.id]
   ai_model_id integer [not null, ref: > ai_model.id]
+  prompt_config_id integer [ref: > ai_prompt_config.id]  // save id of used prompt configs
 
   // Generation input
+  vacancy_title text [not null]                 // Pasted vacancy title
   vacancy_description text [not null]           // Pasted vacancy text
-  company_description text
+  company_name text                             // Pasted company name
+  company_description text                      // Pasted company text
   additional_comments text                      // "Focus on my courses"
   include_cover_letter boolean [not null, default: false]
 
   // Generation parameters
-  language_id integer [not null, ref: > language.id]
+  language_mode resume_language_mode [not null]
+  // Values: ENGLISH_ONLY, RUSSIAN_ONLY, BILINGUAL
+  // UI labels: "English only", "Russian only", "Bilingual"
+  // DEC-063: language choice belongs to the request as a mode, not as a single language FK.
+  // A single request can produce one or two language-specific responses.
   adaptation_level_id integer [not null, ref: > adaptation_level.id]
-  language_mode varchar(20) [not null, default: 'default']
-  // Values: 'default' (Default English), 'additional' (Additional Russian), 'both'
 
   // Budget config used for generation (DB-backed budget configuration)
   budget_config_id bigint [ref: > resume_budget_configs.id]
@@ -6624,8 +6363,13 @@ Table resume_generation_request {
 Table resume_generation_response {
   id integer [primary key]
 
-  generation_request_id integer [not null, unique, ref: > resume_generation_request.id]
-  // 1:1 — one response per request
+  generation_request_id integer [not null, ref: > resume_generation_request.id]
+  // DEC-063: many-to-one. One request creates one response for single-language mode
+  // or two responses for BILINGUAL mode.
+
+  language_id integer [not null, ref: > language.id]
+  // Actual language of this response row: EN or RU.
+  // Kept here to preserve 3NF: language is a property of the response, not of a bilingual request.
 
   status_id integer [not null, ref: > response_status.id]
   // DRAFT = AI output, waiting for user review
@@ -6633,12 +6377,17 @@ Table resume_generation_response {
 
   // Top-level single-value fields (reviewed/edited by user)
   professional_title varchar(250) [not null]
+  value_line varchar(500)                      // DEC-063: AI-generated positioning / keyword line
   professional_summary text [not null]
   professional_aspirations text [not null]
   cover_letter text                            // DEC-016: Final edited cover letter
 
   created_at timestamp [not null, default: `now()`]
   updated_at timestamp
+
+  indexes {
+    (generation_request_id, language_id) [unique]
+  }  
 }
 
 // DEC-028: Reviewed/edited work experience items from the generation response.
@@ -6731,6 +6480,27 @@ Table generation_response_skill {
   updated_at timestamp
 }
 
+// DEC-071: Reviewed/edited Personal Information generated per response language/adaptation.
+// Profile stores raw/default personal data once, but AI returns localized resume-ready values.
+// This table gives users editable intermediate values before final HTML/PDF generation.
+Table generation_response_personal {
+  id integer [primary key]
+  response_id integer [not null, unique, ref: > resume_generation_response.id]
+
+  location varchar(255) [not null]
+  spoken_languages varchar(100) [not null]
+  willingness_to_relocate varchar(50) [not null]
+  willingness_for_business_trips varchar(50) [not null]
+  citizenship varchar(50) [not null]
+  date_of_birth date [not null]
+  work_formats varchar(255)
+  gpa_grade varchar(20)
+  order_in_resume integer [not null, default: 0]
+
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
+}
+
 // ----- Section: Saved Resumes -----
 
 // DEC-028: Finalized resume record. Stores metadata and path to generated PDF.
@@ -6738,6 +6508,9 @@ Table generation_response_skill {
 // All resumes are public by design — no is_public flag needed (DEC-028).
 // Top-level text fields (professional_summary, professional_aspirations, cover_letter)
 // live in resume_generation_response table.
+// DEC-073: Filled HTML is persisted before PDF conversion.
+// Java backend renders and saves HTML first, then calls HtmlToPdfConverter.
+// Both HTML and PDF paths are stored for traceability and future download actions.
 Table saved_resume {
   id integer [primary key]
 
@@ -6753,7 +6526,8 @@ Table saved_resume {
   public_code varchar(4) [not null]            // 4-char: QWRYUPASEDFGHJKZXCVBNM
   public_url_link varchar(200) [not null]      // Full ready-made public resume URL
 
-  // Path to generated PDF file on server
+  // Path to generated PDF and HTML files on server
+  html_file_path varchar(500) [not null]       // DEC-073: HTML shoud be stored and be downloadable
   pdf_file_path varchar(500) [not null]        // DEC-017: HTML-to-PDF on Java backend
 
   is_deleted boolean [not null, default: false]
@@ -6781,13 +6555,25 @@ Table ai_usage_log {
   user_id integer [not null, ref: > users.id]
   ai_model_id integer [not null, ref: > ai_model.id]
   generation_request_id integer [not null, ref: > resume_generation_request.id]
-  generation_response_id integer [not null, ref: > resume_generation_response.id]
 
   tokens_sent integer [not null, default: 0]          // Prompt tokens
   tokens_generated integer [not null, default: 0]     // Completion tokens
   cost decimal [note: 'Post-MVP: cost per request']
 
   created_at timestamp [not null, default: `now()`]   // When API call completed
+}
+
+// DEC-063: One API call may create one or two response rows.
+// Junction table avoids duplicating usage-log facts and keeps monitoring in 3NF.
+Table ai_usage_log_response {
+  id integer [primary key]
+
+  ai_usage_log_id integer [not null, ref: > ai_usage_log.id]
+  generation_response_id integer [not null, ref: > resume_generation_response.id]
+
+  indexes {
+    (ai_usage_log_id, generation_response_id) [unique]
+  }
 }
 
 // ============================================================
@@ -6817,8 +6603,9 @@ Table ai_usage_log {
 // === GENERATION ===
 // users → resume_generation_request:       one-to-many
 // ai_model → resume_generation_request:    one-to-many
-// resume_generation_request → resume_generation_response: one-to-one
+// resume_generation_request → resume_generation_response: one-to-many (1 response for ENGLISH_ONLY/RUSSIAN_ONLY, 2 responses for BILINGUAL)
 // response_status → resume_generation_response: many-to-one
+// language → resume_generation_response: many-to-one
 // resume_generation_response → generation_response_experience: one-to-many
 // resume_generation_response → generation_response_education: one-to-many
 // resume_generation_response → generation_response_course: one-to-many
@@ -6832,7 +6619,7 @@ Table ai_usage_log {
 
 // === SAVED ===
 // users → saved_resume:              one-to-many
-// resume_generation_request → saved_resume: one-to-one
+// resume_generation_request → saved_resume: one-to-many
 // resume_generation_response → saved_resume: one-to-one
 // resume_template → saved_resume:    one-to-many (Post-MVP)
 
@@ -6840,10 +6627,11 @@ Table ai_usage_log {
 // users → ai_usage_log:              one-to-many
 // ai_model → ai_usage_log:           one-to-many
 // resume_generation_request → ai_usage_log: one-to-many
-// resume_generation_response → ai_usage_log: one-to-many
+// ai_usage_log → ai_usage_log_response: one-to-many
+// resume_generation_response → ai_usage_log_response: one-to-many
 
 // ============================================================
-// TOTAL TABLE COUNT: 30 tables
+// TOTAL TABLE COUNT: 31 tables
 // ============================================================
 // Reference Data (8):     role, user_status, user_permission, response_status,
 //                          language, adaptation_level, work_format, resume_template
@@ -6858,7 +6646,7 @@ Table ai_usage_log {
 // Budget Config (4):     resume_budget_configs, resume_template_selection_rules,
 //                        resume_work_experience_distribution_rules, resume_section_budget_rules
 // Saved (1):              saved_resume
-// Monitoring (1):         ai_usage_log
+// Monitoring (2):         ai_usage_log, ai_usage_log_response
 
 // ============================================================
 // KEY CHANGES FROM v0.1 TO v0.2
@@ -6923,6 +6711,104 @@ Table ai_usage_log {
 // 5. New table: resume_section_budget_rules — section-level min/max budget rules.
 // 6. resume_generation_request: added budget_config_id, budget_config_version_used.
 // 7. Total table count: 25 → 30.
+
+// ============================================================
+// KEY CHANGES FROM v2.0 TO v3.0
+// ============================================================
+//
+// 1. Added enum resume_language_mode with values ENGLISH_ONLY, RUSSIAN_ONLY, BILINGUAL.
+//    UI labels: "English only", "Russian only", "Bilingual".
+// 2. resume_generation_request.language_id removed.
+//    Reason: a request can now represent one-language or bilingual generation.
+// 3. resume_generation_request.language_mode changed from varchar/default/additional/both
+//    to fixed enum resume_language_mode.
+// 4. resume_generation_response.language_id added.
+//    Reason: actual generated language is a property of each response row.
+// 5. resume_generation_response.generation_request_id is no longer unique.
+//    Instead, unique index is now (generation_request_id, language_id).
+// 6. One resume_generation_request can now have one or two resume_generation_response rows.
+//    ENGLISH_ONLY/RUSSIAN_ONLY create one response; BILINGUAL creates two responses.
+// 7. resume_generation_response.value_line added for AI-generated resume positioning line.
+// 8. ai_usage_log.generation_response_id removed.
+//    Reason: one API call may produce two response rows in bilingual mode.
+// 9. ai_usage_log_response junction table added to keep API usage tracking normalized and 3NF-compliant.
+// 10. Relationships overview and total table count updated: 30 → 31.
+
+// ============================================================
+// KEY CHANGES FROM v3.0 TO v4.0
+// ============================================================
+//
+// 1. Added DB-backed modular AI prompt configuration (DEC-064).
+//    Instead of storing 16 duplicated full request prompts, backend now builds
+//    the final prompt from reusable prompt fragments.
+//
+// 2. New table: ai_prompt_config.
+//    Stores versioned prompt bundle metadata and controls which prompt set is active.
+//
+// 3. New table: ai_system_prompt.
+//    Stores stable global system prompt rules that do not depend on generation settings.
+//
+// 4. New table: ai_request_prompt_language.
+//    Stores language-mode-specific prompt fragments for ENGLISH_ONLY,
+//    RUSSIAN_ONLY, and BILINGUAL generation modes.
+//
+// 5. New table: ai_request_prompt_adaptation.
+//    Stores adaptation-specific prompt fragments for MINIMAL, BALANCED,
+//    MAXIMUM, and ALL generation scenarios.
+//
+// 6. New table: ai_request_prompt_cover_letter.
+//    Stores cover-letter-specific prompt fragments for include_cover_letter = true/false.
+//    This prevents the AI model from generating a cover letter when the user disabled it.
+//
+// 7. New table: ai_prompt_render_log.
+//    Stores final rendered system/request prompts for debugging, QA,
+//    reproducibility, and future AI result comparison.
+//
+// 8. resume_generation_request: added prompt_config_id FK to ai_prompt_config.
+//    Reason: each generation request must be traceable to the exact prompt bundle
+//    used at generation time.
+//
+// 9. Education model updated to bilingual profile-owned fields (DEC-070).
+//    institution_name, degree, and field_of_study were replaced by mandatory
+//    RU/EN pairs: institution_name_ru/en, degree_ru/en, field_of_study_ru/en.
+//    Reason: Education is not AI-generated/reviewed, but final resumes can be
+//    rendered in Russian or English.
+//
+// 10. generation_response_personal table added (DEC-071).
+//     Personal Information is now AI-generated/localized per response language
+//     and available for user review/edit before final HTML/PDF generation.
+//
+// 11. Resume Review flow updated conceptually (DEC-072).
+//     Personal Information is added as the last Review section after Skills.
+//     Education remains outside Review because it is now bilingual profile-owned data.
+//
+// 12. saved_resume: added html_file_path (DEC-073).
+//     Filled HTML is now persisted before PDF conversion.
+//     Java backend will render and save HTML first, then call HtmlToPdfConverter.
+//
+// 13. Generated artifact storage convention introduced (DEC-073).
+//     Final generated files should be stored under:
+//     generated_results/{username}/{public_code}/
+//     Each saved resume language version has its own public_code and folder.
+//
+// 14. Export flow expanded conceptually to support HTML download.
+//     In addition to PDF download/open actions, frontend should expose
+//     "Download HTML" for saved filled HTML files.
+//
+// 15. Relationships overview updated:
+//     ai_prompt_config → ai_system_prompt: one-to-one
+//     ai_prompt_config → ai_request_prompt_language: one-to-many
+//     ai_prompt_config → ai_request_prompt_adaptation: one-to-many
+//     ai_prompt_config → ai_request_prompt_cover_letter: one-to-many
+//     ai_prompt_config → ai_prompt_render_log: one-to-many
+//     resume_generation_request → ai_prompt_render_log: one-to-many
+//     resume_generation_response → generation_response_personal: one-to-one
+//
+// 16. Total table count updated: 31 → 38.
+//     Added 7 tables:
+//     ai_prompt_config, ai_system_prompt, ai_request_prompt_language,
+//     ai_request_prompt_adaptation, ai_request_prompt_cover_letter,
+//     ai_prompt_render_log, generation_response_personal.
 ```
 
 `docs\04_domain-and-data-model\mermaid_erd.md`:
@@ -16613,9 +16499,9 @@ The goal is to ensure that project scope remains controlled and that each import
 **Project ID:** `resumainer`
 **Product Name:** ResumAIner
 **Date Created:** 2026-05-10
-**Last Updated:** 2026-05-23
+**Last Updated:** 2026-06-11
 **Author:** Anton
-**Version:** 16.0
+**Version:** 18.0
 **Status:** Active
 **Related BABOK Area:** 3.3 Plan Business Analysis Governance
 
@@ -16714,6 +16600,19 @@ Each decision includes context, selected option, rejected alternatives, rational
 | DEC-060 | 2026-05-23 | Architecture | Replace YAML budget config with DB-backed config | YAML is developer-oriented, not admin/data-oriented; DB-backed config is easier to inspect, test, and demonstrate | YAML config section replaced with DB-backed approach; new DB tables added; Decision Log, Requirements Log, Change Request Log, ERDs updated | Approved |
 | DEC-061 | 2026-05-23 | Requirement | Fixed resume section order stays in backend code | Section order is fixed and not configurable through DB admin panel | Section order belongs to template rendering logic, not runtime budget configuration | Approved |
 | DEC-062 | 2026-05-23 | Data Model | PostgreSQL partial unique index for one active budget config | Protects data integrity even though backend has fallback logic | Partial unique index in Flyway migration; DBML notes added | Approved |
+| DEC-063 | 2026-06-10 | Data Model | Support bilingual generation with language-specific responses | Independent EN/RU AI calls can produce inconsistent bilingual resumes; one request must support single-language and bilingual modes | `language_id` moved from request to response; request-response becomes 1:N; `value_line` and `ai_usage_log_response` added | Approved |
+| DEC-064 | 2026-06-10 | Architecture | Use versioned modular AI prompt configuration | Avoids 16 duplicated full request prompts and supports maintainable prompt assembly | Adds AI prompt config bundle tables, prompt fragments, and rendered prompt traceability | Approved |
+```markdown
+| DEC-065 | 2026-06-10 | Architecture | Store system prompt separately | Keeps stable model-level rules independent from request-specific generation settings | Adds `ai_system_prompt` linked to `ai_prompt_config` | Approved |
+| DEC-066 | 2026-06-10 | Architecture | Store language-specific prompt fragments | Avoids duplication of single-language and bilingual response rules across full prompts | Adds `ai_request_prompt_language` for ENGLISH_ONLY, RUSSIAN_ONLY, and BILINGUAL modes | Approved |
+| DEC-067 | 2026-06-10 | Architecture | Store adaptation-specific prompt fragments | Keeps minimal, balanced, maximum, and all-level generation rules independently maintainable | Adds `ai_request_prompt_adaptation` for MINIMAL, BALANCED, MAXIMUM, and ALL selections | Approved |
+| DEC-068 | 2026-06-10 | Architecture | Store cover-letter prompt fragments for enabled/disabled mode | Makes cover-letter behavior explicit and prevents unwanted cover-letter generation | Adds `ai_request_prompt_cover_letter` for true/false cover-letter modes | Approved |
+| DEC-069 | 2026-06-10 | Architecture | Store rendered prompt log for debugging and reproducibility | Allows exact prompt inspection, QA, and comparison of AI output across prompt versions | Adds `ai_prompt_render_log` linked to generation request and prompt config | Approved |
+| DEC-070 | 2026-06-12 | Data Model | Store bilingual education profile fields | Education is profile-owned and not AI-generated, but resumes can be rendered in EN/RU | Replaces single-language education fields with mandatory RU/EN education fields | Approved |
+| DEC-071 | 2026-06-12 | Data Model | Add generated Personal Information response table | Personal information needs localized editable output per generated language/adaptation | Adds `generation_response_personal`; Resume Review can edit Personal Information before final save | Approved |
+| DEC-072 | 2026-06-12 | UI/UX | Add Personal Information tab to Resume Review | Users need to review and edit localized personal information before PDF generation | Adds last Review tab after Skills; hides profile resume-language preference fields from current UI | Approved |
+| DEC-073 | 2026-06-12 | Architecture | Store generated HTML and PDF artifacts under user/code folders | HTML is canonical intermediate artifact before server-side PDF conversion | Saves files under `generated_results/{username}/{public_code}/`; Export adds HTML download action | Approved |
+
 
 ## 4. Details
 
@@ -17362,46 +17261,6 @@ Each decision includes context, selected option, rejected alternatives, rational
 **Rationale:** YAML is simple to edit, version-controllable, and independent of database schema.
 **Impact:** External config file created; service reads budget values at startup.
 
-### DEC-060 Use DB-Backed Resume Budget Configuration Instead of YAML
-
-**Date:** 2026-05-23
-**Type:** Architecture
-**Status:** Approved
-**Supersedes:** DEC-049
-**Context:** The previously approved YAML-based configuration approach is less suitable for this project because YAML is developer-oriented, not admin/data-oriented; runtime changes are less convenient with YAML; the project already uses PostgreSQL and has admin-side concepts for AI models and runtime settings.
-**Selected Option:** Resume budget settings stored in PostgreSQL tables. Backend reads DB config before every generation. No cache in MVP. One active config with version_no. PostgreSQL partial unique index prevents multiple active configs.
-**Rejected Alternatives:** YAML-based configuration (previous approach); caching for MVP; configurable section order in DB.
-**Rationale:** DB-backed configuration is easier to inspect, test, and demonstrate in a portfolio. It avoids hardcoding budget parameters in Java and allows runtime configuration changes without application restart.
-**Impact:**
-- **Data Model:** 4 new tables: resume_budget_configs, resume_template_selection_rules, resume_work_experience_distribution_rules, resume_section_budget_rules.
-- **Resume Template Details:** Section 11 replaced, YAML examples removed, DB-backed config behavior added.
-- **Requirements:** NFR-033, NFR-034 added. DEC-049 superseded.
-- **ERD/Data Dictionary:** Updated with new entities and fields.
-- **Governance:** Change request CR-031 created.
-- **Risks:** RISK-015 added for misconfigured budget settings.
-
-### DEC-061 Fixed Resume Section Order Stays in Backend Code
-
-**Date:** 2026-05-23
-**Type:** Requirement
-**Status:** Approved
-**Context:** The decision to move budget configuration to DB raised the question whether section order should also be configurable through DB.
-**Selected Option:** Fixed resume section order is implemented in backend rendering code and is not configurable through DB in MVP.
-**Rejected Alternatives:** Storing section order in DB; admin panel for section order configuration.
-**Rationale:** Section order is fixed and not configurable. There is no requirement to configure section order through admin panel. Storing it in DB adds unnecessary complexity. Section order belongs to template rendering logic, not runtime budget configuration.
-**Impact:** Section order explicitly excluded from DB-backed budget configuration scope. Documented in Resume Template Details.
-
-### DEC-062 Use PostgreSQL Partial Unique Index to Protect One Active Config
-
-**Date:** 2026-05-23
-**Type:** Data Model
-**Status:** Approved
-**Context:** Even though backend has fallback logic for multiple active configs, database-level protection is recommended to prevent data integrity issues.
-**Selected Option:** Add PostgreSQL partial unique index in Flyway migration: `CREATE UNIQUE INDEX uq_one_active_resume_budget_config ON resume_budget_configs (is_active) WHERE is_active = true;`
-**Rejected Alternatives:** Application-level enforcement only; no enforcement.
-**Rationale:** Database-level constraint prevents multiple active configs regardless of how data is modified (direct SQL, application, future admin tools). Partial unique index is PostgreSQL-specific and cannot be fully expressed in DBML.
-**Impact:** Migration SQL includes partial unique index. DBML notes document the constraint. Data Dictionary mentions it as migration-level constraint.
-
 ### DEC-050 Profile Picture Moved from MVP to POST-MVP
 
 **Date:** 2026-05-20
@@ -17522,6 +17381,227 @@ Each decision includes context, selected option, rejected alternatives, rational
 - Cover letter: plain text field, no formatting rules (FR-011/FR-012).
 - Resume delete: confirmation dialog text "Are you sure you want to delete this resume?" (FR-013).
 **Impact:** All requirements baseline approved and ready for development handoff. Decision Log, Requirements Log, Open Questions Log updated.
+
+### DEC-060 Use DB-Backed Resume Budget Configuration Instead of YAML
+
+**Date:** 2026-05-23
+**Type:** Architecture
+**Status:** Approved
+**Supersedes:** DEC-049
+**Context:** The previously approved YAML-based configuration approach is less suitable for this project because YAML is developer-oriented, not admin/data-oriented; runtime changes are less convenient with YAML; the project already uses PostgreSQL and has admin-side concepts for AI models and runtime settings.
+**Selected Option:** Resume budget settings stored in PostgreSQL tables. Backend reads DB config before every generation. No cache in MVP. One active config with version_no. PostgreSQL partial unique index prevents multiple active configs.
+**Rejected Alternatives:** YAML-based configuration (previous approach); caching for MVP; configurable section order in DB.
+**Rationale:** DB-backed configuration is easier to inspect, test, and demonstrate in a portfolio. It avoids hardcoding budget parameters in Java and allows runtime configuration changes without application restart.
+**Impact:**
+- **Data Model:** 4 new tables: resume_budget_configs, resume_template_selection_rules, resume_work_experience_distribution_rules, resume_section_budget_rules.
+- **Resume Template Details:** Section 11 replaced, YAML examples removed, DB-backed config behavior added.
+- **Requirements:** NFR-033, NFR-034 added. DEC-049 superseded.
+- **ERD/Data Dictionary:** Updated with new entities and fields.
+- **Governance:** Change request CR-031 created.
+- **Risks:** RISK-015 added for misconfigured budget settings.
+
+### DEC-061 Fixed Resume Section Order Stays in Backend Code
+
+**Date:** 2026-05-23
+**Type:** Requirement
+**Status:** Approved
+**Context:** The decision to move budget configuration to DB raised the question whether section order should also be configurable through DB.
+**Selected Option:** Fixed resume section order is implemented in backend rendering code and is not configurable through DB in MVP.
+**Rejected Alternatives:** Storing section order in DB; admin panel for section order configuration.
+**Rationale:** Section order is fixed and not configurable. There is no requirement to configure section order through admin panel. Storing it in DB adds unnecessary complexity. Section order belongs to template rendering logic, not runtime budget configuration.
+**Impact:** Section order explicitly excluded from DB-backed budget configuration scope. Documented in Resume Template Details.
+
+### DEC-062 Use PostgreSQL Partial Unique Index to Protect One Active Config
+
+**Date:** 2026-05-23
+**Type:** Data Model
+**Status:** Approved
+**Context:** Even though backend has fallback logic for multiple active configs, database-level protection is recommended to prevent data integrity issues.
+**Selected Option:** Add PostgreSQL partial unique index in Flyway migration: `CREATE UNIQUE INDEX uq_one_active_resume_budget_config ON resume_budget_configs (is_active) WHERE is_active = true;`
+**Rejected Alternatives:** Application-level enforcement only; no enforcement.
+**Rationale:** Database-level constraint prevents multiple active configs regardless of how data is modified (direct SQL, application, future admin tools). Partial unique index is PostgreSQL-specific and cannot be fully expressed in DBML.
+**Impact:** Migration SQL includes partial unique index. DBML notes document the constraint. Data Dictionary mentions it as migration-level constraint.
+
+### DEC-063 Support Bilingual Generation with Language-Specific Responses
+
+**Date:** 2026-06-10  
+**Type:** Data Model  
+**Status:** Approved  
+**Context:** Prototype testing showed that generating English and Russian resumes through two independent AI requests can produce inconsistent wording, emphasis, and section meaning for the same candidate profile. The product needs consistent bilingual output while still allowing users to generate only one language when needed.  
+**Selected Option:** Use a single `resume_generation_request` with `language_mode` to represent the user's language choice. Supported values are `English only`, `Russian only`, and `Bilingual`. Move actual generated language to `resume_generation_response.language_id`. A single-language request creates one response row. A bilingual request creates two response rows: one English and one Russian.  
+**Rejected Alternatives:** Keep two independent requests for EN/RU; generate one language and then translate it outside the response contract; store two languages in one wide response row; keep `language_id` only on `resume_generation_request`.  
+**Rationale:** Language mode belongs to the generation request because it describes what the user asked the system to produce. Actual language belongs to each generated response because generated content is language-specific. This preserves 3NF and allows one request to produce one or two normalized response rows. A bilingual AI response can also enforce semantic consistency between EN and RU versions while still allowing natural localization rather than literal translation.  
+**Impact:**  
+- `resume_generation_request.language_id` is removed.  
+- `resume_generation_request.language_mode` uses controlled values: `English only`, `Russian only`, `Bilingual`.  
+- `resume_generation_response.language_id` is added.  
+- `resume_generation_response.generation_request_id` is no longer unique by itself.  
+- Unique constraint becomes (`generation_request_id`, `language_id`).  
+- `resume_generation_request` to `resume_generation_response` relationship changes from 1:1 to 1:N.  
+- `resume_generation_response.value_line` is added for language-specific AI positioning text.  
+- `ai_usage_log.generation_response_id` is removed because one bilingual API call may produce two responses.  
+- `ai_usage_log_response` junction table is added to map one API call to one or more generated responses.  
+- ERD, Data Dictionary, Mermaid ERD, PlantUML ERD, prompt contract, and generation flow documentation must be updated.  
+**Follow-up Actions:** Update Flyway migrations, Java DAOs/services, response parsing, prompt selection, Resume Review flow, and traceability artifacts to support single-language and bilingual generation modes.
+
+### DEC-064 Use Versioned Modular AI Prompt Configuration
+
+**Date:** 2026-06-11  
+**Type:** Architecture  
+**Status:** Approved  
+**Context:** The resume generation feature needs different prompt behavior depending on language mode, adaptation selection, and cover letter option. A simple table with one full request prompt per combination would require 16 active prompt records at once: single-language/bilingual × minimal/balanced/maximum/all × cover-letter enabled/disabled. This approach would duplicate prompt text, make updates error-prone, and increase the risk of inconsistent AI behavior between scenarios.  
+**Selected Option:** Store AI prompts as a versioned modular prompt configuration bundle. Add an active `ai_prompt_config` as the parent prompt set. Store stable global rules in `ai_system_prompt`. Store request prompt fragments separately by language mode, adaptation selection, and cover letter flag using `ai_request_prompt_language`, `ai_request_prompt_adaptation`, and `ai_request_prompt_cover_letter`. Backend assembles the final prompt at runtime from the active config and the current `resume_generation_request` settings. Store the rendered prompt in `ai_prompt_render_log` for debugging and reproducibility.  
+**Rejected Alternatives:** Store 16 full request prompts for every language/adaptation/cover-letter combination; keep prompt text fully hardcoded in Java; store only one generic prompt without configuration fragments; add `is_active` flags to every prompt fragment table without a parent config bundle.  
+**Rationale:** Modular prompt fragments avoid duplicated instructions and make prompt updates safer. Language-specific, adaptation-specific, and cover-letter-specific instructions are independent configuration concerns and should not be repeated across 16 full prompt rows. A parent prompt config allows the system to switch the whole prompt set as one versioned bundle, reducing inconsistent active states. The design supports 3NF because each prompt fragment table stores one type of prompt rule, while `ai_prompt_config` controls the active version. Rendered prompt logging provides traceability for AI output debugging, QA, and future comparison of prompt versions.  
+**Impact:**  
+- New AI prompt configuration section added to the Generation group.  
+- `ai_prompt_config` added as the versioned parent prompt set.  
+- `ai_system_prompt` added for stable system-level model instructions.  
+- `ai_request_prompt_language` added for `ENGLISH_ONLY`, `RUSSIAN_ONLY`, and `BILINGUAL` language-mode prompt fragments.  
+- `ai_request_prompt_adaptation` added for `MINIMAL`, `BALANCED`, `MAXIMUM`, and `ALL` adaptation-selection prompt fragments.  
+- `ai_request_prompt_cover_letter` added for cover-letter enabled/disabled prompt fragments.  
+- `ai_prompt_render_log` added to store rendered system/request prompts and optional payload/hash for debugging and reproducibility.  
+- `resume_generation_request` should reference the prompt config used for the request.  
+- Backend prompt generation should use a Prompt Builder approach: system prompt + language fragment + adaptation fragment + cover-letter fragment + dynamic profile/vacancy/budget payload.  
+- PostgreSQL partial unique index should enforce only one active prompt config at a time.  
+- ERD, Data Dictionary, Mermaid ERD, PlantUML ERD, Flyway migrations, prompt prototype, and Java generation service documentation must be updated.  
+**Follow-up Actions:** Update DBML ERD, Data Dictionary, Mermaid ERD, PlantUML ERD, Flyway migrations, prompt builder logic, Python backend prototype, and OpenCode implementation brief to use the modular prompt configuration model.
+
+### DEC-065 Store System Prompt Separately
+
+**Date:** 2026-06-11
+**Type:** Architecture  
+**Status:** Approved  
+**Context:** Resume generation requires stable global AI instructions that do not depend on user-selected generation settings. These instructions include the model role, JSON-only response rule, hallucination prevention, sourceId preservation, allowed HTML rules, factuality constraints, and general output quality requirements. Keeping these rules inside every request prompt fragment would duplicate text and increase the risk of inconsistent behavior.  
+**Selected Option:** Store the stable system-level prompt in a separate `ai_system_prompt` table linked to `ai_prompt_config`. Each active prompt config should have exactly one system prompt. The backend loads this prompt as the system message before assembling the request-specific prompt fragments.  
+**Rejected Alternatives:** Keep the system prompt hardcoded in Java; duplicate the same system instructions inside every request prompt; store one large monolithic prompt for every language/adaptation/cover-letter combination.  
+**Rationale:** System-level model behavior is independent from language mode, adaptation selection, and cover-letter settings. Storing it separately avoids duplication and keeps the prompt configuration easier to maintain. It also makes it clearer which rules apply globally to all generation scenarios.  
+**Impact:**  
+- `ai_system_prompt` added to the AI Prompt Configs section.  
+- `ai_system_prompt.prompt_config_id` links the system prompt to a specific prompt bundle.  
+- Backend Prompt Builder must load the system prompt from the active `ai_prompt_config`.  
+- A unique constraint should ensure one system prompt per prompt config.  
+- Prompt updates that affect global model behavior can be managed without editing language/adaptation/cover-letter fragments.  
+**Follow-up Actions:** Update DBML ERD, Data Dictionary, Flyway migration, Python prototype, and Java Prompt Builder logic to load system prompt from the database.
+
+### DEC-066 Store Language-Specific Prompt Fragments
+
+**Date:** 2026-06-11 
+**Type:** Architecture  
+**Status:** Approved  
+**Context:** Resume generation supports three language modes: English-only, Russian-only, and bilingual. Each mode requires different response rules and JSON contract instructions. Bilingual generation also requires consistency between English and Russian versions while avoiding literal translation. Duplicating language instructions across full request prompts would make prompt updates error-prone.  
+**Selected Option:** Store language-mode-specific prompt fragments in `ai_request_prompt_language`, linked to `ai_prompt_config`. The table stores one prompt fragment per language mode: `ENGLISH_ONLY`, `RUSSIAN_ONLY`, and `BILINGUAL`. Backend selects the correct fragment based on `resume_generation_request.language_mode`.  
+**Rejected Alternatives:** Use a boolean `bilingual` flag instead of explicit language mode; store language instructions inside 16 full prompt combinations; hardcode language instructions in Java; use one generic language prompt for all modes.  
+**Rationale:** `language_mode` is more expressive than a boolean flag because single-language generation still needs to distinguish English-only from Russian-only. Separating language prompt fragments avoids duplication and makes bilingual response behavior easier to update. This also aligns with the data model where `resume_generation_request.language_mode` controls requested generation mode and `resume_generation_response.language_id` stores actual response language.  
+**Impact:**  
+- `ai_request_prompt_language` added to the AI Prompt Configs section.  
+- Expected rows per prompt config: `ENGLISH_ONLY`, `RUSSIAN_ONLY`, `BILINGUAL`.  
+- Backend Prompt Builder must select the language fragment by `prompt_config_id` and `language_mode`.  
+- Bilingual prompt fragment must describe one-call bilingual JSON generation and semantic consistency between EN/RU outputs.  
+- A unique constraint should enforce one language fragment per language mode per prompt config.  
+**Follow-up Actions:** Update ERD, Data Dictionary, prompt seed data, Python prototype, and Java Prompt Builder to use language-specific prompt fragments.
+
+### DEC-067 Store Adaptation-Specific Prompt Fragments
+
+**Date:** 2026-06-11
+**Type:** Architecture  
+**Status:** Approved  
+**Context:** The resume generation feature supports several adaptation selections: minimal, balanced, maximum, and all levels. Each selection requires different prompt behavior. Minimal adaptation should preserve more of the original profile wording, balanced adaptation should tailor content without overfitting, maximum adaptation should strongly align the resume with the vacancy, and all-level generation should return multiple variants for user review.  
+**Selected Option:** Store adaptation-specific prompt fragments in `ai_request_prompt_adaptation`, linked to `ai_prompt_config`. The table stores one prompt fragment per adaptation selection: `MINIMAL`, `BALANCED`, `MAXIMUM`, and `ALL`. Backend selects the correct fragment based on the generation request settings.  
+**Rejected Alternatives:** Hardcode adaptation behavior in Java; store adaptation instructions inside full request prompt combinations; treat `ALL` as a final resume adaptation level; use one generic adaptation prompt for all cases.  
+**Rationale:** Adaptation behavior is independent from language mode and cover-letter settings, so it should be stored as a separate prompt fragment. This prevents duplicated adaptation instructions across multiple prompt combinations and makes it easier to refine the generation behavior of one level without affecting others. `ALL` is treated as a generation selection, not as a final saved resume level, because the user later selects one final level for PDF generation.  
+**Impact:**  
+- `ai_request_prompt_adaptation` added to the AI Prompt Configs section.  
+- Expected rows per prompt config: `MINIMAL`, `BALANCED`, `MAXIMUM`, `ALL`.  
+- Backend Prompt Builder must select the adaptation fragment by `prompt_config_id` and adaptation selection.  
+- `ALL` prompt fragment must instruct the AI to return minimal, balanced, and maximum variants.  
+- Final saved resume should still use one selected adaptation level, not `ALL`.  
+- A unique constraint should enforce one adaptation fragment per adaptation selection per prompt config.  
+**Follow-up Actions:** Update DBML ERD, Data Dictionary, seed data, Python prototype, Java Prompt Builder, and review/export flow documentation to distinguish adaptation selection from final saved adaptation level.
+
+### DEC-068 Store Cover-Letter Prompt Fragments for Enabled/Disabled Mode
+
+**Date:** 2026-06-11
+**Type:** Architecture  
+**Status:** Approved  
+**Context:** Cover letter generation is optional. If the user enables it, the AI must generate editable cover-letter content. If the user disables it, the AI must not generate cover-letter text. Simply omitting a cover-letter prompt fragment when disabled may be risky because the base JSON schema or model behavior could still produce a cover letter.  
+**Selected Option:** Store cover-letter-specific prompt fragments in `ai_request_prompt_cover_letter`, linked to `ai_prompt_config`. The table stores two prompt fragments per config: one for `include_cover_letter = true` and one for `include_cover_letter = false`. Backend selects the correct fragment based on the request setting.  
+**Rejected Alternatives:** Store only one cover-letter prompt for enabled mode and omit the fragment when disabled; hardcode cover-letter behavior in Java; duplicate cover-letter instructions across all full request prompt combinations.  
+**Rationale:** Explicit true/false prompt fragments make the desired AI behavior clear in both cases. The disabled-mode fragment can explicitly instruct the model to return `coverLetter = null` or omit cover-letter content according to the response contract. This reduces accidental cover-letter generation and keeps cover-letter behavior independently maintainable.  
+**Impact:**  
+- `ai_request_prompt_cover_letter` added to the AI Prompt Configs section.  
+- Expected rows per prompt config: `include_cover_letter = true` and `include_cover_letter = false`.  
+- Backend Prompt Builder must select the fragment by `prompt_config_id` and request cover-letter flag.  
+- Cover-letter output remains stored in `resume_generation_response.cover_letter` when generated.  
+- A unique constraint should enforce one cover-letter fragment per true/false mode per prompt config.  
+**Follow-up Actions:** Update ERD, Data Dictionary, prompt seed data, Python prototype, Java Prompt Builder, and generation response validation rules to explicitly handle cover-letter enabled and disabled modes.
+
+### DEC-069 Store Rendered Prompt Log for Debugging and Reproducibility
+
+**Date:** 2026-06-10  
+**Type:** Architecture  
+**Status:** Approved  
+**Context:** AI-generated resume output can vary depending on prompt configuration, user profile data, vacancy text, budget rules, language mode, adaptation selection, and cover-letter settings. For debugging and QA, it must be possible to inspect exactly what was sent to the AI model for a specific generation request. Without rendered prompt logging, it is difficult to reproduce output issues or compare results after prompt updates.  
+**Selected Option:** Add `ai_prompt_render_log` to store the rendered system prompt, rendered request prompt, optional profile/vacancy payload JSON, and optional prompt hash for each generation request. The log links to both `resume_generation_request` and `ai_prompt_config`.  
+**Rejected Alternatives:** Store only prompt fragment IDs without rendered text; rely on application logs; store rendered prompts inside `resume_generation_request`; do not store prompt rendering details.  
+**Rationale:** Rendered prompt logging provides strong traceability and makes AI behavior easier to debug. It helps answer why a specific resume was generated in a certain way and which prompt configuration was used. Keeping rendered prompt data in a separate table prevents the generation request table from becoming overloaded and preserves separation between request metadata and diagnostic prompt details. Access to this table should be restricted because rendered prompts may contain user profile and vacancy data.  
+**Impact:**  
+- `ai_prompt_render_log` added to the AI Prompt Configs section.  
+- Render log links to `resume_generation_request` and `ai_prompt_config`.  
+- Backend Prompt Builder should save rendered prompts before or during the AI call.  
+- Optional `prompt_hash` can support prompt comparison and reproducibility checks.  
+- Optional `profile_payload_json` can support debugging of payload construction issues.  
+- Sensitive prompt/payload data must not be exposed to normal users and must not be logged in plaintext application logs.  
+**Follow-up Actions:** Update DBML ERD, Data Dictionary, Flyway migration, Python prototype, Java Prompt Builder, admin/debugging documentation, and security notes for restricted access to rendered prompt data.
+
+### DEC-070 Store Bilingual Education Profile Fields
+
+**Date:** 2026-06-12  
+**Type:** Data Model  
+**Status:** Approved  
+**Context:** Education records are profile-owned data and are not generated or adapted by the AI response. Prototype testing showed that if Education is entered only in one language, the same text appears in both Russian and English resumes.  
+**Selected Option:** Store mandatory bilingual education fields in the profile `education` table: `institution_name_ru`, `institution_name_en`, `degree_ru`, `degree_en`, `field_of_study_ru`, and `field_of_study_en`. Resume rendering selects the correct language-specific fields based on `resume_generation_response.language_id`.  
+**Rejected Alternatives:** Let AI translate education during generation; keep one-language education fields; add Education back to AI Review as generated response data.  
+**Rationale:** Education is factual profile data and should remain stable, not rewritten by AI. Bilingual profile fields preserve correctness, reduce hallucination risk, and keep the Review page focused on AI-generated content.  
+**Impact:** Updates `education` table, My Profile Education form, validation rules, profile API DTOs, rendering logic, Data Dictionary, ERDs, and frontend profile UI.  
+**Follow-up Actions:** Update Flyway migrations, Java DAO/DTO/service validation, Vue profile form, seed data, and resume template renderer.
+
+### DEC-071 Add Generated Personal Information Response Table
+
+**Date:** 2026-06-12  
+**Type:** Data Model  
+**Status:** Approved  
+**Context:** Personal Information uses profile values such as location, languages, relocation readiness, business trip readiness, citizenship, and date of birth. Some of these values require localized resume-ready wording, and users must be able to edit them before final PDF generation.  
+**Selected Option:** Add `generation_response_personal` as a 1:1 child table of `resume_generation_response`. AI returns localized Personal Information per language/adaptation variant, backend stores it, and Resume Review displays it as editable fields.  
+**Rejected Alternatives:** Render Personal Information directly from profile only; make profile fields bilingual for all personal info; store personal info as JSON inside `resume_generation_response`.  
+**Rationale:** The table keeps normalized structured data, supports bilingual/adaptation-specific text, and provides a clean editable Review state before final save.  
+**Impact:** Adds new generation response table, AI JSON contract section, response parser/persistence changes, Review UI tab, template renderer changes, ERD/Data Dictionary updates.  
+**Follow-up Actions:** Update prompt config, OpenRouter parsing, Java DAOs/services, Vue Review flow, and template markers.
+
+### DEC-072 Add Personal Information Tab to Resume Review
+
+**Date:** 2026-06-12  
+**Type:** UI/UX  
+**Status:** Approved  
+**Context:** Resume Review previously excluded Personal Information, but prototype testing showed that localized values must be reviewed and edited before final PDF output.  
+**Selected Option:** Add `Personal Information` / `Личная информация` as the last internal tab on `/generate/review`, after Skills. The tab follows the same language/adaptation layout as other Review sections. Education remains outside Review because it is profile-owned bilingual data. Hide `Default resume language` and `Additional resume language` fields from My Profile Additional Info UI for MVP.  
+**Rejected Alternatives:** Keep Personal Information uneditable; put Personal Information inside Skills; move Education back into Review.  
+**Rationale:** Personal Information is short but visible in final resume. A dedicated Review tab keeps the flow explicit and avoids mixing profile settings with generated resume content.  
+**Impact:** Updates Review tabs, i18n labels, frontend mock data, generated response model, and OpenDesign/OpenCode handoff.  
+**Follow-up Actions:** Update frontend prototype, Review form components, i18n files, and API contracts.
+
+### DEC-073 Store Generated HTML and PDF Artifacts Under User/Code Folders
+
+**Date:** 2026-06-12  
+**Type:** Architecture  
+**Status:** Approved  
+**Context:** Backend rendering produces filled HTML before server-side PDF conversion. The generated HTML should be persisted for traceability, debugging, future HTML download, and reliable PDF generation.  
+**Selected Option:** Store generated artifacts under `generated_results/{username}/{public_code}/`. Each saved resume language version gets its own `public_code` and folder. The folder contains the filled HTML and, after Java implementation, the generated PDF.  
+**Rejected Alternatives:** Store only PDF; store all outputs in one flat folder; use request ID only; keep HTML temporary and delete it after PDF conversion.  
+**Rationale:** User/code folders are easy to inspect, align with public URL identity, support bilingual outputs, and keep HTML as the canonical intermediate artifact before PDF conversion.  
+**Impact:** Adds/uses `saved_resume.html_file_path`, keeps `saved_resume.pdf_file_path`, updates finalization service, export actions, storage structure, and future PDF converter integration.  
+**Follow-up Actions:** Implement Java file storage service, safe filename handling, public route validation, HTML download action, and real HTML-to-PDF conversion.
+
 
 ***
 
