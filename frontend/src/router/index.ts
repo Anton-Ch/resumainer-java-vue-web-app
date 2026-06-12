@@ -1,6 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { checkAuthStatus } from '@/services/authService'
-import GeneratePlaceholderPage from '@/components/common/GeneratePlaceholderPage.vue'
+import GenerateVacancyPage from '@/views/generate/GenerateVacancyPage.vue'
+import GenerateSettingsPage from '@/views/generate/GenerateSettingsPage.vue'
+import GenerateReviewPage from '@/views/generate/GenerateReviewPage.vue'
+import GenerateExportPage from '@/views/generate/GenerateExportPage.vue'
+import GenerateErrorPage from '@/views/generate/GenerateErrorPage.vue'
 import ProfilePage from '@/views/ProfilePage.vue'
 
 const router = createRouter({
@@ -66,29 +70,35 @@ const router = createRouter({
       component: ProfilePage,
       meta: { requiresAuth: true }
     },
-    // Generate resume placeholders (with stepper)
+    // Generate resume wizard pages
     {
       path: '/generate/vacancy',
       name: 'generate-vacancy',
-      component: GeneratePlaceholderPage,
+      component: GenerateVacancyPage,
       meta: { requiresAuth: true }
     },
     {
       path: '/generate/settings',
       name: 'generate-settings',
-      component: GeneratePlaceholderPage,
+      component: GenerateSettingsPage,
       meta: { requiresAuth: true }
     },
     {
       path: '/generate/review',
       name: 'generate-review',
-      component: GeneratePlaceholderPage,
+      component: GenerateReviewPage,
       meta: { requiresAuth: true }
     },
     {
       path: '/generate/export',
       name: 'generate-export',
-      component: GeneratePlaceholderPage,
+      component: GenerateExportPage,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/generate/error',
+      name: 'generate-error',
+      component: GenerateErrorPage,
       meta: { requiresAuth: true }
     },
     {
