@@ -10,20 +10,23 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useGenerateResumeFlow } from '@/composables/useGenerateResumeFlow'
 import GenerateStepper from '@/components/generate/GenerateStepper.vue'
 import VacancyStepForm from '@/components/generate/VacancyStepForm.vue'
 
 const router = useRouter()
+const { t } = useI18n()
 const { submitVacancy } = useGenerateResumeFlow()
 
-const steps = [
-  { label: 'Vacancy', route: '/generate/vacancy' },
-  { label: 'Settings', route: '/generate/settings' },
-  { label: 'Review', route: '/generate/review' },
-  { label: 'Export', route: '/generate/export' }
-]
+const steps = computed(() => [
+  { label: t('generate.steps.vacancy'), route: '/generate/vacancy' },
+  { label: t('generate.steps.settings'), route: '/generate/settings' },
+  { label: t('generate.steps.review'), route: '/generate/review' },
+  { label: t('generate.steps.export'), route: '/generate/export' }
+])
 
 async function onContinue(data: any) {
   await submitVacancy(data)

@@ -16,8 +16,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useGenerateResumeFlow } from '@/composables/useGenerateResumeFlow'
 import * as generateApi from '@/services/generateResumeService'
 import type { ExportResultDto } from '@/services/generateResumeService'
@@ -26,14 +27,15 @@ import ExportResult from '@/components/generate/ExportResult.vue'
 import WhimsicalLoader from '@/components/generate/WhimsicalLoader.vue'
 
 const router = useRouter()
+const { t } = useI18n()
 const { state } = useGenerateResumeFlow()
 
-const steps = [
-  { label: 'Vacancy', route: '/generate/vacancy' },
-  { label: 'Settings', route: '/generate/settings' },
-  { label: 'Review', route: '/generate/review' },
-  { label: 'Export', route: '/generate/export' }
-]
+const steps = computed(() => [
+  { label: t('generate.steps.vacancy'), route: '/generate/vacancy' },
+  { label: t('generate.steps.settings'), route: '/generate/settings' },
+  { label: t('generate.steps.review'), route: '/generate/review' },
+  { label: t('generate.steps.export'), route: '/generate/export' }
+])
 
 const exportData = ref<ExportResultDto | null>(null)
 const loading = ref(true)
