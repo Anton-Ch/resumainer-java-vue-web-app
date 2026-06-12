@@ -58,4 +58,11 @@ public class GenerationRequestService {
         log.info("Generation request created: id={}, userId={}", created.getId(), userId);
         return created;
     }
+
+    /**
+     * Finds a request by ID, verifying ownership.
+     */
+    public ResumeGenerationRequest findById(UUID requestId, UUID userId) {
+        return requestDao.findById(requestId, userId);
+    }
 }

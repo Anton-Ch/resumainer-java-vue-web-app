@@ -34,6 +34,25 @@ public class SavedResumeDao {
         this.dataSource = dataSource;
     }
 
+    /**
+     * Auto-managed insert (gets its own connection).
+     */
+    public long insert(UUID userId, String resumeTitle, String vacancy,
+                       String company, String language, String adaptationLevel,
+                       String publicCode, String publicUrlLink,
+                       String htmlFilePath, String pdfFilePath,
+                       UUID generationRequestId, UUID responseId,
+                       long adaptationLevelId, long languageId) {
+        try (Connection conn = dataSource.getConnection()) {
+            return insert(conn, userId, resumeTitle, vacancy, company, language,
+                    adaptationLevel, publicCode, publicUrlLink, htmlFilePath, pdfFilePath,
+                    generationRequestId, responseId, adaptationLevelId, languageId);
+        } catch (SQLException e) {
+            log.error("Error inserting saved resume", e);
+            throw new RuntimeException("Failed to save resume.", e);
+        }
+    }
+
     public long insert(Connection conn, UUID userId, String resumeTitle, String vacancy,
                        String company, String language, String adaptationLevel,
                        String publicCode, String publicUrlLink,
