@@ -22,25 +22,30 @@ public class EducationDao {
     private static final Logger log = LoggerFactory.getLogger(EducationDao.class);
 
     private static final String SELECT_BY_USER =
-            "SELECT id, user_id, institution_name, degree, field_of_study, description, "
+            "SELECT id, user_id, institution_name_ru, institution_name_en, "
+            + "degree_ru, degree_en, field_of_study_ru, field_of_study_en, description, "
             + "start_date, end_date, is_current, location, gpa_grade, "
             + "created_at, updated_at, is_deleted, deleted_at "
             + "FROM education WHERE user_id = ? AND is_deleted = FALSE "
             + "ORDER BY start_date DESC, end_date DESC NULLS FIRST";
 
     private static final String SELECT_BY_ID =
-            "SELECT id, user_id, institution_name, degree, field_of_study, description, "
+            "SELECT id, user_id, institution_name_ru, institution_name_en, "
+            + "degree_ru, degree_en, field_of_study_ru, field_of_study_en, description, "
             + "start_date, end_date, is_current, location, gpa_grade, "
             + "created_at, updated_at, is_deleted, deleted_at "
             + "FROM education WHERE id = ? AND user_id = ? AND is_deleted = FALSE";
 
     private static final String INSERT =
-            "INSERT INTO education (user_id, institution_name, degree, field_of_study, description, "
+            "INSERT INTO education (user_id, institution_name_ru, institution_name_en, "
+            + "degree_ru, degree_en, field_of_study_ru, field_of_study_en, description, "
             + "start_date, end_date, is_current, location, gpa_grade) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
 
     private static final String UPDATE =
-            "UPDATE education SET institution_name = ?, degree = ?, field_of_study = ?, description = ?, "
+            "UPDATE education SET institution_name_ru = ?, institution_name_en = ?, "
+            + "degree_ru = ?, degree_en = ?, field_of_study_ru = ?, field_of_study_en = ?, "
+            + "description = ?, "
             + "start_date = ?, end_date = ?, is_current = ?, location = ?, gpa_grade = ?, "
             + "updated_at = NOW() WHERE id = ? AND user_id = ? AND is_deleted = FALSE";
 
@@ -129,15 +134,18 @@ public class EducationDao {
     public Education create(Education education, Connection conn) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement(INSERT)) {
             stmt.setObject(1, education.getUserId());
-            stmt.setString(2, education.getInstitutionName());
-            stmt.setString(3, education.getDegree());
-            stmt.setString(4, education.getFieldOfStudy());
-            stmt.setString(5, education.getDescription());
-            stmt.setDate(6, Date.valueOf(education.getStartDate()));
-            setDateOrNull(stmt, 7, education.getEndDate());
-            stmt.setBoolean(8, education.isCurrent());
-            stmt.setString(9, education.getLocation());
-            stmt.setString(10, education.getGpaGrade());
+            stmt.setString(2, education.getInstitutionNameRu());
+            stmt.setString(3, education.getInstitutionNameEn());
+            stmt.setString(4, education.getDegreeRu());
+            stmt.setString(5, education.getDegreeEn());
+            stmt.setString(6, education.getFieldOfStudyRu());
+            stmt.setString(7, education.getFieldOfStudyEn());
+            stmt.setString(8, education.getDescription());
+            stmt.setDate(9, Date.valueOf(education.getStartDate()));
+            setDateOrNull(stmt, 10, education.getEndDate());
+            stmt.setBoolean(11, education.isCurrent());
+            stmt.setString(12, education.getLocation());
+            stmt.setString(13, education.getGpaGrade());
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -151,17 +159,20 @@ public class EducationDao {
 
     public void update(Education education, Connection conn) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement(UPDATE)) {
-            stmt.setString(1, education.getInstitutionName());
-            stmt.setString(2, education.getDegree());
-            stmt.setString(3, education.getFieldOfStudy());
-            stmt.setString(4, education.getDescription());
-            stmt.setDate(5, Date.valueOf(education.getStartDate()));
-            setDateOrNull(stmt, 6, education.getEndDate());
-            stmt.setBoolean(7, education.isCurrent());
-            stmt.setString(8, education.getLocation());
-            stmt.setString(9, education.getGpaGrade());
-            stmt.setLong(10, education.getId());
-            stmt.setObject(11, education.getUserId());
+            stmt.setString(1, education.getInstitutionNameRu());
+            stmt.setString(2, education.getInstitutionNameEn());
+            stmt.setString(3, education.getDegreeRu());
+            stmt.setString(4, education.getDegreeEn());
+            stmt.setString(5, education.getFieldOfStudyRu());
+            stmt.setString(6, education.getFieldOfStudyEn());
+            stmt.setString(7, education.getDescription());
+            stmt.setDate(8, Date.valueOf(education.getStartDate()));
+            setDateOrNull(stmt, 9, education.getEndDate());
+            stmt.setBoolean(10, education.isCurrent());
+            stmt.setString(11, education.getLocation());
+            stmt.setString(12, education.getGpaGrade());
+            stmt.setLong(13, education.getId());
+            stmt.setObject(14, education.getUserId());
 
             int affected = stmt.executeUpdate();
             if (affected == 0) {
@@ -190,9 +201,12 @@ public class EducationDao {
         Education e = new Education();
         e.setId(rs.getLong("id"));
         e.setUserId((UUID) rs.getObject("user_id"));
-        e.setInstitutionName(rs.getString("institution_name"));
-        e.setDegree(rs.getString("degree"));
-        e.setFieldOfStudy(rs.getString("field_of_study"));
+        e.setInstitutionNameRu(rs.getString("institution_name_ru"));
+        e.setInstitutionNameEn(rs.getString("institution_name_en"));
+        e.setDegreeRu(rs.getString("degree_ru"));
+        e.setDegreeEn(rs.getString("degree_en"));
+        e.setFieldOfStudyRu(rs.getString("field_of_study_ru"));
+        e.setFieldOfStudyEn(rs.getString("field_of_study_en"));
         e.setDescription(rs.getString("description"));
         e.setStartDate(rs.getDate("start_date").toLocalDate());
         Date endDate = rs.getDate("end_date");

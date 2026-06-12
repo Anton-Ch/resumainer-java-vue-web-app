@@ -15,6 +15,8 @@
             <small v-if="formErrors.username" class="field-error">{{ formErrors.username }}</small>
             <p class="field-hint">{{ $t('profile.additional.usernameHelp') }}</p>
           </div>
+          <!-- Resume language fields hidden per DEC-029/T023. DB columns preserved for future use. -->
+          <!--
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">{{ $t('profile.additional.defaultResumeLanguage') }}</label>
@@ -25,6 +27,7 @@
               <Select v-model="form.additionalResumeLanguage" :options="languageOptions" optionLabel="label" optionValue="value" class="form-input" />
             </div>
           </div>
+          -->
         </div>
       </div>
 

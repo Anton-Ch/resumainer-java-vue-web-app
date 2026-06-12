@@ -15,9 +15,12 @@ public class Education {
     private Long id;
     private UUID userId;
 
-    private String institutionName;
-    private String degree;
-    private String fieldOfStudy;
+    private String institutionNameRu;
+    private String institutionNameEn;
+    private String degreeRu;
+    private String degreeEn;
+    private String fieldOfStudyRu;
+    private String fieldOfStudyEn;
     private String description;
 
     private LocalDate startDate;
@@ -53,28 +56,54 @@ public class Education {
         this.userId = userId;
     }
 
-    public String getInstitutionName() {
-        return institutionName;
+    // --- Bilingual fields (DEC-070) ---
+
+    public String getInstitutionNameRu() {
+        return institutionNameRu;
     }
 
-    public void setInstitutionName(String institutionName) {
-        this.institutionName = institutionName;
+    public void setInstitutionNameRu(String institutionNameRu) {
+        this.institutionNameRu = institutionNameRu;
     }
 
-    public String getDegree() {
-        return degree;
+    public String getInstitutionNameEn() {
+        return institutionNameEn;
     }
 
-    public void setDegree(String degree) {
-        this.degree = degree;
+    public void setInstitutionNameEn(String institutionNameEn) {
+        this.institutionNameEn = institutionNameEn;
     }
 
-    public String getFieldOfStudy() {
-        return fieldOfStudy;
+    public String getDegreeRu() {
+        return degreeRu;
     }
 
-    public void setFieldOfStudy(String fieldOfStudy) {
-        this.fieldOfStudy = fieldOfStudy;
+    public void setDegreeRu(String degreeRu) {
+        this.degreeRu = degreeRu;
+    }
+
+    public String getDegreeEn() {
+        return degreeEn;
+    }
+
+    public void setDegreeEn(String degreeEn) {
+        this.degreeEn = degreeEn;
+    }
+
+    public String getFieldOfStudyRu() {
+        return fieldOfStudyRu;
+    }
+
+    public void setFieldOfStudyRu(String fieldOfStudyRu) {
+        this.fieldOfStudyRu = fieldOfStudyRu;
+    }
+
+    public String getFieldOfStudyEn() {
+        return fieldOfStudyEn;
+    }
+
+    public void setFieldOfStudyEn(String fieldOfStudyEn) {
+        this.fieldOfStudyEn = fieldOfStudyEn;
     }
 
     public String getDescription() {
@@ -172,6 +201,6 @@ public class Education {
 
     @Override
     public String toString() {
-        return "Education{id=" + id + ", userId=" + userId + ", institutionName='" + institutionName + "'}";
+        return "Education{id=" + id + ", userId=" + userId + ", institutionNameEn='" + institutionNameEn + "'}";
     }
 }
