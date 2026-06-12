@@ -1,6 +1,7 @@
 package com.resumainer.controller;
 
 import com.resumainer.dao.AiModelDao;
+import com.resumainer.dao.SavedResumeDao;
 import com.resumainer.dto.UserSession;
 import com.resumainer.dto.generate.*;
 import com.resumainer.exception.ServiceException;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,19 +38,22 @@ public class GenerateResumeController {
     private final ResumeFinalizeService resumeFinalizeService;
     private final GeneratedFileStorageService fileStorage;
     private final AiModelDao aiModelDao;
+    private final SavedResumeDao savedResumeDao;
 
     public GenerateResumeController(GenerationRequestService generationRequestService,
                                      ResumeGenerationService resumeGenerationService,
                                      ResumeReviewService resumeReviewService,
                                      ResumeFinalizeService resumeFinalizeService,
                                      GeneratedFileStorageService fileStorage,
-                                     AiModelDao aiModelDao) {
+                                     AiModelDao aiModelDao,
+                                     SavedResumeDao savedResumeDao) {
         this.generationRequestService = generationRequestService;
         this.resumeGenerationService = resumeGenerationService;
         this.resumeReviewService = resumeReviewService;
         this.resumeFinalizeService = resumeFinalizeService;
         this.fileStorage = fileStorage;
         this.aiModelDao = aiModelDao;
+        this.savedResumeDao = savedResumeDao;
     }
 
     /**
@@ -96,13 +101,29 @@ public class GenerateResumeController {
             return noCache(ResponseEntity.ok().body(java.util.Map.of("status", "completed")));
         } catch (IllegalArgumentException e) {
             return noCache(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Map.of("error", e.getMessage())));
+                    .body(new GenerationErrorDto(
+                            "REQUEST_NOT_FOUND", e.getMessage(),
+                            false, false, "failed")));
+        } catch (com.resumainer.service.ai.AiClientException e) {
+            log.warn("Generation failed for request: {} — {} [{}]", requestId, e.getMessage(), e.getErrorCode());
+            String errorCode = e.getErrorCode();
+            boolean retryAllowed = !"GENERATION_ALREADY_IN_PROGRESS".equals(errorCode);
+            boolean changeAllowed = !"GENERATION_ALREADY_IN_PROGRESS".equals(errorCode);
+            String message = "GENERATION_ALREADY_IN_PROGRESS".equals(errorCode)
+                    ? "Generation already in progress. Please wait for it to complete."
+                    : "Generation failed while contacting the AI model. "
+                      + "Please try again or change settings.";
+            return noCache(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new GenerationErrorDto(
+                            errorCode, message,
+                            retryAllowed, changeAllowed, "failed")));
         } catch (Exception e) {
             log.warn("Generation failed for request: {} — {}", requestId, e.getMessage());
             return noCache(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(java.util.Map.of(
-                            "status", "failed",
-                            "error", "Generation failed. Please try again or change settings.")));
+                    .body(new GenerationErrorDto(
+                            "GENERATION_FAILED",
+                            "Generation failed. Please try again or change settings.",
+                            true, true, "failed")));
         }
     }
 
@@ -176,14 +197,33 @@ public class GenerateResumeController {
         UUID userId = getUserId(session);
         log.debug("GET /api/generate/requests/{}/export — userId={}", requestId, userId);
 
-        // Verify ownership
-        ResumeGenerationRequest request = generationRequestService.findById(requestId, userId);
-        if (request == null) {
+        // Verify ownership and load saved resumes
+        List<SavedResumeDao.SavedResumeRow> savedRows = savedResumeDao.findByGenerationRequestId(requestId, userId);
+        if (savedRows.isEmpty()) {
             return noCache(ResponseEntity.notFound().build());
         }
 
-        // Export data loaded from saved_resumes — simplified for MVP
-        return noCache(ResponseEntity.ok(new ExportResultDto()));
+        ExportResultDto export = new ExportResultDto();
+        List<SavedResumeExportDto> exportItems = new ArrayList<>();
+
+        for (SavedResumeDao.SavedResumeRow row : savedRows) {
+            SavedResumeExportDto item = new SavedResumeExportDto();
+            item.setSavedResumeId(row.id);
+            item.setLanguageCode(row.language);
+            item.setAdaptationLevel(row.adaptationLevel);
+            item.setHtmlDownloadUrl("/api/resumes/" + row.id + "/html");
+            item.setPdfDownloadUrl("/api/resumes/" + row.id + "/pdf");
+            item.setPdfOpenUrl("/candidate/" + row.publicCode);
+            item.setPublicUrlLink("/candidate/" + row.publicCode);
+            item.setPdfAvailable(false);
+            item.setPdfMessage("PDF generation is not available in this version. "
+                    + "It will be available in a future update.");
+            item.setCoverLetter(row.coverLetter);
+            exportItems.add(item);
+        }
+
+        export.setResumes(exportItems);
+        return noCache(ResponseEntity.ok(export));
     }
 
     /**

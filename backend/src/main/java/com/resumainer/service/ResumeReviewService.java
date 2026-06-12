@@ -76,11 +76,38 @@ public class ResumeReviewService {
     /**
      * Saves review edits for a generation response.
      */
+    /** Allowlisted editable field names in review. All other fields are rejected. */
+    private static final Set<String> ALLOWED_REVIEW_FIELDS = Set.of(
+            "professionalTitle", "professional_title",
+            "professionalSummary", "professional_summary",
+            "professionalAspirations", "professional_aspirations",
+            "valueLine", "value_line",
+            "coverLetter", "cover_letter"
+    );
+
+    /** Field names that are FORBIDDEN even if somehow they pass the allowlist. */
+    private static final Set<String> FORBIDDEN_FIELD_PATTERNS = Set.of(
+            "id", "userId", "user_id", "requestId",
+            "status", "status_id", "language_id", "adaptation_level_id",
+            "html_file_path", "pdf_file_path",
+            "public_code", "public_url_link",
+            "created_at", "updated_at",
+            "completed_at", "error_message"
+    );
+
     public void saveReview(UUID requestId, UUID userId, UUID responseId,
                             String fieldName, String value) {
         // Verify ownership via request
         if (requestDao.findById(requestId, userId) == null) {
             throw new IllegalArgumentException("Generation request not found.");
+        }
+
+        // Validate field is allowed for editing
+        if (!ALLOWED_REVIEW_FIELDS.contains(fieldName)) {
+            throw new IllegalArgumentException("Field '" + fieldName + "' is not editable.");
+        }
+        if (FORBIDDEN_FIELD_PATTERNS.contains(fieldName)) {
+            throw new IllegalArgumentException("Field '" + fieldName + "' cannot be edited.");
         }
 
         try (Connection conn = dataSource.getConnection();

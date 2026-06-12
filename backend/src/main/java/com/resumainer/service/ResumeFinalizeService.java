@@ -79,7 +79,8 @@ public class ResumeFinalizeService {
         }
 
         // Load profile education and username for rendering
-        String username = request.getUserId().toString().substring(0, 8); // Short username from userId
+        // Use full userId with hyphens replaced for safe path segments (unique, collision-avoidant)
+        String username = request.getUserId().toString().replace("-", "_");
         List<Map<String, Object>> profileEducation = profilePromptDao.loadEducation(userId);
 
         // Track created files for compensation
@@ -96,7 +97,9 @@ public class ResumeFinalizeService {
 
                 // 1. Render HTML
                 GenerationResponseDao.ResponseBundle bundle = responseDao.loadResponseBundle(response.getId());
-                String publicCode = PublicCodeGenerator.generate();
+                // Use collision-safe code generation with uniqueness check
+                String publicCode = PublicCodeGenerator.generateWithRetry(
+                        code -> savedResumeDao.findPublicCodeByCode(code) == null);
 
                 // 2. Save HTML to disk
                 String htmlPath = templateRenderer.renderAndSave(

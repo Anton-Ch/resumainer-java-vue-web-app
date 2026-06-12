@@ -6,6 +6,8 @@ import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -81,6 +83,13 @@ public class SavedResumeDao {
         }
     }
 
+    private static final String SELECT_BY_GENERATION_REQUEST =
+            "SELECT id, user_id, resume_title, vacancy, company, language, "
+            + "adaptation_level, public_code, public_url_link, html_file_path, "
+            + "pdf_file_path, generation_request_id, response_id, "
+            + "adaptation_level_id, language_id, cover_letter, is_deleted "
+            + "FROM saved_resumes WHERE generation_request_id = ? AND user_id = ? AND is_deleted = FALSE";
+
     /** Returns the public code if the resume is active and not deleted. Null otherwise. */
     public String findPublicCodeByCode(String publicCode) {
         try (Connection conn = dataSource.getConnection();
@@ -93,5 +102,55 @@ public class SavedResumeDao {
             log.error("Error looking up public code: {}", publicCode, e);
             throw new RuntimeException("Database error looking up public code", e);
         }
+    }
+
+    /**
+     * Finds all saved resumes for a generation request, owner-scoped.
+     */
+    public List<SavedResumeRow> findByGenerationRequestId(UUID generationRequestId, UUID userId) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_BY_GENERATION_REQUEST)) {
+            stmt.setObject(1, generationRequestId);
+            stmt.setObject(2, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<SavedResumeRow> results = new ArrayList<>();
+                while (rs.next()) {
+                    SavedResumeRow row = new SavedResumeRow();
+                    row.id = rs.getLong("id");
+                    row.userId = (UUID) rs.getObject("user_id");
+                    row.title = rs.getString("resume_title");
+                    row.vacancy = rs.getString("vacancy");
+                    row.company = rs.getString("company");
+                    row.language = rs.getString("language");
+                    row.adaptationLevel = rs.getString("adaptation_level");
+                    row.publicCode = rs.getString("public_code");
+                    row.publicUrlLink = rs.getString("public_url_link");
+                    row.htmlFilePath = rs.getString("html_file_path");
+                    row.pdfFilePath = rs.getString("pdf_file_path");
+                    row.coverLetter = rs.getString("cover_letter");
+                    results.add(row);
+                }
+                return results;
+            }
+        } catch (SQLException e) {
+            log.error("Error finding saved resumes for request: {}", generationRequestId, e);
+            throw new RuntimeException("Database error finding saved resumes", e);
+        }
+    }
+
+    /** Lightweight row representation for export. */
+    public static class SavedResumeRow {
+        public long id;
+        public UUID userId;
+        public String title;
+        public String vacancy;
+        public String company;
+        public String language;
+        public String adaptationLevel;
+        public String publicCode;
+        public String publicUrlLink;
+        public String htmlFilePath;
+        public String pdfFilePath;
+        public String coverLetter;
     }
 }

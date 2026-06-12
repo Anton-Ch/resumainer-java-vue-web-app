@@ -52,6 +52,13 @@ public class ResumeGenerationService {
             throw new IllegalArgumentException("Generation request not found.");
         }
 
+        // Check one active generation BEFORE spending AI tokens
+        if (requestDao.hasProcessingRequest(userId)) {
+            throw new com.resumainer.service.ai.AiClientException(
+                    "Generation already in progress. Please wait for it to complete.",
+                    "GENERATION_ALREADY_IN_PROGRESS");
+        }
+
         log.info("Starting generation for request: {}", requestId);
 
         // 1. Build prompt

@@ -172,9 +172,15 @@ public class AiResponseParser {
     }
 
     private boolean looksLikeVariant(JsonNode node) {
-        return node != null && node.isObject()
-                && (node.has("professionalTitle") || node.has("professional_title")
-                    || node.has("workExperience") || node.has("work_experience"));
+        if (node == null || !node.isObject()) return false;
+        // Check for any of the expected variant keys in camelCase or snake_case
+        return node.has("professionalTitle") || node.has("professional_title")
+            || node.has("professionalSummary") || node.has("professional_summary")
+            || node.has("workExperience") || node.has("work_experience")
+            || node.has("skills")
+            || node.has("courses")
+            || node.has("projects")
+            || node.has("personalInfo") || node.has("personal_info");
     }
 
     private List<String> getLanguages(String languageMode) {
