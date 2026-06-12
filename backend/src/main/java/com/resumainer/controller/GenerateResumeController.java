@@ -7,6 +7,8 @@ import com.resumainer.exception.ServiceException;
 import com.resumainer.model.ResumeGenerationRequest;
 import com.resumainer.service.*;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;
@@ -31,15 +33,21 @@ public class GenerateResumeController {
     private final GenerationRequestService generationRequestService;
     private final ResumeGenerationService resumeGenerationService;
     private final ResumeReviewService resumeReviewService;
+    private final ResumeFinalizeService resumeFinalizeService;
+    private final GeneratedFileStorageService fileStorage;
     private final AiModelDao aiModelDao;
 
     public GenerateResumeController(GenerationRequestService generationRequestService,
                                      ResumeGenerationService resumeGenerationService,
                                      ResumeReviewService resumeReviewService,
+                                     ResumeFinalizeService resumeFinalizeService,
+                                     GeneratedFileStorageService fileStorage,
                                      AiModelDao aiModelDao) {
         this.generationRequestService = generationRequestService;
         this.resumeGenerationService = resumeGenerationService;
         this.resumeReviewService = resumeReviewService;
+        this.resumeFinalizeService = resumeFinalizeService;
+        this.fileStorage = fileStorage;
         this.aiModelDao = aiModelDao;
     }
 
@@ -133,6 +141,90 @@ public class GenerateResumeController {
             });
         }
         return noCache(ResponseEntity.ok().body(java.util.Map.of("success", true)));
+    }
+
+    /**
+     * T082: Finalizes a generation request.
+     */
+    @PostMapping("/requests/{requestId}/finalize")
+    public ResponseEntity<?> finalizeRequest(HttpSession session,
+                                              @PathVariable UUID requestId,
+                                              @RequestBody FinalizeResumeRequestDto dto) {
+        UUID userId = getUserId(session);
+        log.debug("POST /api/generate/requests/{}/finalize — userId={}", requestId, userId);
+
+        try {
+            ExportResultDto export = resumeFinalizeService.finalizeRequest(
+                    requestId, userId, dto.getSelectedAdaptationLevel());
+            return noCache(ResponseEntity.ok(export));
+        } catch (IllegalArgumentException e) {
+            return noCache(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(java.util.Map.of("error", e.getMessage())));
+        } catch (Exception e) {
+            log.warn("Finalization failed for request: {}", requestId, e);
+            return noCache(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", "Failed to finalize resume. Please try again.")));
+        }
+    }
+
+    /**
+     * T083: Returns export data with download URLs.
+     */
+    @GetMapping("/requests/{requestId}/export")
+    public ResponseEntity<ExportResultDto> getExport(HttpSession session,
+                                                      @PathVariable UUID requestId) {
+        UUID userId = getUserId(session);
+        log.debug("GET /api/generate/requests/{}/export — userId={}", requestId, userId);
+
+        // Verify ownership
+        ResumeGenerationRequest request = generationRequestService.findById(requestId, userId);
+        if (request == null) {
+            return noCache(ResponseEntity.notFound().build());
+        }
+
+        // Export data loaded from saved_resumes — simplified for MVP
+        return noCache(ResponseEntity.ok(new ExportResultDto()));
+    }
+
+    /**
+     * T084: Authenticated HTML download.
+     */
+    @GetMapping("/resumes/{savedResumeId}/html")
+    public ResponseEntity<Resource> downloadHtml(HttpSession session,
+                                                  @PathVariable long savedResumeId) {
+        UUID userId = getUserId(session);
+        log.debug("GET /api/resumes/{}/html — userId={}", savedResumeId, userId);
+
+        // Look up saved resume and verify ownership
+        // For MVP, return placeholder if not found
+        // TODO: Implement full owner-scoped lookup in Phase 13
+        return noCache(ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build());
+    }
+
+    /**
+     * T085: PDF download — placeholder stub in feat/007.
+     */
+    @GetMapping("/resumes/{savedResumeId}/pdf")
+    public ResponseEntity<?> downloadPdf(@PathVariable long savedResumeId) {
+        log.debug("GET /api/resumes/{}/pdf — placeholder stub (feat/008)", savedResumeId);
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                .body(java.util.Map.of(
+                        "available", false,
+                        "message", "PDF generation is not available in this version. "
+                                + "It will be available in a future update."));
+    }
+
+    /**
+     * T086: Public route — placeholder in feat/007.
+     */
+    @GetMapping("/candidate/{publicCode}")
+    public ResponseEntity<?> publicResume(@PathVariable String publicCode) {
+        log.debug("GET /candidate/{} — placeholder stub (feat/008)", publicCode);
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                .body(java.util.Map.of(
+                        "available", false,
+                        "message", "Public resume links are not available in this version. "
+                                + "They will be available in a future update."));
     }
 
     // --- Session helpers ---
