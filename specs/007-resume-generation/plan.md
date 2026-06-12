@@ -8,9 +8,9 @@
 
 ## Summary
 
-Implement the full Generate Resume feature — the core business flow of ResumAIner. Users enter vacancy data, select generation settings (language mode, AI model, adaptation level, cover letter), trigger AI generation via OpenRouter, review and edit structured output, finalize one adaptation level, and obtain saved HTML/PDF artifacts with public recruiter links.
+Implement the full Generate Resume feature — the core business flow of ResumAIner. Users enter vacancy data, select generation settings (language mode, AI model, adaptation level, cover letter), trigger AI generation via OpenRouter, review and edit structured output, finalize one adaptation level, and obtain saved HTML artifacts.
 
-The feature spans: backend generation pipeline (request → AI → response → finalize → save), 10+ new DB tables with Flyway migrations, frontend wizard (vacancy → settings → review → export), OpenRouter AI integration, mock AI client for tests, modular prompt configuration, HTML template rendering, and server-side PDF conversion.
+The feature spans: backend generation pipeline (request → AI → response → finalize → save), 10+ new DB tables with Flyway migrations, frontend wizard (vacancy → settings → review → export), OpenRouter AI integration, mock AI client for tests, modular prompt configuration, and HTML template rendering. PDF conversion is deferred to `feat/008-pdf-conversion`; feat/007 defines only the service boundary.
 
 ---
 
@@ -22,12 +22,12 @@ The feature spans: backend generation pipeline (request → AI → response → 
 **Database**: PostgreSQL 17, plain JDBC (no ORM/JPA/Hibernate), custom Connection Pool
 **Migrations**: Flyway 10.x with `@Bean(initMethod="migrate")`
 **AI Integration**: OpenRouter API behind `AiClient` interface + `AiClientFactory` (Factory Method pattern). `MockAiClient` for tests
-**PDF Generation**: Server-side HTML-to-PDF from saved filled HTML templates
+**PDF Generation**: Deferred to `feat/008-pdf-conversion`. In feat/007, only the `PdfGenerationService` interface/stub boundary is defined. No PDF library is chosen or integrated in this feature.
 **Testing**: JUnit 5 + Mockito + JaCoCo (50%+ coverage on Service/DAO)
 **Build**: Maven (`mvn clean package` must pass) + npm (`npm run build` must pass)
 **Deployment**: Docker Compose (Tomcat + Nginx + PostgreSQL)
 **Performance Goals**: Generation requests complete within 30-60s (AI provider dependent). Review/export endpoints respond under 500ms p95
-**Constraints**: Backend owns all HTML/PDF rendering. Vue renders only structured forms. Manual JDBC transactions for generation persistence and finalization. PreparedStatement-only SQL. UTF-8 for all text and file I/O. API keys never logged or exposed.
+**Constraints**: Backend owns all HTML rendering. Vue renders only structured forms. PDF conversion deferred to `feat/008-pdf-conversion`. Manual JDBC transactions for generation persistence and finalization. PreparedStatement-only SQL. UTF-8 for all text and file I/O. API keys never logged or exposed.
 
 ---
 
@@ -40,8 +40,8 @@ The feature spans: backend generation pipeline (request → AI → response → 
 | **I. Code Quality & Maintainability** | ✅ Pass | Layered architecture: `controller/`, `service/`, `dao/`, `model/`, `dto/`, `util/`, `config/`. Builder pattern for prompt assembly, Factory Method for AI client creation, Strategy for adaptation level selection. No Spring Boot/JPA/Hibernate. New classes follow existing project conventions. |
 | **II. Testing Excellence** | ✅ Pass | JUnit 5 + Mockito for all backend tests. TDD for prompt builder, parser, finalize, and persistence services. Mock AI provider for all automated tests — no real OpenRouter calls. JaCoCo 50%+ coverage target on Service/DAO layers. Frontend smoke tests for wizard flow. |
 | **III. User Experience Consistency** | ✅ Pass | All new UI strings externalized in EN/RU i18n files (Vue). Dual validation: frontend via PrimeVue Zod resolver, backend via Jakarta Validation. Error messages user-readable with no stack traces. Wizard preserves prototype UX (vacancy → settings → review → export). |
-| **IV. Performance & Reliability** | ✅ Pass | PreparedStatement-only SQL. Manual JDBC transactions (commit/rollback) around generation persistence and finalization. `catch(Exception)` for all transaction blocks (per D23). SQL-level pagination for resume lists. UTF-8 encoding for all DB connections and file writes. |
-| **V. Security by Design** | ✅ Pass | Owner-scoped queries for all private endpoints (request/review/export/download). API keys masked in UI, never logged. AI HTML sanitized with allowlist before storage. Public PDF route checks active/deleted state. File paths never accepted from user input. Backend validation authoritative. |
+| **IV. Performance & Reliability** | ✅ Pass | PreparedStatement-only SQL. Manual JDBC transactions (commit/rollback) around generation persistence and finalization. `catch(Exception)` for all transaction blocks (per D23). SQL-level pagination for resume lists. UTF-8 encoding for all DB connections and file writes. PDF service boundary defined; real PDF conversion deferred to feat/008. |
+| **V. Security by Design** | ✅ Pass | Owner-scoped queries for all private endpoints (request/review/export/download). API keys masked in UI, never logged. AI HTML sanitized with allowlist before storage. Public PDF route deferred to `feat/008-pdf-conversion`. File paths never accepted from user input. Backend validation authoritative. |
 
 ### Complexity Justification
 
@@ -82,7 +82,7 @@ backend/src/main/java/com/resumainer/
 │   ├── ResumeReviewService.java
 │   ├── ResumeFinalizeService.java
 │   ├── ResumeTemplateRenderer.java
-│   ├── PdfGenerationService.java
+│   ├── PdfGenerationService.java      (interface/stub, real impl deferred to feat/008)
 │   └── GeneratedFileStorageService.java
 ├── service/ai/
 │   ├── AiClient.java                  (interface)
@@ -176,9 +176,9 @@ frontend/src/
 All technology choices are already known from project stack. No NEEDS CLARIFICATION items remain. The following confirmations will be documented in `research.md`:
 
 1. **OpenRouter API**: Confirm current API endpoint format, auth header pattern, JSON response structure, error codes
-2. **HTML-to-PDF Java library**: Evaluate options (Flying Saucer, OpenPDF, Apache PDFBox) for server-side HTML-to-PDF in pure Spring MVC
-3. **PrimeVue 4 Form patterns**: Confirm PrimeVue 4 Zod resolver pattern for new wizard forms
-4. **Unique public code algorithm**: Determine character set and collision strategy for 5-character public codes
+2. **PrimeVue 4 Form patterns**: Confirm PrimeVue 4 Zod resolver pattern for new wizard forms
+3. **Unique public code algorithm**: Determine character set and collision strategy for 5-character public codes
+4. **PDF converter research**: Deferred to `feat/008-pdf-conversion`. Not evaluated in feat/007.
 
 ### Research Output
 
@@ -208,9 +208,11 @@ See `contracts/` directory for endpoint specifications:
 - `PUT /api/generate/requests/{id}/review` — Save review edits
 - `POST /api/generate/requests/{id}/finalize` — Finalize selected level
 - `GET /api/generate/requests/{id}/export` — Get export data
-- `GET /api/resumes/{id}/pdf` — Download PDF (authenticated)
-- `GET /api/resumes/{id}/html` — Download HTML (authenticated)
-- `GET /candidate/{publicCode}` — Public PDF route (no auth)
+- `GET /api/resumes/{id}/html` — Download HTML (authenticated, owner-scoped, fully functional in feat/007)
+- `GET /api/resumes/{id}/pdf` — Placeholder stub in feat/007. Returns safe "not available yet" response. Real PDF download deferred to `feat/008-pdf-conversion`.
+- `GET /candidate/{publicCode}` — Placeholder in feat/007 (real public PDF route deferred to `feat/008-pdf-conversion`). Export DTO may provide a placeholder `publicUrlLink` that does not expose resume data.
+
+> **Export DTO contract:** `GET /api/generate/requests/{id}/export` returns: `htmlDownloadUrl` (real), `pdfDownloadUrl` (placeholder), `pdfOpenUrl` (placeholder), `publicUrlLink` (placeholder), `pdfAvailable` (false in feat/007), `pdfMessage` (user-facing text: "PDF generation coming in a future update"), `coverLetter` (if generated).
 
 > **AI model endpoint rules:**
 > - `GET /api/generate/ai-models` returns safe metadata only (id, provider, displayName, modelCode). API keys must never appear in the response.
@@ -235,9 +237,9 @@ See `quickstart.md` for implementation notes, key patterns, and watchpoints.
 | **6** | Request + generation API + AI model endpoint | `GenerationRequestService` (with `ai_model_id` privilege validation), `GenerateResumeController` (create/generate + `GET /api/generate/ai-models` with privileged filtering) | Steps 3-5 |
 | **7** | Review API | ResumeReviewService, GET/PUT review endpoints with grouped DTOs | Steps 2, 5 |
 | **8** | Template rendering + file storage | ResumeTemplateRenderer, GeneratedFileStorageService, HTML template files | Steps 2, 7 |
-| **9** | PDF service | PdfGenerationService (separate from generation logic), HTML-to-PDF implementation | Step 8 |
+| **9** | PDF boundary | Define `PdfGenerationService` interface only. Create `NoOpPdfGenerationService` stub that clearly reports PDF not available in this feature. No PDF library chosen or integrated in feat/007. | Step 8 |
 | **10** | Finalize API | ResumeFinalizeService, finalize endpoint with transaction + file coordination | Steps 7-9 |
-| **11** | Export + download + public routes | Export endpoints, authenticated file download, public PDF route | Steps 9-10 |
+| **11** | Export + download (real HTML + placeholder PDF/public) | Export DTO with real `htmlDownloadUrl` plus placeholder `pdfDownloadUrl`, `pdfOpenUrl`, `publicUrlLink`, `pdfAvailable=false`, `pdfMessage`. Authenticated HTML download endpoint (owner-scoped). PDF/download stubs returning safe placeholder responses. | Steps 9-10 |
 | **12** | Frontend service layer | generateResumeService.ts, types/generate.ts, CSRF-aware API calls | Step 11 |
 | **13** | Frontend pages | All wizard pages (vacancy, settings, review, error, export), components, i18n strings, routing | Step 12 |
 | **14** | Tests + verification | Backend unit tests (DAO/Service), frontend smoke verification, Docker integration test | All steps |
@@ -256,9 +258,9 @@ See `quickstart.md` for implementation notes, key patterns, and watchpoints.
 | `PUT /.../review` | Session required | Owner check | Edit own data |
 | `POST /.../finalize` | Session required | Owner check | Finalize own resume |
 | `GET /.../export` | Session required | Owner check | Export own results |
-| `GET /api/resumes/{id}/pdf` | Session required | Owner check | Download own file |
-| `GET /api/resumes/{id}/html` | Session required | Owner check | Download own file |
-| `GET /candidate/{code}` | None | Public (active only) | 410 Gone if deleted |
+| `GET /api/resumes/{id}/html` | Session required | Owner check | Download own HTML file — fully functional in feat/007 |
+| `GET /api/resumes/{id}/pdf` | Session required | Owner check | Placeholder stub — returns "not available yet" in feat/007. No fake PDF file created. Real PDF download in feat/008 |
+| `GET /candidate/{code}` | None | Public (placeholder) | Placeholder only in feat/007 — returns safe placeholder response, no resume data exposed. Real public PDF route deferred to feat/008 |
 
 ---
 
@@ -326,7 +328,7 @@ Only one generation request per user may be in `processing` status at a time:
 | `ResumePromptBuilder` | Correct fragment loading, bilingual education inclusion, work format inclusion, render log creation |
 | `AiResponseParser` | EN-only/RU-only/Bilingual parsing, All levels → 3 response sets, invalid JSON rejection, missing field rejection |
 | `GenerationResponsePersistenceService` | Correct row counts, transaction rollback on error, prior draft handling |
-| `ResumeFinalizeService` | Correct saved resume count, HTML file creation, PDF creation, rollback on failure |
+| `ResumeFinalizeService` | Correct saved resume count, HTML file creation, rollback on HTML write failure, no PDF conversion in feat/007 |
 | `GeneratedFileStorageService` | Path construction, username sanitization (strip `../`, `Path.normalize()`), UTF-8 writes, path traversal attempts rejected |
 | `GenerationRequestDao` | PreparedStatement verification, owner-scoped selects, unique constraint behavior |
 | `GenerationResponseDao` | Response + child table round-trip, unique `(request_id, lang_id, adapt_level_id)` |
@@ -347,7 +349,7 @@ Only one generation request per user may be in `processing` status at a time:
 - Bilingual layout: EN/RU side-by-side on desktop
 - All-levels layout: three variants per field
 - Personal Information tab: editing and display
-- Export actions: Copy link, Download PDF, Open PDF, Download HTML
+- Export actions: Copy public link (placeholder), Download PDF (placeholder), Open PDF (placeholder), Download HTML (real), Copy cover letter
 - i18n: all new strings in EN/RU
 - Generation error screen: mock AI failure shows temporary error screen with "Try again" and "Change settings"
 - Try again action: re-calls generation endpoint with same request/settings
@@ -356,12 +358,12 @@ Only one generation request per user may be in `processing` status at a time:
 
 ### End-to-End Smoke Tests
 
-1. English only + Balanced + no cover letter → generate → review → finalize → export
-2. Russian only + Minimal + cover letter → generate → review → finalize → export
-3. Bilingual + All + cover letter → review all 6 variants → finalize Balanced → 2 saved resumes
+1. English only + Balanced + no cover letter → generate → review → finalize → HTML downloaded
+2. Russian only + Minimal + cover letter → generate → review → finalize → HTML downloaded
+3. Bilingual + All + cover letter → review all 6 variants → finalize Balanced → 2 HTML saved resumes
 4. Invalid AI response (via MockAiClient) → readable error screen → Try again / Change settings
-5. Public PDF route → serves PDF for active resume, 410 for deleted resume
-6. HTML/PDF download → owner receives file, non-owner gets 403
+5. HTML download → owner receives file, non-owner gets 403
+6. Export page shows PDF actions as disabled/unavailable (PDF deferred to feat/008)
 7. AI model filtering → non-privileged user cannot see hidden model; privileged user can
 8. AI model validation → non-privileged user cannot create request with hidden model id
 
@@ -377,9 +379,13 @@ Only one generation request per user may be in `processing` status at a time:
 - [ ] EN-only/RU-only/Bilingual flows work end-to-end
 - [ ] Bilingual + All creates 6 draft response rows
 - [ ] Finalize selected level creates correct saved resume rows
-- [ ] HTML saved to disk before PDF conversion
-- [ ] PDF and HTML downloads work from Export page
-- [ ] Public PDF link opens PDF directly; deleted returns 410
+- [ ] HTML saved to disk during finalization
+- [ ] HTML download works from Export page and is owner-scoped
+- [ ] Export page shows all prototype actions: Copy public link, Download PDF, Open PDF, Download HTML, Copy cover letter
+- [ ] PDF/public link actions are placeholders using safe placeholder URLs/responses — no fake PDF artifacts created
+- [ ] Public placeholder link does not expose resume data
+- [ ] PDF service boundary (interface/stub) exists; real PDF conversion deferred to `feat/008-pdf-conversion`
+- [ ] Frontend export contract is stable: feat/008 can replace placeholder URLs with real PDF URLs without redesigning Export UI
 - [ ] No hardcoded UI strings — all in i18n EN/RU
 - [ ] No secrets/API keys in logs or UI
 - [ ] API keys masked in AI Model dropdown
@@ -407,7 +413,7 @@ Only one generation request per user may be in `processing` status at a time:
 
 - **Backend migrations + models** (Steps 1-2): Can proceed in parallel with frontend route/i18n setup
 - **Frontend pages** (Step 13): Can proceed in parallel with backend endpoint implementation once contracts are defined
-- **PDF service** (Step 9): Can be developed independently once it receives a saved HTML file path
+- **PDF boundary stubs** (Step 9): Trivial — interface + NoOp stub only. Real PDF conversion is feat/008.
 
 ### Human Checkpoints
 
