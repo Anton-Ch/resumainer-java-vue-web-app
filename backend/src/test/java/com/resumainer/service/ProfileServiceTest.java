@@ -196,13 +196,19 @@ class ProfileServiceTest {
     @Test
     void createEducation_setsUserIdAndCreates() {
         Education edu = new Education();
-        edu.setInstitutionName("MIT");
+        edu.setInstitutionNameRu("MIT RU");
+        edu.setInstitutionNameEn("MIT");
+        edu.setDegreeRu("BS RU");
+        edu.setDegreeEn("BS");
+        edu.setFieldOfStudyRu("CS RU");
+        edu.setFieldOfStudyEn("CS");
+        edu.setStartDate(LocalDate.of(2020, 1, 1));
         when(educationDao.create(any())).thenAnswer(i -> i.getArgument(0));
 
         Education result = profileService.createEducation(userId, edu);
 
         assertEquals(userId, result.getUserId());
-        assertEquals("MIT", result.getInstitutionName());
+        assertEquals("MIT", result.getInstitutionNameEn());
     }
 
     // ========================================================================

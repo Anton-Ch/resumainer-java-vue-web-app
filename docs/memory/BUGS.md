@@ -677,3 +677,29 @@ Both LoginForm.vue and RegisterForm.vue had try {} finally {} without catch. Reg
 
 **Where to look next**
 frontend/src/components/LoginForm.vue, frontend/src/components/RegisterForm.vue
+
+---
+
+### 2026-06-12 - Ambiguous Date reference from java.sql.* + java.util.* wildcard imports
+
+**Status**
+Active
+
+**Symptoms**
+Compilation error: "reference to Date is ambiguous — both class java.util.Date in java.util and class java.sql.Date in java.sql match". Occurs when a Java file imports both java.sql.* and java.util.* and uses Date (for example calling Date.valueOf()).
+
+**Root Cause**
+Both java.sql and java.util packages contain a class named Date. When both are imported via wildcard (import java.sql.*; import java.util.*;), the compiler cannot resolve which Date is intended for calls like Date.valueOf().
+
+**Future mistake prevented**
+Avoid using both import java.sql.* and import java.util.* in the same file. Replace wildcard imports with explicit imports. For java.sql.Date, either use fully qualified names (java.sql.Date.valueOf()) or add an explicit import java.sql.Date.
+
+**Evidence**
+GenerationResponseDao.java compiled with 3 errors on Date.valueOf() calls when using import java.sql.* and import java.util.*. Fixing to explicit imports resolved the issue.
+
+**Prevention / Detection**
+- Replace java.sql.* and java.util.* wildcard imports with explicit imports
+- When both java.sql and java.util types are needed, use fully qualified names for the less common Date variant
+
+**Where to look next**
+All DAO files that use both SQL and utility types.

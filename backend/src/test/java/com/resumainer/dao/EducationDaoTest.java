@@ -43,9 +43,12 @@ class EducationDaoTest {
         when(resultSet.next()).thenReturn(true, false);
         when(resultSet.getLong("id")).thenReturn(1L);
         when(resultSet.getObject("user_id")).thenReturn(userId);
-        when(resultSet.getString("institution_name")).thenReturn("MIT");
-        when(resultSet.getString("degree")).thenReturn("BS");
-        when(resultSet.getString("field_of_study")).thenReturn("CS");
+        when(resultSet.getString("institution_name_ru")).thenReturn("MIT RU");
+        when(resultSet.getString("institution_name_en")).thenReturn("MIT");
+        when(resultSet.getString("degree_ru")).thenReturn("BS RU");
+        when(resultSet.getString("degree_en")).thenReturn("BS");
+        when(resultSet.getString("field_of_study_ru")).thenReturn("CS RU");
+        when(resultSet.getString("field_of_study_en")).thenReturn("CS");
         when(resultSet.getString("description")).thenReturn("Great");
         when(resultSet.getDate("start_date")).thenReturn(Date.valueOf("2019-01-01"));
         when(resultSet.getDate("end_date")).thenReturn(Date.valueOf("2023-01-01"));
@@ -60,8 +63,8 @@ class EducationDaoTest {
         List<Education> results = dao.findByUserId(userId);
 
         assertEquals(1, results.size());
-        assertEquals("MIT", results.get(0).getInstitutionName());
-        assertEquals("BS", results.get(0).getDegree());
+        assertEquals("MIT", results.get(0).getInstitutionNameEn());
+        assertEquals("BS", results.get(0).getDegreeEn());
         assertEquals("3.9", results.get(0).getGpaGrade());
     }
 
@@ -79,9 +82,12 @@ class EducationDaoTest {
         when(resultSet.next()).thenReturn(true);
         when(resultSet.getLong("id")).thenReturn(1L);
         when(resultSet.getObject("user_id")).thenReturn(userId);
-        when(resultSet.getString("institution_name")).thenReturn("MIT");
-        when(resultSet.getString("degree")).thenReturn("BS");
-        when(resultSet.getString("field_of_study")).thenReturn("CS");
+        when(resultSet.getString("institution_name_ru")).thenReturn("MIT RU");
+        when(resultSet.getString("institution_name_en")).thenReturn("MIT");
+        when(resultSet.getString("degree_ru")).thenReturn("BS RU");
+        when(resultSet.getString("degree_en")).thenReturn("BS");
+        when(resultSet.getString("field_of_study_ru")).thenReturn("CS RU");
+        when(resultSet.getString("field_of_study_en")).thenReturn("CS");
         when(resultSet.getDate("start_date")).thenReturn(Date.valueOf("2019-01-01"));
         when(resultSet.getDate("end_date")).thenReturn(null);
         when(resultSet.getBoolean("is_current")).thenReturn(true);
@@ -93,7 +99,7 @@ class EducationDaoTest {
         Education result = dao.findById(1L, userId);
 
         assertNotNull(result);
-        assertEquals("MIT", result.getInstitutionName());
+        assertEquals("MIT", result.getInstitutionNameEn());
         assertTrue(result.isCurrent());
         assertNull(result.getEndDate());
     }
@@ -106,9 +112,12 @@ class EducationDaoTest {
 
         Education edu = new Education();
         edu.setUserId(userId);
-        edu.setInstitutionName("MIT");
-        edu.setDegree("BS");
-        edu.setFieldOfStudy("CS");
+        edu.setInstitutionNameRu("MIT RU");
+        edu.setInstitutionNameEn("MIT");
+        edu.setDegreeRu("BS RU");
+        edu.setDegreeEn("BS");
+        edu.setFieldOfStudyRu("CS RU");
+        edu.setFieldOfStudyEn("CS");
         edu.setStartDate(LocalDate.of(2019, 1, 1));
 
         Education result = dao.create(edu);
@@ -125,9 +134,12 @@ class EducationDaoTest {
         Education edu = new Education();
         edu.setId(1L);
         edu.setUserId(userId);
-        edu.setInstitutionName("Updated");
-        edu.setDegree("PhD");
-        edu.setFieldOfStudy("Physics");
+        edu.setInstitutionNameRu("Updated RU");
+        edu.setInstitutionNameEn("Updated");
+        edu.setDegreeRu("PhD RU");
+        edu.setDegreeEn("PhD");
+        edu.setFieldOfStudyRu("Physics RU");
+        edu.setFieldOfStudyEn("Physics");
         edu.setStartDate(LocalDate.of(2020, 1, 1));
 
         dao.update(edu);
@@ -143,9 +155,12 @@ class EducationDaoTest {
         Education edu = new Education();
         edu.setId(999L);
         edu.setUserId(userId);
-        edu.setInstitutionName("X");
-        edu.setDegree("X");
-        edu.setFieldOfStudy("X");
+        edu.setInstitutionNameRu("X RU");
+        edu.setInstitutionNameEn("X");
+        edu.setDegreeRu("X RU");
+        edu.setDegreeEn("X");
+        edu.setFieldOfStudyRu("X RU");
+        edu.setFieldOfStudyEn("X");
         edu.setStartDate(LocalDate.now());
 
         assertThrows(RuntimeException.class, () -> dao.update(edu));

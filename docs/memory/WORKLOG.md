@@ -339,6 +339,29 @@ mvnw clean package → BUILD SUCCESS with 1 passing test.
 - **Evidence**: specs 018, 024, and 031 all required pagination rework; see DECISIONS.md entry on API pagination
 - **Where to look**: `src/api/pagination.ts`, `docs/memory/DECISIONS.md`
 
+### 2026-06-12 - Feature 007 Specification, Planning, and Implementation Complete
+
+**Status**: Active
+
+**Milestone**: Feature 007 (Resume Generation) reached Tasks + Implementation phase complete.
+
+**What was delivered**:
+- Full spec with 45 FRs, 11 SCs, 7 user stories
+- 15 implementation phases (0-14), 150+ tasks
+- 8 Flyway migrations (V17-V24) + education migration (V25)
+- Backend: 40+ new Java files (models, DTOs, DAOs, services, AI client, parser, persistence, renderer, finalize)
+- Frontend: 14 new Vue components (4 wizard pages, 10 shared components) + service/composable layer
+- 3 diagram files (component, system design, software architecture)
+- Security review with 5 findings (overall LOW risk)
+
+**Technical decisions**:
+- All DAOs use connection-accepting overloads per D10
+- AI client uses Factory Method pattern; prompt uses Builder pattern
+- PDF conversion deferred to feat/008-pdf-conversion
+- HTML is canonical generated artifact in feat/007
+
+---
+
 ## Counter-Example (do not write entries like this)
 
 > ### 2026-03-15 - Updated pagination
