@@ -28,3 +28,13 @@ function onFinalize() {
   emit('finalize', selectedLevel.value)
 }
 </script>
+
+<style scoped>
+.empty-state {
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+  color: #999;
+  background: #f5f5f5;
+}
+</style>

@@ -134,6 +134,52 @@
       "review": "Проверка",
       "export": "Экспорт"
     },
+    "vacancy": {
+      "title": "Генерация резюме — вакансия",
+      "description": "Укажи данные целевой вакансии",
+      "vacancyTitle": "Название вакансии",
+      "vacancyDescription": "Описание вакансии",
+      "companyName": "Название компании",
+      "companyDescription": "Описание компании",
+      "additionalComments": "Дополнительные комментарии",
+      "continue": "Продолжить"
+    },
+    "settings": {
+      "title": "Настройки генерации",
+      "description": "Выбери язык, уровень адаптации, AI-модель и опцию cover letter",
+      "languageMode": "Язык резюме",
+      "adaptationSelection": "Уровень адаптации",
+      "aiModel": "AI-модель",
+      "noModels": "Нет доступных AI-моделей",
+      "includeCoverLetter": "Добавить cover letter",
+      "generate": "Сгенерировать"
+    },
+    "review": {
+      "title": "Проверка сгенерированного резюме",
+      "loading": "Генерируем резюме...",
+      "noData": "Сгенерированные данные пока недоступны.",
+      "selectLevel": "Выбери финальный уровень адаптации",
+      "finalize": "Финализировать",
+      "save": "Сохранить изменения"
+    },
+    "export": {
+      "title": "Экспорт результата",
+      "description": "Скачай HTML, скопируй cover letter и используй временные PDF/public-link действия до появления PDF-генерации.",
+      "loading": "Подготавливаем данные экспорта...",
+      "downloadHtml": "Скачать HTML",
+      "copyPublicLink": "Скопировать публичную ссылку",
+      "downloadPdf": "Скачать PDF",
+      "openPdf": "Открыть PDF",
+      "copyCoverLetter": "Скопировать cover letter",
+      "pdfComingSoon": "PDF-генерация появится в следующем обновлении.",
+      "copied": "Скопировано"
+    },
+    "error": {
+      "title": "Генерация не удалась",
+      "description": "Произошёл сбой при обращении к AI-модели. Попробуй ещё раз или измени настройки.",
+      "tryAgain": "Попробовать снова",
+      "changeSettings": "Изменить настройки"
+    },
     "disabledTooltip": "Сначала создай резюме.",
     "loadingTitle": "Создаём резюме...",
     "loadingText": "Это может занять немного времени. Не закрывай страницу."
@@ -269,8 +315,14 @@
       "save": "Сохранить",
       "cancel": "Отмена",
       "institutionName": "Учебное заведение",
+      "institutionNameRu": "Название заведения (RU)",
+      "institutionNameEn": "Название заведения (EN)",
       "degree": "Степень / квалификация",
+      "degreeRu": "Степень (RU)",
+      "degreeEn": "Степень (EN)",
       "fieldOfStudy": "Направление / специальность",
+      "fieldOfStudyRu": "Специальность (RU)",
+      "fieldOfStudyEn": "Специальность (EN)",
       "startDate": "Дата начала",
       "endDate": "Дата окончания",
       "currentlyStudying": "Я ещё не выпустился и учусь здесь сейчас",

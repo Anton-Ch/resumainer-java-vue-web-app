@@ -134,6 +134,52 @@
       "review": "Review",
       "export": "Export"
     },
+    "vacancy": {
+      "title": "Generate Resume — Vacancy",
+      "description": "Enter the target vacancy details",
+      "vacancyTitle": "Vacancy Title",
+      "vacancyDescription": "Vacancy Description",
+      "companyName": "Company Name",
+      "companyDescription": "Company Description",
+      "additionalComments": "Additional Comments",
+      "continue": "Continue"
+    },
+    "settings": {
+      "title": "Generation Settings",
+      "description": "Choose language, adaptation level, AI model, and cover letter option",
+      "languageMode": "Language Mode",
+      "adaptationSelection": "Adaptation Level",
+      "aiModel": "AI Model",
+      "noModels": "No AI models available",
+      "includeCoverLetter": "Include cover letter",
+      "generate": "Generate"
+    },
+    "review": {
+      "title": "Review Generated Resume",
+      "loading": "Generating resume...",
+      "noData": "No generated data is available yet.",
+      "selectLevel": "Select final adaptation level",
+      "finalize": "Finalize",
+      "save": "Save changes"
+    },
+    "export": {
+      "title": "Export Results",
+      "description": "Download HTML, copy cover letter, and use placeholder PDF/public-link actions until PDF generation is available.",
+      "loading": "Preparing export data...",
+      "downloadHtml": "Download HTML",
+      "copyPublicLink": "Copy public link",
+      "downloadPdf": "Download PDF",
+      "openPdf": "Open PDF",
+      "copyCoverLetter": "Copy cover letter",
+      "pdfComingSoon": "PDF generation is coming in a future update.",
+      "copied": "Copied"
+    },
+    "error": {
+      "title": "Generation failed",
+      "description": "Something went wrong while contacting the AI model. Please try again or change settings.",
+      "tryAgain": "Try again",
+      "changeSettings": "Change settings"
+    },
     "disabledTooltip": "Generate a resume first.",
     "loadingTitle": "Generating your resume...",
     "loadingText": "This may take a moment. Please keep this page open."
@@ -261,8 +307,14 @@
       "save": "Save",
       "cancel": "Cancel",
       "institutionName": "Institution name",
+      "institutionNameRu": "Institution name (RU)",
+      "institutionNameEn": "Institution name (EN)",
       "degree": "Degree / Qualification",
+      "degreeRu": "Degree (RU)",
+      "degreeEn": "Degree (EN)",
       "fieldOfStudy": "Field of study / Major",
+      "fieldOfStudyRu": "Field of study (RU)",
+      "fieldOfStudyEn": "Field of study (EN)",
       "startDate": "Start date",
       "endDate": "End date",
       "currentlyStudying": "I am currently studying here",

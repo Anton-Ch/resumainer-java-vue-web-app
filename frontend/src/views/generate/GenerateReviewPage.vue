@@ -19,8 +19,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useGenerateResumeFlow } from '@/composables/useGenerateResumeFlow'
 import * as generateApi from '@/services/generateResumeService'
 import GenerateStepper from '@/components/generate/GenerateStepper.vue'
@@ -29,14 +30,15 @@ import WhimsicalLoader from '@/components/generate/WhimsicalLoader.vue'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const { finalizeResume, state } = useGenerateResumeFlow()
 
-const steps = [
-  { label: 'Vacancy', route: '/generate/vacancy' },
-  { label: 'Settings', route: '/generate/settings' },
-  { label: 'Review', route: '/generate/review' },
-  { label: 'Export', route: '/generate/export' }
-]
+const steps = computed(() => [
+  { label: t('generate.steps.vacancy'), route: '/generate/vacancy' },
+  { label: t('generate.steps.settings'), route: '/generate/settings' },
+  { label: t('generate.steps.review'), route: '/generate/review' },
+  { label: t('generate.steps.export'), route: '/generate/export' }
+])
 
 const reviewData = ref<any>(null)
 const loading = ref(true)

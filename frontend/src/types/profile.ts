@@ -30,9 +30,12 @@ export interface WorkExperience {
 
 export interface Education {
   id: number
-  institutionName: string
-  degree: string
-  fieldOfStudy: string
+  institutionNameRu: string
+  institutionNameEn: string
+  degreeRu: string
+  degreeEn: string
+  fieldOfStudyRu: string
+  fieldOfStudyEn: string
   startDate: string
   endDate: string | null
   currentlyStudying: boolean

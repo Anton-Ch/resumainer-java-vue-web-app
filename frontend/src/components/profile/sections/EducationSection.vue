@@ -99,7 +99,7 @@
     <RecordCard
       v-for="rec in records"
       :key="rec.id"
-      :title="rec.institutionNameRu || rec.institutionNameEn"
+      :title="educationTitle(rec)"
       :metaLine="formatMeta(rec)"
       :description="formatDescription(rec)"
       :chipLabel="rec.currentlyStudying ? $t('profile.education.current') : undefined"
@@ -112,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick, watch } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useI18n } from 'vue-i18n'
@@ -248,14 +248,26 @@ function formatMeta(rec: Education): string {
   return (rec.location ? dateStr + ' · ' + rec.location : dateStr)
 }
 
+/** Returns the current locale (short code). */
+const isRu = computed(() => locale.value.startsWith('ru'))
+
+/** Picks the language-appropriate value: prefers current locale, falls back to the other. */
+function pickLocalized(ru?: string | null, en?: string | null): string {
+  if (isRu.value) {
+    return ru || en || ''
+  }
+  return en || ru || ''
+}
+
+/** Returns the education card title in the current UI language. */
+function educationTitle(rec: Education): string {
+  return pickLocalized(rec.institutionNameRu, rec.institutionNameEn)
+}
+
 function formatDescription(rec: Education): string {
-  const parts: string[] = []
-  const lang = locale.value === 'ru' ? 'Ru' : 'En'
-  const degree = lang === 'Ru' ? rec.degreeRu : rec.degreeEn
-  const field = lang === 'Ru' ? rec.fieldOfStudyRu : rec.fieldOfStudyEn
-  if (degree) parts.push(degree)
-  if (field) parts.push(field)
-  return parts.join('\n')
+  const degree = pickLocalized(rec.degreeRu, rec.degreeEn)
+  const field = pickLocalized(rec.fieldOfStudyRu, rec.fieldOfStudyEn)
+  return [degree, field].filter(Boolean).join(' \u00B7 ')
 }
 
 function scrollToSectionTitle() {
