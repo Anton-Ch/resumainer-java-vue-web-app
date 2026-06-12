@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: Build the full Generate Resume feature for ResumAIner: vacancy-specific resume generation using structured profile data, AI adaptation, bilingual output (EN/RU), review/editing, adaptation levels (Minimal/Balanced/Maximum/All), cover letter option, and finalization into saved HTML and PDF artifacts with public recruiter links.
+**Input**: Build the full Generate Resume feature for ResumAIner: vacancy-specific resume generation using structured profile data, AI adaptation, bilingual output (EN/RU), review/editing, adaptation levels (Minimal/Balanced/Maximum/All), cover letter option, and finalization into saved HTML artifacts. PDF conversion is deferred to `feat/008-pdf-conversion`.
 
 ## User Scenarios & Testing
 
@@ -89,26 +89,26 @@ As a logged-in user, I want to review and edit AI-generated content before final
 
 ### User Story 5 — Finalize Selected Adaptation Level and Save Files (P1)
 
-As a logged-in user, I want to select one final adaptation level per language and save the result so that I obtain downloadable PDF and HTML artifacts.
+As a logged-in user, I want to select one final adaptation level per language and save the result so that I obtain downloadable HTML artifacts.
 
 **Why this priority**: Saving the finalized resume is the ultimate goal of the entire generation flow.
 
-**Independent Test**: After finalizing one adaptation level, the system creates saved resume records with file paths.
+**Independent Test**: After finalizing one adaptation level, the system creates saved resume records with HTML file paths.
 
 **Acceptance Scenarios**:
 
 1. **Given** I generated all levels and selected Balanced as final, **When** I finalize, **Then** only Balanced responses are saved as final resumes.
 2. **Given** Bilingual mode was used, **When** I finalize one selected level, **Then** the system creates two saved resumes: one in English and one in Russian.
-3. **Given** finalization starts, **Then** the system renders and saves filled HTML to disk before PDF conversion.
-4. **Given** HTML rendering succeeds, **Then** the system generates or prepares the PDF from the HTML.
-5. **Given** PDF conversion fails, **Then** the system reports the error without losing the saved HTML artifact.
-6. **Given** finalization succeeds for both languages, **Then** each saved resume stores HTML path, PDF path, public code, public URL, language, and adaptation level.
+3. **Given** finalization starts, **Then** the system renders and saves filled HTML to disk.
+4. **Given** HTML rendering succeeds, **Then** the system stores the `html_file_path` on the saved resume record.
+5. **Given** HTML rendering or file writing fails, **Then** the system reports the error and does not create a partial saved resume.
+6. **Given** finalization succeeds for both languages, **Then** each saved resume stores HTML path, public code, language, and adaptation level. PDF fields are reserved for future generation (see feat/008-pdf-conversion).
 
 ---
 
 ### User Story 6 — Export and Download Results (P1)
 
-As a logged-in user, I want to download PDF and HTML files and copy public links so that I can use my resume for job applications.
+As a logged-in user, I want to download the saved HTML, copy the public link, copy the cover letter, and see PDF actions so that I can use my resume for job applications. In feat/007, HTML download is fully functional; PDF and public-link actions are placeholders ready for `feat/008-pdf-conversion`.
 
 **Why this priority**: Export is the final delivery step — without it, the generated resume has no practical use.
 
@@ -116,28 +116,30 @@ As a logged-in user, I want to download PDF and HTML files and copy public links
 
 **Acceptance Scenarios**:
 
-1. **Given** finalization completed, **When** I open the export screen, **Then** I see one export card per saved resume language.
-2. **Given** I click Copy Link, **Then** the public PDF link is copied to clipboard.
-3. **Given** I click Download PDF, **Then** the PDF file is downloaded.
-4. **Given** I click Open PDF, **Then** the public PDF opens in a new browser tab.
-5. **Given** I click Download HTML, **Then** the filled HTML file is downloaded.
+1. **Given** finalization completed, **When** I open the export screen, **Then** I see one export card per saved resume language with: Copy public link, Download PDF, Open PDF, Download HTML, Copy cover letter.
+2. **Given** I click Download HTML, **Then** the filled HTML file is downloaded. Access is owner-scoped — another user cannot download this HTML.
+3. **Given** I click Copy public link, **Then** a safe placeholder link is copied (real public PDF link deferred to feat/008). The placeholder does not expose resume data.
+4. **Given** I click Download PDF, **Then** a placeholder response is shown (real PDF generation deferred to feat/008). No fake PDF file is created.
+5. **Given** I click Open PDF, **Then** a placeholder response or redirect is shown (real PDF serving deferred to feat/008).
 6. **Given** a cover letter exists, **Then** I can copy the cover letter text.
 
 ---
 
-### User Story 7 — Public Recruiter PDF Access (P2)
+### User Story 7 — Public Recruiter PDF Access (P2) [DEFERRED with placeholder]
+
+> **Real PDF serving deferred to `feat/008-pdf-conversion`.** In feat/007, the Export UI keeps placeholder public-link and PDF actions so the frontend contract is stable. No fake PDF files are created. `pdf_file_path` is nullable until feat/008.
 
 As a recruiter with a public link, I want to open a PDF directly so that I can view, print, or save the candidate's resume without any login or intermediate page.
 
-**Why this priority**: Essential for the product's value but only matters after resumes have been generated and shared.
+**Why this priority**: Essential for the product's value but requires PDF conversion which is tracked separately.
 
-**Independent Test**: A public link serves the saved PDF for an active non-deleted resume.
+**Independent Test**: Not applicable in feat/007 — deferred.
 
 **Acceptance Scenarios**:
 
-1. **Given** a saved resume is active and not deleted, **When** a recruiter opens its public URL, **Then** the PDF is served directly.
-2. **Given** a saved resume has been deleted (soft-deleted), **When** a recruiter opens its public URL, **Then** the system returns a safe Gone or Not Found page.
-3. **Given** a public link is opened, **Then** no private profile data outside the finalized PDF content is exposed.
+1. **Deferred**: Real public recruiter PDF access is planned for `feat/008-pdf-conversion`.
+2. **feat/007 placeholder**: Export UI keeps Copy public link, Download PDF, Open PDF buttons. These use safe placeholder URLs/responses and do not expose resume data or create fake PDF files.
+3. **feat/007 security**: No public route serves HTML or resume data. The placeholder link must not leak private information.
 
 ---
 
@@ -181,15 +183,15 @@ As a recruiter with a public link, I want to open a PDF directly so that I can v
 - **FR-GEN-024**: The system shall keep the cover letter editable throughout the review process.
 - **FR-GEN-025**: The system shall allow the user to select exactly one final adaptation level. The same level is applied to all languages in the request. For Bilingual mode, selecting one level creates two saved resumes (EN and RU) with the same adaptation level.
 - **FR-GEN-026**: The system shall render filled HTML on the backend using stored templates and response/profile data.
-- **FR-GEN-027**: The system shall save filled HTML to disk before initiating PDF conversion.
-- **FR-GEN-028**: The system shall convert filled HTML to PDF through a dedicated backend service.
+- **FR-GEN-027**: The system shall save filled HTML to disk during finalization.
+- **FR-GEN-028**: The system shall define a dedicated backend PDF generation service boundary for future PDF conversion. Real PDF conversion is deferred to `feat/008-pdf-conversion`.
 - **FR-GEN-029**: The system shall store generated files under a deterministic server-side folder structure.
 - **FR-GEN-030**: The system shall create one saved resume per finalized language.
-- **FR-GEN-031**: The system shall store HTML file path, PDF file path, and public URL for each saved resume.
+- **FR-GEN-031**: The system shall store HTML file path for each saved resume. The PDF file path may be nullable/not generated until PDF conversion is implemented in `feat/008-pdf-conversion`.
 - **FR-GEN-032**: The system shall generate a unique public code for each saved resume.
-- **FR-GEN-033**: The system shall support PDF download and HTML download for authenticated users.
-- **FR-GEN-034**: The system shall support public PDF access without authentication via a unique public URL.
-- **FR-GEN-035**: The system shall support copying the public link and copying the cover letter text from the export screen.
+- **FR-GEN-033**: The system shall support authenticated owner-scoped HTML download. The UI shall keep PDF download/open buttons as placeholders in feat/007, pointing to safe placeholder responses. Real PDF download is deferred to `feat/008-pdf-conversion`.
+- **FR-GEN-034**: Public PDF access without authentication is deferred to `feat/008-pdf-conversion`. In feat/007, the Export UI may provide a placeholder public link for frontend stability; the placeholder must not expose resume data or serve real PDFs.
+- **FR-GEN-035**: The system shall support copying the public link (placeholder in feat/007) and copying the cover letter text from the export screen.
 - **FR-GEN-036**: The system shall allow the user to delete a saved resume, which deactivates its public link.
 
 #### AI Model Selection
@@ -207,6 +209,8 @@ As a recruiter with a public link, I want to open a PDF directly so that I can v
 - **FR-GEN-044**: The system shall fail the entire request if any part of a Bilingual generation fails. No partial responses are preserved.
 - **FR-GEN-045**: The system shall not expose raw provider errors, stack traces, API keys, or sensitive technical details to the user on the error screen.
 
+> **Deferred scope note:** Real PDF conversion, PDF download/open, and public recruiter PDF access are planned for `feat/008-pdf-conversion`. In feat/007, the Export UI keeps placeholder buttons for pdfDownload, pdfOpen, and public link copy so the frontend contract is stable for feat/008. No fake PDF files are created. `pdf_file_path` is nullable until feat/008. HTML download is fully functional and owner-scoped.
+
 ### Key Entities
 
 - **Generation Request**: Captures user input (vacancy/company details), language mode, adaptation selection, cover letter preference, AI model chosen, and prompt configuration used. Tracks processing state (pending/processing/completed/failed).
@@ -217,7 +221,7 @@ As a recruiter with a public link, I want to open a PDF directly so that I can v
 - **Education (profile data)**: Bilingual profile-owned data with institution name, degree, and field of study available in both English and Russian. Not AI-generated. Final HTML rendering selects the correct language version based on the response language. Not shown in Resume Review.
 - **Response Skill**: Generated skill groups and individual skill names per response.
 - **Response Personal Information**: Generated and editable personal details localized per response language (location, spoken languages, relocation willingness, travel willingness, citizenship, date of birth, work formats).
-- **Saved Resume**: Finalized record storing metadata (user, request, response, adaptation level, language, title), file paths (HTML, PDF), public code, and public URL. Supports soft-delete.
+- **Saved Resume**: Finalized record storing metadata (user, request, response, adaptation level, language, title), HTML file path, public code, and public URL. PDF file path is nullable/not generated until PDF conversion is implemented in `feat/008-pdf-conversion`. Supports soft-delete.
 - **AI Model**: Configuration of an AI provider endpoint with model code, display name, active status, and encrypted API key.
 - **AI Prompt Configuration**: Versioned bundle of modular prompt components (system prompt, language fragment, adaptation fragment, cover letter fragment). Only one active config at a time.
 - **AI Usage Log**: Records each AI API call with token counts and links to one or more generation responses.
@@ -228,15 +232,15 @@ As a recruiter with a public link, I want to open a PDF directly so that I can v
 
 ### Measurable Outcomes
 
-- **SC-001**: A user can generate an English-only resume from start to finish and finalize it into saved HTML and PDF artifacts.
-- **SC-002**: A user can generate a Russian-only resume from start to finish and finalize it into saved HTML and PDF artifacts.
-- **SC-003**: A user can generate Bilingual + All Levels and finalize one selected adaptation level into two saved resumes (EN and RU).
+- **SC-001**: A user can generate an English-only resume from start to finish and finalize it into a saved HTML artifact.
+- **SC-002**: A user can generate a Russian-only resume from start to finish and finalize it into a saved HTML artifact.
+- **SC-003**: A user can generate Bilingual + All Levels and finalize one selected adaptation level into two saved HTML resumes (EN and RU). PDF conversion is deferred to `feat/008-pdf-conversion`.
 - **SC-004**: Personal Information is editable in the review screen and persisted per response.
 - **SC-005**: Education renders in the correct language (EN or RU) from bilingual profile fields, not from AI-generated content.
 - **SC-006**: Work formats originate from the user's normalized profile data and reach the AI prompt, generation output, and final rendering.
-- **SC-007**: The export step supports PDF download, PDF open, HTML download, public link copy, and cover letter copy.
+- **SC-007**: The export step supports HTML download and cover letter copy. PDF/public-link actions are visible and use safe placeholder behavior with a clear message that PDF generation is coming in `feat/008-pdf-conversion`.
 - **SC-008**: All backend tests pass without real AI provider calls.
-- **SC-009**: A public recruiter link serves the saved PDF directly for active resumes and returns a safe Gone/Not Found page for deleted resumes.
+- **SC-009**: Public recruiter PDF access is deferred to `feat/008-pdf-conversion`. Not required for feat/007.
 - **SC-010**: The implementation complies with the ResumAIner Constitution principles (layered architecture, TDD, i18n, security, no ORM).
 - **SC-011**: When AI generation fails, the user sees a graceful error screen with "Try again" and "Change settings" actions, without losing entered vacancy data or seeing raw technical errors.
 
@@ -258,8 +262,8 @@ This feature MUST comply with the ResumAIner Constitution principles:
 | **I. Code Quality & Maintainability** | All Java code follows layered architecture (controller/service/dao/model/config/util). No Spring Boot, JPA, or Hibernate. Maven CLI build must succeed. |
 | **II. Testing Excellence** | JUnit 5 + Mockito tests required. TDD for business logic. Mock AI provider used — no real API calls in tests. JaCoCo coverage tracked. |
 | **III. User Experience Consistency** | i18n via messages_en.properties/messages_ru.properties. Dual validation (frontend + backend). PRG pattern for form submissions. No stack traces exposed. |
-| **IV. Performance & Reliability** | PreparedStatement for all SQL queries. JDBC transaction management (commit/rollback). SQL-level pagination. UTF-8 encoding throughout. AI-generated HTML sanitized with allowlist. |
-| **V. Security by Design** | Backend validation is authoritative. No secrets in logs or builds. API keys masked in UI. Owner-scoped access for generation results. Public links expose only finalized PDFs. Soft-delete disables public access. |
+| **IV. Performance & Reliability** | PreparedStatement for all SQL queries. JDBC transaction management (commit/rollback). SQL-level pagination. UTF-8 encoding throughout. AI-generated HTML sanitized with allowlist. PDF service boundary defined for future conversion (deferred to feat/008). |
+| **V. Security by Design** | Backend validation is authoritative. No secrets in logs or builds. API keys masked in UI. Owner-scoped access for generation results and HTML download. Public links are placeholders in feat/007 and must not expose resume data; real public PDF access deferred to feat/008. Soft-delete disables public access. |
 
 **Technology Constraint Check** (per Constitution Technology Stack):
 - [ ] Java 21, Spring MVC (no Spring Boot), Plain JDBC (no ORM)
@@ -272,9 +276,9 @@ This feature MUST comply with the ResumAIner Constitution principles:
 - Users have a sufficiently complete profile (contact details, work experience, education) before attempting generation.
 - The user selects an AI model from the Generate Settings dropdown. Available models depend on the user's privileged flag. Hidden models are not shown to non-privileged users.
 - The AI provider may be temporarily unavailable — the system handles timeouts and errors gracefully.
-- Filled HTML is the canonical intermediate artifact; PDF is derived from HTML.
+- Filled HTML is the canonical generated artifact in feat/007. PDF conversion is deferred to `feat/008-pdf-conversion`.
 - Files are stored on the server filesystem under a deterministic path structure; no cloud object storage integration for MVP.
-- Public links are read-only and expose only the finalized PDF content — no interactive features or profile data.
+- Public resume access (PDF serving, recruiter links) is deferred to `feat/008-pdf-conversion`. In feat/007, placeholder public links are used in the Export UI for frontend contract stability; they do not expose real resume content.
 - Each generation response represents exactly one language and one adaptation level. A single request produces one response per language and adaptation level combination.
 - For All Levels adaptation, one language produces up to three responses (Minimal, Balanced, Maximum). For Bilingual + All Levels, one request produces up to six responses.
 - The single default resume template is used for all generated resumes in MVP; template selection is post-MVP.
