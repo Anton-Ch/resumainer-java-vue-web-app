@@ -106,7 +106,7 @@ Agents provide specialization.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the implementation
-plan at `specs/006-user-profile/plan.md`.
+plan at `specs/007-resume-generation/plan.md`.
 <!-- SPECKIT END -->
 
 ### Spec Kit
