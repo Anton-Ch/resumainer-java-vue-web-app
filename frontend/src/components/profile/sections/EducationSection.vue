@@ -24,20 +24,42 @@
         <h4 class="form-title">{{ editingId ? $t('profile.education.edit') : $t('profile.education.add') }}</h4>
       </div>
       <div class="form-fields">
-        <div class="form-group">
-          <label class="form-label">{{ $t('profile.education.institutionName') }} <span class="required">*</span></label>
-          <InputText v-model="formData.institutionName" class="form-input" @blur="validateField('institutionName')" :class="{ 'p-invalid': formErrors.institutionName }" />
-          <small v-if="formErrors.institutionName" class="field-error">{{ formErrors.institutionName }}</small>
+        <!-- Bilingual fields: RU (left) / EN (right) -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">{{ $t('profile.education.institutionNameRu') }} <span class="required">*</span></label>
+            <InputText v-model="formData.institutionNameRu" class="form-input" @blur="validateField('institutionNameRu')" :class="{ 'p-invalid': formErrors.institutionNameRu }" />
+            <small v-if="formErrors.institutionNameRu" class="field-error">{{ formErrors.institutionNameRu }}</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ $t('profile.education.institutionNameEn') }} <span class="required">*</span></label>
+            <InputText v-model="formData.institutionNameEn" class="form-input" @blur="validateField('institutionNameEn')" :class="{ 'p-invalid': formErrors.institutionNameEn }" />
+            <small v-if="formErrors.institutionNameEn" class="field-error">{{ formErrors.institutionNameEn }}</small>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">{{ $t('profile.education.degree') }} <span class="required">*</span></label>
-          <InputText v-model="formData.degree" class="form-input" @blur="validateField('degree')" :class="{ 'p-invalid': formErrors.degree }" />
-          <small v-if="formErrors.degree" class="field-error">{{ formErrors.degree }}</small>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">{{ $t('profile.education.degreeRu') }} <span class="required">*</span></label>
+            <InputText v-model="formData.degreeRu" class="form-input" @blur="validateField('degreeRu')" :class="{ 'p-invalid': formErrors.degreeRu }" />
+            <small v-if="formErrors.degreeRu" class="field-error">{{ formErrors.degreeRu }}</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ $t('profile.education.degreeEn') }} <span class="required">*</span></label>
+            <InputText v-model="formData.degreeEn" class="form-input" @blur="validateField('degreeEn')" :class="{ 'p-invalid': formErrors.degreeEn }" />
+            <small v-if="formErrors.degreeEn" class="field-error">{{ formErrors.degreeEn }}</small>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">{{ $t('profile.education.fieldOfStudy') }} <span class="required">*</span></label>
-          <InputText v-model="formData.fieldOfStudy" class="form-input" @blur="validateField('fieldOfStudy')" :class="{ 'p-invalid': formErrors.fieldOfStudy }" />
-          <small v-if="formErrors.fieldOfStudy" class="field-error">{{ formErrors.fieldOfStudy }}</small>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">{{ $t('profile.education.fieldOfStudyRu') }} <span class="required">*</span></label>
+            <InputText v-model="formData.fieldOfStudyRu" class="form-input" @blur="validateField('fieldOfStudyRu')" :class="{ 'p-invalid': formErrors.fieldOfStudyRu }" />
+            <small v-if="formErrors.fieldOfStudyRu" class="field-error">{{ formErrors.fieldOfStudyRu }}</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ $t('profile.education.fieldOfStudyEn') }} <span class="required">*</span></label>
+            <InputText v-model="formData.fieldOfStudyEn" class="form-input" @blur="validateField('fieldOfStudyEn')" :class="{ 'p-invalid': formErrors.fieldOfStudyEn }" />
+            <small v-if="formErrors.fieldOfStudyEn" class="field-error">{{ formErrors.fieldOfStudyEn }}</small>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">{{ $t('profile.education.gpa') }}</label>
@@ -77,7 +99,7 @@
     <RecordCard
       v-for="rec in records"
       :key="rec.id"
-      :title="rec.institutionName"
+      :title="rec.institutionNameRu || rec.institutionNameEn"
       :metaLine="formatMeta(rec)"
       :description="formatDescription(rec)"
       :chipLabel="rec.currentlyStudying ? $t('profile.education.current') : undefined"
@@ -123,9 +145,12 @@ const sectionTopRef = ref<HTMLElement | null>(null)
 const dateError = ref('')
 
 const formData = reactive({
-  institutionName: '',
-  degree: '',
-  fieldOfStudy: '',
+  institutionNameRu: '',
+  institutionNameEn: '',
+  degreeRu: '',
+  degreeEn: '',
+  fieldOfStudyRu: '',
+  fieldOfStudyEn: '',
   startDate: null as Date | null,
   endDate: null as Date | null,
   currentlyStudying: false,
@@ -135,9 +160,12 @@ const formData = reactive({
 })
 
 const formErrors = reactive<Record<string, string>>({
-  institutionName: '',
-  degree: '',
-  fieldOfStudy: '',
+  institutionNameRu: '',
+  institutionNameEn: '',
+  degreeRu: '',
+  degreeEn: '',
+  fieldOfStudyRu: '',
+  fieldOfStudyEn: '',
   startDate: ''
 })
 
@@ -152,7 +180,7 @@ function validateField(field: string) {
 
 function validateAll(): boolean {
   let valid = true
-  const fields = ['institutionName', 'degree', 'fieldOfStudy', 'startDate'] as const
+  const fields = ['institutionNameRu', 'institutionNameEn', 'degreeRu', 'degreeEn', 'fieldOfStudyRu', 'fieldOfStudyEn', 'startDate'] as const
   for (const f of fields) {
     validateField(f)
     if (formErrors[f]) valid = false
@@ -172,9 +200,12 @@ function validateDates(): boolean {
 }
 
 function resetForm() {
-  formData.institutionName = ''
-  formData.degree = ''
-  formData.fieldOfStudy = ''
+  formData.institutionNameRu = ''
+  formData.institutionNameEn = ''
+  formData.degreeRu = ''
+  formData.degreeEn = ''
+  formData.fieldOfStudyRu = ''
+  formData.fieldOfStudyEn = ''
   formData.startDate = null
   formData.endDate = null
   formData.currentlyStudying = false
@@ -219,8 +250,11 @@ function formatMeta(rec: Education): string {
 
 function formatDescription(rec: Education): string {
   const parts: string[] = []
-  if (rec.degree) parts.push(rec.degree)
-  if (rec.fieldOfStudy) parts.push(rec.fieldOfStudy)
+  const lang = locale.value === 'ru' ? 'Ru' : 'En'
+  const degree = lang === 'Ru' ? rec.degreeRu : rec.degreeEn
+  const field = lang === 'Ru' ? rec.fieldOfStudyRu : rec.fieldOfStudyEn
+  if (degree) parts.push(degree)
+  if (field) parts.push(field)
   return parts.join('\n')
 }
 
@@ -237,9 +271,12 @@ function openAddForm() {
 }
 
 function openEditForm(rec: Education) {
-  formData.institutionName = rec.institutionName
-  formData.degree = rec.degree
-  formData.fieldOfStudy = rec.fieldOfStudy
+  formData.institutionNameRu = rec.institutionNameRu
+  formData.institutionNameEn = rec.institutionNameEn
+  formData.degreeRu = rec.degreeRu
+  formData.degreeEn = rec.degreeEn
+  formData.fieldOfStudyRu = rec.fieldOfStudyRu
+  formData.fieldOfStudyEn = rec.fieldOfStudyEn
   formData.startDate = rec.startDate ? new Date(rec.startDate) : null
   formData.endDate = rec.endDate ? new Date(rec.endDate) : null
   formData.currentlyStudying = rec.currentlyStudying
@@ -268,9 +305,12 @@ async function handleSave() {
   saving.value = true
   try {
     const payload = {
-      institutionName: formData.institutionName,
-      degree: formData.degree,
-      fieldOfStudy: formData.fieldOfStudy,
+      institutionNameRu: formData.institutionNameRu,
+      institutionNameEn: formData.institutionNameEn,
+      degreeRu: formData.degreeRu,
+      degreeEn: formData.degreeEn,
+      fieldOfStudyRu: formData.fieldOfStudyRu,
+      fieldOfStudyEn: formData.fieldOfStudyEn,
       startDate: toISODate(formData.startDate) || '',
       endDate: formData.currentlyStudying ? null : toISODate(formData.endDate),
       currentlyStudying: formData.currentlyStudying,
