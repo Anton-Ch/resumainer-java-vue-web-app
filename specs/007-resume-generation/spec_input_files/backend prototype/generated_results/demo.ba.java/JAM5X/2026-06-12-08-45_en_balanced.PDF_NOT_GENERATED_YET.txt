@@ -1,0 +1,3 @@
+PDF PLACEHOLDER ONLY. Java implementation must call real HTML-to-PDF converter after HTML rendering.
+HTML source: C:\Users\user\Downloads\tempcodebase\backend_v3_2\generated_results\demo.ba.java\JAM5X\2026-06-12-08-45_en_balanced.html
+Future PDF path stored in DB: C:\Users\user\Downloads\tempcodebase\backend_v3_2\generated_results\demo.ba.java\JAM5X\2026-06-12-08-45_en_balanced.pdf

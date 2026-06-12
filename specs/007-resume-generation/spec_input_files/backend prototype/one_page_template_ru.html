@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ResumAIner One-Page Resume Template RU</title>
+
+  <!-- =========================================================
+       ONE-PAGE RESUME TEMPLATE
+       Used when Page 2 Score = 0 (no additional WE, no projects).
+       Everything fits on a single A4 page.
+    ========================================================== -->
+
+  <style>
+
+    /* =========================================================
+       PAGE SETUP — A4 single page, no overflow
+    ========================================================== */
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    body {
+      margin: 0;
+      background: #f5f6f8;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.32;
+      color: #111111;
+    }
+
+    .resume-page {
+      --font-scale: 1;
+      --section-gap: 0px;
+      --single-page-min-fill-ratio: 0.8;
+
+      width: 210mm;
+      min-height: 297mm;
+      height: 297mm;                 /* Fixed height — content must fit */
+      margin: 0 auto;
+      background: #ffffff;
+      box-sizing: border-box;
+      padding: 11mm;
+      position: relative;
+
+      display: grid;
+      grid-template-rows: minmax(0, 1fr);
+
+      font-size: calc(10.5px * var(--font-scale));
+      line-height: 1.32;
+    }
+
+    .page-content {
+      min-height: 0;
+      overflow: hidden;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;  /* Font size is fitted first; spacing is added after */
+      row-gap: var(--section-gap);
+    }
+
+    /* =========================================================
+       DYNAMIC TYPOGRAPHY — current sizes are minimum values
+       Main text: min 10.5px, max 16px. Other font sizes scale
+       proportionally through --font-scale.
+    ========================================================== */
+
+    .candidate-name {
+      font-size: calc(25px * var(--font-scale));
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1;
+      margin-bottom: 2px;
+      color: #111111;
+    }
+
+    .candidate-title {
+      font-size: calc(14px * var(--font-scale));
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 6px;
+    }
+
+    .contact-line {
+      font-size: calc(9.7px * var(--font-scale));
+      color: #2b2b2b;
+      margin-bottom: 2px;
+    }
+
+    .value-line {
+      margin-top: 7px;
+      padding: 5px 0;
+      border-top: 1px solid #1f2937;
+      border-bottom: 1px solid #1f2937;
+      font-size: calc(9.8px * var(--font-scale));
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+      color: #1f2937;
+    }
+
+    .section-title {
+      font-size: calc(12px * var(--font-scale));
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #444444;
+      color: #111111;
+    }
+
+    .summary-text,
+    .keyword-line,
+    .skill-group,
+    .education-line,
+    .course-line,
+    .info-line {
+      font-size: calc(10px * var(--font-scale));
+    }
+
+    .summary-text {
+      margin-bottom: 4px;
+    }
+
+    /*
+      AI-generated HTML often returns raw <p> tags.
+      Browser default paragraph margins are too large for a strict A4 resume.
+    */
+    .resume-page p {
+      margin: 0 0 4px 0;
+    }
+
+    .job-block p,
+    .project-block p {
+      margin: 2px 0 3px 0;
+    }
+
+    .keyword-line {
+      margin-top: 4px;
+      margin-bottom: 0;
+    }
+
+    strong {
+      font-weight: 800;
+    }
+
+    /* =========================================================
+       EXPERIENCE — job blocks with bullet points
+    ========================================================== */
+
+    .job-block,
+    .project-block {
+      margin-bottom: 9px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .item-heading {
+      font-size: calc(10.4px * var(--font-scale));
+      font-weight: 700;
+      margin-bottom: 2px;
+      color: #111111;
+    }
+
+    .date {
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    ul {
+      margin-top: 2px;
+      margin-bottom: 0;
+      padding-left: 17px;
+    }
+
+    li {
+      margin-bottom: 2px;
+      padding-left: 1px;
+    }
+
+    /* =========================================================
+       SKILLS — groups with inline skills
+    ========================================================== */
+
+    .skill-group {
+      margin-bottom: 4px;
+    }
+
+    .skill-label {
+      font-weight: 800;
+    }
+
+    /* =========================================================
+       COMPACT SECTIONS — education, courses, personal info
+       In single-page mode these are extra compact to save space.
+    ========================================================== */
+
+    .compact-section .education-line,
+    .compact-section .course-line {
+      margin-bottom: 2px;
+    }
+
+    .compact-info {
+      font-size: calc(9.5px * var(--font-scale));
+      line-height: 1.25;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 12px;                /* Horizontal wrapping */
+    }
+
+    .compact-info span {
+      white-space: nowrap;
+    }
+
+    /* =========================================================
+       PRINT
+    ========================================================== */
+
+    @media print {
+      body {
+        background: #ffffff;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .resume-page {
+        margin: 0;
+        box-shadow: none;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+
+<!-- =========================================================
+     PAGE 1 — SINGLE PAGE
+     Sections from top to bottom, fitted by shared font scaling first, then stretched with controlled section gaps.
+     AI content budgets (see resume_template_details_and_logic.md):
+       - Professional Summary: 5-10 sentences (expanded)
+       - Work Experience: 3-5 sentences + 5-9 bullet points
+       - Skills: 3-4 groups, 5-6 skills each
+       - Courses: up to 10, compact format
+       - Aspirations: 1-3 brief sentences
+       - Personal Info: compact block at bottom
+========================================================== -->
+
+<main class="resume-page">
+
+  <div class="page-content">
+
+    <!-- RESUME:HEADER -->
+    <!-- RESUME:PROFESSIONAL_SUMMARY -->
+    <!-- RESUME:WORK_EXPERIENCE_PRIMARY -->
+    <!-- RESUME:SKILLS -->
+    <!-- RESUME:EDUCATION -->
+    <!-- RESUME:COURSES -->
+    <!-- RESUME:PROFESSIONAL_ASPIRATIONS -->
+    <!-- RESUME:PERSONAL_INFO -->
+
+  </div>
+
+</main>
+
+
+<script>
+  (function () {
+    const MIN_SCALE = 0.94;
+    const MAX_SCALE = 16 / 10.5; // Main inherited text cannot exceed 16px.
+    const FIT_TOLERANCE_PX = 2;
+    const GAP_SAFETY_PX = 1;
+    const SINGLE_PAGE_MIN_FILL_RATIO = 0.8; // Content block must occupy at least 80% of A4 height.
+
+    const pages = Array.from(document.querySelectorAll(".resume-page"));
+
+    function setScale(page, scale) {
+      page.style.setProperty("--font-scale", scale.toFixed(4));
+    }
+
+    function setSectionGap(page, gapPx) {
+      page.style.setProperty("--section-gap", `${Math.max(0, gapPx).toFixed(2)}px`);
+    }
+
+    function resetSpacing() {
+      pages.forEach(function (page) {
+        setSectionGap(page, 0);
+      });
+    }
+
+    function pageFits(page) {
+      return page.scrollHeight <= page.clientHeight + FIT_TOLERANCE_PX;
+    }
+
+    function contentFits(page) {
+      const content = page.querySelector(".page-content");
+      if (!content) return pageFits(page);
+
+      return pageFits(page) && content.scrollHeight <= content.clientHeight + FIT_TOLERANCE_PX;
+    }
+
+    function findMaxScaleForPage(page) {
+      let low = MIN_SCALE;
+      let high = MAX_SCALE;
+
+      setSectionGap(page, 0);
+      setScale(page, MIN_SCALE);
+
+      if (!contentFits(page)) {
+        page.dataset.overflowAtMinFont = "true";
+        return MIN_SCALE;
+      }
+
+      delete page.dataset.overflowAtMinFont;
+
+      for (let i = 0; i < 22; i++) {
+        const mid = (low + high) / 2;
+        setScale(page, mid);
+
+        if (contentFits(page)) {
+          low = mid;
+        } else {
+          high = mid;
+        }
+      }
+
+      return low;
+    }
+
+    function getVisibleSections(content) {
+      return Array.from(content.children).filter(function (child) {
+        return child.offsetParent !== null;
+      });
+    }
+
+    function getNaturalContentHeight(content) {
+      const sections = getVisibleSections(content);
+
+      if (!sections.length) {
+        return 0;
+      }
+
+      const first = sections[0];
+      const last = sections[sections.length - 1];
+
+      return (last.offsetTop + last.offsetHeight) - first.offsetTop;
+    }
+
+    function distributeSectionGapsToTarget(page, targetHeightPx) {
+      const content = page.querySelector(".page-content");
+      if (!content) return;
+
+      setSectionGap(page, 0);
+
+      const sections = getVisibleSections(content);
+      const gapSlots = Math.max(0, sections.length - 1);
+
+      if (gapSlots === 0) return;
+
+      const naturalContentHeight = getNaturalContentHeight(content);
+      const maxUsableHeight = content.clientHeight;
+      const safeTargetHeight = Math.min(targetHeightPx, maxUsableHeight - GAP_SAFETY_PX);
+      const extraSpaceNeeded = safeTargetHeight - naturalContentHeight;
+
+      if (extraSpaceNeeded <= 0) return;
+
+      const gap = extraSpaceNeeded / gapSlots;
+      setSectionGap(page, gap);
+    }
+
+    function distributeSinglePageMinimumFill() {
+      const page = document.querySelector(".resume-page");
+      if (!page) return;
+
+      const a4PageHeightPx = page.clientHeight;
+      const minimumContentBlockHeight = a4PageHeightPx * SINGLE_PAGE_MIN_FILL_RATIO;
+
+      /*
+        Single-page resume content should not remain compressed near the top.
+        If the natural content block is shorter than 80% of the A4 page height,
+        increase only the section gaps until the block reaches that minimum.
+      */
+      distributeSectionGapsToTarget(page, minimumContentBlockHeight);
+
+      if (!contentFits(page)) {
+        setSectionGap(page, 0);
+      }
+    }
+
+    function fitSinglePageResume() {
+      if (!pages.length) return;
+
+      resetSpacing();
+      pages.forEach(function (page) {
+        setScale(page, MIN_SCALE);
+      });
+
+      const maxScalesPerPage = pages.map(findMaxScaleForPage);
+      const sharedScale = Math.min.apply(null, maxScalesPerPage);
+
+      pages.forEach(function (page) {
+        setScale(page, sharedScale);
+        page.dataset.fontScale = sharedScale.toFixed(4);
+      });
+
+      /*
+        Order matters:
+        1. Fit font size using the shared scale.
+        2. Only after that, add dynamic section spacing.
+      */
+      distributeSinglePageMinimumFill();
+
+      /*
+        Final safety net: dynamic gaps must never be the reason why
+        a strict fixed-height A4 page clips content in print preview.
+      */
+      pages.forEach(function (page) {
+        if (!contentFits(page)) {
+          setSectionGap(page, 0);
+        }
+      });
+    }
+
+    let resizeTimer;
+
+    window.addEventListener("load", function () {
+      requestAnimationFrame(fitSinglePageResume);
+    });
+
+    window.addEventListener("resize", function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        requestAnimationFrame(fitSinglePageResume);
+      }, 100);
+    });
+
+    window.addEventListener("beforeprint", function () {
+      fitSinglePageResume();
+    });
+  })();
+</script>
+</body>
+</html>

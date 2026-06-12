@@ -1,0 +1,192 @@
+{
+  "user": {
+    "id": "auto",
+    "username": "demo.ba.java",
+    "email": "demo.ba.java@example.com",
+    "password_hash": "prototype-not-a-real-password-hash",
+    "default_language_code": "EN",
+    "secondary_language_code": "RU"
+  },
+  "contact_detail": {
+    "full_name": "Alex Candidate",
+    "phone": "+7 777 000 00 00",
+    "resume_email": "alex.candidate@example.com",
+    "location": "Kazakhstan",
+    "professional_title": "Business Analyst with Java Backend Learning Track",
+    "linkedin_url": "https://linkedin.com/in/alex-candidate",
+    "portfolio_url": "https://portfolio.example.com",
+    "telegram": "@alex_candidate",
+    "whatsapp": "+7 777 000 00 00"
+  },
+  "additional_profile_info": {
+    "skills": "Business analysis, BPMN, user stories, acceptance criteria, SQL, Power BI, Java basics, REST API understanding, Git, Docker basics",
+    "languages": "English C1, Russian native",
+    "professional_aspirations": "Develop as a business/system analyst with strong technical understanding and later transition toward backend engineering.",
+    "achievements": "Prepared structured documentation for multiple public-sector digital cases and improved requirement clarity for development teams.",
+    "general_information": "Interested in business analysis, systems thinking, AI-assisted workflows, Java backend and Vue frontend integration.",
+    "default_resume_language_code": "EN",
+    "additional_resume_language_code": "RU",
+    "ready_for_relocation": false,
+    "ready_for_business_trips": true,
+    "date_of_birth": "1993-01-01",
+    "citizenship": "Kazakhstan",
+    "photo_file_path": null,
+    "work_formats": [
+      "FULL_TIME",
+      "HYBRID",
+      "REMOTE"
+    ]
+  },
+  "work_experience": [
+    {
+      "source_id": "work-1",
+      "job_title": "Business Analyst",
+      "company_name": "Robosoft Digital Solutions",
+      "location": "Kazakhstan",
+      "start_date": "2025-05-01",
+      "end_date": null,
+      "is_current": true,
+      "description": "Worked on public-sector digital services, gathered requirements, prepared STP/technical specification artifacts, BPMN diagrams, ERD drafts, user stories, acceptance criteria, and coordinated with developers and stakeholders.",
+      "company_url": "https://example.com/robosoft"
+    },
+    {
+      "source_id": "work-2",
+      "job_title": "Operations Assistant",
+      "company_name": "Kazakhstan Industrial Services",
+      "location": "Kazakhstan",
+      "start_date": "2017-01-01",
+      "end_date": "2024-12-31",
+      "is_current": false,
+      "description": "Supported operational workflows, reports, document coordination, and communication between internal teams and external stakeholders.",
+      "company_url": null
+    },
+    {
+      "source_id": "work-3",
+      "job_title": "English-Russian Translator",
+      "company_name": "Freelance and Corporate Projects",
+      "location": "Remote",
+      "start_date": "2012-01-01",
+      "end_date": "2021-12-31",
+      "is_current": false,
+      "description": "Translated technical, business, and operational documents between English and Russian with focus on clarity, terminology consistency, and stakeholder communication.",
+      "company_url": null
+    }
+  ],
+  "education": [
+    {
+      "source_id": "edu-1",
+      "institution_name_ru": "Казахстанский университет",
+      "institution_name_en": "Kazakhstan University",
+      "degree_ru": "Бакалавр",
+      "degree_en": "Bachelor",
+      "field_of_study_ru": "Информационные системы",
+      "field_of_study_en": "Information Systems",
+      "education_type": "University",
+      "description": {
+        "ru": "Текущая степень с фокусом на разработке ПО, базах данных и информационных системах.",
+        "en": "Current degree focused on software development, databases, and information systems."
+      },
+      "start_date": "2024-09-01",
+      "end_date": "2026-06-30",
+      "location": "Kazakhstan",
+      "gpa_grade": null
+    },
+    {
+      "source_id": "edu-2",
+      "institution_name_ru": "Транспортная академия",
+      "institution_name_en": "Transport Academy",
+      "degree_ru": "Бакалавр",
+      "degree_en": "Bachelor",
+      "field_of_study_ru": "Организация перевозок и управление движением",
+      "field_of_study_en": "Transport Organization and Traffic Management",
+      "education_type": "University",
+      "description": {
+        "ru": "Обучение с фокусом на логистике, операциях и транспортных системах.",
+        "en": "Focused on logistics, operations and transport systems."
+      },
+      "start_date": "2015-09-01",
+      "end_date": "2017-06-30",
+      "location": "Kazakhstan",
+      "gpa_grade": null
+    },
+    {
+      "source_id": "edu-3",
+      "institution_name_ru": "Лингвистический университет",
+      "institution_name_en": "Linguistic University",
+      "degree_ru": "Бакалавр",
+      "degree_en": "Bachelor",
+      "field_of_study_ru": "Английский перевод",
+      "field_of_study_en": "English Translation",
+      "education_type": "University",
+      "description": {
+        "ru": "Англо-русский перевод и межкультурная коммуникация.",
+        "en": "English-Russian translation and intercultural communication."
+      },
+      "start_date": "2009-09-01",
+      "end_date": "2013-06-30",
+      "location": "Kazakhstan",
+      "gpa_grade": null
+    }
+  ],
+  "courses": [
+    {
+      "source_id": "course-1",
+      "name": "Microsoft Business Analyst Professional Certificate",
+      "provider": "Coursera / Microsoft",
+      "start_date": "2026-01-01",
+      "end_date": null,
+      "credential_url": null,
+      "skills_topics": "Business analysis, requirements, Excel, process modeling",
+      "description": "Professional certificate focused on business analysis fundamentals and applied tools."
+    },
+    {
+      "source_id": "course-2",
+      "name": "EPAM Java Backend Program",
+      "provider": "EPAM / TechOrda",
+      "start_date": "2026-01-01",
+      "end_date": null,
+      "credential_url": null,
+      "skills_topics": "Java, backend, JDBC, Spring MVC, testing",
+      "description": "Backend development training aligned with Java stack."
+    },
+    {
+      "source_id": "course-3",
+      "name": "Data for Business Analysts Using Microsoft Excel",
+      "provider": "Coursera",
+      "start_date": "2025-01-01",
+      "end_date": "2025-02-01",
+      "credential_url": null,
+      "skills_topics": "Excel, pivot tables, formulas, data analysis",
+      "description": "Practical Excel analytics course for business analysis tasks."
+    }
+  ],
+  "projects": [
+    {
+      "source_id": "project-1",
+      "project_name": "Resume Generation Capstone",
+      "role": "Product Owner / Analyst / Developer",
+      "start_date": "2026-01-01",
+      "end_date": null,
+      "description": "Designed and prototyped an AI-assisted resume generation system with structured profile data, prompt builder, review flow and PDF export concept.",
+      "project_url": null
+    },
+    {
+      "source_id": "project-2",
+      "project_name": "Public Services Analytics Cases",
+      "role": "Business Analyst",
+      "start_date": "2025-05-01",
+      "end_date": null,
+      "description": "Prepared structured artifacts for multiple public-sector digital cases, including BPMN, ERD, user stories and acceptance criteria.",
+      "project_url": null
+    },
+    {
+      "source_id": "project-3",
+      "project_name": "Board Game Finance Learning Concept",
+      "role": "Concept Author",
+      "start_date": "2025-01-01",
+      "end_date": null,
+      "description": "Explored a gamified educational product concept based on financial simulation and coaching elements.",
+      "project_url": null
+    }
+  ]
+}
