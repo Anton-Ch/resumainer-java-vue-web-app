@@ -1,0 +1,161 @@
+{
+  "generate": {
+    "title": "Generate resume",
+    "steps": {
+      "vacancy": "Vacancy",
+      "settings": "Settings",
+      "review": "Review",
+      "export": "Export"
+    },
+    "disabledTooltip": "Generate a resume first.",
+    "vacancy": {
+        "title": "Vacancy details",
+        "subtitle": "Add the vacancy and company context so the resume can be adapted properly.",
+        "vacancyTitle": "Vacancy title",
+        "vacancyDescription": "Vacancy description",
+        "companyName": "Company name",
+        "companyDescription": "Company description",
+        "additionalComments": "Additional comments",
+        "additionalCommentsPlaceholder": "Any extra context the AI should know about you, your preferences, or the role…",
+        "continue": "Continue to settings",
+        "backToWorkspace": "Back to workspace"
+      },
+    "settings": {
+      "title": "Generation settings",
+      "languageMode": "Resume language",
+      "englishOnly": "English only",
+      "russianOnly": "Russian only",
+      "bilingual": "Bilingual",
+      "adaptationLevel": "Adaptation level",
+      "minimal": "Minimal",
+      "balanced": "Balanced",
+      "maximum": "Maximum",
+      "allLevels": "All levels",
+      "includeCoverLetter": "Generate cover letter",
+      "generate": "Generate resume",
+      "descriptions": {
+        "minimal": "Minimal adaptation to the vacancy requirements.",
+        "balanced": "Balanced adaptation: practical adaptation without overfitting.",
+        "maximum": "Maximum adaptation: strongest tailoring to the vacancy.",
+        "allLevels": "Generate all three levels for review. Only one can be saved as final PDF."
+      }
+    },
+    "loader": {
+      "generationTitle": "Generating your resume...",
+      "pdfTitle": "Saving and preparing PDF...",
+      "text": "This can take from a few seconds to a couple of minutes. Please keep this page open. Do not refresh the page and do not switch to other ResumAIner pages, otherwise progress may be lost."
+    },
+    "review": {
+      "levels": {
+        "minimal": "Minimal",
+        "balanced": "Balanced",
+        "maximum": "Maximum"
+      },
+      "languageCard": {
+        "english": "English version",
+        "russian": "Russian version"
+      },
+      "title": "Review generated resume",
+      "tabs": {
+        "positioning": "Professional Positioning",
+        "work": "Work Experience",
+        "courses": "Courses and Certifications",
+        "projects": "Projects and Volunteering",
+        "skills": "Skills",
+        "personal": "Personal Information"
+      },
+      "fields": {
+        "professionalTitle": "Professional title",
+        "valueLine": "Value line",
+        "professionalSummary": "Professional summary",
+        "professionalAspirations": "Professional aspirations",
+        "coverLetter": "Cover letter",
+        "jobTitle": "Job title",
+        "companyName": "Company",
+        "company": "Company",
+        "description": "Description",
+        "bullet": "Bullet",
+        "courseName": "Course name",
+        "provider": "Provider",
+        "courseFocus": "Course focus",
+        "projectName": "Project name",
+        "role": "Role",
+        "skillGroup": "Skill group",
+        "skill": "Skill",
+        "location": "Location",
+        "spokenLanguages": "Spoken languages",
+        "willingnessToRelocate": "Willingness to relocate",
+        "willingnessForBusinessTrips": "Willingness for business trips",
+        "citizenship": "Citizenship",
+        "dateOfBirth": "Date of birth",
+        "workFormats": "Work formats",
+        "gpaGrade": "GPA / grade"
+      },
+      "previousSection": "To previous section",
+      "nextSection": "To next section",
+      "previousButton": {
+        "toPositioning": "Professional Positioning",
+        "toWork": "Work Experience",
+        "toCourses": "Courses and Certifications",
+        "toProjects": "Projects and Volunteering",
+        "toSkills": "Skills"
+      },
+      "nextButton": {
+        "toWork": "Work Experience",
+        "toCourses": "Courses and Certifications",
+        "toProjects": "Projects and Volunteering",
+        "toSkills": "Skills",
+        "toPersonal": "Personal Information"
+      },
+      "help": {
+        "simpleSave": "Once you finish reviewing and editing, click the button below to create your PDF resume.",
+        "chooseLevelSave": "Once you finish reviewing and editing, choose one adaptation level to save and click the button below to create your PDF resume.",
+        "oneLevelWarning": "Only one of these three adaptation levels can be saved as the final PDF.",
+        "oneLevelWarningBilingual": "Only one of these three adaptation levels can be saved as the final PDF. If you generated both languages, both language versions of the selected level will be saved."
+      },
+      "noContent": "No generated content to review.",
+      "chooseLevelToSave": "Choose adaptation level to save",
+      "saveToPdf": "Save PDF"
+    },
+    "export": {
+      "title": "Resume is ready",
+      "englishResume": "English resume",
+      "russianResume": "Russian resume",
+      "publicLink": "Public PDF link",
+      "safeLinkHint": "You can safely send this link to a recruiter. It opens only the PDF resume document and nothing else.",
+      "singleHelp": "This resume is now available from your workspace. You can download it or copy the public link at any time.",
+      "bilingualHelp": "Both resumes are now available from your workspace. You can download them or copy their public links at any time.",
+      "copyLink": "Copy link",
+      "downloadPdf": "Download PDF",
+      "openPdf": "Open PDF in new tab",
+      "copyCoverLetter": "Copy cover letter",
+      "downloadHtml": "Download HTML",
+      "downloadHtmlHelp": "You can edit the HTML manually after saving if needed.",
+      "backToWorkspace": "Back to workspace",
+      "generateAnother": "Generate another resume",
+      "linkCopied": "Link copied.",
+      "coverLetterCopied": "Cover letter copied."
+    }
+  },
+  "placeholder": {
+    "title": "Placeholder page",
+    "text": "This page is a placeholder for future work.",
+    "back": "Back to Home"
+  },
+  "language": {
+    "en": "EN",
+    "ru": "RU"
+  },
+  "nav": {
+    "home": "Home",
+    "myProfile": "My Profile",
+    "generateResume": "Generate Resume",
+    "logout": "Log out",
+    "mobileMenu": "Menu"
+  },
+  "adaptation": {
+    "minimal": "Minimal",
+    "balanced": "Balanced",
+    "maximum": "Maximum"
+  }
+}

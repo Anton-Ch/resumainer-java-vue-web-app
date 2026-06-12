@@ -31,8 +31,19 @@ Desktop.ini
 !.env.example
 docker/.env
 
-# Node
+# Python (from GitHub Python.gitignore template)
+__pycache__/
+*.py[codz]
+*$py.class
+
+# Node / Vite (from GitHub Node.gitignore template)
 node_modules/
+.vite/
+dist
+*.tsbuildinfo
+
+# Logs
+*.log
 
 # Playwright MCP testing artifacts
 .playwright-mcp/

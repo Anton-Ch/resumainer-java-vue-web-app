@@ -1,0 +1,738 @@
+{
+  "en": {
+    "minimal": {
+      "professionalTitle": "Business Analyst",
+      "valueLine": "Bridges stakeholder needs and delivery teams with structured requirements and practical technical awareness. (minimal)",
+      "professionalSummary": "Business analyst with experience in public-sector digital services, requirements discovery, process modeling, and coordination with developers. Combines analytical documentation skills with growing Java backend understanding.",
+      "professionalAspirations": "I aim to grow as a business/system analyst who can connect product goals, stakeholder expectations, and implementation constraints.",
+      "workExperience": [
+        {
+          "sourceId": "work-1",
+          "jobTitle": "Business Analyst",
+          "companyName": "Robosoft Digital Solutions",
+          "location": "Kazakhstan",
+          "dateRange": "2025-Present",
+          "description": "Prepared requirements and analytical artifacts for public-sector digital services.",
+          "bullets": [
+            "Created BPMN, ERD, user stories and acceptance criteria.",
+            "Coordinated requirement clarification between stakeholders and developers."
+          ]
+        },
+        {
+          "sourceId": "work-2",
+          "jobTitle": "Operations Assistant",
+          "companyName": "Kazakhstan Industrial Services",
+          "location": "Kazakhstan",
+          "dateRange": "2017-2024",
+          "description": "Supported operational reporting and document coordination.",
+          "bullets": [
+            "Maintained clear communication between internal teams.",
+            "Prepared structured operational documentation."
+          ]
+        },
+        {
+          "sourceId": "work-3",
+          "jobTitle": "English-Russian Translator",
+          "companyName": "Freelance and Corporate Projects",
+          "location": "Remote",
+          "dateRange": "2012-2021",
+          "description": "Translated business and technical documentation with strong terminology consistency.",
+          "bullets": [
+            "Adapted complex technical texts for different audiences.",
+            "Maintained bilingual communication clarity."
+          ]
+        }
+      ],
+      "courses": [
+        {
+          "sourceId": "course-1",
+          "courseName": "Microsoft Business Analyst Professional Certificate",
+          "provider": "Coursera / Microsoft",
+          "dateRange": "2026",
+          "courseFocus": "Business analysis, requirements and Excel analytics"
+        },
+        {
+          "sourceId": "course-2",
+          "courseName": "EPAM Java Backend Program",
+          "provider": "EPAM / TechOrda",
+          "dateRange": "2026",
+          "courseFocus": "Java backend, JDBC, Spring MVC and testing"
+        },
+        {
+          "sourceId": "course-3",
+          "courseName": "Data for Business Analysts Using Microsoft Excel",
+          "provider": "Coursera",
+          "dateRange": "2025",
+          "courseFocus": "Formulas, pivot tables and business data analysis"
+        }
+      ],
+      "projects": [
+        {
+          "sourceId": "project-1",
+          "projectName": "Resume Generation Capstone",
+          "role": "Product Owner / Analyst / Developer",
+          "dateRange": "2026",
+          "description": "Designed an AI-assisted resume generation system with structured profile data, prompt builder and review flow.",
+          "bullets": [
+            "Modeled prompt configuration and generation response tables.",
+            "Built frontend and backend prototypes for validation."
+          ]
+        },
+        {
+          "sourceId": "project-2",
+          "projectName": "Public Services Analytics Cases",
+          "role": "Business Analyst",
+          "dateRange": "2025-Present",
+          "description": "Prepared structured analytical artifacts for multiple public-sector digital cases.",
+          "bullets": [
+            "Created BPMN, ERD and user stories.",
+            "Improved traceability of requirements."
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "groupName": "Business analysis",
+          "skills": [
+            "Requirements elicitation",
+            "BPMN",
+            "User stories",
+            "Acceptance criteria"
+          ]
+        },
+        {
+          "groupName": "Technical awareness",
+          "skills": [
+            "SQL",
+            "Power BI",
+            "Java basics",
+            "REST API understanding"
+          ]
+        }
+      ],
+      "coverLetter": "Dear Hiring Team,\n\nI am interested in the Business Analyst position. My experience in requirements discovery, process modeling and stakeholder coordination can help your team deliver clear and implementation-ready solutions.\n\nBest regards,\nAlex Candidate",
+      "personalInfo": {
+        "location": "Kazakhstan",
+        "spokenLanguages": "English C1, Russian native",
+        "willingnessToRelocate": "Open to relocation",
+        "willingnessForBusinessTrips": "Open to business trips",
+        "citizenship": "Kazakhstan",
+        "dateOfBirth": "1993-01-01",
+        "workFormats": "Full-time, Hybrid, Remote",
+        "gpaGrade": null
+      }
+    },
+    "balanced": {
+      "professionalTitle": "Business Analyst",
+      "valueLine": "Bridges stakeholder needs and delivery teams with structured requirements and practical technical awareness. (balanced)",
+      "professionalSummary": "Business analyst with experience in public-sector digital services, requirements discovery, process modeling, and coordination with developers. Combines analytical documentation skills with growing Java backend understanding.",
+      "professionalAspirations": "I aim to grow as a business/system analyst who can connect product goals, stakeholder expectations, and implementation constraints.",
+      "workExperience": [
+        {
+          "sourceId": "work-1",
+          "jobTitle": "Business Analyst",
+          "companyName": "Robosoft Digital Solutions",
+          "location": "Kazakhstan",
+          "dateRange": "2025-Present",
+          "description": "Prepared requirements and analytical artifacts for public-sector digital services.",
+          "bullets": [
+            "Created BPMN, ERD, user stories and acceptance criteria.",
+            "Coordinated requirement clarification between stakeholders and developers."
+          ]
+        },
+        {
+          "sourceId": "work-2",
+          "jobTitle": "Operations Assistant",
+          "companyName": "Kazakhstan Industrial Services",
+          "location": "Kazakhstan",
+          "dateRange": "2017-2024",
+          "description": "Supported operational reporting and document coordination.",
+          "bullets": [
+            "Maintained clear communication between internal teams.",
+            "Prepared structured operational documentation."
+          ]
+        },
+        {
+          "sourceId": "work-3",
+          "jobTitle": "English-Russian Translator",
+          "companyName": "Freelance and Corporate Projects",
+          "location": "Remote",
+          "dateRange": "2012-2021",
+          "description": "Translated business and technical documentation with strong terminology consistency.",
+          "bullets": [
+            "Adapted complex technical texts for different audiences.",
+            "Maintained bilingual communication clarity."
+          ]
+        }
+      ],
+      "courses": [
+        {
+          "sourceId": "course-1",
+          "courseName": "Microsoft Business Analyst Professional Certificate",
+          "provider": "Coursera / Microsoft",
+          "dateRange": "2026",
+          "courseFocus": "Business analysis, requirements and Excel analytics"
+        },
+        {
+          "sourceId": "course-2",
+          "courseName": "EPAM Java Backend Program",
+          "provider": "EPAM / TechOrda",
+          "dateRange": "2026",
+          "courseFocus": "Java backend, JDBC, Spring MVC and testing"
+        },
+        {
+          "sourceId": "course-3",
+          "courseName": "Data for Business Analysts Using Microsoft Excel",
+          "provider": "Coursera",
+          "dateRange": "2025",
+          "courseFocus": "Formulas, pivot tables and business data analysis"
+        }
+      ],
+      "projects": [
+        {
+          "sourceId": "project-1",
+          "projectName": "Resume Generation Capstone",
+          "role": "Product Owner / Analyst / Developer",
+          "dateRange": "2026",
+          "description": "Designed an AI-assisted resume generation system with structured profile data, prompt builder and review flow.",
+          "bullets": [
+            "Modeled prompt configuration and generation response tables.",
+            "Built frontend and backend prototypes for validation."
+          ]
+        },
+        {
+          "sourceId": "project-2",
+          "projectName": "Public Services Analytics Cases",
+          "role": "Business Analyst",
+          "dateRange": "2025-Present",
+          "description": "Prepared structured analytical artifacts for multiple public-sector digital cases.",
+          "bullets": [
+            "Created BPMN, ERD and user stories.",
+            "Improved traceability of requirements."
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "groupName": "Business analysis",
+          "skills": [
+            "Requirements elicitation",
+            "BPMN",
+            "User stories",
+            "Acceptance criteria"
+          ]
+        },
+        {
+          "groupName": "Technical awareness",
+          "skills": [
+            "SQL",
+            "Power BI",
+            "Java basics",
+            "REST API understanding"
+          ]
+        }
+      ],
+      "coverLetter": "Dear Hiring Team,\n\nI am interested in the Business Analyst position. My experience in requirements discovery, process modeling and stakeholder coordination can help your team deliver clear and implementation-ready solutions.\n\nBest regards,\nAlex Candidate",
+      "personalInfo": {
+        "location": "Kazakhstan",
+        "spokenLanguages": "English C1, Russian native",
+        "willingnessToRelocate": "Open to relocation",
+        "willingnessForBusinessTrips": "Open to business trips",
+        "citizenship": "Kazakhstan",
+        "dateOfBirth": "1993-01-01",
+        "workFormats": "Full-time, Hybrid, Remote",
+        "gpaGrade": null
+      }
+    },
+    "maximum": {
+      "professionalTitle": "Business Analyst",
+      "valueLine": "Bridges stakeholder needs and delivery teams with structured requirements and practical technical awareness. (maximum)",
+      "professionalSummary": "Business analyst with experience in public-sector digital services, requirements discovery, process modeling, and coordination with developers. Combines analytical documentation skills with growing Java backend understanding.",
+      "professionalAspirations": "I aim to grow as a business/system analyst who can connect product goals, stakeholder expectations, and implementation constraints.",
+      "workExperience": [
+        {
+          "sourceId": "work-1",
+          "jobTitle": "Business Analyst",
+          "companyName": "Robosoft Digital Solutions",
+          "location": "Kazakhstan",
+          "dateRange": "2025-Present",
+          "description": "Prepared requirements and analytical artifacts for public-sector digital services.",
+          "bullets": [
+            "Created BPMN, ERD, user stories and acceptance criteria.",
+            "Coordinated requirement clarification between stakeholders and developers."
+          ]
+        },
+        {
+          "sourceId": "work-2",
+          "jobTitle": "Operations Assistant",
+          "companyName": "Kazakhstan Industrial Services",
+          "location": "Kazakhstan",
+          "dateRange": "2017-2024",
+          "description": "Supported operational reporting and document coordination.",
+          "bullets": [
+            "Maintained clear communication between internal teams.",
+            "Prepared structured operational documentation."
+          ]
+        },
+        {
+          "sourceId": "work-3",
+          "jobTitle": "English-Russian Translator",
+          "companyName": "Freelance and Corporate Projects",
+          "location": "Remote",
+          "dateRange": "2012-2021",
+          "description": "Translated business and technical documentation with strong terminology consistency.",
+          "bullets": [
+            "Adapted complex technical texts for different audiences.",
+            "Maintained bilingual communication clarity."
+          ]
+        }
+      ],
+      "courses": [
+        {
+          "sourceId": "course-1",
+          "courseName": "Microsoft Business Analyst Professional Certificate",
+          "provider": "Coursera / Microsoft",
+          "dateRange": "2026",
+          "courseFocus": "Business analysis, requirements and Excel analytics"
+        },
+        {
+          "sourceId": "course-2",
+          "courseName": "EPAM Java Backend Program",
+          "provider": "EPAM / TechOrda",
+          "dateRange": "2026",
+          "courseFocus": "Java backend, JDBC, Spring MVC and testing"
+        },
+        {
+          "sourceId": "course-3",
+          "courseName": "Data for Business Analysts Using Microsoft Excel",
+          "provider": "Coursera",
+          "dateRange": "2025",
+          "courseFocus": "Formulas, pivot tables and business data analysis"
+        }
+      ],
+      "projects": [
+        {
+          "sourceId": "project-1",
+          "projectName": "Resume Generation Capstone",
+          "role": "Product Owner / Analyst / Developer",
+          "dateRange": "2026",
+          "description": "Designed an AI-assisted resume generation system with structured profile data, prompt builder and review flow.",
+          "bullets": [
+            "Modeled prompt configuration and generation response tables.",
+            "Built frontend and backend prototypes for validation."
+          ]
+        },
+        {
+          "sourceId": "project-2",
+          "projectName": "Public Services Analytics Cases",
+          "role": "Business Analyst",
+          "dateRange": "2025-Present",
+          "description": "Prepared structured analytical artifacts for multiple public-sector digital cases.",
+          "bullets": [
+            "Created BPMN, ERD and user stories.",
+            "Improved traceability of requirements."
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "groupName": "Business analysis",
+          "skills": [
+            "Requirements elicitation",
+            "BPMN",
+            "User stories",
+            "Acceptance criteria"
+          ]
+        },
+        {
+          "groupName": "Technical awareness",
+          "skills": [
+            "SQL",
+            "Power BI",
+            "Java basics",
+            "REST API understanding"
+          ]
+        }
+      ],
+      "coverLetter": "Dear Hiring Team,\n\nI am interested in the Business Analyst position. My experience in requirements discovery, process modeling and stakeholder coordination can help your team deliver clear and implementation-ready solutions.\n\nBest regards,\nAlex Candidate",
+      "personalInfo": {
+        "location": "Kazakhstan",
+        "spokenLanguages": "English C1, Russian native",
+        "willingnessToRelocate": "Open to relocation",
+        "willingnessForBusinessTrips": "Open to business trips",
+        "citizenship": "Kazakhstan",
+        "dateOfBirth": "1993-01-01",
+        "workFormats": "Full-time, Hybrid, Remote",
+        "gpaGrade": null
+      }
+    }
+  },
+  "ru": {
+    "minimal": {
+      "professionalTitle": "Бизнес-аналитик",
+      "valueLine": "Связывает потребности стейкхолдеров и команды разработки через структурированные требования и техническое понимание. (минимальная)",
+      "professionalSummary": "Бизнес-аналитик с опытом в цифровых сервисах, выявлении требований, моделировании процессов и координации с разработчиками. Сочетает аналитическую документацию с растущим пониманием Java backend.",
+      "professionalAspirations": "Я хочу развиваться как бизнес/системный аналитик, который умеет связывать цели продукта, ожидания стейкхолдеров и технические ограничения реализации.",
+      "workExperience": [
+        {
+          "sourceId": "work-1",
+          "jobTitle": "Бизнес-аналитик",
+          "companyName": "Robosoft Digital Solutions",
+          "location": "Казахстан",
+          "dateRange": "2025-н.в.",
+          "description": "Готовил требования и аналитические артефакты для цифровых государственных сервисов.",
+          "bullets": [
+            "Создавал BPMN, ERD, user stories и acceptance criteria.",
+            "Координировал уточнение требований между стейкхолдерами и разработчиками."
+          ]
+        },
+        {
+          "sourceId": "work-2",
+          "jobTitle": "Ассистент операционного отдела",
+          "companyName": "Kazakhstan Industrial Services",
+          "location": "Казахстан",
+          "dateRange": "2017-2024",
+          "description": "Поддерживал операционную отчётность и координацию документов.",
+          "bullets": [
+            "Поддерживал коммуникацию между внутренними командами.",
+            "Готовил структурированную операционную документацию."
+          ]
+        },
+        {
+          "sourceId": "work-3",
+          "jobTitle": "Англо-русский переводчик",
+          "companyName": "Freelance and Corporate Projects",
+          "location": "Удалённо",
+          "dateRange": "2012-2021",
+          "description": "Переводил бизнес- и техническую документацию с сохранением терминологической точности.",
+          "bullets": [
+            "Адаптировал сложные технические тексты под разные аудитории.",
+            "Поддерживал ясность двуязычной коммуникации."
+          ]
+        }
+      ],
+      "courses": [
+        {
+          "sourceId": "course-1",
+          "courseName": "Microsoft Business Analyst Professional Certificate",
+          "provider": "Coursera / Microsoft",
+          "dateRange": "2026",
+          "courseFocus": "Бизнес-анализ, требования и Excel-аналитика"
+        },
+        {
+          "sourceId": "course-2",
+          "courseName": "EPAM Java Backend Program",
+          "provider": "EPAM / TechOrda",
+          "dateRange": "2026",
+          "courseFocus": "Java backend, JDBC, Spring MVC и тестирование"
+        },
+        {
+          "sourceId": "course-3",
+          "courseName": "Data for Business Analysts Using Microsoft Excel",
+          "provider": "Coursera",
+          "dateRange": "2025",
+          "courseFocus": "Формулы, сводные таблицы и анализ бизнес-данных"
+        }
+      ],
+      "projects": [
+        {
+          "sourceId": "project-1",
+          "projectName": "Resume Generation Capstone",
+          "role": "Product Owner / Analyst / Developer",
+          "dateRange": "2026",
+          "description": "Спроектировал систему генерации резюме с ИИ, структурированным профилем, prompt builder и review flow.",
+          "bullets": [
+            "Смоделировал prompt config и generation response tables.",
+            "Подготовил frontend и backend прототипы для проверки."
+          ]
+        },
+        {
+          "sourceId": "project-2",
+          "projectName": "Public Services Analytics Cases",
+          "role": "Бизнес-аналитик",
+          "dateRange": "2025-н.в.",
+          "description": "Готовил структурированные аналитические артефакты для государственных цифровых кейсов.",
+          "bullets": [
+            "Создавал BPMN, ERD и user stories.",
+            "Улучшал трассируемость требований."
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "groupName": "Бизнес-анализ",
+          "skills": [
+            "Выявление требований",
+            "BPMN",
+            "User stories",
+            "Acceptance criteria"
+          ]
+        },
+        {
+          "groupName": "Техническое понимание",
+          "skills": [
+            "SQL",
+            "Power BI",
+            "Основы Java",
+            "Понимание REST API"
+          ]
+        }
+      ],
+      "coverLetter": "Уважаемая команда найма!\n\nМеня заинтересовала позиция бизнес-аналитика. Мой опыт в выявлении требований, моделировании процессов и координации со стейкхолдерами поможет вашей команде готовить понятные и реализуемые решения.\n\nС уважением,\nAlex Candidate",
+      "personalInfo": {
+        "location": "Казахстан",
+        "spokenLanguages": "Английский C1, русский родной",
+        "willingnessToRelocate": "Готов к переезду",
+        "willingnessForBusinessTrips": "Готов к командировкам",
+        "citizenship": "Казахстан",
+        "dateOfBirth": "1993-01-01",
+        "workFormats": "Полная занятость, Гибрид, Удалённо",
+        "gpaGrade": null
+      }
+    },
+    "balanced": {
+      "professionalTitle": "Бизнес-аналитик",
+      "valueLine": "Связывает потребности стейкхолдеров и команды разработки через структурированные требования и техническое понимание. (сбалансированная)",
+      "professionalSummary": "Бизнес-аналитик с опытом в цифровых сервисах, выявлении требований, моделировании процессов и координации с разработчиками. Сочетает аналитическую документацию с растущим пониманием Java backend.",
+      "professionalAspirations": "Я хочу развиваться как бизнес/системный аналитик, который умеет связывать цели продукта, ожидания стейкхолдеров и технические ограничения реализации.",
+      "workExperience": [
+        {
+          "sourceId": "work-1",
+          "jobTitle": "Бизнес-аналитик",
+          "companyName": "Robosoft Digital Solutions",
+          "location": "Казахстан",
+          "dateRange": "2025-н.в.",
+          "description": "Готовил требования и аналитические артефакты для цифровых государственных сервисов.",
+          "bullets": [
+            "Создавал BPMN, ERD, user stories и acceptance criteria.",
+            "Координировал уточнение требований между стейкхолдерами и разработчиками."
+          ]
+        },
+        {
+          "sourceId": "work-2",
+          "jobTitle": "Ассистент операционного отдела",
+          "companyName": "Kazakhstan Industrial Services",
+          "location": "Казахстан",
+          "dateRange": "2017-2024",
+          "description": "Поддерживал операционную отчётность и координацию документов.",
+          "bullets": [
+            "Поддерживал коммуникацию между внутренними командами.",
+            "Готовил структурированную операционную документацию."
+          ]
+        },
+        {
+          "sourceId": "work-3",
+          "jobTitle": "Англо-русский переводчик",
+          "companyName": "Freelance and Corporate Projects",
+          "location": "Удалённо",
+          "dateRange": "2012-2021",
+          "description": "Переводил бизнес- и техническую документацию с сохранением терминологической точности.",
+          "bullets": [
+            "Адаптировал сложные технические тексты под разные аудитории.",
+            "Поддерживал ясность двуязычной коммуникации."
+          ]
+        }
+      ],
+      "courses": [
+        {
+          "sourceId": "course-1",
+          "courseName": "Microsoft Business Analyst Professional Certificate",
+          "provider": "Coursera / Microsoft",
+          "dateRange": "2026",
+          "courseFocus": "Бизнес-анализ, требования и Excel-аналитика"
+        },
+        {
+          "sourceId": "course-2",
+          "courseName": "EPAM Java Backend Program",
+          "provider": "EPAM / TechOrda",
+          "dateRange": "2026",
+          "courseFocus": "Java backend, JDBC, Spring MVC и тестирование"
+        },
+        {
+          "sourceId": "course-3",
+          "courseName": "Data for Business Analysts Using Microsoft Excel",
+          "provider": "Coursera",
+          "dateRange": "2025",
+          "courseFocus": "Формулы, сводные таблицы и анализ бизнес-данных"
+        }
+      ],
+      "projects": [
+        {
+          "sourceId": "project-1",
+          "projectName": "Resume Generation Capstone",
+          "role": "Product Owner / Analyst / Developer",
+          "dateRange": "2026",
+          "description": "Спроектировал систему генерации резюме с ИИ, структурированным профилем, prompt builder и review flow.",
+          "bullets": [
+            "Смоделировал prompt config и generation response tables.",
+            "Подготовил frontend и backend прототипы для проверки."
+          ]
+        },
+        {
+          "sourceId": "project-2",
+          "projectName": "Public Services Analytics Cases",
+          "role": "Бизнес-аналитик",
+          "dateRange": "2025-н.в.",
+          "description": "Готовил структурированные аналитические артефакты для государственных цифровых кейсов.",
+          "bullets": [
+            "Создавал BPMN, ERD и user stories.",
+            "Улучшал трассируемость требований."
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "groupName": "Бизнес-анализ",
+          "skills": [
+            "Выявление требований",
+            "BPMN",
+            "User stories",
+            "Acceptance criteria"
+          ]
+        },
+        {
+          "groupName": "Техническое понимание",
+          "skills": [
+            "SQL",
+            "Power BI",
+            "Основы Java",
+            "Понимание REST API"
+          ]
+        }
+      ],
+      "coverLetter": "Уважаемая команда найма!\n\nМеня заинтересовала позиция бизнес-аналитика. Мой опыт в выявлении требований, моделировании процессов и координации со стейкхолдерами поможет вашей команде готовить понятные и реализуемые решения.\n\nС уважением,\nAlex Candidate",
+      "personalInfo": {
+        "location": "Казахстан",
+        "spokenLanguages": "Английский C1, русский родной",
+        "willingnessToRelocate": "Готов к переезду",
+        "willingnessForBusinessTrips": "Готов к командировкам",
+        "citizenship": "Казахстан",
+        "dateOfBirth": "1993-01-01",
+        "workFormats": "Полная занятость, Гибрид, Удалённо",
+        "gpaGrade": null
+      }
+    },
+    "maximum": {
+      "professionalTitle": "Бизнес-аналитик",
+      "valueLine": "Связывает потребности стейкхолдеров и команды разработки через структурированные требования и техническое понимание. (максимальная)",
+      "professionalSummary": "Бизнес-аналитик с опытом в цифровых сервисах, выявлении требований, моделировании процессов и координации с разработчиками. Сочетает аналитическую документацию с растущим пониманием Java backend.",
+      "professionalAspirations": "Я хочу развиваться как бизнес/системный аналитик, который умеет связывать цели продукта, ожидания стейкхолдеров и технические ограничения реализации.",
+      "workExperience": [
+        {
+          "sourceId": "work-1",
+          "jobTitle": "Бизнес-аналитик",
+          "companyName": "Robosoft Digital Solutions",
+          "location": "Казахстан",
+          "dateRange": "2025-н.в.",
+          "description": "Готовил требования и аналитические артефакты для цифровых государственных сервисов.",
+          "bullets": [
+            "Создавал BPMN, ERD, user stories и acceptance criteria.",
+            "Координировал уточнение требований между стейкхолдерами и разработчиками."
+          ]
+        },
+        {
+          "sourceId": "work-2",
+          "jobTitle": "Ассистент операционного отдела",
+          "companyName": "Kazakhstan Industrial Services",
+          "location": "Казахстан",
+          "dateRange": "2017-2024",
+          "description": "Поддерживал операционную отчётность и координацию документов.",
+          "bullets": [
+            "Поддерживал коммуникацию между внутренними командами.",
+            "Готовил структурированную операционную документацию."
+          ]
+        },
+        {
+          "sourceId": "work-3",
+          "jobTitle": "Англо-русский переводчик",
+          "companyName": "Freelance and Corporate Projects",
+          "location": "Удалённо",
+          "dateRange": "2012-2021",
+          "description": "Переводил бизнес- и техническую документацию с сохранением терминологической точности.",
+          "bullets": [
+            "Адаптировал сложные технические тексты под разные аудитории.",
+            "Поддерживал ясность двуязычной коммуникации."
+          ]
+        }
+      ],
+      "courses": [
+        {
+          "sourceId": "course-1",
+          "courseName": "Microsoft Business Analyst Professional Certificate",
+          "provider": "Coursera / Microsoft",
+          "dateRange": "2026",
+          "courseFocus": "Бизнес-анализ, требования и Excel-аналитика"
+        },
+        {
+          "sourceId": "course-2",
+          "courseName": "EPAM Java Backend Program",
+          "provider": "EPAM / TechOrda",
+          "dateRange": "2026",
+          "courseFocus": "Java backend, JDBC, Spring MVC и тестирование"
+        },
+        {
+          "sourceId": "course-3",
+          "courseName": "Data for Business Analysts Using Microsoft Excel",
+          "provider": "Coursera",
+          "dateRange": "2025",
+          "courseFocus": "Формулы, сводные таблицы и анализ бизнес-данных"
+        }
+      ],
+      "projects": [
+        {
+          "sourceId": "project-1",
+          "projectName": "Resume Generation Capstone",
+          "role": "Product Owner / Analyst / Developer",
+          "dateRange": "2026",
+          "description": "Спроектировал систему генерации резюме с ИИ, структурированным профилем, prompt builder и review flow.",
+          "bullets": [
+            "Смоделировал prompt config и generation response tables.",
+            "Подготовил frontend и backend прототипы для проверки."
+          ]
+        },
+        {
+          "sourceId": "project-2",
+          "projectName": "Public Services Analytics Cases",
+          "role": "Бизнес-аналитик",
+          "dateRange": "2025-н.в.",
+          "description": "Готовил структурированные аналитические артефакты для государственных цифровых кейсов.",
+          "bullets": [
+            "Создавал BPMN, ERD и user stories.",
+            "Улучшал трассируемость требований."
+          ]
+        }
+      ],
+      "skills": [
+        {
+          "groupName": "Бизнес-анализ",
+          "skills": [
+            "Выявление требований",
+            "BPMN",
+            "User stories",
+            "Acceptance criteria"
+          ]
+        },
+        {
+          "groupName": "Техническое понимание",
+          "skills": [
+            "SQL",
+            "Power BI",
+            "Основы Java",
+            "Понимание REST API"
+          ]
+        }
+      ],
+      "coverLetter": "Уважаемая команда найма!\n\nМеня заинтересовала позиция бизнес-аналитика. Мой опыт в выявлении требований, моделировании процессов и координации со стейкхолдерами поможет вашей команде готовить понятные и реализуемые решения.\n\nС уважением,\nAlex Candidate",
+      "personalInfo": {
+        "location": "Казахстан",
+        "spokenLanguages": "Английский C1, русский родной",
+        "willingnessToRelocate": "Готов к переезду",
+        "willingnessForBusinessTrips": "Готов к командировкам",
+        "citizenship": "Казахстан",
+        "dateOfBirth": "1993-01-01",
+        "workFormats": "Полная занятость, Гибрид, Удалённо",
+        "gpaGrade": null
+      }
+    }
+  }
+}
