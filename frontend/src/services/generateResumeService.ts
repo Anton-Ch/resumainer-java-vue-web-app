@@ -1,0 +1,116 @@
+/**
+ * Generate Resume API service.
+ * All state-changing requests use shared httpClient for CSRF handling.
+ * PDF/public-link methods are placeholders in feat/007
+ * (real PDF generation deferred to feat/008-pdf-conversion).
+ */
+import { apiRequest } from './httpClient'
+
+const BASE = '/api/generate'
+const RESUME_BASE = '/api/resumes'
+
+export interface AiModelDto {
+  id: string
+  provider: string
+  displayName: string
+  modelCode: string
+}
+
+export interface GenerationRequestCreateDto {
+  vacancyTitle: string
+  vacancyDescription: string
+  companyName?: string
+  companyDescription?: string
+  additionalComments?: string
+  includeCoverLetter: boolean
+  languageMode: string
+  adaptationSelection: string
+  aiModelId: string
+}
+
+export interface SavedResumeExportDto {
+  savedResumeId: number
+  languageCode: string
+  adaptationLevel: string
+  htmlDownloadUrl: string
+  pdfDownloadUrl: string
+  pdfOpenUrl: string
+  publicUrlLink: string
+  pdfAvailable: boolean
+  pdfMessage: string
+  coverLetter?: string
+}
+
+export interface ExportResultDto {
+  resumes: SavedResumeExportDto[]
+}
+
+/** Fetch available AI models for the current user. */
+export async function getAiModels(): Promise<AiModelDto[]> {
+  return apiRequest<AiModelDto[]>(`${BASE}/ai-models`, { method: 'GET' })
+}
+
+/** Create a new generation request. Returns request ID. */
+export async function createRequest(dto: GenerationRequestCreateDto): Promise<string> {
+  return apiRequest<string>(`${BASE}/requests`, {
+    method: 'POST',
+    body: JSON.stringify(dto)
+  })
+}
+
+/** Execute generation (synchronous). */
+export async function generate(requestId: string): Promise<{ status: string }> {
+  return apiRequest<{ status: string }>(`${BASE}/requests/${requestId}/generate`, {
+    method: 'POST'
+  })
+}
+
+/** Get grouped review data. */
+export async function getReview(requestId: string): Promise<any> {
+  return apiRequest<any>(`${BASE}/requests/${requestId}/review`, { method: 'GET' })
+}
+
+/** Save review edits. */
+export async function saveReview(requestId: string, payload: any): Promise<{ success: boolean }> {
+  return apiRequest<{ success: boolean }>(`${BASE}/requests/${requestId}/review`, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  })
+}
+
+/** Finalize a generation request with selected adaptation level. */
+export async function finalize(requestId: string, selectedAdaptationLevel: string): Promise<ExportResultDto> {
+  return apiRequest<ExportResultDto>(`${BASE}/requests/${requestId}/finalize`, {
+    method: 'POST',
+    body: JSON.stringify({ selectedAdaptationLevel })
+  })
+}
+
+/** Get export data. */
+export async function getExport(requestId: string): Promise<ExportResultDto> {
+  return apiRequest<ExportResultDto>(`${BASE}/requests/${requestId}/export`, { method: 'GET' })
+}
+
+/** Download HTML (authenticated, owner-scoped). */
+export async function downloadHtml(savedResumeId: number): Promise<Blob> {
+  const response = await fetch(`${RESUME_BASE}/${savedResumeId}/html`, {
+    credentials: 'include'
+  })
+  if (!response.ok) throw new Error('Failed to download HTML')
+  return response.blob()
+}
+
+/**
+ * Placeholder: PDF download deferred to feat/008.
+ * In feat/007, this returns a placeholder response.
+ */
+export async function downloadPdf(_savedResumeId: number): Promise<void> {
+  console.warn('PDF download is not available in feat/007. Deferred to feat/008-pdf-conversion.')
+}
+
+/**
+ * Placeholder: open PDF deferred to feat/008.
+ */
+export async function openPdf(_publicUrlLink: string): Promise<void> {
+  console.warn('PDF open is not available in feat/007. Deferred to feat/008-pdf-conversion.')
+}
