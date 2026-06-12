@@ -7,11 +7,24 @@ package com.resumainer.service.ai;
  */
 public class AiClientException extends RuntimeException {
 
+    private final String errorCode;
+
     public AiClientException(String message) {
         super(message);
+        this.errorCode = "GENERATION_FAILED";
+    }
+
+    public AiClientException(String message, String errorCode) {
+        super(message);
+        this.errorCode = errorCode;
     }
 
     public AiClientException(String message, Throwable cause) {
         super(message, cause);
+        this.errorCode = "GENERATION_FAILED";
+    }
+
+    public String getErrorCode() {
+        return errorCode;
     }
 }
