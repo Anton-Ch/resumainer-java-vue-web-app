@@ -63,7 +63,7 @@ public class AuthController {
 
             // Auto-login: create session
             UserSession userSession = new UserSession(
-                    user.getId(), user.getEmail(), "USER");
+                    user.getId(), user.getEmail(), "USER", user.isPrivileged());
             session.setAttribute("user", userSession);
 
             log.info("User registered and logged in: {}", user.getEmail());
@@ -115,7 +115,7 @@ public class AuthController {
             String redirectUrl = role.equals("ADMIN") ? "/admin" : "/home";
 
             UserSession userSession = new UserSession(
-                    user.getId(), user.getEmail(), role);
+                    user.getId(), user.getEmail(), role, user.isPrivileged());
             newSession.setAttribute("user", userSession);
 
             // Remember me: extend session TTL to 7 days

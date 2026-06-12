@@ -11,14 +11,20 @@ public class UserSession {
     private UUID userId;
     private String email;
     private String role;
+    private boolean privileged;
 
     public UserSession() {
     }
 
     public UserSession(UUID userId, String email, String role) {
+        this(userId, email, role, false);
+    }
+
+    public UserSession(UUID userId, String email, String role, boolean privileged) {
         this.userId = userId;
         this.email = email;
         this.role = role;
+        this.privileged = privileged;
     }
 
     public UUID getUserId() {
@@ -43,6 +49,14 @@ public class UserSession {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public boolean isPrivileged() {
+        return privileged;
+    }
+
+    public void setPrivileged(boolean privileged) {
+        this.privileged = privileged;
     }
 
     @Override
