@@ -157,15 +157,20 @@ class ProfileControllerTest {
     void createEducation_returns201() throws Exception {
         Education edu = new Education();
         edu.setId(1L);
-        edu.setInstitutionName("MIT");
+        edu.setInstitutionNameEn("MIT");
+        edu.setInstitutionNameRu("MIT RU");
+        edu.setDegreeEn("BS");
+        edu.setDegreeRu("BS RU");
+        edu.setFieldOfStudyEn("CS");
+        edu.setFieldOfStudyRu("CS RU");
         when(profileService.createEducation(eq(userId), any())).thenReturn(edu);
 
         mockMvc.perform(post("/api/profile/education")
                         .sessionAttr("user", userSession)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"institutionName\":\"MIT\",\"degree\":\"BS\",\"fieldOfStudy\":\"CS\",\"startDate\":\"2019-01-01\"}"))
+                        .content("{\"institutionNameRu\":\"MIT RU\",\"institutionNameEn\":\"MIT\",\"degreeRu\":\"BS RU\",\"degreeEn\":\"BS\",\"fieldOfStudyRu\":\"CS RU\",\"fieldOfStudyEn\":\"CS\",\"startDate\":\"2019-01-01\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.institutionName").value("MIT"));
+                .andExpect(jsonPath("$.institutionNameEn").value("MIT"));
     }
 
     // ========================================================================

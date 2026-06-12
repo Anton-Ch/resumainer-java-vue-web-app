@@ -691,3 +691,21 @@ Example mapping pattern:
 - Gained: Sort works correctly regardless of naming convention differences
 - Made harder: DAO needs an additional mapping structure and switch/case or Map
 - Reconsider: If frontend and DB column names are identical, mapping is not needed
+
+---
+
+### 2026-06-12 - HTML-first generation pipeline with deferred PDF conversion
+
+**Status**
+Active
+
+**Why this is durable**
+HTML-to-PDF conversion requires independent library evaluation (Flying Saucer, OpenPDF, wkhtmltopdf), A4 layout validation, Cyrillic font support, and selectable text verification. Bundling it with AI generation would make the feature too large and risky. This split pattern may apply to other composite features.
+
+**Decision**
+HTML is the canonical generated artifact in feat/007-resume-generation. PDF conversion is deferred to a separate feature (feat/008-pdf-conversion). PdfGenerationService is defined only as an interface boundary with a NoOp stub. The Export DTO carries pdfAvailable=false and placeholder URLs until the PDF feature is implemented.
+
+**Tradeoffs**
+- Gained: Feature can be completed, tested, and merged without waiting for PDF library selection. HTML artifact is usable independently.
+- Made harder: Frontend must handle placeholder PDF/public-link actions. Backend must maintain nullable pdf_file_path and clear "not available" responses.
+- Reconsider: If a future PDF library proves trivial to integrate, the two features could be merged.
