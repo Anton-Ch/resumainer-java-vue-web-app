@@ -173,6 +173,7 @@ public class ProfileService {
 
     public Education createEducation(UUID userId, Education education) {
         log.debug("createEducation: userId={}", userId);
+        validateBilingualEducation(education, "create");
         education.setUserId(userId);
         Education created = educationDao.create(education);
         log.info("Education created: id={}, userId={}", created.getId(), userId);
@@ -181,10 +182,36 @@ public class ProfileService {
 
     public void updateEducation(UUID userId, long id, Education education) {
         log.debug("updateEducation: id={}, userId={}", id, userId);
+        validateBilingualEducation(education, "update");
         education.setId(id);
         education.setUserId(userId);
         educationDao.update(education);
         log.info("Education updated: id={}, userId={}", id, userId);
+    }
+
+    /**
+     * Validates that both RU and EN bilingual education fields are provided.
+     * Education is profile-owned factual data — all 6 bilingual fields required.
+     */
+    private void validateBilingualEducation(Education e, String operation) {
+        if (!isNotBlank(e.getInstitutionNameRu())) {
+            throw new IllegalArgumentException("institutionNameRu is required for education " + operation);
+        }
+        if (!isNotBlank(e.getInstitutionNameEn())) {
+            throw new IllegalArgumentException("institutionNameEn is required for education " + operation);
+        }
+        if (!isNotBlank(e.getDegreeRu())) {
+            throw new IllegalArgumentException("degreeRu is required for education " + operation);
+        }
+        if (!isNotBlank(e.getDegreeEn())) {
+            throw new IllegalArgumentException("degreeEn is required for education " + operation);
+        }
+        if (!isNotBlank(e.getFieldOfStudyRu())) {
+            throw new IllegalArgumentException("fieldOfStudyRu is required for education " + operation);
+        }
+        if (!isNotBlank(e.getFieldOfStudyEn())) {
+            throw new IllegalArgumentException("fieldOfStudyEn is required for education " + operation);
+        }
     }
 
     public boolean deleteEducation(UUID userId, long id) {
