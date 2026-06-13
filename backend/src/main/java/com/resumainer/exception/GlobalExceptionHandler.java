@@ -4,8 +4,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.NoHandlerFoundException;
@@ -31,9 +34,37 @@ public class GlobalExceptionHandler {
         log.warn("Not found: {} {}", request.getMethod(), request.getRequestURI());
         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         if (isApiRequest(request)) {
-            return Map.of("error", "Resource not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Resource not found"));
         }
         return "error/404";
+    }
+
+    /**
+     * Handles ServiceException (auth errors, not found, business rule violations).
+     * Returns 401 for auth errors, 400 for other service errors.
+     */
+    @ExceptionHandler(ServiceException.class)
+    public ResponseEntity<Map<String, Object>> handleServiceException(ServiceException ex, HttpServletRequest request) {
+        log.warn("Service error at {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
+        boolean isAuth = "auth.unauthorized".equals(ex.getErrorCode());
+        HttpStatus status = isAuth ? HttpStatus.UNAUTHORIZED : HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status).body(Map.of(
+                "errorCode", ex.getErrorCode(),
+                "message", ex.getMessage()
+        ));
+    }
+
+    /**
+     * Handles bad request errors (invalid UUID path variable, missing path variable).
+     * Always returns JSON for API requests.
+     */
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class, MissingPathVariableException.class})
+    public ResponseEntity<Map<String, Object>> handleBadRequest(Exception ex, HttpServletRequest request) {
+        log.warn("Bad request at {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
+        return ResponseEntity.badRequest().body(Map.of(
+                "errorCode", "INVALID_REQUEST",
+                "message", "Invalid request parameter."
+        ));
     }
 
     /**
@@ -44,7 +75,10 @@ public class GlobalExceptionHandler {
         log.error("Unhandled server error at {} {}", request.getMethod(), request.getRequestURI(), ex);
         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         if (isApiRequest(request)) {
-            return Map.of("error", "Internal server error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "errorCode", "INTERNAL_ERROR",
+                    "message", "Unexpected server error."
+            ));
         }
         return "error/500";
     }

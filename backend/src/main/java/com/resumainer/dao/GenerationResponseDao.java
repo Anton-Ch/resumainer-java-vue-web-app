@@ -191,6 +191,134 @@ public class GenerationResponseDao {
         return findChildList(responseId, SELECT_SKILLS_BY_RESPONSE, this::mapSkillRow);
     }
 
+    // --- Safe update methods (used by ResumeReviewService) ---
+
+    /** Column allowlist for resume_generation_response */
+    private static final java.util.Map<String, String> RESPONSE_COLUMN_MAP = java.util.Map.of(
+            "professionalTitle", "professional_title",
+            "valueLine", "value_line",
+            "professionalSummary", "professional_summary",
+            "professionalAspirations", "professional_aspirations",
+            "coverLetter", "cover_letter"
+    );
+
+    /** Column allowlist for generation_response_experience */
+    private static final java.util.Map<String, String> EXPERIENCE_COLUMN_MAP = java.util.Map.of(
+            "jobTitle", "job_title",
+            "companyName", "company_name",
+            "description", "description"
+    );
+
+    /** Column allowlist for generation_response_course */
+    private static final java.util.Map<String, String> COURSE_COLUMN_MAP = java.util.Map.of(
+            "courseName", "name",
+            "provider", "provider",
+            "courseFocus", "course_focus"
+    );
+
+    /** Column allowlist for generation_response_project */
+    private static final java.util.Map<String, String> PROJECT_COLUMN_MAP = java.util.Map.of(
+            "projectName", "project_name",
+            "role", "role",
+            "description", "description"
+    );
+
+    /** Update a top-level response field. fieldName must be in RESPONSE_COLUMN_MAP. */
+    public void updateResponseField(UUID id, String fieldName, String value) {
+        String dbColumn = RESPONSE_COLUMN_MAP.get(fieldName);
+        if (dbColumn == null) {
+            throw new IllegalArgumentException("Field '" + fieldName + "' is not allowed for update.");
+        }
+        String sql = "UPDATE resume_generation_response SET " + dbColumn + " = ?, updated_at = NOW() WHERE id = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, value);
+            stmt.setObject(2, id);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error updating response field {} for id: {}", fieldName, id, e);
+            throw new RuntimeException("Failed to update " + fieldName, e);
+        }
+    }
+
+    /** Update a work experience field. fieldName must be in EXPERIENCE_COLUMN_MAP. */
+    public void updateExperienceField(UUID id, String fieldName, String value) {
+        String dbColumn = EXPERIENCE_COLUMN_MAP.get(fieldName);
+        if (dbColumn == null) {
+            throw new IllegalArgumentException("Field '" + fieldName + "' is not allowed for update.");
+        }
+        String sql = "UPDATE generation_response_experience SET " + dbColumn + " = ?, updated_at = NOW() WHERE id = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, value);
+            stmt.setObject(2, id);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error updating experience field {} for id: {}", fieldName, id, e);
+            throw new RuntimeException("Failed to update " + fieldName, e);
+        }
+    }
+
+    /** Update a course field. fieldName must be in COURSE_COLUMN_MAP. */
+    public void updateCourseField(UUID id, String fieldName, String value) {
+        String dbColumn = COURSE_COLUMN_MAP.get(fieldName);
+        if (dbColumn == null) {
+            throw new IllegalArgumentException("Field '" + fieldName + "' is not allowed for update.");
+        }
+        String sql = "UPDATE generation_response_course SET " + dbColumn + " = ?, updated_at = NOW() WHERE id = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, value);
+            stmt.setObject(2, id);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error updating course field {} for id: {}", fieldName, id, e);
+            throw new RuntimeException("Failed to update " + fieldName, e);
+        }
+    }
+
+    /** Update a project field. fieldName must be in PROJECT_COLUMN_MAP. */
+    public void updateProjectField(UUID id, String fieldName, String value) {
+        String dbColumn = PROJECT_COLUMN_MAP.get(fieldName);
+        if (dbColumn == null) {
+            throw new IllegalArgumentException("Field '" + fieldName + "' is not allowed for update.");
+        }
+        String sql = "UPDATE generation_response_project SET " + dbColumn + " = ?, updated_at = NOW() WHERE id = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, value);
+            stmt.setObject(2, id);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error updating project field {} for id: {}", fieldName, id, e);
+            throw new RuntimeException("Failed to update " + fieldName, e);
+        }
+    }
+
+    /** Update skill group name. Replaces the skill_group value for all skills with this group+responseId. */
+    public void updateSkillGroupName(UUID responseId, String oldGroupName, String newGroupName) {
+        String sql = "UPDATE generation_response_skill SET skill_group = ?, updated_at = NOW() WHERE response_id = ? AND skill_group = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, newGroupName);
+            stmt.setObject(2, responseId);
+            stmt.setString(3, oldGroupName);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error updating skill group name for response: {}", responseId, e);
+            throw new RuntimeException("Failed to update skill group name", e);
+        }
+    }
+
+    /** Delete all skills for a response */
+    public void deleteSkillsByResponseId(UUID responseId, Connection conn) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "DELETE FROM generation_response_skill WHERE response_id = ?")) {
+            stmt.setObject(1, responseId);
+            stmt.executeUpdate();
+        }
+    }
+
     // --- Response bundle loading (T040) ---
 
     /**

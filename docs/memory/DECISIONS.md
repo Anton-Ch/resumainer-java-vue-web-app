@@ -709,3 +709,91 @@ HTML is the canonical generated artifact in feat/007-resume-generation. PDF conv
 - Gained: Feature can be completed, tested, and merged without waiting for PDF library selection. HTML artifact is usable independently.
 - Made harder: Frontend must handle placeholder PDF/public-link actions. Backend must maintain nullable pdf_file_path and clear "not available" responses.
 - Reconsider: If a future PDF library proves trivial to integrate, the two features could be merged.
+
+---
+
+### 2026-06-12 - Vue composable state must be module-level singleton, not per-component-instance
+
+**Status**
+Active
+
+**Why this is durable**
+Multi-page wizards that share state across routes must use module-level state in composables. Otherwise each route page creates a fresh state instance on mount, losing all data from previous steps.
+
+**Decision**
+When a Vue composable is used across multiple pages in a wizard flow (e.g., Vacancy -> Settings -> Review -> Export), the reactive state MUST be defined at the module level (outside the exported function), not inside the function body. Otherwise each page that calls useGenerateResumeFlow() gets an independent state ref, causing shared data (like requestId) to reset to defaults on navigation.
+
+Wrong pattern:
+```ts
+export function useGenerateResumeFlow() {
+  const state = ref({ requestId: null })
+  return { state }
+}
+```
+
+Correct pattern:
+```ts
+const state = ref({ requestId: null })
+export function useGenerateResumeFlow() {
+  return { state }
+}
+```
+
+**Tradeoffs**
+- Gained: Shared state across wizard pages works correctly. requestId and settings persist when navigating between steps.
+- Made harder: Page refresh loses wizard state (acceptable for MVP). Can be mitigated with sessionStorage later.
+- Reconsider: If the app needs SSR or multiple independent wizards simultaneously, this pattern needs revisiting.
+
+---
+
+### 2026-06-13 - Backend-generated opaque updateKey for review/save pattern
+
+**Status**
+Active
+
+**Why this is durable**
+Every feature that involves multi-section review/editing (generated resume, profile, admin forms) needs a safe way for frontend to send back edited field values. The naive approach (frontend constructs field paths) leads to format mismatches, SQL injection risks, and tight coupling to backend column names.
+
+**Decision**
+When the backend exposes editable fields in a review DTO, every field variant MUST include an opaque `updateKey` string. The frontend MUST NOT construct update keys manually — it must reuse the `updateKey` returned by the review endpoint.
+
+Format: `sectionKey:recordId:fieldName:adaptationCode`
+- sectionKey: section identifier (e.g., professional_positioning, work_experience)
+- recordId: UUID of the owning record (response or child row)
+- fieldName: frontend-friendly field name (mapped to DB column by backend allowlist)
+- adaptationCode: MINIMAL, BALANCED, MAXIMUM (or omitted for non-adaptive fields)
+
+Backend parsing: split by `:`, validate against section-aware allowlist (`ALLOWED_REVIEW_FIELDS_BY_SECTION`), map fieldName to DB column via per-section column map (never raw SQL concatenation). Example: `professional_positioning:<responseId>:professionalTitle:BALANCED` → `UPDATE resume_generation_response SET professional_title = ? WHERE id = ?`.
+
+**Tradeoffs**
+- Gained: Frontend never constructs save keys, never knows DB column names. Backend controls key format and field allowlist. Field renames don't require frontend changes. SQL injection through field names eliminated.
+- Made harder: updateKey is opaque — frontend cannot reason about which section a field belongs to without parsing. But that's intentional.
+- Reconsider: If the number of sections grows beyond 10-15, consider using a more structured format (JSON path, dot-notation) instead of colon-delimited. For current needs, colon format is simpler.
+
+---
+
+### 2026-06-13 - Frontend adapter pattern for hierarchical backend DTO to flat view model
+
+**Status**
+Active
+
+**Why this is durable**
+When the backend returns a hierarchical DTO (language → section → record → fieldVariants) but the frontend UI expects a flat view model (GeneratedVariant[] per language×adaptation), the transformation should live in a dedicated frontend adapter module (`utils/generateReviewAdapter.ts`), not in the component or service layer. This isolates the mapping logic, makes it testable independently of Vue rendering, and allows the backend and frontend view models to evolve independently.
+
+**Decision**
+Place all DTO-to-view-model transformation and reverse-mapping (view-model-to-update-payload) in a single adapter module under `frontend/src/utils/`. The adapter exports two functions:
+1. `adaptGenerationReviewDto(dto)` — backend → frontend view model
+2. `buildReviewUpdatePayload(model)` — frontend view model → backend save payload
+
+Rules:
+- The adapter is the ONLY place that knows both the backend DTO shape and the frontend view model shape.
+- Components receive only the view model, never raw backend DTO.
+- Services send only the save payload, never raw component state.
+- The adapter must preserve opaque updateKey values across both directions.
+
+Partially inspired by the adapter pattern from the prototype's mock service (`generateMockService.ts`), but reimplemented for real backend DTOs without mock data.
+
+**Tradeoffs**
+- Gained: Backend can change DTO structure without touching Vue components. Components remain focused on rendering, not data transformation. Mapping logic is testable via unit tests on the adapter module.
+- Made harder: Two data shape definitions (backend DTO types + view model types) must be maintained. Adapter needs updates when either side changes.
+- Reconsider: If the backend and frontend view models converge in the future, the adapter can be simplified or removed. For now, they serve different purposes (backend: normalized, database-oriented; frontend: UI-oriented, flat).

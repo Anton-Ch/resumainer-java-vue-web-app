@@ -1,6 +1,7 @@
 package com.resumainer.controller;
 
 import com.resumainer.dao.AiModelDao;
+import com.resumainer.exception.GlobalExceptionHandler;
 import com.resumainer.service.GenerationRequestService;
 import com.resumainer.service.ResumeFinalizeService;
 import com.resumainer.service.ResumeGenerationService;
@@ -48,7 +49,9 @@ class GenerateResumeControllerTest {
 
     @BeforeEach
     void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
     }
 
     @Test
@@ -64,6 +67,7 @@ class GenerateResumeControllerTest {
     @Test
     void getAiModels_withoutAuth_returns401() throws Exception {
         mockMvc.perform(get("/api/generate/ai-models"))
-                .andExpect(status().isFound()); // redirect to auth
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("auth.unauthorized"));
     }
 }

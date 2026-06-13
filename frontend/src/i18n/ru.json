@@ -128,6 +128,7 @@
     "success": "Резюме удалено."
   },
   "generate": {
+    "title": "Создать резюме",
     "steps": {
       "vacancy": "Вакансия",
       "settings": "Настройки",
@@ -142,25 +143,109 @@
       "companyName": "Название компании",
       "companyDescription": "Описание компании",
       "additionalComments": "Дополнительные комментарии",
-      "continue": "Продолжить"
+      "continue": "Продолжить",
+      "backToWorkspace": "Вернуться на главную",
+      "vacancyBlockTitle": "Детали вакансии",
+      "vacancyBlockDescription": "Укажи данные о целевой роли, чтобы AI мог адаптировать резюме.",
+      "companyBlockTitle": "Данные компании",
+      "companyBlockDescription": "Расскажи AI о целевой компании для лучшего соответствия.",
+      "vacancyTitlePlaceholder": "Например: Senior Java Developer",
+      "vacancyDescriptionPlaceholder": "Вставьте полное описание вакансии, чтобы AI проанализировал требования.",
+      "companyNamePlaceholder": "Например: Acme Corp",
+      "companyDescriptionPlaceholder": "Опишите компанию, её отрасль или любой релевантный контекст.",
+      "additionalCommentsPlaceholder": "Любые дополнительные инструкции или фокус-области для AI."
     },
     "settings": {
       "title": "Настройки генерации",
       "description": "Выбери язык, уровень адаптации, AI-модель и опцию cover letter",
       "languageMode": "Язык резюме",
+      "adaptationLevel": "Уровень адаптации",
       "adaptationSelection": "Уровень адаптации",
       "aiModel": "AI-модель",
+      "aiModelPlaceholder": "Выбери AI-модель",
       "noModels": "Нет доступных AI-моделей",
       "includeCoverLetter": "Добавить cover letter",
-      "generate": "Сгенерировать"
+      "generate": "Сгенерировать",
+      "englishOnly": "Только английский",
+      "russianOnly": "Только русский",
+      "bilingual": "Двуязычное",
+      "minimal": "Минимальная",
+      "balanced": "Сбалансированная",
+      "maximum": "Максимальная",
+      "all": "Все уровни"
     },
     "review": {
       "title": "Проверка сгенерированного резюме",
-      "loading": "Генерируем резюме...",
+      "loading": "Загружаем данные проверки...",
+      "noContent": "Сгенерированный контент пока недоступен.",
       "noData": "Сгенерированные данные пока недоступны.",
       "selectLevel": "Выбери финальный уровень адаптации",
       "finalize": "Финализировать",
-      "save": "Сохранить изменения"
+      "save": "Сохранить изменения",
+      "goToSettings": "Перейти к настройкам",
+      "saveToPdf": "Сохранить резюме",
+      "chooseLevelToSave": "Выбери уровень адаптации для сохранения",
+      "tabs": {
+        "positioning": "Позиционирование",
+        "work": "Опыт работы",
+        "courses": "Курсы и сертификаты",
+        "projects": "Проекты",
+        "skills": "Навыки",
+        "personal": "Личная информация"
+      },
+      "fields": {
+        "professionalTitle": "Профессиональный заголовок",
+        "valueLine": "Ключевая фраза",
+        "professionalSummary": "Профессиональное резюме",
+        "professionalAspirations": "Профессиональные стремления",
+        "coverLetter": "Сопроводительное письмо",
+        "jobTitle": "Должность",
+        "companyName": "Компания",
+        "description": "Описание",
+        "courseName": "Название курса",
+        "provider": "Провайдер",
+        "courseFocus": "Фокус курса",
+        "projectName": "Название проекта",
+        "role": "Роль",
+        "skillGroup": "Группа навыков",
+        "skill": "Навык",
+        "location": "Локация",
+        "spokenLanguages": "Языки",
+        "willingnessToRelocate": "Готовность к переезду",
+        "willingnessForBusinessTrips": "Готовность к командировкам",
+        "citizenship": "Гражданство",
+        "dateOfBirth": "Дата рождения",
+        "workFormats": "Форматы работы"
+      },
+      "levels": {
+        "minimal": "Минимальная",
+        "balanced": "Сбалансированная",
+        "maximum": "Максимальная"
+      },
+      "languageCard": {
+        "english": "Версия на английском",
+        "russian": "Версия на русском"
+      },
+      "help": {
+        "chooseLevelSave": "Выбери один уровень адаптации для сохранения. Выбранный уровень применится ко всем языкам.",
+        "simpleSave": "Проверь сгенерированный контент и сохрани резюме.",
+        "oneLevelWarning": "Просматривается один уровень адаптации. Сохранится только этот уровень.",
+        "oneLevelWarningBilingual": "Просматривается один уровень адаптации для двух языков. Сохранится только этот уровень для обоих языков."
+      },
+      "nextButton": {
+        "toWork": "Опыт работы",
+        "toCourses": "Курсы",
+        "toProjects": "Проекты",
+        "toSkills": "Навыки",
+        "toPersonal": "Личное"
+      },
+      "previousButton": {
+        "toPositioning": "Позиционирование",
+        "toWork": "Опыт работы",
+        "toCourses": "Курсы",
+        "toProjects": "Проекты",
+        "toSkills": "Навыки"
+      }
     },
     "export": {
       "title": "Экспорт результата",
@@ -171,14 +256,28 @@
       "downloadPdf": "Скачать PDF",
       "openPdf": "Открыть PDF",
       "copyCoverLetter": "Скопировать cover letter",
+      "copyLink": "Копировать ссылку",
+      "publicLink": "Публичная ссылка",
+      "englishResume": "Резюме на английском",
+      "russianResume": "Резюме на русском",
+      "safeLinkHint": "Эту ссылку можно безопасно отправлять рекрутерам.",
+      "downloadHtmlHelp": "При необходимости ты сможешь вручную подредактировать HTML после скачивания.",
       "pdfComingSoon": "PDF-генерация появится в следующем обновлении.",
-      "copied": "Скопировано"
+      "copied": "Скопировано",
+      "generateAnother": "Создать ещё одно резюме",
+      "noData": "Резюме ещё не созданы.",
+      "goToReview": "Перейти к проверке"
     },
     "error": {
       "title": "Генерация не удалась",
       "description": "Произошёл сбой при обращении к AI-модели. Попробуй ещё раз или измени настройки.",
       "tryAgain": "Попробовать снова",
       "changeSettings": "Изменить настройки"
+    },
+    "loader": {
+      "generationTitle": "Создаём резюме",
+      "text": "Это может занять немного времени. Не закрывай страницу.",
+      "pdfTitle": "Сохраняем резюме"
     },
     "disabledTooltip": "Сначала создай резюме.",
     "loadingTitle": "Создаём резюме...",

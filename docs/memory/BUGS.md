@@ -703,3 +703,76 @@ GenerationResponseDao.java compiled with 3 errors on Date.valueOf() calls when u
 
 **Where to look next**
 All DAO files that use both SQL and utility types.
+
+---
+
+### 2026-06-12 - OpenRouter JSON response parsing must use Jackson ObjectMapper, not manual string operations
+
+**Status**
+Active
+
+**Symptoms**
+AI generation returns "Generation failed" despite a valid 200 response from OpenRouter. Backend log shows: "Failed to parse AI response: Unexpected character ('\' (code 92)): was expecting double-quote to start field name". The response contains escaped characters, nested quotes, or multi-line content that breaks manual parsing.
+
+**Root Cause**
+OpenRouterClient.extractContent() used indexOf/substring to extract choices[0].message.content from the JSON response. This approach fails when the AI response content contains escaped quotes, backslashes, or line breaks, because indexOf finds the wrong quote position. Additionally, the method did not detect provider-error JSON objects returned within 200 responses.
+
+**Future mistake prevented**
+When parsing external API JSON responses (especially AI providers where content contains escape characters), always use a proper JSON parser (Jackson ObjectMapper.readTree / JsonNode.path) instead of indexOf/substring. Manual JSON parsing of AI responses will inevitably break on escaped characters, nested JSON, or multi-line content.
+
+**Evidence**
+OpenRouterClient.extractContent() failed on a real OpenRouter response containing a backslash character. Replacing manual indexOf/substring parsing with Jackson ObjectMapper.readTree + JsonNode.path() resolved the issue. 8 unit tests verify the fix across normal responses, escaped quotes, missing choices, empty choices, provider errors, and invalid JSON.
+
+**Prevention / Detection**
+- Always use Jackson for JSON response parsing in API clients.
+- Never use indexOf, substring, regex, or manual string parsing for JSON.
+- Test with responses containing escaped quotes, backslashes, line breaks, and provider error objects.
+- Check for error objects even in 200 responses.
+
+**Where to look next**
+backend/src/main/java/com/resumainer/service/ai/OpenRouterClient.java
+
+---
+
+### 2026-06-13 - Standalone MockMvc without setControllerAdvice causes ServiceException to become 500
+
+**Status**
+Active
+
+**Symptoms**
+A standalone MockMvc controller test (setup via `MockMvcBuilders.standaloneSetup(controller)`) sends a request without authentication. The controller's `getUserId()` method throws `ServiceException("auth.unauthorized", "Not authenticated")`. The test expects HTTP 401 (UNAUTHORIZED) but receives HTTP 500 (INTERNAL_SERVER_ERROR).
+
+**Root cause**
+Standalone MockMvc does not auto-configure `@ControllerAdvice` beans. The `ServiceException` thrown by the controller falls through to the generic `Exception` handler in `GlobalExceptionHandler` — but since the handler is not registered, the exception propagates as an unhandled error (500).
+
+The `AuthInterceptor` normally prevents unauthenticated requests from reaching the controller, but standalone MockMvc does not include interceptors either.
+
+**Fix**
+Add `GlobalExceptionHandler` as controller advice in the MockMvc builder:
+
+```java
+mockMvc = MockMvcBuilders.standaloneSetup(controller)
+    .setControllerAdvice(new GlobalExceptionHandler())
+    .build();
+```
+
+Also ensure `GlobalExceptionHandler` has an explicit handler for `ServiceException` (not just the generic `Exception` catch-all):
+
+```java
+@ExceptionHandler(ServiceException.class)
+public ResponseEntity<Map<String, Object>> handleServiceException(ServiceException ex, HttpServletRequest request) {
+    boolean isAuth = "auth.unauthorized".equals(ex.getErrorCode());
+    HttpStatus status = isAuth ? HttpStatus.UNAUTHORIZED : HttpStatus.BAD_REQUEST;
+    return ResponseEntity.status(status).body(Map.of(
+        "errorCode", ex.getErrorCode(),
+        "message", ex.getMessage()
+    ));
+}
+```
+
+**Prevention**
+Any standalone MockMvc test for a controller that can throw `ServiceException` MUST:
+1. Add `.setControllerAdvice(new GlobalExceptionHandler())` to the builder.
+2. Test the expected HTTP status code for unauthenticated access, not a redirect.
+
+Related to B10 (MockMvc standalone session handling) but distinct — this is about exception handling, not session persistence.

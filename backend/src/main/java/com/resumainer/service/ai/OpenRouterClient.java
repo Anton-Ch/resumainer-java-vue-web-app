@@ -1,5 +1,9 @@
 package com.resumainer.service.ai;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.resumainer.model.AiModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +24,7 @@ public class OpenRouterClient implements AiClient {
     private static final Logger log = LoggerFactory.getLogger(OpenRouterClient.class);
 
     private static final Duration TIMEOUT = Duration.ofSeconds(120);
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final AiModel model;
     private final HttpClient httpClient;
@@ -49,12 +54,17 @@ public class OpenRouterClient implements AiClient {
             log.debug("Calling OpenRouter model: {}", model.getModelCode());
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
+            String responseBody = response.body();
+
+            // Try to detect provider error JSON even on non-200
             if (response.statusCode() != 200) {
-                log.warn("OpenRouter returned HTTP {}: {}", response.statusCode(), response.body());
-                throw new AiClientException("AI provider returned an error. Please try again or choose a different model.");
+                String errorMessage = extractErrorMessage(responseBody);
+                log.warn("OpenRouter returned HTTP {}: error={}", response.statusCode(), errorMessage);
+                throw new AiClientException(
+                        "AI provider returned an error. Please try again or choose a different model.",
+                        "AI_PROVIDER_ERROR");
             }
 
-            String responseBody = response.body();
             return extractContent(responseBody);
 
         } catch (AiClientException e) {
@@ -71,41 +81,101 @@ public class OpenRouterClient implements AiClient {
         }
     }
 
+    /**
+     * Builds the OpenRouter request body using Jackson ObjectNode/ArrayNode.
+     */
     private String buildRequestBody(String systemPrompt, String requestPrompt) {
-        return "{\"model\":\"" + escapeJson(model.getModelCode()) + "\","
-                + "\"temperature\":0.2,"
-                + "\"messages\":["
-                + "{\"role\":\"system\",\"content\":\"" + escapeJson(systemPrompt) + "\"},"
-                + "{\"role\":\"user\",\"content\":\"" + escapeJson(requestPrompt) + "\"}"
-                + "]}";
+        ObjectNode root = MAPPER.createObjectNode();
+        root.put("model", model.getModelCode());
+        root.put("temperature", 0.2);
+
+        ArrayNode messages = root.putArray("messages");
+
+        ObjectNode system = messages.addObject();
+        system.put("role", "system");
+        system.put("content", systemPrompt);
+
+        ObjectNode user = messages.addObject();
+        user.put("role", "user");
+        user.put("content", requestPrompt);
+
+        return root.toString();
     }
 
-    private String extractContent(String responseBody) {
-        // Simple JSON parse: extract choices[0].message.content
-        // Uses basic string operations to avoid Jackson dependency for this one call
+    /**
+     * Extracts error message from OpenRouter error response JSON.
+     */
+    private String extractErrorMessage(String responseBody) {
         try {
-            // Find "content" field in the first choice
-            int choicesIdx = responseBody.indexOf("\"choices\"");
-            if (choicesIdx < 0) throw new AiClientException("Unexpected AI response format.");
+            JsonNode root = MAPPER.readTree(responseBody);
+            JsonNode error = root.path("error");
+            if (!error.isMissingNode() && !error.isNull()) {
+                return error.path("message").asText("Unknown provider error");
+            }
+        } catch (Exception ignored) {
+            // Unable to parse error JSON — use default message
+        }
+        return "Unknown provider error";
+    }
 
-            int messageIdx = responseBody.indexOf("\"message\"", choicesIdx);
-            int contentIdx = responseBody.indexOf("\"content\"", messageIdx);
-            int colonIdx = responseBody.indexOf(':', contentIdx);
-            int startIdx = responseBody.indexOf('"', colonIdx + 1) + 1;
-            int endIdx = responseBody.indexOf('"', startIdx);
+    /**
+     * Extracts choices[0].message.content from a successful OpenRouter response.
+     * Uses Jackson only — no manual string parsing.
+     */
+    private String extractContent(String responseBody) {
+        try {
+            JsonNode root = MAPPER.readTree(responseBody);
 
-            String content = responseBody.substring(startIdx, endIdx);
-            // Unescape JSON string
-            content = content.replace("\\n", "\n").replace("\\\"", "\"").replace("\\\\", "\\");
-            return content;
+            // Check for provider error in success response
+            JsonNode error = root.path("error");
+            if (!error.isMissingNode() && !error.isNull()) {
+                String errorMessage = error.path("message").asText("AI provider returned an error.");
+                log.warn("OpenRouter returned error in 200 response: {}", errorMessage);
+                throw new AiClientException(
+                        "AI provider returned an error. Please try again or choose another model.",
+                        "AI_PROVIDER_ERROR");
+            }
 
+            JsonNode choices = root.path("choices");
+            if (!choices.isArray() || choices.isEmpty()) {
+                log.warn("OpenRouter response missing non-empty choices array");
+                throw new AiClientException("Unexpected AI response format.");
+            }
+
+            JsonNode firstChoice = choices.get(0);
+            JsonNode content = firstChoice.path("message").path("content");
+
+            if (content.isMissingNode() || content.isNull()) {
+                log.warn("OpenRouter response missing choices[0].message.content");
+                throw new AiClientException("Unexpected AI response format.");
+            }
+
+            if (!content.isTextual()) {
+                log.warn("OpenRouter response content is not textual: nodeType={}", content.getNodeType());
+                throw new AiClientException("Unexpected AI response format.");
+            }
+
+            String text = content.asText();
+            if (text == null || text.isBlank()) {
+                log.warn("OpenRouter response content is blank");
+                throw new AiClientException("AI response was empty. Please try again.");
+            }
+
+            return text;
+
+        } catch (AiClientException e) {
+            throw e;
         } catch (Exception e) {
-            log.warn("Failed to parse AI response JSON");
+            log.warn("Failed to parse OpenRouter response JSON: {}", e.getMessage());
             throw new AiClientException("Failed to process AI response. Please try again.");
         }
     }
 
-    private String escapeJson(String s) {
-        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
+    /**
+     * Package-private for testing — allows tests to call extractContent without
+     * making it public.
+     */
+    String testExtractContent(String responseBody) {
+        return extractContent(responseBody);
     }
 }

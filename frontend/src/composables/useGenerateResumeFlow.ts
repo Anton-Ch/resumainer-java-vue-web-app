@@ -1,37 +1,36 @@
 /**
  * Generate Resume flow composable.
  * Manages wizard state, API calls, and data flow between steps.
+ *
+ * IMPORTANT: state is module-level singleton, NOT created inside the function.
+ * This ensures all pages (Vacancy, Settings, Review, Export) share the same
+ * requestId rather than each getting a fresh null state.
  */
 import { ref, computed } from 'vue'
 import type {
   GenerateFlowState,
   LanguageMode,
   AdaptationSelection,
-  AdaptationLevel,
-  WizardStep
+  AdaptationLevel
 } from '@/types/generate'
 import * as generateApi from '@/services/generateResumeService'
 import { useRouter } from 'vue-router'
 
+// Module-level singleton state — shared across all components
+const state = ref<GenerateFlowState>({
+  requestId: null,
+  aiModelId: null,
+  selectedAdaptationLevel: null,
+  wizardStep: 'vacancy',
+  languageMode: 'ENGLISH_ONLY',
+  adaptationSelection: 'BALANCED',
+  includeCoverLetter: false,
+  isLoading: false,
+  errorMessage: null
+})
+
 export function useGenerateResumeFlow() {
   const router = useRouter()
-
-  const state = ref<GenerateFlowState>({
-    requestId: null,
-    aiModelId: null,
-    selectedAdaptationLevel: null,
-    wizardStep: 'vacancy',
-    languageMode: 'ENGLISH_ONLY',
-    adaptationSelection: 'BALANCED',
-    includeCoverLetter: false,
-    isLoading: false,
-    errorMessage: null
-  })
-
-  const isStepValid = computed(() => {
-    // Basic validation per step
-    return true // Fine-grained validation done in individual step forms
-  })
 
   /** Create generation request and move to settings */
   async function submitVacancy(data: {
@@ -76,7 +75,12 @@ export function useGenerateResumeFlow() {
     state.value.errorMessage = null
 
     try {
-      const result = await generateApi.generate(state.value.requestId!)
+      if (!state.value.requestId) {
+        state.value.errorMessage = 'Generation request is missing. Please start from the vacancy step.'
+        router.push('/generate/vacancy')
+        return
+      }
+      const result = await generateApi.generate(state.value.requestId)
       if (result.status === 'completed') {
         state.value.wizardStep = 'review'
         router.push('/generate/review')
@@ -110,7 +114,11 @@ export function useGenerateResumeFlow() {
     state.value.errorMessage = null
     state.value.isLoading = true
     try {
-      const result = await generateApi.generate(state.value.requestId!)
+      if (!state.value.requestId) {
+        state.value.errorMessage = 'Generation request is missing.'
+        return
+      }
+      const result = await generateApi.generate(state.value.requestId)
       if (result.status === 'completed') {
         state.value.wizardStep = 'review'
         router.push('/generate/review')
@@ -130,7 +138,6 @@ export function useGenerateResumeFlow() {
 
   return {
     state,
-    isStepValid,
     submitVacancy,
     submitSettings,
     finalizeResume,

@@ -1,0 +1,70 @@
+- generic [ref=e204] [box=0,-100,1511,1169]:
+  - banner [ref=e205] [box=0,0,1511,68]:
+    - generic [ref=e206] [cursor=pointer] [box=32,10,144,48]:
+      - img [ref=e207] [box=32,18,32,32]
+      - generic [ref=e212] [box=74,20,102,28]: ResumAIner
+    - navigation [ref=e213] [box=212,15,1107,38]:
+      - link "Главная" [ref=e214] [cursor=pointer] [box=212,15,94,38]:
+        - /url: /app/home
+      - link "Профиль" [ref=e215] [cursor=pointer] [box=309,15,103,38]:
+        - /url: /app/profile/contact
+      - link "Создать резюме" [ref=e216] [cursor=pointer] [box=416,15,151,38]:
+        - /url: /app/generate/vacancy
+    - generic [ref=e217] [box=1355,18,124,32]:
+      - text: 
+      - group "Language switcher" [ref=e218] [box=1355,18,76,32]:
+        - button "EN" [ref=e219] [cursor=pointer] [box=1356,19,37,30]
+        - button "RU" [pressed] [ref=e220] [cursor=pointer] [box=1393,19,37,30]
+      - button "Выйти" [ref=e221] [cursor=pointer] [box=1443,18,36,32]:
+        - generic [ref=e222] [box=1453,26,16,16]: 
+  - main [ref=e223] [box=116,-32,1280,1101]:
+    - heading "Проверка сгенерированного резюме" [level=1] [ref=e224] [box=148,4,1216,35]
+    - navigation "Step 3 of 4" [ref=e225] [box=356,63,800,30]:
+      - generic [ref=e227] [box=356,63,103,30]:
+        - generic [ref=e229] [box=368,72,13,12]: 
+        - generic [ref=e230] [box=398,68,57,20]: Вакансия
+      - generic [ref=e233] [box=556,63,113,30]:
+        - generic [ref=e235] [box=568,72,13,12]: 
+        - generic [ref=e236] [box=598,68,67,20]: Настройки
+      - generic [ref=e239] [box=756,63,107,30]:
+        - generic [ref=e241] [box=771,68,7,20]: "3"
+        - generic [ref=e242] [box=798,68,61,20]: Проверка
+      - generic [ref=e245] [box=956,63,96,30]:
+        - generic [ref=e247] [box=971,68,8,20]: "4"
+        - generic [ref=e248] [box=998,68,50,20]: Экспорт
+    - generic [ref=e251] [box=148,125,1216,908]:
+      - tablist [ref=e254] [box=148,125,1216,54]:
+        - tab "Позиционирование" [selected] [ref=e255] [cursor=pointer] [box=148,125,168,54]
+        - tab "Опыт работы" [ref=e256] [cursor=pointer] [box=315,125,124,54]
+        - tab "Курсы и сертификаты" [ref=e257] [cursor=pointer] [box=439,125,179,54]
+        - tab "Проекты" [ref=e258] [cursor=pointer] [box=619,125,95,54]
+        - tab "Навыки" [ref=e259] [cursor=pointer] [box=713,125,88,54]
+        - tab "Личная информация" [ref=e260] [cursor=pointer] [box=801,125,175,54]
+      - tabpanel "Позиционирование" [ref=e262] [box=166,193,1180,822]:
+        - generic [ref=e263] [box=166,193,1180,822]:
+          - heading "Позиционирование" [level=3] [ref=e264] [box=166,193,1180,28]
+          - generic [ref=e266] [box=166,241,1180,621]:
+            - generic [ref=e267] [box=183,258,1146,104]:
+              - text: Профессиональный заголовок
+              - textbox [ref=e268] [box=208,300,1096,41]: Профессия
+            - generic [ref=e269] [box=183,374,1146,128]:
+              - text: Ключевая фраза
+              - textbox [ref=e270] [box=208,416,1096,60]: Bachelor’s in Information Systems from KAFU
+            - generic [ref=e271] [box=183,514,1146,170]:
+              - text: Профессиональное резюме
+              - textbox [ref=e272] [box=208,556,1096,102]: Recent graduate in Information Systems from KAFU with a Bachelor’s degree. Seeking an opportunity to apply academic knowledge and develop professional skills.
+            - generic [ref=e273] [box=183,696,1146,149]:
+              - text: Профессиональные стремления
+              - textbox [ref=e274] [box=208,738,1096,81]
+          - generic [ref=e275] [box=166,886,1180,129]:
+            - generic [ref=e276] [box=166,903,1180,47]:
+              - generic [ref=e277] [box=183,918,16,16]: 
+              - generic [ref=e278] [box=209,916,356,21]: Проверь сгенерированный контент и сохрани резюме.
+            - generic [ref=e279] [box=166,966,1180,49]:
+              - button "Сохранить резюме" [ref=e281] [cursor=pointer] [box=647,966,217,49]:
+                - generic [ref=e282] [box=662,981,18,18]: 
+                - generic [ref=e283] [box=688,977,161,27]: Сохранить резюме
+              - button "Опыт работы" [ref=e285] [cursor=pointer] [box=1195,969,151,42]:
+                - generic [ref=e286] [box=1317,982,16,16]: 
+                - generic [ref=e287] [box=1208,978,101,24]: Опыт работы
+      - text:              

@@ -141,7 +141,10 @@ public class GenerateResumeController {
     }
 
     /**
-     * T067: Saves a review edit for a specific field.
+     * T067: Saves review edits.
+     * fieldUpdates maps backend-generated updateKey to new value.
+     * updateKey format: "sectionKey:recordId:fieldName:adaptationCode"
+     * Frontend must not construct update keys manually.
      */
     @PutMapping("/requests/{requestId}/review")
     public ResponseEntity<?> saveReview(HttpSession session,
@@ -151,14 +154,8 @@ public class GenerateResumeController {
         log.debug("PUT /api/generate/requests/{}/review — userId={}", requestId, userId);
 
         if (dto.getFieldUpdates() != null) {
-            dto.getFieldUpdates().forEach((fieldPath, value) -> {
-                // fieldPath format: "responseId.fieldName"
-                String[] parts = fieldPath.split("\\.", 2);
-                if (parts.length == 2) {
-                    UUID responseId = UUID.fromString(parts[0]);
-                    String fieldName = parts[1];
-                    resumeReviewService.saveReview(requestId, userId, responseId, fieldName, value);
-                }
+            dto.getFieldUpdates().forEach((updateKey, value) -> {
+                resumeReviewService.saveReview(requestId, userId, updateKey, value);
             });
         }
         return noCache(ResponseEntity.ok().body(java.util.Map.of("success", true)));
