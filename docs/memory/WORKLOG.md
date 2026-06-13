@@ -33,6 +33,32 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-13 - Feature 007 Review Page — backend DTO fix + frontend adapter + tabbed editing UI
+
+**Status**
+Active
+
+**Milestone**
+Feature 007 (Resume Generation) Review page fixed: replaced stub (radio buttons + Finalize only) with full 6-tab editable review UI matching the prototype.
+
+**What was done**
+- Backend `ResumeReviewService.buildSections()` rewritten to return all 6 sections (professional_positioning, work_experience, courses, projects, skills, personal_information) with real data instead of empty stubs.
+- `AdaptationVariant` DTO gained `responseId` and `updateKey` fields for section-aware save contract.
+- Safe DAO update methods added to `GenerationResponseDao` with column allowlists (no raw SQL concatenation from user input).
+- `saveReview()` rewritten to parse section-aware updateKey format and dispatch to section-specific handlers.
+- Frontend adapter (`utils/generateReviewAdapter.ts`) created: transforms backend hierarchical DTO → flat `GeneratedVariant[]` view model + builds save payload.
+- `ReviewStepForm.vue` rewritten with PrimeVue 4 Tabs API (6 tabs, editable fields, language grid, adaptation level variants, tab navigation).
+- `GenerateReviewPage.vue` updated to use adapter + wired save-before-finalize flow.
+- i18n keys for all review fields added to en/ru.
+- GlobalExceptionHandler gained ServiceException handler; standalone MockMvc test fixed with setControllerAdvice.
+
+**Verification**
+- Frontend build: ✅ SUCCESS
+- Backend tests: 251 run, 2 pre-existing failures (EducationDao bilingual fields, unrelated)
+- Playwright E2E: full Generate → Review(6 tabs) → Edit → Save (PUT 200) → Finalize (500 due to pre-existing BUG-002 file storage issue, not review page)
+
 ### 2026-06-08 - Feature 006 bug fixes — CSRF, connection pool, favicon
 
 **Status**

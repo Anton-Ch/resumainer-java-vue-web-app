@@ -1,64 +1,92 @@
 <template>
-  <div class="generate-layout">
-    <GenerateStepper :current-step="3" :steps="steps" />
-    <div class="generate-card">
-      <h2 class="card-title">{{ $t('generate.review.title') }}</h2>
+  <div class="page">
+    <AppHeader />
+    <main class="main-content">
+      <h1 class="vue-h2" style="margin-bottom: 24px;">{{ $t('generate.review.title') }}</h1>
 
-      <div v-if="loading" class="loading-state">
-        <WhimsicalLoader />
-        <p>{{ $t('generate.review.loading') }}</p>
+      <GenerateStepper :currentStep="2" :disabledSteps="[3]" />
+
+      <div class="step-content" v-if="reviewModel">
+        <ReviewStepForm
+          :en-variants="reviewModel.enVariants"
+          :ru-variants="reviewModel.ruVariants"
+          :is-bilingual="reviewModel.isBilingual"
+          :show-levels="reviewModel.showLevels"
+          v-model:active-tab="activeTab"
+          v-model:selected-level="selectedLevel"
+          @save="handleSaveAndFinalize"
+        />
       </div>
 
-      <div v-else-if="error" class="error-message">
-        <p>{{ error }}</p>
+      <div v-else-if="loadError" class="vue-card" style="text-align:center;padding:48px;">
+        <i class="pi pi-exclamation-triangle" style="font-size:2rem;color:#8091A7;margin-bottom:12px;"></i>
+        <p>{{ $t('generate.review.noData') }}</p>
+        <p style="font-size:0.85rem;color:#999;margin-top:8px;">{{ loadError }}</p>
+        <Button :label="$t('generate.review.goToSettings')" class="p-button-outlined" @click="$router.push('/generate/settings')" style="margin-top:12px;" />
       </div>
 
-      <ReviewStepForm v-else :review-data="reviewData" @finalize="onFinalize" />
-    </div>
+      <div v-else style="text-align:center;padding:48px;">
+        <i class="pi pi-spin pi-spinner" style="font-size:2rem;color:#8091A7;"></i>
+        <p style="margin-top:12px;color:#8091A7;">{{ $t('generate.review.loading') }}</p>
+      </div>
+    </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useGenerateResumeFlow } from '@/composables/useGenerateResumeFlow'
 import * as generateApi from '@/services/generateResumeService'
+import type { GenerationReviewDto, ReviewViewModel, PrototypeLevel } from '@/types/generate'
+import { adaptGenerationReviewDto, buildReviewUpdatePayload, toBackendLevel } from '@/utils/generateReviewAdapter'
+import AppHeader from '@/components/AppHeader.vue'
 import GenerateStepper from '@/components/generate/GenerateStepper.vue'
 import ReviewStepForm from '@/components/generate/ReviewStepForm.vue'
-import WhimsicalLoader from '@/components/generate/WhimsicalLoader.vue'
+import Button from 'primevue/button'
 
-const route = useRoute()
 const router = useRouter()
-const { t } = useI18n()
-const { finalizeResume, state } = useGenerateResumeFlow()
+const { state, finalizeResume } = useGenerateResumeFlow()
 
-const steps = computed(() => [
-  { label: t('generate.steps.vacancy'), route: '/generate/vacancy' },
-  { label: t('generate.steps.settings'), route: '/generate/settings' },
-  { label: t('generate.steps.review'), route: '/generate/review' },
-  { label: t('generate.steps.export'), route: '/generate/export' }
-])
-
-const reviewData = ref<any>(null)
-const loading = ref(true)
-const error = ref<string | null>(null)
+const reviewModel = ref<ReviewViewModel | null>(null)
+const loadError = ref<string | null>(null)
+const activeTab = ref('positioning')
+const selectedLevel = ref<PrototypeLevel>('Balanced')
 
 onMounted(async () => {
-  if (!state.value.requestId) {
+  if (!state.value.requestId || state.value.requestId === 'null') {
     router.push('/generate/vacancy')
     return
   }
   try {
-    reviewData.value = await generateApi.getReview(state.value.requestId)
+    const rawReview: GenerationReviewDto = await generateApi.getReview(state.value.requestId)
+    reviewModel.value = adaptGenerationReviewDto(rawReview)
   } catch (err: any) {
-    error.value = err.message || 'Failed to load review data.'
-  } finally {
-    loading.value = false
+    loadError.value = err.message || 'Failed to load review data.'
   }
 })
 
-async function onFinalize(level: string) {
-  await finalizeResume(level as any)
+async function handleSaveAndFinalize() {
+  if (!state.value.requestId || !reviewModel.value) return
+
+  // Build save payload for edited fields
+  const payload = buildReviewUpdatePayload(reviewModel.value)
+
+  // Save changes if any
+  if (Object.keys(payload.fieldUpdates).length > 0) {
+    await generateApi.saveReview(state.value.requestId, payload)
+  }
+
+  // Finalize with selected adaptation level
+  await finalizeResume(toBackendLevel(selectedLevel.value) as any)
+
+  router.push('/generate/export')
 }
 </script>
+
+<style scoped>
+.page { display: flex; flex-direction: column; min-height: 100vh; background: #F6F7FB; }
+.main-content { flex: 1; max-width: 1280px; width: 100%; margin: 0 auto; padding: 36px 32px; }
+.step-content { margin-top: 32px; }
+@media (max-width: 640px) { .main-content { padding: 20px 16px; } }
+</style>

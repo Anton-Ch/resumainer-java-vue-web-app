@@ -63,9 +63,14 @@ public class GenerationReviewDto {
     }
 
     public static class AdaptationVariant {
+        private UUID responseId;
         private long adaptationLevelId;
         private String adaptationCode;    // MINIMAL, BALANCED, MAXIMUM
         private String value;
+        private String updateKey;         // Opaque key for saveReview: "sectionKey:recordId:fieldName:adaptationCode"
+
+        public UUID getResponseId() { return responseId; }
+        public void setResponseId(UUID responseId) { this.responseId = responseId; }
 
         public long getAdaptationLevelId() { return adaptationLevelId; }
         public void setAdaptationLevelId(long adaptationLevelId) { this.adaptationLevelId = adaptationLevelId; }
@@ -73,5 +78,8 @@ public class GenerationReviewDto {
         public void setAdaptationCode(String adaptationCode) { this.adaptationCode = adaptationCode; }
         public String getValue() { return value; }
         public void setValue(String value) { this.value = value; }
+
+        public String getUpdateKey() { return updateKey; }
+        public void setUpdateKey(String updateKey) { this.updateKey = updateKey; }
     }
 }

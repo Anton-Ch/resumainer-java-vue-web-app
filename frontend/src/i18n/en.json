@@ -128,6 +128,7 @@
     "success": "Resume deleted."
   },
   "generate": {
+    "title": "Generate Resume",
     "steps": {
       "vacancy": "Vacancy",
       "settings": "Settings",
@@ -142,25 +143,109 @@
       "companyName": "Company Name",
       "companyDescription": "Company Description",
       "additionalComments": "Additional Comments",
-      "continue": "Continue"
+      "continue": "Continue",
+      "backToWorkspace": "Back to workspace",
+      "vacancyBlockTitle": "Vacancy details",
+      "vacancyBlockDescription": "Provide details about the target role to help the AI tailor your resume.",
+      "companyBlockTitle": "Company details",
+      "companyBlockDescription": "Let the AI know about the target company for better alignment.",
+      "vacancyTitlePlaceholder": "e.g. Senior Java Developer",
+      "vacancyDescriptionPlaceholder": "Paste the full vacancy description here so the AI can analyze the requirements.",
+      "companyNamePlaceholder": "e.g. Acme Corp",
+      "companyDescriptionPlaceholder": "Describe the company, its industry, or any relevant context.",
+      "additionalCommentsPlaceholder": "Any additional instructions or focus areas for the AI."
     },
     "settings": {
       "title": "Generation Settings",
       "description": "Choose language, adaptation level, AI model, and cover letter option",
       "languageMode": "Language Mode",
+      "adaptationLevel": "Adaptation Level",
       "adaptationSelection": "Adaptation Level",
       "aiModel": "AI Model",
+      "aiModelPlaceholder": "Select AI model",
       "noModels": "No AI models available",
       "includeCoverLetter": "Include cover letter",
-      "generate": "Generate"
+      "generate": "Generate",
+      "englishOnly": "English only",
+      "russianOnly": "Russian only",
+      "bilingual": "Bilingual",
+      "minimal": "Minimal",
+      "balanced": "Balanced",
+      "maximum": "Maximum",
+      "all": "All levels"
     },
     "review": {
       "title": "Review Generated Resume",
-      "loading": "Generating resume...",
+      "loading": "Loading review data...",
+      "noContent": "No generated content is available yet.",
       "noData": "No generated data is available yet.",
       "selectLevel": "Select final adaptation level",
       "finalize": "Finalize",
-      "save": "Save changes"
+      "save": "Save changes",
+      "goToSettings": "Go to settings",
+      "saveToPdf": "Save resume",
+      "chooseLevelToSave": "Choose adaptation level to save",
+      "tabs": {
+        "positioning": "Professional Positioning",
+        "work": "Work Experience",
+        "courses": "Courses & Certifications",
+        "projects": "Projects & Volunteering",
+        "skills": "Skills",
+        "personal": "Personal Information"
+      },
+      "fields": {
+        "professionalTitle": "Professional Title",
+        "valueLine": "Professional Value Line",
+        "professionalSummary": "Professional Summary",
+        "professionalAspirations": "Professional Aspirations",
+        "coverLetter": "Cover Letter",
+        "jobTitle": "Job Title",
+        "companyName": "Company Name",
+        "description": "Description",
+        "courseName": "Course Name",
+        "provider": "Provider",
+        "courseFocus": "Course Focus",
+        "projectName": "Project Name",
+        "role": "Role",
+        "skillGroup": "Skill Group",
+        "skill": "Skill",
+        "location": "Location",
+        "spokenLanguages": "Spoken Languages",
+        "willingnessToRelocate": "Willingness to Relocate",
+        "willingnessForBusinessTrips": "Willingness for Business Trips",
+        "citizenship": "Citizenship",
+        "dateOfBirth": "Date of Birth",
+        "workFormats": "Work Formats"
+      },
+      "levels": {
+        "minimal": "Minimal",
+        "balanced": "Balanced",
+        "maximum": "Maximum"
+      },
+      "languageCard": {
+        "english": "English version",
+        "russian": "Russian version"
+      },
+      "help": {
+        "chooseLevelSave": "Select one adaptation level to save. The selected level will apply to all languages.",
+        "simpleSave": "Review the generated content and save your resume.",
+        "oneLevelWarning": "You are viewing one adaptation level. Saving will preserve only this level.",
+        "oneLevelWarningBilingual": "You are viewing one adaptation level across two languages. Saving will preserve only this level for both languages."
+      },
+      "nextButton": {
+        "toWork": "Work Experience",
+        "toCourses": "Courses",
+        "toProjects": "Projects",
+        "toSkills": "Skills",
+        "toPersonal": "Personal Info"
+      },
+      "previousButton": {
+        "toPositioning": "Positioning",
+        "toWork": "Work",
+        "toCourses": "Courses",
+        "toProjects": "Projects",
+        "toSkills": "Skills"
+      }
     },
     "export": {
       "title": "Export Results",
@@ -171,14 +256,28 @@
       "downloadPdf": "Download PDF",
       "openPdf": "Open PDF",
       "copyCoverLetter": "Copy cover letter",
+      "copyLink": "Copy link",
+      "publicLink": "Public link",
+      "englishResume": "English resume",
+      "russianResume": "Russian resume",
+      "safeLinkHint": "This link is safe to share with recruiters.",
+      "downloadHtmlHelp": "You can edit the saved HTML manually if needed after downloading.",
       "pdfComingSoon": "PDF generation is coming in a future update.",
-      "copied": "Copied"
+      "copied": "Copied",
+      "generateAnother": "Generate another resume",
+      "noData": "No resumes have been generated yet.",
+      "goToReview": "Go to review"
     },
     "error": {
       "title": "Generation failed",
       "description": "Something went wrong while contacting the AI model. Please try again or change settings.",
       "tryAgain": "Try again",
       "changeSettings": "Change settings"
+    },
+    "loader": {
+      "generationTitle": "Generating your resume",
+      "text": "This may take a moment. Please keep this page open.",
+      "pdfTitle": "Saving your resume"
     },
     "disabledTooltip": "Generate a resume first.",
     "loadingTitle": "Generating your resume...",

@@ -3,6 +3,8 @@
  * Mirrors backend DTOs for type-safe API communication.
  */
 
+// ── Wizard / flow state ─────────────────────────────────────────────
+
 /** Language modes */
 export type LanguageMode = 'ENGLISH_ONLY' | 'RUSSIAN_ONLY' | 'BILINGUAL'
 
@@ -11,6 +13,9 @@ export type AdaptationSelection = 'MINIMAL' | 'BALANCED' | 'MAXIMUM' | 'ALL'
 
 /** Single adaptation level for saved responses */
 export type AdaptationLevel = 'MINIMAL' | 'BALANCED' | 'MAXIMUM'
+
+/** Prototype-style adaptation level labels (title case) */
+export type PrototypeLevel = 'Minimal' | 'Balanced' | 'Maximum'
 
 /** Wizard step */
 export type WizardStep = 'vacancy' | 'settings' | 'review' | 'export'
@@ -26,4 +31,118 @@ export interface GenerateFlowState {
   includeCoverLetter: boolean
   isLoading: boolean
   errorMessage: string | null
+}
+
+// ── Backend DTO types (GET /review response) ────────────────────────
+
+export interface GenerationReviewDto {
+  requestId: string
+  languages: LanguageReviewGroup[]
+}
+
+export interface LanguageReviewGroup {
+  languageId: number
+  languageCode: 'EN' | 'RU'
+  sections: SectionReviewGroup[]
+}
+
+export interface SectionReviewGroup {
+  sectionKey: string
+  sectionLabel: string
+  records: RecordReviewGroup[]
+}
+
+export interface RecordReviewGroup {
+  recordId: string
+  orderInResume: number
+  fieldVariants: Record<string, AdaptationVariant[]>
+}
+
+export interface AdaptationVariant {
+  responseId: string
+  adaptationLevelId: number
+  adaptationCode: 'MINIMAL' | 'BALANCED' | 'MAXIMUM'
+  value: string
+  updateKey: string    // Opaque key for saveReview
+}
+
+// ── Backend DTO type (PUT /review request body) ─────────────────────
+
+export interface GenerationReviewUpdateDto {
+  requestId?: string
+  fieldUpdates: Record<string, string>   // updateKey -> new value
+}
+
+// ── Prototype-style view model (after adapter transformation) ───────
+
+export interface GeneratedExperience {
+  sourceId: string
+  jobTitle: string
+  companyName: string
+  location: string
+  dateRange: string
+  description: string
+  // bullets not stored separately in backend; kept in description
+}
+
+export interface GeneratedCourse {
+  sourceId: string
+  courseName: string
+  provider: string
+  dateRange: string
+  courseFocus: string
+}
+
+export interface GeneratedProject {
+  sourceId: string
+  projectName: string
+  role: string
+  dateRange: string
+  description: string
+  // bullets not stored separately in backend; kept in description
+}
+
+export interface GeneratedSkillGroup {
+  groupName: string
+  skills: string[]        // array of skill names
+}
+
+export interface GeneratedPersonalInfo {
+  location: string
+  spokenLanguages: string
+  willingnessToRelocate: string
+  willingnessForBusinessTrips: string
+  citizenship: string
+  dateOfBirth: string
+  workFormats: string
+}
+
+export interface GeneratedVariant {
+  language: 'EN' | 'RU'
+  adaptationLevel: PrototypeLevel
+
+  professionalTitle: string
+  valueLine: string
+  professionalSummary: string
+  professionalAspirations: string
+  coverLetter?: string
+
+  personalInfo?: GeneratedPersonalInfo
+  workExperience: GeneratedExperience[]
+  courses: GeneratedCourse[]
+  projects: GeneratedProject[]
+  skills: GeneratedSkillGroup[]
+
+  /** Metadata for save — maps fieldPath to updateKey */
+  __meta?: Record<string, string>
+}
+
+// ── Adapted review view model ───────────────────────────────────────
+
+export interface ReviewViewModel {
+  requestId: string
+  enVariants: GeneratedVariant[]
+  ruVariants: GeneratedVariant[]
+  isBilingual: boolean
+  showLevels: boolean
 }

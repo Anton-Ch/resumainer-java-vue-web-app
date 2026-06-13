@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ResumAIner Two-Page Resume Template EN</title>
+  <style>
+
+    /* =========================================================
+       PAGE SETUP — strict A4, hard page break between pages
+    ========================================================== */
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    body {
+      margin: 0;
+      background: #f5f6f8;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.32;
+      color: #111111;
+    }
+
+    .resume-page {
+      --font-scale: 1;
+      --section-gap: 0px;
+      --page-two-min-fill-ratio: 0.5;
+
+      width: 210mm;
+      min-height: 297mm;
+      height: 297mm;                 /* Fixed height = strict 1 page */
+      margin: 0 auto;
+      background: #ffffff;
+      box-sizing: border-box;
+      padding: 0;
+      position: relative;
+
+      display: grid;
+
+      font-size: calc(10.5px * var(--font-scale));
+      line-height: 1.32;
+
+      page-break-after: always;     /* Forces PDF to create new page */
+      break-after: page;
+    }
+
+    .page-1 {
+      grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    .page-2 {
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .resume-page:last-child {
+      page-break-after: auto;       /* No break after last page */
+      break-after: auto;
+    }
+
+    .page-content {
+      min-height: 0;
+      overflow: hidden;             /* Hard guard: content can never paint over header/footer rows. */
+      box-sizing: border-box;
+      padding: 11mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;  /* Font size is fitted first; spacing is added after */
+      row-gap: var(--section-gap);
+    }
+
+    .page-1 .page-content {
+      padding-bottom: 4mm;           /* Footer owns the bottom area. */
+    }
+
+    .page-2 .page-content {
+      padding-top: 4mm;              /* Header owns the top area. */
+    }
+
+    /* =========================================================
+       DYNAMIC TYPOGRAPHY — current sizes are minimum values
+       Main text: min 10.5px, max 16px. Other font sizes scale
+       proportionally through --font-scale.
+    ========================================================== */
+
+    .candidate-name {
+      font-size: calc(25px * var(--font-scale));
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1;
+      margin-bottom: 2px;
+      color: #111111;
+    }
+
+    .candidate-title {
+      font-size: calc(14px * var(--font-scale));
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 6px;
+    }
+
+    .contact-line {
+      font-size: calc(9.7px * var(--font-scale));
+      color: #2b2b2b;
+      margin-bottom: 2px;
+    }
+
+    .value-line {
+      margin-top: 7px;
+      padding: 5px 0;
+      border-top: 1px solid #1f2937;
+      border-bottom: 1px solid #1f2937;
+      font-size: calc(9.8px * var(--font-scale));
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+      color: #1f2937;
+    }
+
+    .section-title {
+      font-size: calc(12px * var(--font-scale));
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #444444;
+      color: #111111;
+    }
+
+    .summary-text,
+    .keyword-line,
+    .skill-group,
+    .education-line,
+    .course-line,
+    .info-line {
+      font-size: calc(10px * var(--font-scale));
+    }
+
+    .summary-text {
+      margin-bottom: 4px;
+    }
+
+    /*
+      AI-generated HTML often returns raw <p> tags.
+      Browser default paragraph margins are too large for a strict A4 resume.
+    */
+    .resume-page p {
+      margin: 0 0 4px 0;
+    }
+
+    .job-block p,
+    .project-block p,
+    .additional-job-block p {
+      margin: 2px 0 3px 0;
+    }
+
+    strong {
+      font-weight: 800;
+    }
+
+    /* =========================================================
+       EXPERIENCE / PROJECTS
+    ========================================================== */
+
+    .job-block,
+    .project-block,
+    .additional-job-block {
+      margin-bottom: 9px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .item-heading {
+      font-size: calc(10.4px * var(--font-scale));
+      font-weight: 700;
+      margin-bottom: 2px;
+      color: #111111;
+    }
+
+    .date {
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    ul {
+      margin-top: 2px;
+      margin-bottom: 0;
+      padding-left: 17px;
+    }
+
+    li {
+      margin-bottom: 2px;
+      padding-left: 1px;
+    }
+
+    /* =========================================================
+       SKILLS
+    ========================================================== */
+
+    .skill-group {
+      margin-bottom: 4px;
+    }
+
+    .skill-label {
+      font-weight: 800;
+    }
+
+    /* =========================================================
+       PAGE NAVIGATION NOTES — "see next/previous page"
+    ========================================================== */
+
+    .page-note-bottom {
+      box-sizing: border-box;
+      margin: 0;
+      border-top: 1px solid #cccccc;
+      padding: 4px 11mm 7mm 11mm;
+      text-align: center;
+      font-size: calc(9px * var(--font-scale));
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: #666666;
+    }
+
+    .page-note-top {
+      box-sizing: border-box;
+      margin: 0;
+      border-bottom: 1px solid #cccccc;
+      padding: 7mm 11mm 4px 11mm;
+      text-align: center;
+      font-size: calc(9px * var(--font-scale));
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: #666666;
+    }
+
+    .page-two-name {
+      font-size: calc(16px * var(--font-scale));
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .page-two-title {
+      font-size: calc(11px * var(--font-scale));
+      font-weight: 700;
+      color: #444444;
+      margin-bottom: 6px;
+    }
+
+    /* =========================================================
+       PRINT
+    ========================================================== */
+
+    @media print {
+      body {
+        background: #ffffff;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .resume-page {
+        margin: 0;
+        box-shadow: none;
+      }
+      .page-content {
+        overflow: hidden;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+<main class="resume-page page-1">
+  <div class="page-content">
+
+    <!-- RESUME:HEADER -->
+    <!-- RESUME:PROFESSIONAL_SUMMARY -->
+    <!-- RESUME:WORK_EXPERIENCE_PRIMARY -->
+    <!-- RESUME:SKILLS -->
+    <!-- RESUME:EDUCATION -->
+    <!-- RESUME:COURSES -->
+
+  </div>
+  <div class="page-note-bottom"><!-- RESUME:NOTE_NEXT --></div>
+</main>
+
+<main class="resume-page page-2">
+  <div class="page-note-top"><!-- RESUME:NOTE_PREVIOUS --></div>
+  <div class="page-content">
+
+    <!-- RESUME:PAGE_TWO_HEADER -->
+    <!-- RESUME:PROJECTS -->
+    <!-- RESUME:PROFESSIONAL_ASPIRATIONS -->
+    <!-- RESUME:WORK_EXPERIENCE_ADDITIONAL -->
+    <!-- RESUME:PERSONAL_INFO -->
+
+  </div>
+</main>
+
+<script>
+  (function () {
+    const MIN_SCALE = 0.94;
+    const MAX_SCALE = 16 / 10.5; // Main inherited text cannot exceed 16px.
+    const FIT_TOLERANCE_PX = 2;
+    const GAP_SAFETY_PX = 1;
+    const PAGE_2_MIN_FILL_RATIO = 0.5; // Page 2 content block must occupy at least 50% of A4 height.
+
+    const pages = Array.from(document.querySelectorAll(".resume-page"));
+
+    function setScale(page, scale) {
+      page.style.setProperty("--font-scale", scale.toFixed(4));
+    }
+
+    function setSectionGap(page, gapPx) {
+      page.style.setProperty("--section-gap", `${Math.max(0, gapPx).toFixed(2)}px`);
+    }
+
+    function resetSpacing() {
+      pages.forEach(function (page) {
+        setSectionGap(page, 0);
+      });
+    }
+
+    function pageFits(page) {
+      return page.scrollHeight <= page.clientHeight + FIT_TOLERANCE_PX;
+    }
+
+    function contentFits(page) {
+      const content = page.querySelector(".page-content");
+      if (!content) return pageFits(page);
+
+      return pageFits(page) && content.scrollHeight <= content.clientHeight + FIT_TOLERANCE_PX;
+    }
+
+    function findMaxScaleForPage(page) {
+      let low = MIN_SCALE;
+      let high = MAX_SCALE;
+
+      setSectionGap(page, 0);
+      setScale(page, MIN_SCALE);
+
+      if (!contentFits(page)) {
+        page.dataset.overflowAtMinFont = "true";
+        return MIN_SCALE;
+      }
+
+      delete page.dataset.overflowAtMinFont;
+
+      for (let i = 0; i < 22; i++) {
+        const mid = (low + high) / 2;
+        setScale(page, mid);
+
+        if (contentFits(page)) {
+          low = mid;
+        } else {
+          high = mid;
+        }
+      }
+
+      return low;
+    }
+
+    function getVisibleSections(content) {
+      return Array.from(content.children).filter(function (child) {
+        return child.offsetParent !== null;
+      });
+    }
+
+    function getNaturalContentHeight(content) {
+      const sections = getVisibleSections(content);
+
+      if (!sections.length) {
+        return 0;
+      }
+
+      const first = sections[0];
+      const last = sections[sections.length - 1];
+
+      return (last.offsetTop + last.offsetHeight) - first.offsetTop;
+    }
+
+    function distributeSectionGapsToTarget(page, targetHeightPx) {
+      const content = page.querySelector(".page-content");
+      if (!content) return;
+
+      setSectionGap(page, 0);
+
+      const sections = getVisibleSections(content);
+      const gapSlots = Math.max(0, sections.length - 1);
+
+      if (gapSlots === 0) return;
+
+      const naturalContentHeight = getNaturalContentHeight(content);
+      const maxUsableHeight = content.clientHeight;
+      const safeTargetHeight = Math.min(targetHeightPx, maxUsableHeight - GAP_SAFETY_PX);
+      const extraSpaceNeeded = safeTargetHeight - naturalContentHeight;
+
+      if (extraSpaceNeeded <= 0) return;
+
+      const gap = extraSpaceNeeded / gapSlots;
+      setSectionGap(page, gap);
+    }
+
+    function distributePageOneRemainingSpace() {
+      const page = document.querySelector(".page-1");
+      if (!page) return;
+
+      const content = page.querySelector(".page-content");
+      if (!content) return;
+
+      /*
+        Page 1 is usually dense.
+        Fill only 96% of the available content area and never keep gaps
+        if they make the fixed A4 page overflow.
+      */
+      distributeSectionGapsToTarget(page, content.clientHeight * 0.96);
+
+      if (!contentFits(page)) {
+        setSectionGap(page, 0);
+      }
+    }
+
+    function distributePageTwoMinimumFill() {
+      const page = document.querySelector(".page-2");
+      if (!page) return;
+
+      const content = page.querySelector(".page-content");
+      if (!content) return;
+
+      const a4PageHeightPx = page.clientHeight;
+      const minimumContentBlockHeight = a4PageHeightPx * PAGE_2_MIN_FILL_RATIO;
+
+      /*
+        Page 2 should not leave all content compressed at the top.
+        If natural content is shorter than 50% of the A4 page height,
+        increase only the section gaps until the block reaches that minimum.
+      */
+      distributeSectionGapsToTarget(page, minimumContentBlockHeight);
+
+      if (!contentFits(page)) {
+        setSectionGap(page, 0);
+      }
+    }
+
+    function fitResumeWithSharedScale() {
+      if (!pages.length) return;
+
+      resetSpacing();
+      pages.forEach(function (page) {
+        setScale(page, MIN_SCALE);
+      });
+
+      const maxScalesPerPage = pages.map(findMaxScaleForPage);
+      const sharedScale = Math.min.apply(null, maxScalesPerPage);
+
+      pages.forEach(function (page) {
+        setScale(page, sharedScale);
+        page.dataset.fontScale = sharedScale.toFixed(4);
+      });
+
+      /*
+        Order matters:
+        1. Fit font size using a shared scale.
+        2. Only after that, add dynamic section spacing.
+      */
+      distributePageOneRemainingSpace();
+      distributePageTwoMinimumFill();
+
+      /*
+        Final safety net: dynamic gaps must never be the reason why
+        a strict fixed-height A4 page clips content in print preview.
+      */
+      pages.forEach(function (page) {
+        if (!contentFits(page)) {
+          setSectionGap(page, 0);
+        }
+      });
+    }
+
+    let resizeTimer;
+
+    window.addEventListener("load", function () {
+      requestAnimationFrame(fitResumeWithSharedScale);
+    });
+
+    window.addEventListener("resize", function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        requestAnimationFrame(fitResumeWithSharedScale);
+      }, 100);
+    });
+
+    window.addEventListener("beforeprint", function () {
+      fitResumeWithSharedScale();
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+- generic [ref=e4] [box=233,159,1060,600]:
+  - generic [ref=e8] [box=278,604,441,102]:
+    - heading "С возвращением" [level=2] [ref=e9] [box=278,604,441,38]
+    - paragraph [ref=e10] [box=278,654,441,51]: Один профиль. Резюме под любую роль. Войди, чтобы продолжить.
+  - generic [ref=e11] [box=763,160,529,598]:
+    - generic [ref=e12] [box=807,208,441,24]:
+      - generic [ref=e13] [box=807,206,138,28]:
+        - img [ref=e14] [box=807,206,28,28]
+        - generic [ref=e19] [box=845,206,100,27]: ResumAIner
+      - group "Language switcher" [ref=e20] [box=1172,204,76,32]:
+        - button "EN" [ref=e21] [cursor=pointer] [box=1173,205,37,30]
+        - button "RU" [pressed] [ref=e22] [cursor=pointer] [box=1210,205,37,30]
+    - generic [ref=e23] [box=807,232,441,478]:
+      - heading "С возвращением" [level=1] [ref=e24] [box=807,284,441,34]
+      - paragraph [ref=e25] [box=807,324,441,23]: Войди в аккаунт
+      - generic [ref=e28] [box=807,375,441,257]:
+        - generic [ref=e30] [box=807,375,441,68]:
+          - generic [ref=e31] [box=807,375,441,21]: Email
+          - textbox "Email" [ref=e32] [box=807,402,441,41]
+        - generic [ref=e34] [box=807,459,441,68]:
+          - generic [ref=e35] [box=807,459,441,21]: Пароль
+          - generic [ref=e36] [box=807,486,441,41]:
+            - textbox "Пароль" [ref=e37] [box=807,486,441,41]
+            - img [ref=e38] [box=1220,498,16,16]
+            - generic [box=806,485,1,1]: Enter a password
+        - generic [ref=e41] [box=807,543,441,21]:
+          - checkbox "Запомнить меня" [ref=e43] [cursor=pointer] [box=807,543,20,20]
+          - generic [ref=e45] [cursor=pointer] [box=835,543,109,21]: Запомнить меня
+        - button "Войти" [ref=e46] [cursor=pointer] [box=807,584,441,48]:
+          - generic [ref=e47] [box=1005,600,45,16]: Войти
+      - paragraph [ref=e48] [box=807,652,441,21]:
+        - text: Нет аккаунта?
+        - button "Регистрация" [ref=e49] [cursor=pointer] [box=1033,652,82,21]

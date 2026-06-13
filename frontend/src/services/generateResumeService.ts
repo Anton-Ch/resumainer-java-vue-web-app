@@ -5,6 +5,7 @@
  * (real PDF generation deferred to feat/008-pdf-conversion).
  */
 import { apiRequest } from './httpClient'
+import type { GenerationReviewDto, GenerationReviewUpdateDto } from '@/types/generate'
 
 const BASE = '/api/generate'
 const RESUME_BASE = '/api/resumes'
@@ -66,12 +67,18 @@ export async function generate(requestId: string): Promise<{ status: string }> {
 }
 
 /** Get grouped review data. */
-export async function getReview(requestId: string): Promise<any> {
-  return apiRequest<any>(`${BASE}/requests/${requestId}/review`, { method: 'GET' })
+export async function getReview(requestId: string): Promise<GenerationReviewDto> {
+  if (!requestId || requestId === 'null' || requestId === 'undefined') {
+    throw new Error('Missing generation request id')
+  }
+  return apiRequest<GenerationReviewDto>(`${BASE}/requests/${requestId}/review`, { method: 'GET' })
 }
 
-/** Save review edits. */
-export async function saveReview(requestId: string, payload: any): Promise<{ success: boolean }> {
+/** Save review edits. Sends updateKey → new value map. */
+export async function saveReview(requestId: string, payload: GenerationReviewUpdateDto): Promise<{ success: boolean }> {
+  if (!requestId || requestId === 'null' || requestId === 'undefined') {
+    throw new Error('Missing generation request id')
+  }
   return apiRequest<{ success: boolean }>(`${BASE}/requests/${requestId}/review`, {
     method: 'PUT',
     body: JSON.stringify(payload)

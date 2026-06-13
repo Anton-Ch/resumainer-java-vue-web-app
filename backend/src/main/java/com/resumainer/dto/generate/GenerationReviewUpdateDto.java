@@ -5,7 +5,15 @@ import java.util.UUID;
 
 /**
  * Updated review values from the frontend.
- * Maps field paths to new values: { "sectionKey.recordId.fieldName": "new value" }
+ * fieldUpdates maps backend-generated updateKey (returned by GenerationReviewDto.AdaptationVariant)
+ * to the new user-reviewed value. Frontend must not construct update keys manually;
+ * it must reuse updateKey values returned by the review endpoint.
+ *
+ * Format: "sectionKey:recordId:fieldName:adaptationCode"
+ *   sectionKey: professional_positioning, work_experience, courses, projects, skills, personal_information
+ *   recordId:   UUID of the response or child record
+ *   fieldName:  frontend-friendly field name (mapped to DB column by backend allowlist)
+ *   adaptationCode: MINIMAL, BALANCED, MAXIMUM
  */
 public class GenerationReviewUpdateDto {
 
