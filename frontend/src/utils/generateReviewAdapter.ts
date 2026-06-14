@@ -165,26 +165,32 @@ function applySectionToVariant(
     }
 
     case 'work_experience': {
+      // Use stable orderInResume as sourceId so the same logical record
+      // at the same position across EN/RU and MIN/BAL/MAX is grouped together.
+      // Meta keys use the same groupKey so save lookup finds the record
+      // by its UI sourceId. The real generated UUID updateKey is preserved
+      // in the value (backend parses it from updateKey).
+      const groupKey = 'we_' + record.orderInResume
       const exp: GeneratedExperience = {
-        sourceId: record.recordId,
+        sourceId: groupKey,
         jobTitle: getFieldValue(record, 'jobTitle'),
         companyName: getFieldValue(record, 'companyName'),
         location: '',
         dateRange: '',
         description: getFieldValue(record, 'description'),
       }
-      // Save update keys per field
       for (const f of ['jobTitle', 'companyName', 'description'] as const) {
         const uk = getUpdateKey(record, f)
-        if (uk) meta[`we:${record.recordId}:${f}`] = uk
+        if (uk) meta[`we:${groupKey}:${f}`] = uk
       }
       variant.workExperience = [...(variant.workExperience ?? []), exp]
       break
     }
 
     case 'courses': {
+      const groupKey = 'co_' + record.orderInResume
       const crs: GeneratedCourse = {
-        sourceId: record.recordId,
+        sourceId: groupKey,
         courseName: getFieldValue(record, 'courseName'),
         provider: getFieldValue(record, 'provider'),
         dateRange: '',
@@ -192,15 +198,16 @@ function applySectionToVariant(
       }
       for (const f of ['courseName', 'provider', 'courseFocus'] as const) {
         const uk = getUpdateKey(record, f)
-        if (uk) meta[`co:${record.recordId}:${f}`] = uk
+        if (uk) meta[`co:${groupKey}:${f}`] = uk
       }
       variant.courses = [...(variant.courses ?? []), crs]
       break
     }
 
     case 'projects': {
+      const groupKey = 'prj_' + record.orderInResume
       const prj: GeneratedProject = {
-        sourceId: record.recordId,
+        sourceId: groupKey,
         projectName: getFieldValue(record, 'projectName'),
         role: getFieldValue(record, 'role'),
         dateRange: '',
@@ -208,7 +215,7 @@ function applySectionToVariant(
       }
       for (const f of ['projectName', 'role', 'description'] as const) {
         const uk = getUpdateKey(record, f)
-        if (uk) meta[`pr:${record.recordId}:${f}`] = uk
+        if (uk) meta[`pr:${groupKey}:${f}`] = uk
       }
       variant.projects = [...(variant.projects ?? []), prj]
       break

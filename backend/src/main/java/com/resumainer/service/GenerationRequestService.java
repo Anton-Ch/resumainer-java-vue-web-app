@@ -65,4 +65,36 @@ public class GenerationRequestService {
     public ResumeGenerationRequest findById(UUID requestId, UUID userId) {
         return requestDao.findById(requestId, userId);
     }
+
+    /**
+     * Updates generation settings (language, adaptation, model, cover letter) for a pending request.
+     * Settings must be saved via this endpoint before calling POST /generate.
+     * This separates request state from the generation command.
+     *
+     * @param requestId          the generation request ID
+     * @param userId             the authenticated user ID
+     * @param languageMode       target language mode
+     * @param adaptationSelection target adaptation level
+     * @param aiModelId          target AI model
+     * @param includeCoverLetter whether to include a cover letter
+     * @throws IllegalArgumentException if request not found or not in pending status
+     */
+    public void updateSettings(UUID requestId, UUID userId,
+                                String languageMode, String adaptationSelection,
+                                UUID aiModelId, boolean includeCoverLetter) {
+        ResumeGenerationRequest request = requestDao.findById(requestId, userId);
+        if (request == null) {
+            throw new IllegalArgumentException("Generation request not found.");
+        }
+        if (!"pending".equals(request.getStatus())) {
+            throw new IllegalArgumentException("Cannot update settings: request is already " + request.getStatus());
+        }
+        boolean updated = requestDao.updateSettings(requestId, userId, languageMode, adaptationSelection,
+                aiModelId, includeCoverLetter);
+        if (!updated) {
+            throw new IllegalArgumentException("Failed to update settings. Request may not be in pending status.");
+        }
+        log.info("Settings updated for request {}: lang={}, adapt={}, modelId={}, coverLetter={}",
+                requestId, languageMode, adaptationSelection, aiModelId, includeCoverLetter);
+    }
 }

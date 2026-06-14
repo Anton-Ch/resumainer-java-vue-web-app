@@ -35,6 +35,15 @@ public class GenerationRequestDao {
             + "completed_at = CASE WHEN ? THEN NOW() ELSE completed_at END "
             + "WHERE id = ? AND user_id = ?";
 
+    private static final String UPDATE_SETTINGS =
+            "UPDATE resume_generation_request SET language_mode = ?, adaptation_selection = ?, "
+            + "ai_model_id = ?, include_cover_letter = ? "
+            + "WHERE id = ? AND user_id = ? AND status = 'pending'";
+
+    private static final String UPDATE_BUDGET_SNAPSHOT =
+            "UPDATE resume_generation_request SET budget_config_id = ?, "
+            + "budget_config_version_used = ? WHERE id = ? AND user_id = ?";
+
     private static final String COUNT_PROCESSING_BY_USER =
             "SELECT COUNT(*) FROM resume_generation_request "
             + "WHERE user_id = ? AND status = 'processing'";
@@ -80,6 +89,53 @@ public class GenerationRequestDao {
         } catch (SQLException e) {
             log.error("Error updating request status: {}", requestId, e);
             throw new RuntimeException("Database error updating request status", e);
+        }
+    }
+
+    /**
+     * Updates generation settings on a pending request.
+     * Only allowed when status = 'pending' (before generation starts).
+     * If the request has already been generated, settings cannot be changed.
+     */
+    public boolean updateSettings(UUID requestId, UUID userId,
+                                   String languageMode, String adaptationSelection,
+                                   UUID aiModelId, boolean includeCoverLetter) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(UPDATE_SETTINGS)) {
+            stmt.setString(1, languageMode);
+            stmt.setString(2, adaptationSelection);
+            stmt.setObject(3, aiModelId);
+            stmt.setBoolean(4, includeCoverLetter);
+            stmt.setObject(5, requestId);
+            stmt.setObject(6, userId);
+            int rows = stmt.executeUpdate();
+            if (rows == 0) {
+                log.warn("No pending request found for settings update: requestId={}, userId={}", requestId, userId);
+            }
+            return rows > 0;
+        } catch (SQLException e) {
+            log.error("Error updating request settings: {}", requestId, e);
+            throw new RuntimeException("Database error updating request settings", e);
+        }
+    }
+
+    /**
+     * Stores the active budget config snapshot on a request before generation.
+     * This ensures the generated output is traceable to the exact budget config version used.
+     */
+    public void updateBudgetSnapshot(UUID requestId, UUID userId, long budgetConfigId, int budgetVersionNo) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(UPDATE_BUDGET_SNAPSHOT)) {
+            stmt.setLong(1, budgetConfigId);
+            stmt.setInt(2, budgetVersionNo);
+            stmt.setObject(3, requestId);
+            stmt.setObject(4, userId);
+            stmt.executeUpdate();
+            log.debug("Budget snapshot saved for request {}: configId={}, version={}",
+                    requestId, budgetConfigId, budgetVersionNo);
+        } catch (SQLException e) {
+            log.error("Error updating budget snapshot for request: {}", requestId, e);
+            throw new RuntimeException("Database error updating budget snapshot", e);
         }
     }
 

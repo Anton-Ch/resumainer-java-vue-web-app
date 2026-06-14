@@ -80,6 +80,16 @@ export function useGenerateResumeFlow() {
         router.push('/generate/vacancy')
         return
       }
+      // Step 1: Persist settings to backend (DEC-007-SET-001)
+      // Settings are saved separately BEFORE generation so the generate endpoint
+      // can use already-persisted request settings without needing a request body.
+      await generateApi.saveSettings(state.value.requestId, {
+        languageMode: state.value.languageMode,
+        adaptationSelection: state.value.adaptationSelection,
+        aiModelId: state.value.aiModelId || '',
+        includeCoverLetter: state.value.includeCoverLetter
+      })
+      // Step 2: Execute generation using persisted settings
       const result = await generateApi.generate(state.value.requestId)
       if (result.status === 'completed') {
         state.value.wizardStep = 'review'

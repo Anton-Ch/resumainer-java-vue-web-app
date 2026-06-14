@@ -59,8 +59,27 @@ export async function createRequest(dto: GenerationRequestCreateDto): Promise<st
   })
 }
 
-/** Execute generation (synchronous). */
+/** Save generation settings to backend (must be called before generate). */
+export async function saveSettings(requestId: string, settings: {
+  languageMode: string
+  adaptationSelection: string
+  aiModelId: string
+  includeCoverLetter: boolean
+}): Promise<{ success: boolean }> {
+  if (!requestId || requestId === 'null' || requestId === 'undefined') {
+    throw new Error('Missing generation request id')
+  }
+  return apiRequest<{ success: boolean }>(`${BASE}/requests/${requestId}/settings`, {
+    method: 'PUT',
+    body: JSON.stringify(settings)
+  })
+}
+
+/** Execute generation (synchronous). Settings must be saved via saveSettings() first. */
 export async function generate(requestId: string): Promise<{ status: string }> {
+  if (!requestId || requestId === 'null' || requestId === 'undefined') {
+    throw new Error('Missing generation request id')
+  }
   return apiRequest<{ status: string }>(`${BASE}/requests/${requestId}/generate`, {
     method: 'POST'
   })
