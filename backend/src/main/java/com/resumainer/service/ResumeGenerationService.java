@@ -23,11 +23,14 @@ public class ResumeGenerationService {
 
     private static final Logger log = LoggerFactory.getLogger(ResumeGenerationService.class);
 
-    /** Build marker — proves running WAR was built after this timestamp during Phase 4.8.2 */
+    /**
+     * Build marker — proves running WAR was built after this timestamp during Phase 4.8.2
+     */
     private static final String BUILD_MARKER = "BUILD_MARKER feat007-phase-4.8.2 2026-06-13T22:30:00Z";
 
     private final GenerationRequestDao requestDao;
     private final ResumePromptBuilder promptBuilder;
+    private final PromptConfigDao promptConfigDao;
     private final AiClientFactory aiClientFactory;
     private final AiResponseParser responseParser;
     private final GenerationResponsePersistenceService persistenceService;
@@ -35,14 +38,16 @@ public class ResumeGenerationService {
     private final ResumeBudgetConfigService budgetConfigService;
 
     public ResumeGenerationService(GenerationRequestDao requestDao,
-                                    ResumePromptBuilder promptBuilder,
-                                    AiClientFactory aiClientFactory,
-                                    AiResponseParser responseParser,
-                                    GenerationResponsePersistenceService persistenceService,
-                                    AiModelDao aiModelDao,
-                                    ResumeBudgetConfigService budgetConfigService) {
+                                   ResumePromptBuilder promptBuilder,
+                                   PromptConfigDao promptConfigDao,
+                                   AiClientFactory aiClientFactory,
+                                   AiResponseParser responseParser,
+                                   GenerationResponsePersistenceService persistenceService,
+                                   AiModelDao aiModelDao,
+                                   ResumeBudgetConfigService budgetConfigService) {
         this.requestDao = requestDao;
         this.promptBuilder = promptBuilder;
+        this.promptConfigDao = promptConfigDao;
         this.aiClientFactory = aiClientFactory;
         this.responseParser = responseParser;
         this.persistenceService = persistenceService;
@@ -57,7 +62,7 @@ public class ResumeGenerationService {
      * @param requestId the generation request ID
      * @param userId    the authenticated user ID
      * @throws IllegalArgumentException if request not found
-     * @throws AiClientException       if generation fails
+     * @throws AiClientException        if generation fails
      */
     public void generate(UUID requestId, UUID userId) {
         log.info(BUILD_MARKER);
@@ -72,7 +77,7 @@ public class ResumeGenerationService {
         if ("completed".equals(status)) {
             throw new IllegalStateException(
                     "Generation request " + requestId + " is already completed. "
-                    + "Create a new request to generate again.");
+                            + "Create a new request to generate again.");
         }
         if ("processing".equals(status)) {
             throw new IllegalStateException(
@@ -102,7 +107,20 @@ public class ResumeGenerationService {
             // 1. Build prompt
             ResumePromptBuilder.PromptResult promptResult = promptBuilder.build(requestId, userId);
 
-            // 2. Look up model info for audit logging
+            // 2. Save rendered prompt log before AI call
+            UUID promptRenderLogId = promptConfigDao.insertPromptRenderLog(
+                    requestId,
+                    promptResult.promptConfigId,
+                    promptResult.systemPrompt,
+                    promptResult.requestPrompt,
+                    promptResult.profilePayloadJson,
+                    promptResult.promptHash
+            );
+
+            log.info("PROMPT_RENDER_LOG_SAVED requestId={}, promptRenderLogId={}, promptConfigId={}, promptHash={}",
+                    requestId, promptRenderLogId, promptResult.promptConfigId, promptResult.promptHash);
+
+            // 3. Look up model info for audit logging
             AiModel model = aiModelDao.findById(request.getAiModelId());
             String modelCode = model != null ? model.getModelCode() : "unknown";
             String provider = model != null ? model.getProvider() : "unknown";

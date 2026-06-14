@@ -2,6 +2,7 @@ package com.resumainer.service;
 
 import com.resumainer.dao.AiModelDao;
 import com.resumainer.dao.GenerationRequestDao;
+import com.resumainer.dao.PromptConfigDao;
 import com.resumainer.dao.ResumeBudgetConfigDao.BudgetConfig;
 import com.resumainer.model.AiModel;
 import com.resumainer.model.ResumeGenerationRequest;
@@ -11,12 +12,14 @@ import com.resumainer.service.ai.AiClientFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -29,6 +32,7 @@ class ResumeGenerationServiceLifecycleTest {
 
     @Mock private GenerationRequestDao requestDao;
     @Mock private ResumePromptBuilder promptBuilder;
+    @Mock private PromptConfigDao promptConfigDao;
     @Mock private AiClientFactory aiClientFactory;
     @Mock private AiResponseParser responseParser;
     @Mock private GenerationResponsePersistenceService persistenceService;
@@ -40,18 +44,24 @@ class ResumeGenerationServiceLifecycleTest {
     private final UUID requestId = UUID.randomUUID();
     private final UUID userId = UUID.randomUUID();
     private final UUID modelId = UUID.randomUUID();
+    private final UUID promptConfigId = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
         service = new ResumeGenerationService(
-                requestDao, promptBuilder, aiClientFactory, responseParser,
+                requestDao, promptBuilder, promptConfigDao, aiClientFactory, responseParser,
                 persistenceService, aiModelDao, budgetConfigService);
 
         // Common stubs
         ResumePromptBuilder.PromptResult promptResult = new ResumePromptBuilder.PromptResult();
         promptResult.systemPrompt = "system";
         promptResult.requestPrompt = "request";
+        promptResult.promptConfigId = promptConfigId;
+        promptResult.profilePayloadJson = "{\"contact\":true}";
+        promptResult.promptHash = "hash-123";
         when(promptBuilder.build(any(), any())).thenReturn(promptResult);
+        when(promptConfigDao.insertPromptRenderLog(any(), any(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(UUID.randomUUID());
         when(aiClientFactory.createOpenRouter(any())).thenReturn(aiClient);
         when(aiClient.generate(anyString(), anyString())).thenReturn("{}");
         when(budgetConfigService.getActiveBudgetConfig())
@@ -159,4 +169,35 @@ class ResumeGenerationServiceLifecycleTest {
         assertDoesNotThrow(() -> service.generate(requestId, userId));
         verify(aiClient, atLeastOnce()).generate(anyString(), anyString());
     }
+
+    @Test
+    void generateSavesPromptRenderLogBeforeAiCall() {
+        // Given a pending request
+        ResumeGenerationRequest request = new ResumeGenerationRequest();
+        request.setId(requestId);
+        request.setUserId(userId);
+        request.setAiModelId(modelId);
+        request.setStatus("pending");
+        request.setLanguageMode("ENGLISH_ONLY");
+        request.setAdaptationSelection("BALANCED");
+        when(requestDao.findById(requestId, userId)).thenReturn(request);
+        when(requestDao.hasProcessingRequest(userId)).thenReturn(false);
+
+        // When
+        service.generate(requestId, userId);
+
+        // Then the final rendered prompt is saved before the AI call.
+        InOrder inOrder = inOrder(promptBuilder, promptConfigDao, aiClient);
+        inOrder.verify(promptBuilder).build(requestId, userId);
+        inOrder.verify(promptConfigDao).insertPromptRenderLog(
+                eq(requestId),
+                eq(promptConfigId),
+                eq("system"),
+                eq("request"),
+                eq("{\"contact\":true}"),
+                eq("hash-123")
+        );
+        inOrder.verify(aiClient).generate("system", "request");
+    }
+
 }

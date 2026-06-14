@@ -46,6 +46,7 @@ public class ResumePromptBuilder {
         public String promptHash;
         public UUID promptConfigId;
         public Map<String, Object> profilePayload;
+        public String profilePayloadJson;
     }
 
     /**
@@ -116,6 +117,7 @@ public class ResumePromptBuilder {
         result.promptHash = promptHash;
         result.promptConfigId = promptConfigId;
         result.profilePayload = profilePayload;
+        result.profilePayloadJson = profilePayloadJson;
         return result;
     }
 
