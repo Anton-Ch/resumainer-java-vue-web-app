@@ -32,6 +32,14 @@ public class PromptConfigDao {
     private static final String SELECT_COVER_LETTER_PROMPT =
             "SELECT prompt FROM ai_request_prompt_cover_letter WHERE prompt_config_id = ? AND include_cover_letter = ?";
 
+    private static final String INSERT_PROMPT_RENDER_LOG = """
+        INSERT INTO ai_prompt_render_log
+        (generation_request_id, prompt_config_id, system_prompt_rendered,
+         request_prompt_rendered, profile_payload_json, prompt_hash)
+        VALUES (?, ?, ?, ?, ?, ?)
+        RETURNING id
+        """;
+
     private final DataSource dataSource;
 
     public PromptConfigDao(DataSource dataSource) {
@@ -102,6 +110,34 @@ public class PromptConfigDao {
         } catch (SQLException e) {
             log.error("Error loading cover letter prompt", e);
             throw new RuntimeException("Database error loading cover letter prompt", e);
+        }
+    }
+
+    public UUID insertPromptRenderLog(UUID generationRequestId,
+                                      UUID promptConfigId,
+                                      String systemPrompt,
+                                      String requestPrompt,
+                                      String profilePayloadJson,
+                                      String promptHash) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(INSERT_PROMPT_RENDER_LOG)) {
+
+            stmt.setObject(1, generationRequestId);
+            stmt.setObject(2, promptConfigId);
+            stmt.setString(3, systemPrompt);
+            stmt.setString(4, requestPrompt);
+            stmt.setString(5, profilePayloadJson);
+            stmt.setString(6, promptHash);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getObject("id", UUID.class);
+                }
+                throw new RuntimeException("Prompt render log insert returned no id");
+            }
+        } catch (SQLException e) {
+            log.error("Error inserting prompt render log for request {}", generationRequestId, e);
+            throw new RuntimeException("Database error inserting prompt render log", e);
         }
     }
 
