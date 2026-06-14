@@ -57,13 +57,9 @@ public class GenerationResponsePersistenceService {
      * @throws IllegalStateException   if transaction fails
      */
     public void persistResponses(UUID requestId, UUID userId, List<AiResponseParser.ParsedVariant> variants) {
-        // T061: Check one active generation per user
-        if (requestDao.hasProcessingRequest(userId)) {
-            throw new AiClientException("Generation already in progress. Please wait for it to complete.");
-        }
-
-        // Update request to processing
-        requestDao.updateStatus(requestId, userId, "processing", null, false);
+        // Status is already set to 'processing' by ResumeGenerationService before AI call.
+        // Do NOT re-check hasProcessingRequest here — it would fail because status is already processing.
+        // The lifecycle guard in ResumeGenerationService prevents non-pending requests from reaching here.
 
         Connection conn = null;
         try {

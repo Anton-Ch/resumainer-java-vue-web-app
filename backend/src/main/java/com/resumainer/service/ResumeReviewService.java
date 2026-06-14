@@ -93,12 +93,12 @@ public class ResumeReviewService {
         List<SectionReviewGroup> workExp = buildChildRecordsSection(
                 "work_experience", "Work Experience",
                 responses, this::loadExperienceRecords,
-                exp -> {
+                (exp, resp) -> {
                     GenerationResponseExperience e = (GenerationResponseExperience) exp;
                     return List.of(
-                            fieldVariant(e.getId(), "jobTitle", e.getJobTitle(), e.getResponseId()),
-                            fieldVariant(e.getId(), "companyName", e.getCompanyName(), e.getResponseId()),
-                            fieldVariant(e.getId(), "description", e.getDescription(), e.getResponseId())
+                            fieldVariant(e.getId(), "jobTitle", e.getJobTitle(), e.getResponseId(), resp, "work_experience"),
+                            fieldVariant(e.getId(), "companyName", e.getCompanyName(), e.getResponseId(), resp, "work_experience"),
+                            fieldVariant(e.getId(), "description", e.getDescription(), e.getResponseId(), resp, "work_experience")
                     );
                 });
         if (workExp != null) sections.addAll(workExp);
@@ -107,12 +107,12 @@ public class ResumeReviewService {
         List<SectionReviewGroup> courses = buildChildRecordsSection(
                 "courses", "Courses & Certifications",
                 responses, this::loadCourseRecords,
-                crs -> {
+                (crs, resp) -> {
                     GenerationResponseCourse c = (GenerationResponseCourse) crs;
                     return List.of(
-                            fieldVariant(c.getId(), "courseName", c.getName(), c.getResponseId()),
-                            fieldVariant(c.getId(), "provider", c.getProvider(), c.getResponseId()),
-                            fieldVariant(c.getId(), "courseFocus", c.getCourseFocus(), c.getResponseId())
+                            fieldVariant(c.getId(), "courseName", c.getName(), c.getResponseId(), resp, "courses"),
+                            fieldVariant(c.getId(), "provider", c.getProvider(), c.getResponseId(), resp, "courses"),
+                            fieldVariant(c.getId(), "courseFocus", c.getCourseFocus(), c.getResponseId(), resp, "courses")
                     );
                 });
         if (courses != null) sections.addAll(courses);
@@ -121,12 +121,12 @@ public class ResumeReviewService {
         List<SectionReviewGroup> projects = buildChildRecordsSection(
                 "projects", "Projects & Volunteering",
                 responses, this::loadProjectRecords,
-                prj -> {
+                (prj, resp) -> {
                     GenerationResponseProject p = (GenerationResponseProject) prj;
                     return List.of(
-                            fieldVariant(p.getId(), "projectName", p.getProjectName(), p.getResponseId()),
-                            fieldVariant(p.getId(), "role", p.getRole(), p.getResponseId()),
-                            fieldVariant(p.getId(), "description", p.getDescription(), p.getResponseId())
+                            fieldVariant(p.getId(), "projectName", p.getProjectName(), p.getResponseId(), resp, "projects"),
+                            fieldVariant(p.getId(), "role", p.getRole(), p.getResponseId(), resp, "projects"),
+                            fieldVariant(p.getId(), "description", p.getDescription(), p.getResponseId(), resp, "projects")
                     );
                 });
         if (projects != null) sections.addAll(projects);
@@ -182,32 +182,15 @@ public class ResumeReviewService {
 
     @FunctionalInterface
     private interface FieldExtractor {
-        List<Map.Entry<String, AdaptationVariant>> extract(Object record);
+        List<Map.Entry<String, AdaptationVariant>> extract(Object record, ResumeGenerationResponse resp);
     }
 
     private List<SectionReviewGroup> buildChildRecordsSection(
             String sectionKey, String sectionLabel,
             List<ResumeGenerationResponse> responses,
             ChildRecordLoader loader,
-            java.util.function.Function<Object, List<Map.Entry<String, AdaptationVariant>>> extractor) {
+            FieldExtractor extractor) {
 
-        // Collect all records across all responses, group by primary key across languages
-        Map<UUID, List<Object>> allRecords = new LinkedHashMap<>();
-        for (ResumeGenerationResponse resp : responses) {
-            List<?> records = loader.load(resp.getId());
-            for (Object rec : records) {
-                UUID pk = getRecordId(rec);
-                allRecords.computeIfAbsent(pk, k -> new ArrayList<>()).add(rec);
-            }
-        }
-
-        if (allRecords.isEmpty()) return null;
-
-        // Group by response ID (each response ID = one language+level → one record group)
-        // Actually each record is already per-response. The same source data (e.g. job at company X)
-        // exists independently for each response (language + adaptation level).
-        // So we DON'T cross-join. Each record belongs to exactly one response.
-        // We create one SectionReviewGroup per response.
         List<SectionReviewGroup> groups = new ArrayList<>();
         for (ResumeGenerationResponse resp : responses) {
             List<?> records = loader.load(resp.getId());
@@ -225,7 +208,7 @@ public class ResumeReviewService {
                 rg.setOrderInResume(getOrderInResume(rec));
 
                 Map<String, List<AdaptationVariant>> fields = new LinkedHashMap<>();
-                List<Map.Entry<String, AdaptationVariant>> fieldEntries = extractor.apply(rec);
+                List<Map.Entry<String, AdaptationVariant>> fieldEntries = extractor.extract(rec, resp);
                 for (Map.Entry<String, AdaptationVariant> entry : fieldEntries) {
                     fields.put(entry.getKey(), List.of(entry.getValue()));
                 }
@@ -235,7 +218,7 @@ public class ResumeReviewService {
             section.setRecords(recordGroups);
             groups.add(section);
         }
-        return groups;
+        return groups.isEmpty() ? null : groups;
     }
 
     private List<?> loadExperienceRecords(UUID responseId) {
@@ -264,17 +247,22 @@ public class ResumeReviewService {
         return 0;
     }
 
-    private Map.Entry<String, AdaptationVariant> fieldVariant(UUID recordId, String fieldName, String value, UUID responseId) {
-        return new AbstractMap.SimpleEntry<>(fieldName, variant(recordId, fieldName, value, responseId));
+    private Map.Entry<String, AdaptationVariant> fieldVariant(UUID recordId, String fieldName, String value,
+                                                                UUID responseId, ResumeGenerationResponse resp,
+                                                                String sectionKey) {
+        return new AbstractMap.SimpleEntry<>(fieldName,
+                childVariant(recordId, fieldName, value, responseId, resp, sectionKey));
     }
 
-    private AdaptationVariant variant(UUID recordId, String fieldName, String value, UUID responseId) {
-        // This variant will be patched with adaptationCode later in createVariant logic
-        // Actually, child records don't have adaptation levels directly — they exist per response.
-        // The response they belong to determines the adaptation.
+    private AdaptationVariant childVariant(UUID recordId, String fieldName, String value,
+                                            UUID responseId, ResumeGenerationResponse resp,
+                                            String sectionKey) {
         AdaptationVariant v = new AdaptationVariant();
         v.setResponseId(responseId);
+        v.setAdaptationLevelId(resp.getAdaptationLevelId());
+        v.setAdaptationCode(adaptationCode(resp.getAdaptationLevelId()));
         v.setValue(value != null ? value : "");
+        v.setUpdateKey(sectionKey + ":" + recordId + ":" + fieldName + ":" + v.getAdaptationCode());
         return v;
     }
 

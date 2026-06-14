@@ -89,6 +89,8 @@ public class GenerateResumeController {
 
     /**
      * T065: Executes generation for a request. Synchronous for MVP.
+     * Settings must be persisted via PUT /settings before calling this endpoint.
+     * This endpoint does not accept settings overrides — it uses persisted request settings.
      */
     @PostMapping("/requests/{requestId}/generate")
     public ResponseEntity<?> generate(HttpSession session,
@@ -124,6 +126,31 @@ public class GenerateResumeController {
                             "GENERATION_FAILED",
                             "Generation failed. Please try again or change settings.",
                             true, true, "failed")));
+        }
+    }
+
+    /**
+     * T065b: Updates generation settings for a pending request.
+     * Settings must be persisted via this endpoint before calling POST /generate.
+     * This separates request state from the generation command (DEC-007-SET-001).
+     */
+    @PutMapping("/requests/{requestId}/settings")
+    public ResponseEntity<?> updateSettings(HttpSession session,
+                                             @PathVariable UUID requestId,
+                                             @RequestBody GenerationSettingsDto settings) {
+        UUID userId = getUserId(session);
+        log.debug("PUT /api/generate/requests/{}/settings — userId={}", requestId, userId);
+
+        try {
+            generationRequestService.updateSettings(requestId, userId,
+                    settings.getLanguageMode(),
+                    settings.getAdaptationSelection(),
+                    settings.getAiModelId(),
+                    settings.getIncludeCoverLetter() != null ? settings.getIncludeCoverLetter() : false);
+            return noCache(ResponseEntity.ok().body(java.util.Map.of("success", true)));
+        } catch (IllegalArgumentException e) {
+            return noCache(ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", e.getMessage())));
         }
     }
 

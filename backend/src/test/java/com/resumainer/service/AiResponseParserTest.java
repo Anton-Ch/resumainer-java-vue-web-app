@@ -112,6 +112,96 @@ class AiResponseParserTest {
     }
 
     @Test
+    void parseSkills_standardFormat_parsesSkillGroupSkillName() {
+        String json = """
+            {
+              "professionalTitle": "Dev",
+              "professionalSummary": "Summary",
+              "skills": [
+                {"skillGroup": "Languages", "skillName": "Java"},
+                {"skillGroup": "Languages", "skillName": "SQL"},
+                {"skillGroup": "Tools", "skillName": "Docker"}
+              ]
+            }
+            """;
+        List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+        assertEquals(3, variants.get(0).skills.size());
+        assertEquals("Languages", variants.get(0).skills.get(0).skillGroup);
+        assertEquals("Java", variants.get(0).skills.get(0).skillName);
+        assertEquals("Tools", variants.get(0).skills.get(2).skillGroup);
+    }
+
+    @Test
+    void parseSkills_prototypeGroupFormat_parsesGroupNameSkillsArray() {
+        // Prototype sends {groupName, skills[]} instead of {skillGroup, skillName}
+        String json = """
+            {
+              "professionalTitle": "Dev",
+              "professionalSummary": "Summary",
+              "skills": [
+                {"groupName": "Languages", "skills": ["Java", "SQL", "Python"]},
+                {"groupName": "Tools", "skills": ["Docker", "Kubernetes"]}
+              ]
+            }
+            """;
+        List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+        assertEquals(5, variants.get(0).skills.size());
+        assertEquals("Languages", variants.get(0).skills.get(0).skillGroup);
+        assertEquals("Java", variants.get(0).skills.get(0).skillName);
+        assertEquals("Languages", variants.get(0).skills.get(2).skillGroup);
+        assertEquals("Python", variants.get(0).skills.get(2).skillName);
+        assertEquals("Tools", variants.get(0).skills.get(3).skillGroup);
+        assertEquals("Docker", variants.get(0).skills.get(3).skillName);
+    }
+
+    @Test
+    void parseBilingualAll_incompleteResponse_throwsException() {
+        // Only EN+MINIMAL returned, missing EN+BALANCED, EN+MAXIMUM, RU+MINIMAL, RU+BALANCED, RU+MAXIMUM
+        String json = """
+            {
+              "en": {
+                "minimal": {"professionalTitle": "Dev EN", "professionalSummary": "Summary EN"}
+              }
+            }
+            """;
+        assertThrows(IllegalArgumentException.class, () ->
+            parser.parse(json, "BILINGUAL", "ALL"));
+    }
+
+    @Test
+    void parseBilingualAll_missingLanguage_throwsException() {
+        // Only EN variants, no RU
+        String json = """
+            {
+              "en": {
+                "minimal": {"professionalTitle": "Dev EN", "professionalSummary": "Sum EN"},
+                "balanced": {"professionalTitle": "Dev EN B", "professionalSummary": "Sum EN B"},
+                "maximum": {"professionalTitle": "Dev EN M", "professionalSummary": "Sum EN M"}
+              }
+            }
+            """;
+        assertThrows(IllegalArgumentException.class, () ->
+            parser.parse(json, "BILINGUAL", "ALL"));
+    }
+
+    @Test
+    void parseBilingualAll_missingLevels_throwsException() {
+        // Both languages but only MINIMAL, missing BALANCED and MAXIMUM
+        String json = """
+            {
+              "en": {
+                "minimal": {"professionalTitle": "Dev EN", "professionalSummary": "Sum EN"}
+              },
+              "ru": {
+                "minimal": {"professionalTitle": "Dev RU", "professionalSummary": "Sum RU"}
+              }
+            }
+            """;
+        assertThrows(IllegalArgumentException.class, () ->
+            parser.parse(json, "BILINGUAL", "ALL"));
+    }
+
+    @Test
     void parseWorkFormats_extractsList() {
         String json = """
             {

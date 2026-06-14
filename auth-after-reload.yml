@@ -1,0 +1,135 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5] [cursor=pointer]:
+      - img [ref=e6]
+      - generic [ref=e11]: ResumAIner
+    - navigation [ref=e12]:
+      - link "Главная" [ref=e13] [cursor=pointer]:
+        - /url: /app/home
+      - link "Профиль" [ref=e14] [cursor=pointer]:
+        - /url: /app/profile/contact
+      - link "Создать резюме" [ref=e15] [cursor=pointer]:
+        - /url: /app/generate/vacancy
+    - generic [ref=e16]:
+      - text: 
+      - group "Language switcher" [ref=e17]:
+        - button "EN" [ref=e18] [cursor=pointer]
+        - button "RU" [pressed] [ref=e19] [cursor=pointer]
+      - button "Выйти" [ref=e20] [cursor=pointer]:
+        - generic [ref=e21]: 
+  - main [ref=e22]:
+    - heading "Рабочий центр" [level=1] [ref=e23]
+    - generic [ref=e24]:
+      - heading "Следующий лучший шаг" [level=2] [ref=e25]
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - heading "Создай новое резюме" [level=3] [ref=e29]
+            - paragraph [ref=e30]: Начни с вакансии и получи адаптированное резюме.
+          - button "Создать резюме" [ref=e31] [cursor=pointer]:
+            - generic [ref=e32]: 
+            - generic [ref=e33]: Создать резюме
+        - generic [ref=e34]:
+          - generic [ref=e35]:
+            - heading "Обнови профиль" [level=3] [ref=e36]
+            - paragraph [ref=e37]: Используй, если изменились опыт, образование, навыки или контакты.
+          - button "Обновить профиль" [ref=e38] [cursor=pointer]:
+            - generic [ref=e39]: 
+            - generic [ref=e40]: Обновить профиль
+    - generic [ref=e41]:
+      - generic [ref=e42]:
+        - generic [ref=e43]: Сохранённые резюме
+        - generic [ref=e44]: "0"
+        - generic [ref=e45]: Продолжай создавать отличные резюме — нет ничего невозможного!
+      - generic [ref=e46]:
+        - generic [ref=e47]: Статус профиля
+        - generic [ref=e48]: Готов
+        - generic [ref=e49]: Профиль готов! Но всегда можешь его обновить и сделать ещё лучше!
+        - link " Обновить профиль" [ref=e50] [cursor=pointer]:
+          - /url: /app/profile/contact
+          - generic [ref=e51]: 
+          - text: Обновить профиль
+      - generic [ref=e52] [cursor=pointer]:
+        - generic [ref=e53]: Последнее резюме
+        - generic [ref=e54]: Резюме пока нет
+    - generic [ref=e55]:
+      - heading "Сохранённые резюме" [level=2] [ref=e56]
+      - button "Создать резюме" [ref=e57] [cursor=pointer]:
+        - generic [ref=e58]: 
+        - generic [ref=e59]: Создать резюме
+    - generic [ref=e60]:
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - generic: 
+          - textbox "Найти по названию, вакансии или компании" [ref=e63]
+        - generic [ref=e64]:
+          - generic [ref=e65]:
+            - generic [ref=e66]: Язык
+            - generic [ref=e67] [cursor=pointer]:
+              - generic:
+                - combobox "Язык"
+              - generic [ref=e69]: Английский, Русский
+              - img [ref=e71]
+          - generic [ref=e73]:
+            - generic [ref=e74]: Адаптация
+            - generic [ref=e75] [cursor=pointer]:
+              - generic:
+                - combobox "Уровень адаптации"
+              - generic [ref=e77]: Все уровни
+              - img [ref=e79]
+          - generic [ref=e81]:
+            - generic [ref=e82]: Дата создания
+            - generic [ref=e83]:
+              - combobox "С" [ref=e85]
+              - generic [ref=e86]: –
+              - combobox "По" [ref=e88]
+      - generic [ref=e89]:
+        - table [ref=e91]:
+          - rowgroup [ref=e92]:
+            - row "Название резюме Вакансия Компания Язык Уровень адаптации Создано" [ref=e93]:
+              - columnheader "Название резюме" [ref=e94] [cursor=pointer]:
+                - generic [ref=e95]:
+                  - generic [ref=e96]: Название резюме
+                  - img [ref=e98]
+              - columnheader "Вакансия" [ref=e103] [cursor=pointer]:
+                - generic [ref=e104]:
+                  - generic [ref=e105]: Вакансия
+                  - img [ref=e107]
+              - columnheader "Компания" [ref=e112] [cursor=pointer]:
+                - generic [ref=e113]:
+                  - generic [ref=e114]: Компания
+                  - img [ref=e116]
+              - columnheader "Язык" [ref=e121] [cursor=pointer]:
+                - generic [ref=e122]:
+                  - generic [ref=e123]: Язык
+                  - img [ref=e125]
+              - columnheader "Уровень адаптации" [ref=e130] [cursor=pointer]:
+                - generic [ref=e131]:
+                  - generic [ref=e132]: Уровень адаптации
+                  - img [ref=e134]
+              - columnheader "Создано" [ref=e139] [cursor=pointer]:
+                - generic [ref=e140]:
+                  - generic [ref=e141]: Создано
+                  - img [ref=e143]
+          - rowgroup [ref=e145]:
+            - row " Резюме пока нет Попробуй другой запрос или измени фильтры." [ref=e146]:
+              - cell " Резюме пока нет Попробуй другой запрос или измени фильтры." [ref=e147]:
+                - generic [ref=e148]:
+                  - generic [ref=e150]: 
+                  - heading "Резюме пока нет" [level=3] [ref=e151]
+                  - paragraph [ref=e152]: Попробуй другой запрос или измени фильтры.
+        - navigation [ref=e153]:
+          - generic [ref=e155]:
+            - generic [ref=e156]: Показано – из
+            - button "First Page" [disabled]:
+              - img
+            - button "Previous Page" [disabled]:
+              - img
+            - button "Next Page" [disabled]:
+              - img
+            - button "Last Page" [disabled]:
+              - img
+            - generic:
+              - combobox "Rows per page" [disabled]: "10"
+              - generic:
+                - img

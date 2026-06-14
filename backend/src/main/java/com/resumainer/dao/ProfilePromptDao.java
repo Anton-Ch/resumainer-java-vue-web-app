@@ -40,6 +40,23 @@ public class ProfilePromptDao {
             + "field_of_study_ru, field_of_study_en "
             + "FROM education WHERE user_id = ? AND is_deleted = FALSE ORDER BY start_date DESC";
 
+    private static final String SELECT_WORK_EXPERIENCE =
+            "SELECT id, job_title, company_name, description, location, "
+            + "start_date, end_date, is_current "
+            + "FROM work_experience WHERE user_id = ? AND is_deleted = FALSE "
+            + "ORDER BY start_date DESC, end_date DESC NULLS FIRST";
+
+    private static final String SELECT_COURSES =
+            "SELECT id, name, provider, description, course_focus "
+            + "FROM course_certificate WHERE user_id = ? AND is_deleted = FALSE "
+            + "ORDER BY start_date DESC";
+
+    private static final String SELECT_PROJECTS =
+            "SELECT id, project_name, role, description, location, "
+            + "start_date, end_date, is_ongoing "
+            + "FROM project WHERE user_id = ? AND is_deleted = FALSE "
+            + "ORDER BY start_date DESC, end_date DESC NULLS FIRST";
+
     private final DataSource dataSource;
 
     public ProfilePromptDao(DataSource dataSource) {
@@ -111,6 +128,84 @@ public class ProfilePromptDao {
         } catch (SQLException e) {
             log.error("Error loading work formats for user: {}", userId, e);
             throw new RuntimeException("Database error loading work formats", e);
+        }
+    }
+
+    /** Returns list of work experience records for prompt payload. */
+    public List<Map<String, Object>> loadWorkExperience(UUID userId) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_WORK_EXPERIENCE)) {
+            stmt.setObject(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Map<String, Object>> results = new ArrayList<>();
+                while (rs.next()) {
+                    Map<String, Object> exp = new LinkedHashMap<>();
+                    exp.put("id", rs.getObject("id").toString());
+                    exp.put("jobTitle", rs.getString("job_title"));
+                    exp.put("companyName", rs.getString("company_name"));
+                    exp.put("description", rs.getString("description"));
+                    exp.put("location", rs.getString("location"));
+                    exp.put("startDate", rs.getDate("start_date") != null ? rs.getDate("start_date").toString() : null);
+                    exp.put("endDate", rs.getDate("end_date") != null ? rs.getDate("end_date").toString() : null);
+                    exp.put("isCurrent", rs.getBoolean("is_current"));
+                    results.add(exp);
+                }
+                return results;
+            }
+        } catch (SQLException e) {
+            log.error("Error loading work experience for user: {}", userId, e);
+            throw new RuntimeException("Database error loading work experience", e);
+        }
+    }
+
+    /** Returns list of course/certificate records for prompt payload. */
+    public List<Map<String, Object>> loadCourses(UUID userId) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_COURSES)) {
+            stmt.setObject(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Map<String, Object>> results = new ArrayList<>();
+                while (rs.next()) {
+                    Map<String, Object> crs = new LinkedHashMap<>();
+                    crs.put("id", rs.getObject("id").toString());
+                    crs.put("name", rs.getString("name"));
+                    crs.put("provider", rs.getString("provider"));
+                    crs.put("description", rs.getString("description"));
+                    crs.put("courseFocus", rs.getString("course_focus"));
+                    results.add(crs);
+                }
+                return results;
+            }
+        } catch (SQLException e) {
+            log.error("Error loading courses for user: {}", userId, e);
+            throw new RuntimeException("Database error loading courses", e);
+        }
+    }
+
+    /** Returns list of project records for prompt payload. */
+    public List<Map<String, Object>> loadProjects(UUID userId) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_PROJECTS)) {
+            stmt.setObject(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Map<String, Object>> results = new ArrayList<>();
+                while (rs.next()) {
+                    Map<String, Object> prj = new LinkedHashMap<>();
+                    prj.put("id", rs.getObject("id").toString());
+                    prj.put("projectName", rs.getString("project_name"));
+                    prj.put("role", rs.getString("role"));
+                    prj.put("description", rs.getString("description"));
+                    prj.put("location", rs.getString("location"));
+                    prj.put("startDate", rs.getDate("start_date") != null ? rs.getDate("start_date").toString() : null);
+                    prj.put("endDate", rs.getDate("end_date") != null ? rs.getDate("end_date").toString() : null);
+                    prj.put("isOngoing", rs.getBoolean("is_ongoing"));
+                    results.add(prj);
+                }
+                return results;
+            }
+        } catch (SQLException e) {
+            log.error("Error loading projects for user: {}", userId, e);
+            throw new RuntimeException("Database error loading projects", e);
         }
     }
 

@@ -23,7 +23,9 @@ public class OpenRouterClient implements AiClient {
 
     private static final Logger log = LoggerFactory.getLogger(OpenRouterClient.class);
 
-    private static final Duration TIMEOUT = Duration.ofSeconds(120);
+    // Increased from 120s to 240s because DeepSeek V4 Flash
+    // can take 2-4 minutes for complex bilingual+all requests.
+    private static final Duration TIMEOUT = Duration.ofSeconds(240);
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final AiModel model;

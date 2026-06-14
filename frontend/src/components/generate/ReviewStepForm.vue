@@ -524,7 +524,7 @@
                       <span class="vue-chip" :class="lang === 'EN' ? 'chip-en' : 'chip-ru'">{{ lang }}</span>
                       <span class="lang-card-title">{{ languageCardTitle(lang) }}</span>
                     </div>
-                    <template v-for="field in personalFields" :key="field.key">
+                    <template v-for="field in visiblePersonalFields" :key="field.key">
                       <div class="vue-card field-card">
                         <label class="vue-form-label">{{ t('generate.review.fields.' + field.key) }}</label>
                         <template v-if="showLevels">
@@ -725,6 +725,24 @@ const personalFields = [
   { key: 'dateOfBirth', ...input },
   { key: 'workFormats', ...input },
 ]
+
+/**
+ * Filters personal fields to only show those with non-empty values
+ * in at least one visible variant. This hides optional fields like
+ * spokenLanguages when the profile has no data for them.
+ * Empty fields are hidden, not auto-filled (BUG-007-PERSONAL-002).
+ */
+const visiblePersonalFields = computed(() => {
+  return personalFields.filter(field => {
+    for (const lang of visibleLanguages.value) {
+      for (const level of activeLevels.value) {
+        const val = getPersonalField(lang, field.key, level)
+        if (val && val.trim() !== '') return true
+      }
+    }
+    return false
+  })
+})
 
 // ── Localization helpers ────────────────────────────────────────────
 

@@ -264,8 +264,26 @@ public class AiResponseParser {
         if (arr != null && arr.isArray()) {
             for (JsonNode item : arr) {
                 SkillItem s = new SkillItem();
+                // Standard format: {"skillGroup": "..", "skillName": ".."}
                 s.skillGroup = getString(item, "skillGroup", "skill_group");
                 s.skillName = getString(item, "skillName", "skill_name");
+
+                // Prototype-compatible format: {"groupName": "..", "skills": ["..", ".."]}
+                // Convert each skill in the array into individual SkillItem rows.
+                if (s.skillName == null) {
+                    String groupName = getString(item, "groupName");
+                    JsonNode skillsArr = item.get("skills");
+                    if (groupName != null && skillsArr != null && skillsArr.isArray()) {
+                        for (JsonNode skillNode : skillsArr) {
+                            SkillItem expanded = new SkillItem();
+                            expanded.skillGroup = groupName;
+                            expanded.skillName = skillNode.isTextual() ? skillNode.asText() : null;
+                            if (expanded.skillName != null) list.add(expanded);
+                        }
+                        continue; // already added expanded items
+                    }
+                }
+
                 if (s.skillName != null) list.add(s);
             }
         }

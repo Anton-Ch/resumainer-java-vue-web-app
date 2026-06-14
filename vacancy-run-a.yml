@@ -1,0 +1,33 @@
+- generic [ref=e4]:
+  - generic [ref=e8]:
+    - heading "С возвращением" [level=2] [ref=e9]
+    - paragraph [ref=e10]: Один профиль. Резюме под любую роль. Войди, чтобы продолжить.
+  - generic [ref=e11]:
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - img [ref=e14]
+        - generic [ref=e19]: ResumAIner
+      - group "Language switcher" [ref=e20]:
+        - button "EN" [ref=e21] [cursor=pointer]
+        - button "RU" [pressed] [ref=e22] [cursor=pointer]
+    - generic [ref=e23]:
+      - heading "С возвращением" [level=1] [ref=e24]
+      - paragraph [ref=e25]: Войди в аккаунт
+      - generic [ref=e28]:
+        - generic [ref=e30]:
+          - generic [ref=e31]: Email
+          - textbox "Email" [ref=e32]
+        - generic [ref=e34]:
+          - generic [ref=e35]: Пароль
+          - generic [ref=e36]:
+            - textbox "Пароль" [ref=e37]
+            - img [ref=e38]
+            - generic: Enter a password
+        - generic [ref=e41]:
+          - checkbox "Запомнить меня" [ref=e43] [cursor=pointer]
+          - generic [ref=e45] [cursor=pointer]: Запомнить меня
+        - button "Войти" [ref=e46] [cursor=pointer]:
+          - generic [ref=e47]: Войти
+      - paragraph [ref=e48]:
+        - text: Нет аккаунта?
+        - button "Регистрация" [ref=e49] [cursor=pointer]
