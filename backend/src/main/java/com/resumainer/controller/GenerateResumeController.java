@@ -102,6 +102,14 @@ public class GenerateResumeController {
             resumeGenerationService.generate(requestId, userId);
             return noCache(ResponseEntity.ok().body(java.util.Map.of("status", "completed")));
         } catch (IllegalArgumentException e) {
+            if (isAiResponseValidationFailure(e)) {
+                return noCache(ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                        .body(new GenerationErrorDto(
+                                "AI_RESPONSE_VALIDATION_FAILED",
+                                e.getMessage(),
+                                true, true, "failed")));
+            }
+
             return noCache(ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new GenerationErrorDto(
                             "REQUEST_NOT_FOUND", e.getMessage(),
@@ -289,6 +297,11 @@ public class GenerateResumeController {
                         "available", false,
                         "message", "Public resume links are not available in this version. "
                                 + "They will be available in a future update."));
+    }
+
+    private boolean isAiResponseValidationFailure(IllegalArgumentException e) {
+        String message = e.getMessage();
+        return message != null && message.startsWith("AI response validation failed");
     }
 
     // --- Session helpers ---

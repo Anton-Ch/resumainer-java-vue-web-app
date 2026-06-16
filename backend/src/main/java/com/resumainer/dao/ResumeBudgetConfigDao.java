@@ -6,7 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,6 +32,14 @@ public class ResumeBudgetConfigDao {
             "SELECT metric_key, min_value, max_value FROM resume_section_budget_rules "
             + "WHERE config_id = ? AND section_key = ? AND profile_key = ? "
             + "ORDER BY id";
+
+    private static final String SELECT_WORK_EXPERIENCE_DISTRIBUTION_RULES =
+            "SELECT case_key, min_total_jobs, max_total_jobs, min_projects, max_projects, "
+                    + "require_no_courses, template_mode, page1_jobs, page2_jobs, "
+                    + "page2_max_additional_jobs, priority "
+                    + "FROM resume_work_experience_distribution_rules "
+                    + "WHERE config_id = ? "
+                    + "ORDER BY priority ASC, id ASC";
 
     private final DataSource dataSource;
 
@@ -58,6 +68,47 @@ public class ResumeBudgetConfigDao {
         public SectionBudget(Integer minValue, Integer maxValue) {
             this.minValue = minValue;
             this.maxValue = maxValue;
+        }
+    }
+
+    /** Work experience distribution rule projection. */
+    public static class WorkExperienceDistributionRule {
+        public final String caseKey;
+        public final int minTotalJobs;
+        public final int maxTotalJobs;
+        public final int minProjects;
+        public final Integer maxProjects;
+        public final boolean requireNoCourses;
+        public final String templateMode;
+        public final int page1Jobs;
+        public final int page2Jobs;
+        public final Integer page2MaxAdditionalJobs;
+        public final int priority;
+
+        public WorkExperienceDistributionRule(
+                String caseKey,
+                int minTotalJobs,
+                int maxTotalJobs,
+                int minProjects,
+                Integer maxProjects,
+                boolean requireNoCourses,
+                String templateMode,
+                int page1Jobs,
+                int page2Jobs,
+                Integer page2MaxAdditionalJobs,
+                int priority
+        ) {
+            this.caseKey = caseKey;
+            this.minTotalJobs = minTotalJobs;
+            this.maxTotalJobs = maxTotalJobs;
+            this.minProjects = minProjects;
+            this.maxProjects = maxProjects;
+            this.requireNoCourses = requireNoCourses;
+            this.templateMode = templateMode;
+            this.page1Jobs = page1Jobs;
+            this.page2Jobs = page2Jobs;
+            this.page2MaxAdditionalJobs = page2MaxAdditionalJobs;
+            this.priority = priority;
         }
     }
 
@@ -137,6 +188,42 @@ public class ResumeBudgetConfigDao {
             log.error("Error loading section budgets for {}/{}", sectionKey, profileKey, e);
             throw new RuntimeException("Database error loading section budgets", e);
         }
+        return result;
+    }
+
+    /**
+     * Loads all Work Experience distribution rules for the selected budget config.
+     * Rules are ordered by priority so that special cases are evaluated first.
+     */
+    public List<WorkExperienceDistributionRule> loadWorkExperienceDistributionRules(long configId) {
+        List<WorkExperienceDistributionRule> result = new ArrayList<>();
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_WORK_EXPERIENCE_DISTRIBUTION_RULES)) {
+            stmt.setLong(1, configId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    result.add(new WorkExperienceDistributionRule(
+                            rs.getString("case_key"),
+                            rs.getInt("min_total_jobs"),
+                            rs.getInt("max_total_jobs"),
+                            rs.getInt("min_projects"),
+                            rs.getObject("max_projects", Integer.class),
+                            rs.getBoolean("require_no_courses"),
+                            rs.getString("template_mode"),
+                            rs.getInt("page1_jobs"),
+                            rs.getInt("page2_jobs"),
+                            rs.getObject("page2_max_additional_jobs", Integer.class),
+                            rs.getInt("priority")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error loading work experience distribution rules for configId={}", configId, e);
+            throw new RuntimeException("Database error loading work experience distribution rules", e);
+        }
+
         return result;
     }
 }

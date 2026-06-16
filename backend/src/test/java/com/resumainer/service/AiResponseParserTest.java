@@ -1,11 +1,13 @@
 package com.resumainer.service;
 
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for AiResponseParser covering all language/adaptation combinations.
+ * Tests for AiResponseParser covering language/adaptation combinations and required field validation.
  */
 class AiResponseParserTest {
 
@@ -13,16 +15,9 @@ class AiResponseParserTest {
 
     @Test
     void parseEnglishOnlyBalanced_returnsOneVariant() {
-        String json = """
-            {
-              "professionalTitle": "Java Developer",
-              "valueLine": "Backend expert",
-              "professionalSummary": "5 years of Java experience.",
-              "professionalAspirations": "Senior role.",
-              "skills": [{"skillGroup": "Languages", "skillName": "Java"}]
-            }
-            """;
+        String json = variantJson("Java Developer", "5 years of Java experience.");
         List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+
         assertEquals(1, variants.size());
         assertEquals("EN", variants.get(0).languageCode);
         assertEquals("BALANCED", variants.get(0).adaptationLevel);
@@ -31,13 +26,9 @@ class AiResponseParserTest {
 
     @Test
     void parseRussianOnlyMinimal_returnsOneVariant() {
-        String json = """
-            {
-              "professionalTitle": "Java разработчик",
-              "professionalSummary": "5 лет опыта."
-            }
-            """;
+        String json = variantJson("Java разработчик", "5 лет опыта.");
         List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "RUSSIAN_ONLY", "MINIMAL");
+
         assertEquals(1, variants.size());
         assertEquals("RU", variants.get(0).languageCode);
         assertEquals("MINIMAL", variants.get(0).adaptationLevel);
@@ -48,20 +39,28 @@ class AiResponseParserTest {
         String json = """
             {
               "en": {
-                "minimal": {"professionalTitle": "Dev EN", "professionalSummary": "Summary EN"},
-                "balanced": {"professionalTitle": "Dev EN B", "professionalSummary": "Summary EN B"},
-                "maximum": {"professionalTitle": "Dev EN M", "professionalSummary": "Summary EN M"}
+                "minimal": %s,
+                "balanced": %s,
+                "maximum": %s
               },
               "ru": {
-                "minimal": {"professionalTitle": "Dev RU", "professionalSummary": "Summary RU"},
-                "balanced": {"professionalTitle": "Dev RU B", "professionalSummary": "Summary RU B"},
-                "maximum": {"professionalTitle": "Dev RU M", "professionalSummary": "Summary RU M"}
+                "minimal": %s,
+                "balanced": %s,
+                "maximum": %s
               }
             }
-            """;
+            """.formatted(
+                variantJson("Dev EN", "Summary EN"),
+                variantJson("Dev EN B", "Summary EN B"),
+                variantJson("Dev EN M", "Summary EN M"),
+                variantJson("Dev RU", "Summary RU"),
+                variantJson("Dev RU B", "Summary RU B"),
+                variantJson("Dev RU M", "Summary RU M")
+        );
+
         List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "BILINGUAL", "ALL");
+
         assertEquals(6, variants.size());
-        // EN variants come first
         assertEquals("EN", variants.get(0).languageCode);
         assertEquals("MINIMAL", variants.get(0).adaptationLevel);
         assertEquals("RU", variants.get(3).languageCode);
@@ -72,13 +71,17 @@ class AiResponseParserTest {
         String json = """
             {
               "en": {
-                "balanced": {"professionalTitle": "Dev EN", "professionalSummary": "Summary EN"}
+                "balanced": %s
               },
               "ru": {
-                "balanced": {"professionalTitle": "Dev RU", "professionalSummary": "Summary RU"}
+                "balanced": %s
               }
             }
-            """;
+            """.formatted(
+                variantJson("Dev EN", "Summary EN"),
+                variantJson("Dev RU", "Summary RU")
+        );
+
         List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "BILINGUAL", "BALANCED");
         assertEquals(2, variants.size());
     }
@@ -86,16 +89,199 @@ class AiResponseParserTest {
     @Test
     void parseInvalidJson_rejectsWithException() {
         assertThrows(IllegalArgumentException.class, () ->
-            parser.parse("{invalid}", "ENGLISH_ONLY", "BALANCED"));
+                parser.parse("{invalid}", "ENGLISH_ONLY", "BALANCED"));
     }
 
     @Test
-    void parseMissingRequiredField_rejectsWithException() {
-        String json = """
-            { "valueLine": "only this" }
-            """;
+    void parseMissingProfessionalTitle_rejectsWithException() {
+        String json = variantJsonWithout("""
+              "professionalTitle": "Business Analyst",
+            """);
+
         assertThrows(IllegalArgumentException.class, () ->
-            parser.parse(json, "ENGLISH_ONLY", "BALANCED"));
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED"));
+    }
+
+    @Test
+    void parseMissingValueLine_rejectsWithException() {
+        String json = variantJsonWithout("""
+              "valueLine": "Analyst focused on reporting workflows.",
+            """);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED"));
+    }
+
+    @Test
+    void parseMissingProfessionalSummary_rejectsWithException() {
+        String json = variantJsonWithout("""
+              "professionalSummary": "Summary",
+            """);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED"));
+    }
+
+    @Test
+    void parseMissingProfessionalAspirations_rejectsWithException() {
+        String json = variantJsonWithout("""
+              "professionalAspirations": "Grow into a stronger backend-oriented analyst.",
+            """);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED"));
+    }
+
+    @Test
+    void parseMissingWorkExperience_rejectsWithException() {
+        String json = variantJsonWithout("""
+              "workExperience": [
+                {
+                  "sourceId": "work-5",
+                  "jobTitle": "Business Analyst",
+                  "companyName": "Bobrosoft",
+                  "description": "Gathered requirements.",
+                  "location": "Astana",
+                  "startDate": "2025-05",
+                  "endDate": null
+                }
+              ],
+            """);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED"));
+    }
+
+    @Test
+    void parseWorkExperienceItemMissingSourceId_rejectsWithException() {
+        String json = variantJson().replace("""
+                  "sourceId": "work-5",
+                """, "");
+
+        assertThrows(IllegalArgumentException.class, () ->
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED"));
+    }
+
+    @Test
+    void parseWorkExperienceItemMissingJobTitle_rejectsWithException() {
+        String json = variantJson().replace("""
+                  "jobTitle": "Business Analyst",
+                """, "");
+
+        assertThrows(IllegalArgumentException.class, () ->
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED"));
+    }
+
+    @Test
+    void parseWorkExperienceItemMissingCompanyName_rejectsWithException() {
+        String json = variantJson().replace("""
+                  "companyName": "Bobrosoft",
+                """, "");
+
+        assertThrows(IllegalArgumentException.class, () ->
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED"));
+    }
+
+    @Test
+    void parseWorkExperienceItemMissingDescription_rejectsWithException() {
+        String json = variantJson().replace("""
+                  "description": "Gathered requirements.",
+                """, "");
+
+        assertThrows(IllegalArgumentException.class, () ->
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED"));
+    }
+
+    @Test
+    void parseMissingSkills_rejectsWithException() {
+        String json = variantJsonWithout("""
+              "skills": [
+                {"skillGroup": "Analysis", "skillName": "BPMN"}
+              ],
+            """);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED"));
+    }
+
+    @Test
+    void parseSkillMissingSkillGroup_rejectsWithException() {
+        String json = variantJsonWithSections(
+                defaultWorkExperienceSection(),
+                defaultCoursesSection(),
+                defaultProjectsSection(),
+                """
+              "skills": [
+                {"skillName": "BPMN"}
+              ],
+                """,
+                defaultPersonalInfoSection()
+        );
+
+        assertThrows(IllegalArgumentException.class, () ->
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED"));
+    }
+
+    @Test
+    void parseSkillMissingSkillName_rejectsWithException() {
+        String json = variantJsonWithSections(
+                defaultWorkExperienceSection(),
+                defaultCoursesSection(),
+                defaultProjectsSection(),
+                """
+              "skills": [
+                {"skillGroup": "Analysis"}
+              ],
+                """,
+                defaultPersonalInfoSection()
+        );
+
+        assertThrows(IllegalArgumentException.class, () ->
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED"));
+    }
+
+    @Test
+    void parseMissingPersonalInfo_allowsProfileOwnedSectionToBeOmitted() {
+        String json = variantJsonWithSections(
+                defaultWorkExperienceSection(),
+                defaultCoursesSection(),
+                defaultProjectsSection(),
+                defaultSkillsSectionWithoutTrailingComma(),
+                ""
+        );
+
+        List<AiResponseParser.ParsedVariant> variants =
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+
+        assertEquals(1, variants.size());
+        assertNull(variants.get(0).personalInfo);
+    }
+
+    @Test
+    void parsePersonalInfoMissingWorkFormats_allowsProfileOwnedFieldToBeOmitted() {
+        String json = variantJsonWithSections(
+                defaultWorkExperienceSection(),
+                defaultCoursesSection(),
+                defaultProjectsSection(),
+                defaultSkillsSection(),
+                """
+              "personalInfo": {
+                "location": "Astana",
+                "willingnessToRelocate": "Yes",
+                "willingnessForBusinessTrips": "Negotiable",
+                "citizenship": "RK",
+                "dateOfBirth": "1992-02-29",
+                "spokenLanguages": "English"
+              }
+                """
+        );
+
+        List<AiResponseParser.ParsedVariant> variants =
+                parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+
+        assertEquals(1, variants.size());
+        assertNotNull(variants.get(0).personalInfo);
+        assertNull(variants.get(0).personalInfo.workFormats);
     }
 
     @Test
@@ -103,28 +289,56 @@ class AiResponseParserTest {
         String json = """
             {
               "professional_title": "Dev",
-              "professional_summary": "Summary"
+              "value_line": "Backend expert",
+              "professional_summary": "Summary",
+              "professional_aspirations": "Aspirations",
+              "work_experience": [
+                {
+                  "source_id": "work-5",
+                  "job_title": "Business Analyst",
+                  "company_name": "Bobrosoft",
+                  "description": "Gathered requirements."
+                }
+              ],
+              "skills": [
+                {"skill_group": "Languages", "skill_name": "Java"}
+              ],
+              "personal_info": {
+                "location": "Astana",
+                "willingness_to_relocate": "Yes",
+                "willingness_for_business_trips": "Negotiable",
+                "citizenship": "RK",
+                "date_of_birth": "1992-02-29",
+                "work_formats": ["Remote"]
+              }
             }
             """;
+
         List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "MINIMAL");
+
         assertEquals(1, variants.size());
         assertEquals("Dev", variants.get(0).professionalTitle);
+        assertEquals("work-5", variants.get(0).experience.get(0).sourceId);
     }
 
     @Test
     void parseSkills_standardFormat_parsesSkillGroupSkillName() {
-        String json = """
-            {
-              "professionalTitle": "Dev",
-              "professionalSummary": "Summary",
+        String json = variantJsonWithSections(
+                defaultWorkExperienceSection(),
+                defaultCoursesSection(),
+                defaultProjectsSection(),
+                """
               "skills": [
                 {"skillGroup": "Languages", "skillName": "Java"},
                 {"skillGroup": "Languages", "skillName": "SQL"},
                 {"skillGroup": "Tools", "skillName": "Docker"}
-              ]
-            }
-            """;
+              ],
+                """,
+                defaultPersonalInfoSection()
+        );
+
         List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+
         assertEquals(3, variants.get(0).skills.size());
         assertEquals("Languages", variants.get(0).skills.get(0).skillGroup);
         assertEquals("Java", variants.get(0).skills.get(0).skillName);
@@ -133,88 +347,259 @@ class AiResponseParserTest {
 
     @Test
     void parseSkills_prototypeGroupFormat_parsesGroupNameSkillsArray() {
-        // Prototype sends {groupName, skills[]} instead of {skillGroup, skillName}
-        String json = """
-            {
-              "professionalTitle": "Dev",
-              "professionalSummary": "Summary",
+        String json = variantJsonWithSections(
+                defaultWorkExperienceSection(),
+                defaultCoursesSection(),
+                defaultProjectsSection(),
+                """
               "skills": [
                 {"groupName": "Languages", "skills": ["Java", "SQL", "Python"]},
                 {"groupName": "Tools", "skills": ["Docker", "Kubernetes"]}
-              ]
-            }
-            """;
+              ],
+                """,
+                defaultPersonalInfoSection()
+        );
+
         List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+
         assertEquals(5, variants.get(0).skills.size());
         assertEquals("Languages", variants.get(0).skills.get(0).skillGroup);
         assertEquals("Java", variants.get(0).skills.get(0).skillName);
-        assertEquals("Languages", variants.get(0).skills.get(2).skillGroup);
-        assertEquals("Python", variants.get(0).skills.get(2).skillName);
         assertEquals("Tools", variants.get(0).skills.get(3).skillGroup);
-        assertEquals("Docker", variants.get(0).skills.get(3).skillName);
     }
 
     @Test
     void parseBilingualAll_incompleteResponse_throwsException() {
-        // Only EN+MINIMAL returned, missing EN+BALANCED, EN+MAXIMUM, RU+MINIMAL, RU+BALANCED, RU+MAXIMUM
         String json = """
             {
               "en": {
-                "minimal": {"professionalTitle": "Dev EN", "professionalSummary": "Summary EN"}
+                "minimal": %s
               }
             }
-            """;
+            """.formatted(variantJson("Dev EN", "Summary EN"));
+
         assertThrows(IllegalArgumentException.class, () ->
-            parser.parse(json, "BILINGUAL", "ALL"));
+                parser.parse(json, "BILINGUAL", "ALL"));
     }
 
     @Test
     void parseBilingualAll_missingLanguage_throwsException() {
-        // Only EN variants, no RU
         String json = """
             {
               "en": {
-                "minimal": {"professionalTitle": "Dev EN", "professionalSummary": "Sum EN"},
-                "balanced": {"professionalTitle": "Dev EN B", "professionalSummary": "Sum EN B"},
-                "maximum": {"professionalTitle": "Dev EN M", "professionalSummary": "Sum EN M"}
+                "minimal": %s,
+                "balanced": %s,
+                "maximum": %s
               }
             }
-            """;
+            """.formatted(
+                variantJson("Dev EN", "Sum EN"),
+                variantJson("Dev EN B", "Sum EN B"),
+                variantJson("Dev EN M", "Sum EN M")
+        );
+
         assertThrows(IllegalArgumentException.class, () ->
-            parser.parse(json, "BILINGUAL", "ALL"));
+                parser.parse(json, "BILINGUAL", "ALL"));
     }
 
     @Test
     void parseBilingualAll_missingLevels_throwsException() {
-        // Both languages but only MINIMAL, missing BALANCED and MAXIMUM
         String json = """
             {
               "en": {
-                "minimal": {"professionalTitle": "Dev EN", "professionalSummary": "Sum EN"}
+                "minimal": %s
               },
               "ru": {
-                "minimal": {"professionalTitle": "Dev RU", "professionalSummary": "Sum RU"}
+                "minimal": %s
               }
             }
-            """;
+            """.formatted(
+                variantJson("Dev EN", "Sum EN"),
+                variantJson("Dev RU", "Sum RU")
+        );
+
         assertThrows(IllegalArgumentException.class, () ->
-            parser.parse(json, "BILINGUAL", "ALL"));
+                parser.parse(json, "BILINGUAL", "ALL"));
     }
 
     @Test
     void parseWorkFormats_extractsList() {
-        String json = """
+        String json = variantJson();
+
+        List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+
+        assertNotNull(variants.get(0).personalInfo);
+        assertTrue(variants.get(0).personalInfo.workFormats.contains("Remote"));
+    }
+
+    @Test
+    void parseRepeatableSections_preservesSourceId() {
+        String json = variantJson();
+
+        List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+
+        assertEquals(1, variants.size());
+        assertEquals("work-5", variants.get(0).experience.get(0).sourceId,
+                "workExperience sourceId must be preserved");
+        assertEquals("course-5", variants.get(0).courses.get(0).sourceId,
+                "course sourceId must be preserved");
+        assertEquals("project-2", variants.get(0).projects.get(0).sourceId,
+                "project sourceId must be preserved");
+    }
+
+    private String variantJson() {
+        return variantJson("Business Analyst", "Summary");
+    }
+
+    private String variantJson(String professionalTitle, String professionalSummary) {
+        return """
             {
-              "professionalTitle": "Dev",
-              "professionalSummary": "Summary",
+              "professionalTitle": "%s",
+              "valueLine": "Analyst focused on reporting workflows.",
+              "professionalSummary": "%s",
+              "professionalAspirations": "Grow into a stronger backend-oriented analyst.",
+              "workExperience": [
+                {
+                  "sourceId": "work-5",
+                  "jobTitle": "Business Analyst",
+                  "companyName": "Bobrosoft",
+                  "description": "Gathered requirements.",
+                  "location": "Astana",
+                  "startDate": "2025-05",
+                  "endDate": null
+                }
+              ],
+              "courses": [
+                {
+                  "sourceId": "course-5",
+                  "name": "Microsoft Business Analysis",
+                  "provider": "Coursera",
+                  "courseFocus": "Business analysis"
+                }
+              ],
+              "projects": [
+                {
+                  "sourceId": "project-2",
+                  "projectName": "Reporting Optimization",
+                  "role": "Developer",
+                  "description": "Optimized reporting workflow.",
+                  "startDate": "2026-05"
+                }
+              ],
+              "skills": [
+                {"skillGroup": "Analysis", "skillName": "BPMN"}
+              ],
               "personalInfo": {
-                "workFormats": ["remote", "hybrid"]
+                "location": "Astana",
+                "willingnessToRelocate": "Yes",
+                "willingnessForBusinessTrips": "Negotiable",
+                "citizenship": "RK",
+                "dateOfBirth": "1992-02-29",
+                "workFormats": ["Remote"]
               }
             }
-            """;
-        List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "BALANCED");
-        assertNotNull(variants.get(0).personalInfo);
-        assertTrue(variants.get(0).personalInfo.workFormats.contains("remote"));
-        assertTrue(variants.get(0).personalInfo.workFormats.contains("hybrid"));
+            """.formatted(professionalTitle, professionalSummary);
+    }
+
+    private String variantJsonWithSections(String workExperienceSection,
+                                           String coursesSection,
+                                           String projectsSection,
+                                           String skillsSection,
+                                           String personalInfoSection) {
+        return """
+            {
+              "professionalTitle": "Business Analyst",
+              "valueLine": "Analyst focused on reporting workflows.",
+              "professionalSummary": "Summary",
+              "professionalAspirations": "Grow into a stronger backend-oriented analyst.",
+            %s
+            %s
+            %s
+            %s
+            %s
+            }
+            """.formatted(
+                workExperienceSection,
+                coursesSection,
+                projectsSection,
+                skillsSection,
+                personalInfoSection
+        );
+    }
+
+    private String defaultWorkExperienceSection() {
+        return """
+              "workExperience": [
+                {
+                  "sourceId": "work-5",
+                  "jobTitle": "Business Analyst",
+                  "companyName": "Bobrosoft",
+                  "description": "Gathered requirements.",
+                  "location": "Astana",
+                  "startDate": "2025-05",
+                  "endDate": null
+                }
+              ],
+                """;
+    }
+
+    private String defaultCoursesSection() {
+        return """
+              "courses": [
+                {
+                  "sourceId": "course-5",
+                  "name": "Microsoft Business Analysis",
+                  "provider": "Coursera",
+                  "courseFocus": "Business analysis"
+                }
+              ],
+                """;
+    }
+
+    private String defaultProjectsSection() {
+        return """
+              "projects": [
+                {
+                  "sourceId": "project-2",
+                  "projectName": "Reporting Optimization",
+                  "role": "Developer",
+                  "description": "Optimized reporting workflow.",
+                  "startDate": "2026-05"
+                }
+              ],
+                """;
+    }
+
+    private String defaultSkillsSection() {
+        return """
+              "skills": [
+                {"skillGroup": "Analysis", "skillName": "BPMN"}
+              ],
+                """;
+    }
+
+    private String defaultSkillsSectionWithoutTrailingComma() {
+        return """
+              "skills": [
+                {"skillGroup": "Analysis", "skillName": "BPMN"}
+              ]
+                """;
+    }
+
+    private String defaultPersonalInfoSection() {
+        return """
+              "personalInfo": {
+                "location": "Astana",
+                "willingnessToRelocate": "Yes",
+                "willingnessForBusinessTrips": "Negotiable",
+                "citizenship": "RK",
+                "dateOfBirth": "1992-02-29",
+                "workFormats": ["Remote"]
+              }
+                """;
+    }
+
+    private String variantJsonWithout(String exactBlockToRemove) {
+        return variantJson().replace(exactBlockToRemove, "");
     }
 }

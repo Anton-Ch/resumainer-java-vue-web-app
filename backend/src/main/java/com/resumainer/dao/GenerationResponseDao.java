@@ -47,9 +47,9 @@ public class GenerationResponseDao {
     // --- Experience ---
     private static final String INSERT_EXPERIENCE =
             "INSERT INTO generation_response_experience "
-            + "(response_id, job_title, company_name, description, location, "
-            + "is_first_page, start_date, end_date, order_in_resume) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    + "(response_id, source_id, job_title, company_name, description, location, "
+                    + "is_first_page, start_date, end_date, order_in_resume) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     private static final String SELECT_EXPERIENCE_BY_RESPONSE =
             "SELECT * FROM generation_response_experience WHERE response_id = ? ORDER BY order_in_resume";
@@ -57,8 +57,8 @@ public class GenerationResponseDao {
     // --- Course ---
     private static final String INSERT_COURSE =
             "INSERT INTO generation_response_course "
-            + "(response_id, name, provider, is_first_page, course_focus, order_in_resume) "
-            + "VALUES (?, ?, ?, ?, ?, ?)";
+                    + "(response_id, source_id, name, provider, is_first_page, course_focus, order_in_resume) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
     private static final String SELECT_COURSES_BY_RESPONSE =
             "SELECT * FROM generation_response_course WHERE response_id = ? ORDER BY order_in_resume";
@@ -66,8 +66,8 @@ public class GenerationResponseDao {
     // --- Project ---
     private static final String INSERT_PROJECT =
             "INSERT INTO generation_response_project "
-            + "(response_id, project_name, role, description, location, start_date, end_date, order_in_resume) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                    + "(response_id, source_id, project_name, role, description, location, start_date, end_date, order_in_resume) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     private static final String SELECT_PROJECTS_BY_RESPONSE =
             "SELECT * FROM generation_response_project WHERE response_id = ? ORDER BY order_in_resume";
@@ -110,14 +110,15 @@ public class GenerationResponseDao {
     public void insertExperience(GenerationResponseExperience exp, Connection conn) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement(INSERT_EXPERIENCE)) {
             stmt.setObject(1, exp.getResponseId());
-            stmt.setString(2, exp.getJobTitle());
-            stmt.setString(3, exp.getCompanyName());
-            stmt.setString(4, exp.getDescription());
-            stmt.setString(5, exp.getLocation());
-            stmt.setBoolean(6, exp.isFirstPage());
-            stmt.setDate(7, Date.valueOf(exp.getStartDate()));
-            setDateOrNull(stmt, 8, exp.getEndDate());
-            stmt.setInt(9, exp.getOrderInResume());
+            stmt.setString(2, exp.getSourceId());
+            stmt.setString(3, exp.getJobTitle());
+            stmt.setString(4, exp.getCompanyName());
+            stmt.setString(5, exp.getDescription());
+            stmt.setString(6, exp.getLocation());
+            stmt.setBoolean(7, exp.isFirstPage());
+            stmt.setDate(8, Date.valueOf(exp.getStartDate()));
+            setDateOrNull(stmt, 9, exp.getEndDate());
+            stmt.setInt(10, exp.getOrderInResume());
             stmt.executeUpdate();
         }
     }
@@ -125,11 +126,12 @@ public class GenerationResponseDao {
     public void insertCourse(GenerationResponseCourse course, Connection conn) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement(INSERT_COURSE)) {
             stmt.setObject(1, course.getResponseId());
-            stmt.setString(2, course.getName());
-            stmt.setString(3, course.getProvider());
-            stmt.setBoolean(4, course.isFirstPage());
-            stmt.setString(5, course.getCourseFocus());
-            stmt.setInt(6, course.getOrderInResume());
+            stmt.setString(2, course.getSourceId());
+            stmt.setString(3, course.getName());
+            stmt.setString(4, course.getProvider());
+            stmt.setBoolean(5, course.isFirstPage());
+            stmt.setString(6, course.getCourseFocus());
+            stmt.setInt(7, course.getOrderInResume());
             stmt.executeUpdate();
         }
     }
@@ -137,13 +139,14 @@ public class GenerationResponseDao {
     public void insertProject(GenerationResponseProject project, Connection conn) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement(INSERT_PROJECT)) {
             stmt.setObject(1, project.getResponseId());
-            stmt.setString(2, project.getProjectName());
-            stmt.setString(3, project.getRole());
-            stmt.setString(4, project.getDescription());
-            stmt.setString(5, project.getLocation());
-            stmt.setDate(6, Date.valueOf(project.getStartDate()));
-            setDateOrNull(stmt, 7, project.getEndDate());
-            stmt.setInt(8, project.getOrderInResume());
+            stmt.setString(2, project.getSourceId());
+            stmt.setString(3, project.getProjectName());
+            stmt.setString(4, project.getRole());
+            stmt.setString(5, project.getDescription());
+            stmt.setString(6, project.getLocation());
+            stmt.setDate(7, Date.valueOf(project.getStartDate()));
+            setDateOrNull(stmt, 8, project.getEndDate());
+            stmt.setInt(9, project.getOrderInResume());
             stmt.executeUpdate();
         }
     }
@@ -379,6 +382,7 @@ public class GenerationResponseDao {
         GenerationResponseExperience e = new GenerationResponseExperience();
         e.setId((UUID) rs.getObject("id"));
         e.setResponseId((UUID) rs.getObject("response_id"));
+        e.setSourceId(rs.getString("source_id"));
         e.setJobTitle(rs.getString("job_title"));
         e.setCompanyName(rs.getString("company_name"));
         e.setDescription(rs.getString("description"));
@@ -394,6 +398,7 @@ public class GenerationResponseDao {
         GenerationResponseCourse c = new GenerationResponseCourse();
         c.setId((UUID) rs.getObject("id"));
         c.setResponseId((UUID) rs.getObject("response_id"));
+        c.setSourceId(rs.getString("source_id"));
         c.setName(rs.getString("name"));
         c.setProvider(rs.getString("provider"));
         c.setFirstPage(rs.getBoolean("is_first_page"));
@@ -406,6 +411,7 @@ public class GenerationResponseDao {
         GenerationResponseProject p = new GenerationResponseProject();
         p.setId((UUID) rs.getObject("id"));
         p.setResponseId((UUID) rs.getObject("response_id"));
+        p.setSourceId(rs.getString("source_id"));
         p.setProjectName(rs.getString("project_name"));
         p.setRole(rs.getString("role"));
         p.setDescription(rs.getString("description"));

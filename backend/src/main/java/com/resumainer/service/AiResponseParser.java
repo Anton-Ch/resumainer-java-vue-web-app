@@ -40,18 +40,30 @@ public class AiResponseParser {
     }
 
     public static class ExperienceItem {
-        public String jobTitle; public String companyName; public String description;
-        public String location; public String startDate; public String endDate;
+        public String sourceId;
+        public String jobTitle;
+        public String companyName;
+        public String description;
+        public String location;
+        public String startDate;
+        public String endDate;
         public boolean isFirstPage = true;
     }
 
     public static class CourseItem {
-        public String name; public String provider; public String courseFocus;
+        public String sourceId;
+        public String name;
+        public String provider;
+        public String courseFocus;
     }
 
     public static class ProjectItem {
-        public String projectName; public String role; public String description;
-        public String startDate; public String endDate;
+        public String sourceId;
+        public String projectName;
+        public String role;
+        public String description;
+        public String startDate;
+        public String endDate;
     }
 
     public static class SkillItem {
@@ -109,11 +121,10 @@ public class AiResponseParser {
                     variant.coverLetter = getString(variantNode, "coverLetter", "cover_letter");
 
                     // Validate required
-                    if (variant.professionalTitle == null || variant.professionalSummary == null) {
-                        throw new IllegalArgumentException(
-                                "Missing required field in " + lang + "/" + level
-                                + ": professionalTitle and professionalSummary are required");
-                    }
+                    validateRequiredText(variant.professionalTitle, "professionalTitle", lang, level);
+                    validateRequiredText(variant.valueLine, "valueLine", lang, level);
+                    validateRequiredText(variant.professionalSummary, "professionalSummary", lang, level);
+                    validateRequiredText(variant.professionalAspirations, "professionalAspirations", lang, level);
 
                     // Child sections
                     variant.experience = parseExperience(variantNode);
@@ -121,6 +132,8 @@ public class AiResponseParser {
                     variant.projects = parseProjects(variantNode);
                     variant.skills = parseSkills(variantNode);
                     variant.personalInfo = parsePersonalInfo(variantNode);
+
+                    validateRequiredSections(variant, lang, level);
 
                     results.add(variant);
                 }
@@ -206,6 +219,41 @@ public class AiResponseParser {
         return list;
     }
 
+    private void validateRequiredText(String value, String fieldName, String lang, String level) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Missing required field in " + lang + "/" + level + ": " + fieldName);
+        }
+    }
+
+    private void validateRequiredSections(ParsedVariant variant, String lang, String level) {
+        if (variant.experience == null || variant.experience.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Missing required section in " + lang + "/" + level + ": workExperience");
+        }
+
+        for (ExperienceItem item : variant.experience) {
+            validateRequiredText(item.sourceId, "workExperience[].sourceId", lang, level);
+            validateRequiredText(item.jobTitle, "workExperience[].jobTitle", lang, level);
+            validateRequiredText(item.companyName, "workExperience[].companyName", lang, level);
+            validateRequiredText(item.description, "workExperience[].description", lang, level);
+        }
+
+        if (variant.skills == null || variant.skills.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Missing required section in " + lang + "/" + level + ": skills");
+        }
+
+        for (SkillItem item : variant.skills) {
+            validateRequiredText(item.skillGroup, "skills[].skillGroup", lang, level);
+            validateRequiredText(item.skillName, "skills[].skillName", lang, level);
+        }
+
+        // personalInfo is profile-owned data. The AI may echo it, but generation must not fail
+        // if the model omits personalInfo or any of its fields. Profile completeness belongs to
+        // pre-generation validation, not AI response parsing.
+    }
+
     private List<ExperienceItem> parseExperience(JsonNode variant) {
         List<ExperienceItem> list = new ArrayList<>();
         JsonNode arr = variant.get("workExperience");
@@ -213,6 +261,7 @@ public class AiResponseParser {
         if (arr != null && arr.isArray()) {
             for (JsonNode item : arr) {
                 ExperienceItem e = new ExperienceItem();
+                e.sourceId = getString(item, "sourceId", "source_id");
                 e.jobTitle = getString(item, "jobTitle", "job_title");
                 e.companyName = getString(item, "companyName", "company_name");
                 e.description = getString(item, "description");
@@ -232,6 +281,7 @@ public class AiResponseParser {
         if (arr != null && arr.isArray()) {
             for (JsonNode item : arr) {
                 CourseItem c = new CourseItem();
+                c.sourceId = getString(item, "sourceId", "source_id");
                 c.name = getString(item, "name");
                 c.provider = getString(item, "provider");
                 c.courseFocus = getString(item, "courseFocus", "course_focus");
@@ -247,6 +297,7 @@ public class AiResponseParser {
         if (arr != null && arr.isArray()) {
             for (JsonNode item : arr) {
                 ProjectItem p = new ProjectItem();
+                p.sourceId = getString(item, "sourceId", "source_id");
                 p.projectName = getString(item, "projectName", "project_name");
                 p.role = getString(item, "role");
                 p.description = getString(item, "description");
@@ -284,7 +335,7 @@ public class AiResponseParser {
                     }
                 }
 
-                if (s.skillName != null) list.add(s);
+                if (s.skillGroup != null && s.skillName != null) list.add(s);
             }
         }
         return list;
