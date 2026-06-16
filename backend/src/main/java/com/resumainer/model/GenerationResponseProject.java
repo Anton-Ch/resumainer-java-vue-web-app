@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public class GenerationResponseProject {
     private UUID id; private UUID responseId;
+    private String sourceId;
     private String projectName; private String role; private String description;
     private String location; private LocalDate startDate; private LocalDate endDate;
     private int orderInResume;
@@ -15,6 +16,7 @@ public class GenerationResponseProject {
 
     public UUID getId() { return id; } public void setId(UUID id) { this.id = id; }
     public UUID getResponseId() { return responseId; } public void setResponseId(UUID responseId) { this.responseId = responseId; }
+    public String getSourceId() { return sourceId; } public void setSourceId(String sourceId) { this.sourceId = sourceId; }
     public String getProjectName() { return projectName; } public void setProjectName(String projectName) { this.projectName = projectName; }
     public String getRole() { return role; } public void setRole(String role) { this.role = role; }
     public String getDescription() { return description; } public void setDescription(String description) { this.description = description; }

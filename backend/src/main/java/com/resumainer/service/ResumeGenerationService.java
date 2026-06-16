@@ -33,6 +33,7 @@ public class ResumeGenerationService {
     private final PromptConfigDao promptConfigDao;
     private final AiClientFactory aiClientFactory;
     private final AiResponseParser responseParser;
+    private final AiResponseValidator responseValidator;
     private final GenerationResponsePersistenceService persistenceService;
     private final AiModelDao aiModelDao;
     private final ResumeBudgetConfigService budgetConfigService;
@@ -42,6 +43,7 @@ public class ResumeGenerationService {
                                    PromptConfigDao promptConfigDao,
                                    AiClientFactory aiClientFactory,
                                    AiResponseParser responseParser,
+                                   AiResponseValidator responseValidator,
                                    GenerationResponsePersistenceService persistenceService,
                                    AiModelDao aiModelDao,
                                    ResumeBudgetConfigService budgetConfigService) {
@@ -50,6 +52,7 @@ public class ResumeGenerationService {
         this.promptConfigDao = promptConfigDao;
         this.aiClientFactory = aiClientFactory;
         this.responseParser = responseParser;
+        this.responseValidator = responseValidator;
         this.persistenceService = persistenceService;
         this.aiModelDao = aiModelDao;
         this.budgetConfigService = budgetConfigService;
@@ -138,7 +141,14 @@ public class ResumeGenerationService {
             List<AiResponseParser.ParsedVariant> variants = responseParser.parse(
                     rawResponse, request.getLanguageMode(), request.getAdaptationSelection());
 
-            // 5. Persist
+            // 5. Validate parsed response against request/profile-dependent rules
+            responseValidator.validate(
+                    variants,
+                    request.isIncludeCoverLetter(),
+                    promptResult.profilePayload
+            );
+
+            // 6. Persist
             persistenceService.persistResponses(requestId, userId, variants);
 
             log.info("GENERATION_DONE requestId={}, variants={}, durationMs={}",

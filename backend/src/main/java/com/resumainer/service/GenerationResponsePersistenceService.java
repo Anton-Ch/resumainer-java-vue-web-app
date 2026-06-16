@@ -140,6 +140,7 @@ public class GenerationResponsePersistenceService {
             AiResponseParser.ExperienceItem item = items.get(i);
             GenerationResponseExperience exp = new GenerationResponseExperience();
             exp.setResponseId(responseId);
+            exp.setSourceId(item.sourceId);
             exp.setJobTitle(item.jobTitle);
             exp.setCompanyName(item.companyName);
             exp.setDescription(item.description);
@@ -157,6 +158,7 @@ public class GenerationResponsePersistenceService {
             AiResponseParser.CourseItem item = items.get(i);
             GenerationResponseCourse course = new GenerationResponseCourse();
             course.setResponseId(responseId);
+            course.setSourceId(item.sourceId);
             course.setName(item.name);
             course.setProvider(item.provider);
             course.setFirstPage(i < 7); // Page 1: max 7 most relevant courses
@@ -171,6 +173,7 @@ public class GenerationResponsePersistenceService {
             AiResponseParser.ProjectItem item = items.get(i);
             GenerationResponseProject project = new GenerationResponseProject();
             project.setResponseId(responseId);
+            project.setSourceId(item.sourceId);
             project.setProjectName(item.projectName);
             project.setRole(item.role);
             project.setDescription(item.description);

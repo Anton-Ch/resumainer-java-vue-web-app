@@ -3,9 +3,12 @@ package com.resumainer.service;
 import com.resumainer.dao.ResumeBudgetConfigDao;
 import com.resumainer.dao.ResumeBudgetConfigDao.BudgetConfig;
 import com.resumainer.dao.ResumeBudgetConfigDao.SectionBudget;
+import com.resumainer.dao.ResumeBudgetConfigDao.WorkExperienceDistributionRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * Thin service over ResumeBudgetConfigDao.
@@ -102,6 +105,13 @@ public class ResumeBudgetConfigService {
 
     public int getProjectBulletsMax() {
         return getMax("projects", PROJECTS_PROFILE, "bullet_points_per_project");
+    }
+
+    // ─── Work Experience distribution methods ──────────────────────
+
+    public List<WorkExperienceDistributionRule> getWorkExperienceDistributionRules() {
+        BudgetConfig config = getActiveBudgetConfig();
+        return dao.loadWorkExperienceDistributionRules(config.id);
     }
 
     // ─── Internal helpers ──────────────────────────────────────────

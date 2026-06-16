@@ -16,6 +16,8 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,6 +37,7 @@ class ResumeGenerationServiceLifecycleTest {
     @Mock private PromptConfigDao promptConfigDao;
     @Mock private AiClientFactory aiClientFactory;
     @Mock private AiResponseParser responseParser;
+    @Mock private AiResponseValidator responseValidator;
     @Mock private GenerationResponsePersistenceService persistenceService;
     @Mock private AiModelDao aiModelDao;
     @Mock private ResumeBudgetConfigService budgetConfigService;
@@ -45,18 +48,21 @@ class ResumeGenerationServiceLifecycleTest {
     private final UUID userId = UUID.randomUUID();
     private final UUID modelId = UUID.randomUUID();
     private final UUID promptConfigId = UUID.randomUUID();
+    private final Map<String, Object> profilePayload = Map.of("contact", true);
+    private List<AiResponseParser.ParsedVariant> parsedVariants;
 
     @BeforeEach
     void setUp() {
         service = new ResumeGenerationService(
                 requestDao, promptBuilder, promptConfigDao, aiClientFactory, responseParser,
-                persistenceService, aiModelDao, budgetConfigService);
+                responseValidator, persistenceService, aiModelDao, budgetConfigService);
 
         // Common stubs
         ResumePromptBuilder.PromptResult promptResult = new ResumePromptBuilder.PromptResult();
         promptResult.systemPrompt = "system";
         promptResult.requestPrompt = "request";
         promptResult.promptConfigId = promptConfigId;
+        promptResult.profilePayload = profilePayload;
         promptResult.profilePayloadJson = "{\"contact\":true}";
         promptResult.promptHash = "hash-123";
         when(promptBuilder.build(any(), any())).thenReturn(promptResult);
@@ -64,6 +70,14 @@ class ResumeGenerationServiceLifecycleTest {
                 .thenReturn(UUID.randomUUID());
         when(aiClientFactory.createOpenRouter(any())).thenReturn(aiClient);
         when(aiClient.generate(anyString(), anyString())).thenReturn("{}");
+
+        AiResponseParser.ParsedVariant parsedVariant = new AiResponseParser.ParsedVariant();
+        parsedVariant.languageCode = "EN";
+        parsedVariant.adaptationLevel = "BALANCED";
+        parsedVariant.coverLetter = "Cover letter";
+        parsedVariants = List.of(parsedVariant);
+        when(responseParser.parse(anyString(), anyString(), anyString())).thenReturn(parsedVariants);
+
         when(budgetConfigService.getActiveBudgetConfig())
                 .thenReturn(new BudgetConfig(1L, "Test", 1));
         when(aiModelDao.findById(any())).thenReturn(new AiModel());
@@ -198,6 +212,62 @@ class ResumeGenerationServiceLifecycleTest {
                 eq("hash-123")
         );
         inOrder.verify(aiClient).generate("system", "request");
+    }
+
+
+    @Test
+    void generateValidatesParsedAiResponseBeforePersist() {
+        // Given a pending request with cover letter enabled
+        ResumeGenerationRequest request = new ResumeGenerationRequest();
+        request.setId(requestId);
+        request.setUserId(userId);
+        request.setAiModelId(modelId);
+        request.setStatus("pending");
+        request.setLanguageMode("ENGLISH_ONLY");
+        request.setAdaptationSelection("BALANCED");
+        request.setIncludeCoverLetter(true);
+        when(requestDao.findById(requestId, userId)).thenReturn(request);
+        when(requestDao.hasProcessingRequest(userId)).thenReturn(false);
+
+        // When
+        service.generate(requestId, userId);
+
+        // Then parsed AI response is validated before persistence.
+        InOrder inOrder = inOrder(responseParser, responseValidator, persistenceService);
+        inOrder.verify(responseParser).parse("{}", "ENGLISH_ONLY", "BALANCED");
+        inOrder.verify(responseValidator).validate(parsedVariants, true, profilePayload);
+        inOrder.verify(persistenceService).persistResponses(requestId, userId, parsedVariants);
+    }
+
+
+    @Test
+    void generateWhenAiResponseValidationFailsMarksRequestFailedAndDoesNotPersist() {
+        // Given a pending request and parsed AI response that violates validator rules
+        ResumeGenerationRequest request = new ResumeGenerationRequest();
+        request.setId(requestId);
+        request.setUserId(userId);
+        request.setAiModelId(modelId);
+        request.setStatus("pending");
+        request.setLanguageMode("ENGLISH_ONLY");
+        request.setAdaptationSelection("BALANCED");
+        request.setIncludeCoverLetter(false);
+        when(requestDao.findById(requestId, userId)).thenReturn(request);
+        when(requestDao.hasProcessingRequest(userId)).thenReturn(false);
+
+        IllegalArgumentException validationError = new IllegalArgumentException(
+                "AI response validation failed in EN/BALANCED: workExperience count exceeds resolved budget maximum: 16 > 10");
+        doThrow(validationError).when(responseValidator).validate(parsedVariants, false, profilePayload);
+
+        // When / Then
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> service.generate(requestId, userId));
+        assertSame(validationError, ex,
+                "Service must rethrow the original validation exception for upper layers to map correctly");
+
+        // Then request lifecycle is safely closed as failed and nothing is persisted.
+        verify(requestDao).updateStatus(requestId, userId, "processing", null, false);
+        verify(requestDao).updateStatus(requestId, userId, "failed", validationError.getMessage(), false);
+        verify(persistenceService, never()).persistResponses(any(), any(), any());
     }
 
 }

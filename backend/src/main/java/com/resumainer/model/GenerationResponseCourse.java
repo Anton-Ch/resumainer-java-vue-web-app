@@ -11,6 +11,7 @@ public class GenerationResponseCourse {
 
     private UUID id;
     private UUID responseId;
+    private String sourceId;
 
     private String name;
     private String provider;
@@ -23,6 +24,9 @@ public class GenerationResponseCourse {
 
     public GenerationResponseCourse() {
     }
+
+    public String getSourceId() { return sourceId; }
+    public void setSourceId(String sourceId) { this.sourceId = sourceId; }
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
