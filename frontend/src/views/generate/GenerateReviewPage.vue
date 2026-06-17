@@ -39,7 +39,7 @@ import { useRouter } from 'vue-router'
 import { useGenerateResumeFlow } from '@/composables/useGenerateResumeFlow'
 import * as generateApi from '@/services/generateResumeService'
 import type { GenerationReviewDto, ReviewViewModel, PrototypeLevel } from '@/types/generate'
-import { adaptGenerationReviewDto, buildReviewUpdatePayload, toBackendLevel } from '@/utils/generateReviewAdapter'
+import { adaptGenerationReviewDto, buildReviewUpdatePayloadSimple, toBackendLevel } from '@/utils/generateReviewAdapter'
 import AppHeader from '@/components/AppHeader.vue'
 import GenerateStepper from '@/components/generate/GenerateStepper.vue'
 import ReviewStepForm from '@/components/generate/ReviewStepForm.vue'
@@ -61,6 +61,20 @@ onMounted(async () => {
   try {
     const rawReview: GenerationReviewDto = await generateApi.getReview(state.value.requestId)
     reviewModel.value = adaptGenerationReviewDto(rawReview)
+
+    // Initialize selectedLevel from actual generated data
+    // Collect unique adaptation levels present in the review
+    const allVariants = [...reviewModel.value.enVariants, ...reviewModel.value.ruVariants]
+    const uniqueLevels = new Set<PrototypeLevel>()
+    for (const v of allVariants) {
+      uniqueLevels.add(v.adaptationLevel)
+    }
+    // Auto-select the first available level (prefer Balanced, then first found)
+    if (uniqueLevels.has('Balanced')) {
+      selectedLevel.value = 'Balanced'
+    } else if (uniqueLevels.size > 0) {
+      selectedLevel.value = uniqueLevels.values().next().value!
+    }
   } catch (err: any) {
     loadError.value = err.message || 'Failed to load review data.'
   }
@@ -69,8 +83,8 @@ onMounted(async () => {
 async function handleSaveAndFinalize() {
   if (!state.value.requestId || !reviewModel.value) return
 
-  // Build save payload for edited fields
-  const payload = buildReviewUpdatePayload(reviewModel.value)
+  // Build save payload for edited fields (includes personal_info and skills)
+  const payload = buildReviewUpdatePayloadSimple(reviewModel.value)
 
   // Save changes if any
   if (Object.keys(payload.fieldUpdates).length > 0) {

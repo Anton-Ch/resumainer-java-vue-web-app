@@ -90,6 +90,44 @@ public class SavedResumeDao {
             + "adaptation_level_id, language_id, cover_letter, is_deleted "
             + "FROM saved_resumes WHERE generation_request_id = ? AND user_id = ? AND is_deleted = FALSE";
 
+    private static final String SELECT_BY_ID =
+            "SELECT id, user_id, resume_title, vacancy, company, language, "
+            + "adaptation_level, public_code, public_url_link, html_file_path, "
+            + "pdf_file_path, generation_request_id, response_id, "
+            + "adaptation_level_id, language_id, cover_letter, is_deleted "
+            + "FROM saved_resumes WHERE id = ? AND user_id = ? AND is_deleted = FALSE";
+
+    /**
+     * Finds a saved resume by ID, owner-scoped.
+     */
+    public SavedResumeRow findById(long id, UUID userId) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_BY_ID)) {
+            stmt.setLong(1, id);
+            stmt.setObject(2, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) return null;
+                SavedResumeRow row = new SavedResumeRow();
+                row.id = rs.getLong("id");
+                row.userId = (UUID) rs.getObject("user_id");
+                row.title = rs.getString("resume_title");
+                row.vacancy = rs.getString("vacancy");
+                row.company = rs.getString("company");
+                row.language = rs.getString("language");
+                row.adaptationLevel = rs.getString("adaptation_level");
+                row.publicCode = rs.getString("public_code");
+                row.publicUrlLink = rs.getString("public_url_link");
+                row.htmlFilePath = rs.getString("html_file_path");
+                row.pdfFilePath = rs.getString("pdf_file_path");
+                row.coverLetter = rs.getString("cover_letter");
+                return row;
+            }
+        } catch (SQLException e) {
+            log.error("Error finding saved resume by id: {}", id, e);
+            throw new RuntimeException("Database error finding saved resume", e);
+        }
+    }
+
     /** Returns the public code if the resume is active and not deleted. Null otherwise. */
     public String findPublicCodeByCode(String publicCode) {
         try (Connection conn = dataSource.getConnection();

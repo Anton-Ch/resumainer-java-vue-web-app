@@ -14,6 +14,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Finalizes a generation request: renders HTML, saves to disk, and creates
@@ -68,20 +69,60 @@ public class ResumeFinalizeService {
         // Load all responses
         List<ResumeGenerationResponse> allResponses = responseDao.findResponsesByRequestId(requestId);
 
-        // Filter by selected adaptation level
-        long targetLevelId = mapAdaptationLevelId(selectedAdaptationLevel);
+        // Collect unique adaptation levels present in responses
+        Set<Long> availableLevelIds = allResponses.stream()
+                .map(ResumeGenerationResponse::getAdaptationLevelId)
+                .collect(java.util.stream.Collectors.toSet());
+
+        // Determine target level: explicit selection, auto-detect for single level, or error
+        final String effectiveLevel;
+        if (selectedAdaptationLevel != null && !selectedAdaptationLevel.isBlank()) {
+            long requestedId = mapAdaptationLevelId(selectedAdaptationLevel);
+            if (!availableLevelIds.contains(requestedId)) {
+                // If selected level is invalid and only one level exists, auto-select it
+                if (availableLevelIds.size() == 1) {
+                    long singleLevelId = availableLevelIds.iterator().next();
+                    effectiveLevel = adaptationLevelName(singleLevelId);
+                    log.info("Selected level '{}' not found — falling back to only available level: {}",
+                            selectedAdaptationLevel, effectiveLevel);
+                } else {
+                    List<String> availableNames = availableLevelIds.stream()
+                            .map(this::adaptationLevelName)
+                            .sorted()
+                            .toList();
+                    throw new IllegalArgumentException(
+                            "Selected adaptation level not found: " + selectedAdaptationLevel
+                            + ". Available levels: " + String.join(", ", availableNames));
+                }
+            } else {
+                effectiveLevel = selectedAdaptationLevel;
+            }
+        } else if (availableLevelIds.size() == 1) {
+            // No level specified and only one available — auto-select it
+            effectiveLevel = adaptationLevelName(availableLevelIds.iterator().next());
+            log.info("No adaptation level selected — auto-selecting single available level: {}",
+                    effectiveLevel);
+        } else {
+            List<String> availableNames = availableLevelIds.stream()
+                    .map(this::adaptationLevelName)
+                    .sorted()
+                    .toList();
+            throw new IllegalArgumentException(
+                    "No adaptation level selected. Available levels: "
+                    + String.join(", ", availableNames));
+        }
+
+        final long targetLevelId = mapAdaptationLevelId(effectiveLevel);
+        final String finalSelectedLevel = effectiveLevel;
+
         List<ResumeGenerationResponse> toFinalize = allResponses.stream()
                 .filter(r -> r.getAdaptationLevelId() == targetLevelId)
                 .toList();
 
-        if (toFinalize.isEmpty()) {
-            throw new IllegalArgumentException("Selected adaptation level not found: " + selectedAdaptationLevel);
-        }
-
-        // Load profile education and username for rendering
-        // Use full userId with hyphens replaced for safe path segments (unique, collision-avoidant)
+        // Load profile education, username, and contact for rendering
         String username = request.getUserId().toString().replace("-", "_");
         List<Map<String, Object>> profileEducation = profilePromptDao.loadEducation(userId);
+        Map<String, Object> contactData = profilePromptDao.loadContact(userId);
 
         // Track created files for compensation
         List<String> createdFiles = new ArrayList<>();
@@ -93,7 +134,6 @@ public class ResumeFinalizeService {
 
             for (ResumeGenerationResponse response : toFinalize) {
                 String languageCode = response.getLanguageId() == 1L ? "EN" : "RU";
-                String adaptLower = selectedAdaptationLevel.toLowerCase();
 
                 // 1. Render HTML
                 GenerationResponseDao.ResponseBundle bundle = responseDao.loadResponseBundle(response.getId());
@@ -103,8 +143,8 @@ public class ResumeFinalizeService {
 
                 // 2. Save HTML to disk
                 String htmlPath = templateRenderer.renderAndSave(
-                        bundle, profileEducation,
-                        languageCode, selectedAdaptationLevel,
+                        bundle, profileEducation, contactData,
+                        languageCode, finalSelectedLevel,
                         username, publicCode);
                 createdFiles.add(htmlPath);
 
@@ -115,7 +155,7 @@ public class ResumeFinalizeService {
 
                 // 4. Insert saved_resume row
                 long savedId = savedResumeDao.insert(userId, resumeTitle, vacancy, company,
-                        languageCode, selectedAdaptationLevel,
+                        languageCode, finalSelectedLevel,
                         publicCode, "/candidate/" + publicCode,
                         htmlPath, null, // pdf_file_path = null in feat/007
                         requestId, response.getId(),
@@ -126,9 +166,9 @@ public class ResumeFinalizeService {
                 SavedResumeExportDto item = new SavedResumeExportDto();
                 item.setSavedResumeId(savedId);
                 item.setLanguageCode(languageCode);
-                item.setAdaptationLevel(selectedAdaptationLevel);
-                item.setHtmlDownloadUrl("/api/resumes/" + savedId + "/html");
-                item.setPdfDownloadUrl("/api/resumes/" + savedId + "/pdf");
+                item.setAdaptationLevel(finalSelectedLevel);
+                item.setHtmlDownloadUrl("/api/generate/resumes/" + savedId + "/html");
+                item.setPdfDownloadUrl("/api/generate/resumes/" + savedId + "/pdf");
                 item.setPdfOpenUrl("/candidate/" + publicCode);
                 item.setPublicUrlLink("/candidate/" + publicCode);
                 item.setPdfAvailable(false);
@@ -160,6 +200,15 @@ public class ResumeFinalizeService {
             case "BALANCED": return 2L;
             case "MAXIMUM":  return 3L;
             default: throw new IllegalArgumentException("Unknown adaptation level: " + level);
+        }
+    }
+
+    private String adaptationLevelName(long levelId) {
+        switch ((int) levelId) {
+            case 1:  return "MINIMAL";
+            case 2:  return "BALANCED";
+            case 3:  return "MAXIMUM";
+            default: return "UNKNOWN";
         }
     }
 }

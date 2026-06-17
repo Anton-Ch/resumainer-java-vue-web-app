@@ -38,9 +38,11 @@ RUN set -eux; \
         --home-dir /usr/local/tomcat --shell /usr/sbin/nologin app; \
     rm -rf /usr/local/tomcat/webapps/*; \
     mkdir -p /usr/local/tomcat/webapps /usr/local/tomcat/logs \
-             /usr/local/tomcat/temp /usr/local/tomcat/work; \
+             /usr/local/tomcat/temp /usr/local/tomcat/work \
+             /usr/local/tomcat/generated_results; \
     chown -R app:app /usr/local/tomcat/webapps /usr/local/tomcat/logs \
-                     /usr/local/tomcat/temp /usr/local/tomcat/work
+                     /usr/local/tomcat/temp /usr/local/tomcat/work \
+                     /usr/local/tomcat/generated_results
 
 # Copy WAR from build stage
 COPY --from=build --chown=app:app /app/target/ROOT.war /usr/local/tomcat/webapps/ROOT.war

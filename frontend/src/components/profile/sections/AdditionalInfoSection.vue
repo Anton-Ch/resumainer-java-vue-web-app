@@ -92,7 +92,7 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">{{ $t('profile.additional.dateOfBirth') }} <span class="required">*</span></label>
-              <DatePicker v-model="dateOfBirth" class="form-input" :showIcon="true" :maxDate="new Date()" />
+              <DatePicker v-model="dateOfBirth" class="form-input" :showIcon="true" :maxDate="maxBirthDate" />
               <small v-if="formErrors.dateOfBirth" class="field-error">{{ formErrors.dateOfBirth }}</small>
             </div>
             <div class="form-group">
@@ -174,6 +174,13 @@ const form = reactive<AdditionalInfo>({
 })
 
 const dateOfBirth = ref<Date | null>(null)
+
+/** Max allowed birth date: 15 years ago from today */
+const maxBirthDate = computed(() => {
+  const d = new Date()
+  d.setFullYear(d.getFullYear() - 15)
+  return d
+})
 
 const formErrors = reactive<Record<string, string>>({
   username: '',

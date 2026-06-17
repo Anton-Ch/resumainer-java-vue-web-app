@@ -228,11 +228,13 @@ function applySectionToVariant(
         ? skillsCsv.split(',').map((s: string) => s.trim()).filter(Boolean)
         : []
       const sg: GeneratedSkillGroup = { groupName, skills }
-      // Save update keys for skill group
+      // Use orderInResume (which equals groupIdx) to avoid meta key collision
+      // since all skill group records share the same recordId (response UUID)
+      const groupIdx = record.orderInResume
       const groupUk = getUpdateKey(record, 'groupName')
       const skillsUk = getUpdateKey(record, 'skills')
-      if (groupUk) meta[`sk:${record.recordId}:groupName`] = groupUk
-      if (skillsUk) meta[`sk:${record.recordId}:skills`] = skillsUk
+      if (groupUk) meta[`sk:${groupIdx}:groupName`] = groupUk
+      if (skillsUk) meta[`sk:${groupIdx}:skills`] = skillsUk
       variant.skills = [...(variant.skills ?? []), sg]
       break
     }
