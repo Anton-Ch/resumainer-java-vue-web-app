@@ -232,6 +232,12 @@ public class ResumeTemplateRenderer {
             sb.append("  <div class=\"contact-line\">").append(contactLine).append("</div>\n");
         }
 
+        // Secondary contact line: LinkedIn, Portfolio, Telegram, WhatsApp
+        String secondaryLine = buildSecondaryContactLine(contact, isEn);
+        if (!secondaryLine.isBlank()) {
+            sb.append("  <div class=\"contact-line\">").append(secondaryLine).append("</div>\n");
+        }
+
         // Value line from response
         String valueLine = resp.getValueLine();
         if (valueLine != null && !valueLine.isBlank()) {
@@ -273,6 +279,54 @@ public class ResumeTemplateRenderer {
         }
 
         return String.join(" | ", parts);
+    }
+
+    /**
+     * Builds secondary contact line: LinkedIn, Portfolio, Telegram, WhatsApp.
+     * Only includes fields with non-blank values. Labels are bilingual where needed.
+     */
+    private String buildSecondaryContactLine(Map<String, Object> contact, boolean isEn) {
+        if (contact == null) return "";
+
+        List<String> parts = new ArrayList<>();
+
+        String linkedin = getString(contact, "linkedinUrl", "linkedin_url");
+        if (linkedin != null && !linkedin.isBlank()) {
+            parts.add("LinkedIn: " + esc(linkedin));
+        }
+
+        String portfolio = getString(contact, "portfolioUrl", "portfolio_url");
+        if (portfolio != null && !portfolio.isBlank()) {
+            String label = isEn ? "Portfolio" : "Портфолио";
+            parts.add(label + ": " + esc(portfolio));
+        }
+
+        String telegram = getString(contact, "telegram");
+        if (telegram != null && !telegram.isBlank()) {
+            parts.add("Telegram: " + esc(telegram));
+        }
+
+        String whatsapp = getString(contact, "whatsapp");
+        if (whatsapp != null && !whatsapp.isBlank()) {
+            parts.add("WhatsApp: " + esc(whatsapp));
+        }
+
+        return String.join(" | ", parts);
+    }
+
+    /**
+     * Returns the first non-null, non-blank string value from a map for a set of keys.
+     * Supports both camelCase and snake_case key variants.
+     */
+    private String getString(Map<String, Object> map, String... keys) {
+        if (map == null) return null;
+        for (String key : keys) {
+            Object value = map.get(key);
+            if (value instanceof String s && !s.isBlank()) {
+                return s;
+            }
+        }
+        return null;
     }
 
     private String buildSection(String title, String content, boolean isSummary) {

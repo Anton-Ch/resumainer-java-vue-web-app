@@ -399,6 +399,131 @@ class ResumeTemplateRendererTest {
     }
 
     // ══════════════════════════════════════════════════════════════════
+    // Optional contact fields (LinkedIn, Portfolio, Telegram, WhatsApp)
+    // ══════════════════════════════════════════════════════════════════
+
+    @Test
+    void renderHeader_includesAllOptionalContactFields_whenPresent_en() {
+        contactData.put("linkedinUrl", "https://www.linkedin.com/in/pupkin/");
+        contactData.put("portfolioUrl", "https://www.pupkin.com/");
+        contactData.put("telegram", "@pupkin");
+        contactData.put("whatsapp", "+7-777-777-77-77");
+
+        GenerationResponsePersonal personal = new GenerationResponsePersonal();
+        personal.setLocation("Astana, Kazakhstan");
+        when(personalDao.findByResponseId(any())).thenReturn(personal);
+
+        renderer.renderAndSave(bundle, List.of(), contactData, "EN", "BALANCED", "test", "ABC");
+        String html = captureHtml();
+        String header = extractHeader(html);
+
+        // Primary line
+        assertTrue(header.contains("+7 777 000 00 00"), "phone present");
+        assertTrue(header.contains("alex@example.com"), "email present");
+        assertTrue(header.contains("Astana, Kazakhstan"), "generated location");
+
+        // Secondary line
+        assertTrue(header.contains("LinkedIn: https://www.linkedin.com/in/pupkin/"), "LinkedIn");
+        assertTrue(header.contains("Portfolio: https://www.pupkin.com/"), "Portfolio EN");
+        assertTrue(header.contains("Telegram: @pupkin"), "Telegram");
+        assertTrue(header.contains("WhatsApp: +7-777-777-77-77"), "WhatsApp");
+    }
+
+    @Test
+    void renderHeader_includesOptionalContactFields_ruLabel() {
+        contactData.put("linkedinUrl", "https://www.linkedin.com/in/pupkin/");
+        contactData.put("portfolioUrl", "https://www.pupkin.com/");
+        contactData.put("telegram", "@pupkin");
+        contactData.put("whatsapp", "+7-777-777-77-77");
+
+        GenerationResponsePersonal personal = new GenerationResponsePersonal();
+        personal.setLocation("Астана, Казахстан");
+        when(personalDao.findByResponseId(any())).thenReturn(personal);
+
+        renderer.renderAndSave(bundle, List.of(), contactData, "RU", "BALANCED", "test", "ABC");
+        String html = captureHtml();
+        String header = extractHeader(html);
+
+        assertTrue(header.contains("Портфолио: https://www.pupkin.com/"), "Portfolio RU label");
+    }
+
+    @Test
+    void renderHeader_skipsBlankOptionalContactFields() {
+        contactData.put("linkedinUrl", "");
+        contactData.put("portfolioUrl", null);
+        contactData.put("telegram", "   ");
+        contactData.put("whatsapp", "");
+
+        renderer.renderAndSave(bundle, List.of(), contactData, "EN", "BALANCED", "test", "ABC");
+        String html = captureHtml();
+        String header = extractHeader(html);
+
+        assertNotNull(header);
+        // No empty separators like ||
+        assertFalse(header.contains("||"), "no empty separators");
+        // No labels with empty values like "LinkedIn: "
+        assertFalse(header.contains("LinkedIn:"), "no empty LinkedIn");
+        assertFalse(header.contains("Portfolio:"), "no empty Portfolio");
+        assertFalse(header.contains("Telegram:"), "no empty Telegram");
+        assertFalse(header.contains("WhatsApp:"), "no empty WhatsApp");
+    }
+
+    @Test
+    void renderHeader_escapesOptionalContactFields() {
+        contactData.put("linkedinUrl", "https://linkedin.com/in/<script>alert(1)</script>");
+        contactData.put("portfolioUrl", "https://pupkin.com/?q=<img onerror=alert(1)>");
+        contactData.put("telegram", "<b>@bad</b>");
+        contactData.put("whatsapp", "+7 &copy;");
+
+        renderer.renderAndSave(bundle, List.of(), contactData, "EN", "BALANCED", "test", "ABC");
+        String html = captureHtml();
+        String header = extractHeader(html);
+
+        // Must be HTML-escaped, not raw
+        assertFalse(header.contains("<script>alert"), "script tags escaped");
+        assertFalse(header.contains("<img"), "img tags escaped");
+        assertFalse(header.contains("<b>"), "b tags escaped");
+        assertTrue(header.contains("&lt;script&gt;"), "script escaped to entities");
+        assertTrue(header.contains("&lt;b&gt;"), "b escaped to entities");
+    }
+
+    @Test
+    void renderHeader_supportsSnakeCaseOptionalKeys() {
+        // Simulate snake_case keys from legacy data loader
+        contactData.put("linkedin_url", "https://www.linkedin.com/in/pupkin/");
+        contactData.put("portfolio_url", "https://www.pupkin.com/");
+        contactData.put("telegram", "@pupkin_snake");
+        contactData.put("whatsapp", "+7-999-999-99-99");
+
+        renderer.renderAndSave(bundle, List.of(), contactData, "EN", "BALANCED", "test", "ABC");
+        String html = captureHtml();
+        String header = extractHeader(html);
+
+        assertTrue(header.contains("LinkedIn: https://www.linkedin.com/in/pupkin/"), "snake_case linkedin");
+        assertTrue(header.contains("Portfolio: https://www.pupkin.com/"), "snake_case portfolio");
+    }
+
+    @Test
+    void renderHeader_optionalFieldsWithGeneratedPersonalLocation() {
+        contactData.put("linkedinUrl", "https://linkedin.com/in/test");
+        contactData.put("location", "Fallback City"); // contact location fallback
+
+        GenerationResponsePersonal personal = new GenerationResponsePersonal();
+        personal.setLocation("Generated City"); // generated personal wins
+        when(personalDao.findByResponseId(any())).thenReturn(personal);
+
+        renderer.renderAndSave(bundle, List.of(), contactData, "EN", "BALANCED", "test", "ABC");
+        String html = captureHtml();
+        String header = extractHeader(html);
+
+        // Generated personal location wins over contact location
+        assertTrue(header.contains("Generated City"), "generated location used");
+        assertFalse(header.contains("Fallback City"), "contact location NOT used");
+        // Optional field still rendered
+        assertTrue(header.contains("LinkedIn: https://linkedin.com/in/test"), "LinkedIn present");
+    }
+
+    // ══════════════════════════════════════════════════════════════════
     // Helpers
     // ══════════════════════════════════════════════════════════════════
 
