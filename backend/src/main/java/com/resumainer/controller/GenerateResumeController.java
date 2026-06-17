@@ -13,10 +13,13 @@ import org.springframework.core.io.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -243,8 +246,8 @@ public class GenerateResumeController {
             item.setSavedResumeId(row.id);
             item.setLanguageCode(row.language);
             item.setAdaptationLevel(row.adaptationLevel);
-            item.setHtmlDownloadUrl("/api/resumes/" + row.id + "/html");
-            item.setPdfDownloadUrl("/api/resumes/" + row.id + "/pdf");
+            item.setHtmlDownloadUrl("/api/generate/resumes/" + row.id + "/html");
+            item.setPdfDownloadUrl("/api/generate/resumes/" + row.id + "/pdf");
             item.setPdfOpenUrl("/candidate/" + row.publicCode);
             item.setPublicUrlLink("/candidate/" + row.publicCode);
             item.setPdfAvailable(false);
@@ -260,6 +263,7 @@ public class GenerateResumeController {
 
     /**
      * T084: Authenticated HTML download.
+     * Owner-scoped: only the generating user can download their resume HTML.
      */
     @GetMapping("/resumes/{savedResumeId}/html")
     public ResponseEntity<Resource> downloadHtml(HttpSession session,
@@ -267,10 +271,28 @@ public class GenerateResumeController {
         UUID userId = getUserId(session);
         log.debug("GET /api/resumes/{}/html — userId={}", savedResumeId, userId);
 
-        // Look up saved resume and verify ownership
-        // For MVP, return placeholder if not found
-        // TODO: Implement full owner-scoped lookup in Phase 13
-        return noCache(ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build());
+        SavedResumeDao.SavedResumeRow row = savedResumeDao.findById(savedResumeId, userId);
+        if (row == null || row.htmlFilePath == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);
+        }
+
+        try {
+            Path filePath = fileStorage.resolvePath(row.htmlFilePath);
+            Resource resource = new FileSystemResource(filePath);
+            if (!resource.exists()) {
+                log.warn("HTML file not found for saved resume {}: {}", savedResumeId, row.htmlFilePath);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+            return ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.TEXT_HTML)
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "inline; filename=\"resume-" + savedResumeId + ".html\"")
+                    .body(resource);
+        } catch (Exception e) {
+            log.error("Error serving HTML for saved resume: {}", savedResumeId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 
     /**

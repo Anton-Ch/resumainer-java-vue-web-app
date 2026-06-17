@@ -124,7 +124,15 @@ class EducationDaoTest {
 
         assertEquals(42L, result.getId());
         verify(statement).setObject(1, userId);
-        verify(statement).setString(2, "MIT");
+        verify(statement).setString(2, "MIT RU");
+        verify(statement).setString(3, "MIT");
+        verify(statement).setString(4, "BS RU");
+        verify(statement).setString(5, "BS");
+        verify(statement).setString(6, "CS RU");
+        verify(statement).setString(7, "CS");
+        verify(statement).setDate(9, Date.valueOf("2019-01-01"));
+        verify(statement).setNull(10, Types.DATE);
+        verify(statement).setBoolean(11, false);
     }
 
     @Test
@@ -144,8 +152,17 @@ class EducationDaoTest {
 
         dao.update(edu);
 
-        verify(statement).setString(1, "Updated");
-        verify(statement).setLong(10, 1L);
+        verify(statement).setString(1, "Updated RU");
+        verify(statement).setString(2, "Updated");
+        verify(statement).setString(3, "PhD RU");
+        verify(statement).setString(4, "PhD");
+        verify(statement).setString(5, "Physics RU");
+        verify(statement).setString(6, "Physics");
+        verify(statement).setDate(8, Date.valueOf("2020-01-01"));
+        verify(statement).setNull(9, Types.DATE);
+        verify(statement).setBoolean(10, false);
+        verify(statement).setLong(13, 1L);
+        verify(statement).setObject(14, userId);
     }
 
     @Test

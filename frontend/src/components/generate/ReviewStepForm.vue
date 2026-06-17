@@ -530,7 +530,15 @@
                         <template v-if="showLevels">
                           <div v-for="level in activeLevels" :key="level" class="review-level-variant">
                             <span class="vue-chip chip-level">{{ levelLabel(level) }}</span>
+                            <DatePicker
+                              v-if="field.type === 'date'"
+                              :modelValue="getPersonalDate(lang, level)"
+                              @update:modelValue="setPersonalDate(lang, level, $event)"
+                              class="field-input" :showIcon="true" :maxDate="maxBirthDate"
+                              dateFormat="yy-mm-dd"
+                            />
                             <InputText
+                              v-else
                               :modelValue="getPersonalField(lang, field.key, level)"
                               @update:modelValue="setPersonalField(lang, field.key, level, $event)"
                               class="field-input"
@@ -538,7 +546,15 @@
                           </div>
                         </template>
                         <template v-else>
+                          <DatePicker
+                            v-if="field.type === 'date'"
+                            :modelValue="getPersonalDate(lang, activeLevels[0])"
+                            @update:modelValue="setPersonalDate(lang, activeLevels[0], $event)"
+                            class="field-input" :showIcon="true" :maxDate="maxBirthDate"
+                            dateFormat="yy-mm-dd"
+                          />
                           <InputText
+                            v-else
                             :modelValue="getPersonalField(lang, field.key, activeLevels[0])"
                             @update:modelValue="setPersonalField(lang, field.key, activeLevels[0], $event)"
                             class="field-input"
@@ -598,6 +614,7 @@ import Tab from 'primevue/tab'
 import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
 import InputText from 'primevue/inputtext'
+import DatePicker from 'primevue/datepicker'
 import Textarea from 'primevue/textarea'
 import Button from 'primevue/button'
 import AdaptationLevelRadioGroup from './AdaptationLevelRadioGroup.vue'
@@ -689,6 +706,7 @@ const warningText = computed(() => {
 
 const input = { type: 'input' as const }
 const textarea = (rows: number) => ({ type: 'textarea' as const, rows })
+const dateType = { type: 'date' as const }
 
 const positioningFields = [
   { key: 'professionalTitle', ...input },
@@ -722,7 +740,7 @@ const personalFields = [
   { key: 'willingnessToRelocate', ...input },
   { key: 'willingnessForBusinessTrips', ...input },
   { key: 'citizenship', ...input },
-  { key: 'dateOfBirth', ...input },
+  { key: 'dateOfBirth', ...dateType },
   { key: 'workFormats', ...input },
 ]
 
@@ -918,6 +936,35 @@ function setPersonalField(lang: string, fieldKey: string, level: string, val: an
   const variant = findVariant(lang, level)
   if (variant && variant.personalInfo && val !== undefined) {
     (variant.personalInfo as any)[fieldKey] = val
+  }
+}
+
+// ── Personal Information: Date field (DatePicker) ────────────────────
+
+/** Max allowed birth date: 15 years ago from today */
+const maxBirthDate = new Date()
+maxBirthDate.setFullYear(maxBirthDate.getFullYear() - 15)
+
+function getPersonalDate(lang: string, level: string): Date | null {
+  const variant = findVariant(lang, level)
+  if (!variant || !variant.personalInfo) return null
+  const str = String((variant.personalInfo as any).dateOfBirth ?? '')
+  if (!str || str.trim() === '') return null
+  const parsed = new Date(str + 'T00:00:00')
+  return isNaN(parsed.getTime()) ? null : parsed
+}
+
+function setPersonalDate(lang: string, level: string, val: Date | Date[] | (Date | null)[] | null | undefined) {
+  // DatePicker may emit Date[], (Date|null)[], Date, or null — take first valid Date
+  const date: Date | null = Array.isArray(val) ? (val[0] ?? null) : (val ?? null)
+  const variant = findVariant(lang, level)
+  if (variant && variant.personalInfo) {
+    if (date && !isNaN(date.getTime())) {
+      const yyyy = date.getFullYear()
+      const mm = String(date.getMonth() + 1).padStart(2, '0')
+      const dd = String(date.getDate()).padStart(2, '0')
+      ;(variant.personalInfo as any).dateOfBirth = `${yyyy}-${mm}-${dd}`
+    }
   }
 }
 

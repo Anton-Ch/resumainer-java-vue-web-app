@@ -8,7 +8,7 @@ import { apiRequest } from './httpClient'
 import type { GenerationReviewDto, GenerationReviewUpdateDto } from '@/types/generate'
 
 const BASE = '/api/generate'
-const RESUME_BASE = '/api/resumes'
+const RESUME_BASE = '/api/generate/resumes'
 
 export interface AiModelDto {
   id: string

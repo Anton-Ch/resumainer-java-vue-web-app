@@ -586,7 +586,14 @@ public class ResumeReviewService {
             case "willingnessToRelocate": personal.setWillingnessToRelocate(value); break;
             case "willingnessForBusinessTrips": personal.setWillingnessForBusinessTrips(value); break;
             case "citizenship": personal.setCitizenship(value); break;
-            case "dateOfBirth": personal.setDateOfBirth(java.time.LocalDate.parse(value)); break;
+            case "dateOfBirth":
+                try {
+                    personal.setDateOfBirth(java.time.LocalDate.parse(value));
+                } catch (java.time.format.DateTimeParseException e) {
+                    log.warn("Invalid dateOfBirth format '{}' for personal id {} — skipping update", value, personalId);
+                    return; // Skip this field update, don't crash the whole save
+                }
+                break;
             case "workFormats": personal.setWorkFormats(value); break;
             default: throw new IllegalArgumentException("Unknown personal info field: " + fieldName);
         }
