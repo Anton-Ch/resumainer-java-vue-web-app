@@ -78,7 +78,7 @@ class ResumeFinalizeServiceTest {
         when(savedResumeDao.findPublicCodeByCode(any())).thenReturn(null);
         when(savedResumeDao.insert(any(), anyString(), anyString(), anyString(),
                 anyString(), anyString(), anyString(), anyString(),
-                anyString(), any(), any(), any(), anyLong(), anyLong()))
+                anyString(), anyString(), any(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(1L);
 
         // When: finalize with correct level MINIMAL
@@ -111,7 +111,7 @@ class ResumeFinalizeServiceTest {
         when(savedResumeDao.findPublicCodeByCode(any())).thenReturn(null);
         when(savedResumeDao.insert(any(), anyString(), anyString(), anyString(),
                 anyString(), anyString(), anyString(), anyString(),
-                anyString(), any(), any(), any(), anyLong(), anyLong()))
+                anyString(), anyString(), any(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(1L);
 
         // When: finalize with wrong level BALANCED, but only MINIMAL exists
@@ -179,7 +179,7 @@ class ResumeFinalizeServiceTest {
         when(savedResumeDao.findPublicCodeByCode(any())).thenReturn(null);
         when(savedResumeDao.insert(any(), anyString(), anyString(), anyString(),
                 anyString(), anyString(), anyString(), anyString(),
-                anyString(), any(), any(), any(), anyLong(), anyLong()))
+                anyString(), anyString(), any(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(1L);
 
         // When: finalize with null level → should auto-select the only level
@@ -209,7 +209,7 @@ class ResumeFinalizeServiceTest {
         when(savedResumeDao.findPublicCodeByCode(any())).thenReturn(null);
         when(savedResumeDao.insert(any(), anyString(), anyString(), anyString(),
                 anyString(), anyString(), anyString(), anyString(),
-                anyString(), any(), any(), any(), anyLong(), anyLong()))
+                anyString(), anyString(), any(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(1L);
 
         var result = service.finalizeRequest(requestId, userId, "BALANCED");

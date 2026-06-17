@@ -10,7 +10,14 @@
         <SettingsStepForm ref="settingsFormRef" />
 
         <div class="step-actions">
-          <Button :label="$t('generate.settings.generate')" icon="pi pi-play" class="p-button-success p-button-lg" @click="handleGenerate" />
+          <Button
+            :label="$t('generate.settings.generate')"
+            icon="pi pi-play"
+            class="p-button-success p-button-lg"
+            :disabled="state.isLoading"
+            :loading="state.isLoading"
+            @click="handleGenerate"
+          />
           <Button :label="$t('generate.vacancy.backToWorkspace')" class="p-button-outlined" @click="goHome" />
         </div>
       </div>
@@ -37,6 +44,7 @@ const settingsFormRef = ref<InstanceType<typeof SettingsStepForm> | null>(null)
 function goHome() { router.push('/') }
 
 async function handleGenerate() {
+  if (state.value.isLoading) return
   const data = settingsFormRef.value?.form
   if (!data) return
   await submitSettings({

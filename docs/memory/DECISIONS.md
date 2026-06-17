@@ -797,3 +797,47 @@ Partially inspired by the adapter pattern from the prototype's mock service (`ge
 - Gained: Backend can change DTO structure without touching Vue components. Components remain focused on rendering, not data transformation. Mapping logic is testable via unit tests on the adapter module.
 - Made harder: Two data shape definitions (backend DTO types + view model types) must be maintained. Adapter needs updates when either side changes.
 - Reconsider: If the backend and frontend view models converge in the future, the adapter can be simplified or removed. For now, they serve different purposes (backend: normalized, database-oriented; frontend: UI-oriented, flat).
+
+---
+
+### 2026-06-17 - Verify external API parameters against official docs before implementation
+
+**Status**
+Active
+
+**Why this is durable**
+The OpenRouter `reasoning` parameter (`effort`, `exclude`, `max_tokens`, `enabled`) controls whether AI models return reasoning tokens or final content. Guessing parameter names (e.g., `reasoning_effort` vs `reasoning.effort`, or `suppress_reasoning` vs `exclude`) would produce silent failures — the API would accept unknown parameters without error but not apply them. The exact parameter structure was verified against official OpenRouter documentation at `openrouter.ai/docs/guides/best-practices/reasoning-tokens` before implementation.
+
+**Decision**
+Always use Context7 or official API documentation to verify exact parameter names, supported values, and placement (body vs extra_body) before adding provider-specific configuration. For OpenRouter: the `reasoning` object goes at the top level of the request body, not inside `extra_body`. Options: `effort` (OpenAI-style: xhigh/high/medium/low/minimal/none), `max_tokens` (Anthropic-style), `exclude` (boolean), or `enabled` (boolean).
+
+**Tradeoffs**
+- Gained: Correct parameter names prevent silent configuration failures. Shape diagnostics confirm reasoning tokens are excluded.
+- Made harder: Slightly slower implementation — must check docs instead of guessing.
+- Reconsider: If OpenRouter changes their API, docs should be re-checked.
+
+**Evidence**
+6 unit tests verify the request body includes `"reasoning"`, `"effort":"none"`, `"exclude":true`. Playwright E2E confirms `messageKeys` changed from `[role, content, refusal, reasoning, reasoning_details]` to `[role, content, refusal]`.
+
+---
+
+### 2026-06-17 - GENERATION_ALREADY_IN_PROGRESS returns HTTP 409 Conflict, not 500
+
+**Status**
+Active
+
+**Why this is durable**
+When a user starts generation while another request is already processing, the backend must reject the new request. Returning HTTP 500 (Internal Server Error) is semantically wrong — it suggests a server fault when the real issue is a client-side conflict. HTTP 409 Conflict correctly signals "the request could not be completed due to a conflict with the current state of the resource." Additionally, the blocked request must be marked `failed` with a clear error message to prevent stale `pending` rows that block future generations.
+
+**Decision**
+1. `ResumeGenerationService.generate()`: When the same request is already processing, throw `AiClientException("GENERATION_ALREADY_IN_PROGRESS")` instead of `IllegalStateException`. When another request is processing, call `requestDao.updateStatus(requestId, userId, "failed", errMsg, false)` before throwing.
+2. `GenerateResumeController`: Map `GENERATION_ALREADY_IN_PROGRESS` to `HttpStatus.CONFLICT` (409).
+3. Frontend: Disable Generate button during loading (`:disabled="state.isLoading"`, `:loading="state.isLoading"`), add `isLoading` guard in `handleGenerate()`.
+
+**Tradeoffs**
+- Gained: Correct HTTP semantics. Blocked requests don't stay pending forever. Frontend prevents double-submit.
+- Made harder: Controller must distinguish `GENERATION_ALREADY_IN_PROGRESS` from other AI errors (real provider failures still return 500).
+- Reconsider: If the frontend needs to poll for generation completion, 409 could be used as "try again later" signal.
+
+**Evidence**
+Backend diagnostics showed `Completed 500 INTERNAL_SERVER_ERROR` for blocked requests. 11 lifecycle tests + 5 controller tests verify 409 behavior and that blocked pending requests are marked failed.

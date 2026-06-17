@@ -67,6 +67,7 @@ export function useGenerateResumeFlow() {
     aiModelId: string
     includeCoverLetter: boolean
   }) {
+    if (state.value.isLoading) return
     state.value.languageMode = data.languageMode
     state.value.adaptationSelection = data.adaptationSelection
     state.value.aiModelId = data.aiModelId

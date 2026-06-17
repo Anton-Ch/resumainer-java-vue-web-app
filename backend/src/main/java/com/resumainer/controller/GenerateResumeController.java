@@ -126,7 +126,10 @@ public class GenerateResumeController {
                     ? "Generation already in progress. Please wait for it to complete."
                     : "Generation failed while contacting the AI model. "
                       + "Please try again or change settings.";
-            return noCache(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            HttpStatus status = "GENERATION_ALREADY_IN_PROGRESS".equals(errorCode)
+                    ? HttpStatus.CONFLICT
+                    : HttpStatus.INTERNAL_SERVER_ERROR;
+            return noCache(ResponseEntity.status(status)
                     .body(new GenerationErrorDto(
                             errorCode, message,
                             retryAllowed, changeAllowed, "failed")));

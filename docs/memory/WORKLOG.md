@@ -35,6 +35,29 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-17 - Feature 007 Export View, Cover Letter, Generation Concurrency, and OpenRouter fixes completed
+
+**Status**
+Active
+
+**Milestone**
+Completed the following bug fixes and improvements for feat/007-resume-generation:
+
+1. **Export view prototype alignment**: Rewrote `ExportResult.vue` to match frontend prototype: green success/help alert, bilingual two-column layout, EN→RU sorted cards, language chips with blue/orange colors, safeLinkHint, cover letter block, toast notifications, mobile-responsive CSS, real DTO integration preserved. 13 unit tests + 4 page tests GREEN.
+
+2. **Cover letter propagation**: Fixed `SavedResumeDao.insert()` to include `cover_letter` column and `ResumeFinalizeService` to pass it through to export DTO. DB verified: `cover_letter IS NOT NULL` for all new rows.
+
+3. **GENERATION_ALREADY_IN_PROGRESS lifecycle**: Changed HTTP 500 → 409 Conflict. Blocked pending requests are now marked `failed` instead of left as stale `pending`. Frontend: Generate button disabled during loading, double-click guard. 11 lifecycle + 5 controller tests GREEN.
+
+4. **OpenRouter diagnostics**: Added `OPENROUTER_RESPONSE_SHAPE` (always-on) and `OPENROUTER_RAW_RESPONSE` (dev-only guarded by `AI_DEBUG_OPENROUTER_RAW_RESPONSE=true` + `SPRING_PROFILES_ACTIVE=dev`). 13 diagnostic tests GREEN.
+
+5. **OpenRouter reasoning config + retry**: Added `"reasoning":{"effort":"none","exclude":true}` to request body. Retry loop (max 3 attempts) for `MISSING_CONTENT_WITH_REASONING`. 8 retry tests + 6 content/reasoning tests GREEN.
+
+**Evidence**
+Backend: 432 tests, 0 failures. Frontend: 17 tests, 0 failures. Playwright E2E: BILINGUAL + MINIMAL + cover letter passed. Docker containers rebuilt and verified.
+
 ### 2026-06-13 - Feature 007 Review Page — backend DTO fix + frontend adapter + tabbed editing UI
 
 **Status**

@@ -22,10 +22,10 @@ public class SavedResumeDao {
     private static final String INSERT =
             "INSERT INTO saved_resumes "
             + "(user_id, resume_title, vacancy, company, language, adaptation_level, "
-            + "public_code, public_url_link, html_file_path, pdf_file_path, "
+            + "public_code, public_url_link, html_file_path, pdf_file_path, cover_letter, "
             + "generation_request_id, response_id, "
             + "adaptation_level_id, language_id, created_by) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
 
     private static final String SELECT_BY_PUBLIC_CODE =
             "SELECT * FROM saved_resumes WHERE public_code = ? AND is_deleted = FALSE";
@@ -43,11 +43,13 @@ public class SavedResumeDao {
                        String company, String language, String adaptationLevel,
                        String publicCode, String publicUrlLink,
                        String htmlFilePath, String pdfFilePath,
+                       String coverLetter,
                        UUID generationRequestId, UUID responseId,
                        long adaptationLevelId, long languageId) {
         try (Connection conn = dataSource.getConnection()) {
             return insert(conn, userId, resumeTitle, vacancy, company, language,
                     adaptationLevel, publicCode, publicUrlLink, htmlFilePath, pdfFilePath,
+                    coverLetter,
                     generationRequestId, responseId, adaptationLevelId, languageId);
         } catch (SQLException e) {
             log.error("Error inserting saved resume", e);
@@ -59,6 +61,7 @@ public class SavedResumeDao {
                        String company, String language, String adaptationLevel,
                        String publicCode, String publicUrlLink,
                        String htmlFilePath, String pdfFilePath,
+                       String coverLetter,
                        UUID generationRequestId, UUID responseId,
                        long adaptationLevelId, long languageId) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement(INSERT)) {
@@ -72,11 +75,12 @@ public class SavedResumeDao {
             stmt.setString(8, publicUrlLink);
             stmt.setString(9, htmlFilePath);
             stmt.setString(10, pdfFilePath);
-            stmt.setObject(11, generationRequestId);
-            stmt.setObject(12, responseId);
-            stmt.setLong(13, adaptationLevelId);
-            stmt.setLong(14, languageId);
-            stmt.setObject(15, userId);
+            stmt.setString(11, coverLetter);
+            stmt.setObject(12, generationRequestId);
+            stmt.setObject(13, responseId);
+            stmt.setLong(14, adaptationLevelId);
+            stmt.setLong(15, languageId);
+            stmt.setObject(16, userId);
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next() ? rs.getLong("id") : -1;
             }

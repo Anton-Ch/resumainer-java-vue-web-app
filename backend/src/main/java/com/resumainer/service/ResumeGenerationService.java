@@ -83,14 +83,18 @@ public class ResumeGenerationService {
                             + "Create a new request to generate again.");
         }
         if ("processing".equals(status)) {
-            throw new IllegalStateException(
-                    "Generation request " + requestId + " is already processing.");
+            throw new com.resumainer.service.ai.AiClientException(
+                    "Generation already in progress. Please wait for it to complete.",
+                    "GENERATION_ALREADY_IN_PROGRESS");
         }
 
         // Check one active generation BEFORE spending AI tokens
         if (requestDao.hasProcessingRequest(userId)) {
+            // Mark the current request as failed so it does not stay pending forever
+            String errMsg = "Generation already in progress. Please wait for it to complete.";
+            requestDao.updateStatus(requestId, userId, "failed", errMsg, false);
             throw new com.resumainer.service.ai.AiClientException(
-                    "Generation already in progress. Please wait for it to complete.",
+                    errMsg,
                     "GENERATION_ALREADY_IN_PROGRESS");
         }
 

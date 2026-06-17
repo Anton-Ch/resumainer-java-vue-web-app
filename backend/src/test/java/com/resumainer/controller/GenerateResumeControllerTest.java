@@ -90,4 +90,45 @@ class GenerateResumeControllerTest {
                 .andExpect(jsonPath("$.changeSettingsAllowed").value(true))
                 .andExpect(jsonPath("$.requestStatus").value("failed"));
     }
+
+    @Test
+    void generate_whenAlreadyInProgress_returns409ConflictNot500() throws Exception {
+        UUID requestId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        doThrow(new com.resumainer.service.ai.AiClientException(
+                "Generation already in progress. Please wait for it to complete.",
+                "GENERATION_ALREADY_IN_PROGRESS"))
+                .when(resumeGenerationService).generate(requestId, userId);
+
+        mockMvc.perform(post("/api/generate/requests/{requestId}/generate", requestId)
+                        .sessionAttr("user", user))
+                .andExpect(status().isConflict())  // 409, not 500
+                .andExpect(jsonPath("$.errorCode").value("GENERATION_ALREADY_IN_PROGRESS"))
+                .andExpect(jsonPath("$.message").value("Generation already in progress. Please wait for it to complete."))
+                .andExpect(jsonPath("$.retryAllowed").value(false))
+                .andExpect(jsonPath("$.changeSettingsAllowed").value(false))
+                .andExpect(jsonPath("$.requestStatus").value("failed"));
+    }
+
+    @Test
+    void generate_whenAiProviderFails_stillReturns500GenericError() throws Exception {
+        UUID requestId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        // Real AI provider failure — not GENERATION_ALREADY_IN_PROGRESS
+        doThrow(new com.resumainer.service.ai.AiClientException(
+                "AI model returned an error",
+                "AI_PROVIDER_ERROR"))
+                .when(resumeGenerationService).generate(requestId, userId);
+
+        mockMvc.perform(post("/api/generate/requests/{requestId}/generate", requestId)
+                        .sessionAttr("user", user))
+                .andExpect(status().isInternalServerError())  // 500 for real AI failures
+                .andExpect(jsonPath("$.errorCode").value("AI_PROVIDER_ERROR"))
+                .andExpect(jsonPath("$.retryAllowed").value(true))
+                .andExpect(jsonPath("$.changeSettingsAllowed").value(true));
+    }
 }

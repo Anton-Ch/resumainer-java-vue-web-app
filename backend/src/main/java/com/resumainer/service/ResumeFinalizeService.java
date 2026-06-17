@@ -152,12 +152,13 @@ public class ResumeFinalizeService {
                 String resumeTitle = request.getVacancyTitle() != null ? request.getVacancyTitle() : "Resume";
                 String vacancy = request.getVacancyTitle() != null ? request.getVacancyTitle() : "";
                 String company = request.getCompanyName() != null ? request.getCompanyName() : "";
+                String coverLetter = response.getCoverLetter();
 
                 // 4. Insert saved_resume row
                 long savedId = savedResumeDao.insert(userId, resumeTitle, vacancy, company,
                         languageCode, finalSelectedLevel,
                         publicCode, "/candidate/" + publicCode,
-                        htmlPath, null, // pdf_file_path = null in feat/007
+                        htmlPath, null, coverLetter, // pdf_file_path = null in feat/007
                         requestId, response.getId(),
                         targetLevelId, response.getLanguageId());
                 createdResumeIds.add(savedId);
@@ -173,6 +174,7 @@ public class ResumeFinalizeService {
                 item.setPublicUrlLink("/candidate/" + publicCode);
                 item.setPdfAvailable(false);
                 item.setPdfMessage("PDF generation is not available yet. It will be available in a future update.");
+                item.setCoverLetter(coverLetter);
                 exportItems.add(item);
             }
 

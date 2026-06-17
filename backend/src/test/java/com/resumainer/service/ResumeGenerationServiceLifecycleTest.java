@@ -120,9 +120,14 @@ class ResumeGenerationServiceLifecycleTest {
         when(requestDao.findById(requestId, userId)).thenReturn(request);
 
         // When/Then — status check rejects before hasProcessingRequest or AI call
-        assertThrows(IllegalStateException.class, () ->
-            service.generate(requestId, userId));
+        // Now throws AiClientException instead of IllegalStateException to support
+        // proper 409 Conflict mapping in the controller
+        AiClientException ex = assertThrows(AiClientException.class,
+                () -> service.generate(requestId, userId));
+        assertEquals("GENERATION_ALREADY_IN_PROGRESS", ex.getErrorCode());
         verify(aiClient, never()).generate(anyString(), anyString());
+        // Request must NOT be marked failed — it is already processing legitimately
+        verify(requestDao, never()).updateStatus(eq(requestId), eq(userId), eq("failed"), anyString(), anyBoolean());
     }
 
     @Test
@@ -270,4 +275,88 @@ class ResumeGenerationServiceLifecycleTest {
         verify(persistenceService, never()).persistResponses(any(), any(), any());
     }
 
+    // ── GENERATION_ALREADY_IN_PROGRESS lifecycle tests ──────────────────
+
+    @Test
+    void generateWhenCurrentRequestAlreadyProcessing_throwsAlreadyInProgressWithoutMarkingFailed() {
+        // Given the current request itself is already processing (duplicate POST)
+        ResumeGenerationRequest request = new ResumeGenerationRequest();
+        request.setId(requestId);
+        request.setUserId(userId);
+        request.setAiModelId(modelId);
+        request.setStatus("processing");
+        request.setLanguageMode("ENGLISH_ONLY");
+        request.setAdaptationSelection("BALANCED");
+        when(requestDao.findById(requestId, userId)).thenReturn(request);
+
+        // When: duplicate POST /generate for the SAME processing request
+        // Then: must throw AiClientException with GENERATION_ALREADY_IN_PROGRESS
+        AiClientException ex = assertThrows(AiClientException.class,
+                () -> service.generate(requestId, userId));
+        assertEquals("GENERATION_ALREADY_IN_PROGRESS", ex.getErrorCode());
+        assertTrue(ex.getMessage().contains("already in progress") || ex.getMessage().contains("already processing"));
+
+        // And: request must NOT be marked failed (it was processing before and stays processing)
+        verify(requestDao, never()).updateStatus(eq(requestId), eq(userId), eq("failed"), anyString(), anyBoolean());
+        // And: AI client is NOT called
+        verify(aiClient, never()).generate(anyString(), anyString());
+        // And: no response rows are created
+        verify(persistenceService, never()).persistResponses(any(), any(), any());
+    }
+
+    @Test
+    void generateWhenAnotherUserRequestIsProcessing_marksCurrentFailedAndReturnsConflict() {
+        // Given request A (this request) is pending
+        ResumeGenerationRequest currentRequest = new ResumeGenerationRequest();
+        currentRequest.setId(requestId);
+        currentRequest.setUserId(userId);
+        currentRequest.setAiModelId(modelId);
+        currentRequest.setStatus("pending");
+        currentRequest.setLanguageMode("ENGLISH_ONLY");
+        currentRequest.setAdaptationSelection("BALANCED");
+        when(requestDao.findById(requestId, userId)).thenReturn(currentRequest);
+
+        // Given another request for the same user is processing
+        when(requestDao.hasProcessingRequest(userId)).thenReturn(true);
+
+        // When: POST /generate for a NEW pending request while another is processing
+        AiClientException ex = assertThrows(AiClientException.class,
+                () -> service.generate(requestId, userId));
+        assertEquals("GENERATION_ALREADY_IN_PROGRESS", ex.getErrorCode());
+        assertTrue(ex.getMessage().contains("already in progress"));
+
+        // Then: current request is marked FAILED (not left pending forever)
+        verify(requestDao).updateStatus(requestId, userId, "failed",
+                "Generation already in progress. Please wait for it to complete.", false);
+
+        // And: AI client is NOT called for this request
+        verify(aiClient, never()).generate(anyString(), anyString());
+        // And: no response rows are created
+        verify(persistenceService, never()).persistResponses(any(), any(), any());
+    }
+
+    @Test
+    void generateWhenAnotherRequestIsProcessing_doesNotInterfereWithProcessingRequest() {
+        // Given request A is pending
+        ResumeGenerationRequest currentRequest = new ResumeGenerationRequest();
+        currentRequest.setId(requestId);
+        currentRequest.setUserId(userId);
+        currentRequest.setAiModelId(modelId);
+        currentRequest.setStatus("pending");
+        currentRequest.setLanguageMode("ENGLISH_ONLY");
+        currentRequest.setAdaptationSelection("BALANCED");
+        when(requestDao.findById(requestId, userId)).thenReturn(currentRequest);
+
+        // Given another request is processing
+        when(requestDao.hasProcessingRequest(userId)).thenReturn(true);
+
+        // When
+        assertThrows(AiClientException.class, () -> service.generate(requestId, userId));
+
+        // Then: request A is marked failed, but the OTHER processing request is untouched
+        // (only requestId is failed, not the processing one)
+        verify(requestDao).updateStatus(eq(requestId), eq(userId), eq("failed"), anyString(), eq(false));
+        // Never set requestId to 'processing' because it was blocked early
+        verify(requestDao, never()).updateStatus(eq(requestId), eq(userId), eq("processing"), any(), anyBoolean());
+    }
 }
