@@ -32,6 +32,8 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - B20 | Ambiguous Date reference from java.sql.* + java.util.* wildcard imports | java, compiler, date, import, sql, util, ambiguous, compilation-error | [BUGS.md](BUGS.md) | active
 - B21 | OpenRouter JSON response parsing must use Jackson ObjectMapper, not manual string operations | openrouter,ai,json,parsing,jackson,http-client,response-handling | [BUGS.md](BUGS.md) | active
 - B22 | Standalone MockMvc without setControllerAdvice causes ServiceException to become 500 | mockmvc,testing,standalone,controller-advice,serviceexception,spring-mvc | [BUGS.md](BUGS.md) | active
+- B23 | DeepSeek V4 Flash returns reasoning-only responses with null content intermittently | openrouter,deepseek,ai,reasoning,retry,missing-content,diagnostic,response-shape | [BUGS.md](BUGS.md) | active
+- B24 | Cover letter column exists in migration but INSERT SQL omits it | database,migration,dao,cover-letter,insert,column-propagation,saved-resumes | [BUGS.md](BUGS.md) | active
 
 ## Decisions
 - D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web.xml) | servlet, spring-mvc, jakarta-ee, tomcat, initialization, web.xml | [DECISIONS.md](DECISIONS.md) | active
@@ -61,6 +63,8 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - D26 | Vue composable state must be module-level singleton, not per-component-instance | vue3, composable, state-management, singleton, ref, multi-page-wizard | [DECISIONS.md](DECISIONS.md) | active
 - D27 | Backend-generated opaque updateKey for review/save pattern | review,update-key,save,section-aware,security,spring-mvc,frontend,decoupling | [DECISIONS.md](DECISIONS.md) | active
 - D28 | Frontend adapter pattern for hierarchical backend DTO to flat view model | frontend,adapter,transformer,review,dto,view-model,decoupling,architecture | [DECISIONS.md](DECISIONS.md) | active
+- D29 | Verify external API parameters against official docs before implementation | openrouter,api,documentation,context7,reasoning,configuration,best-practice | [DECISIONS.md](DECISIONS.md) | active
+- D30 | GENERATION_ALREADY_IN_PROGRESS returns HTTP 409 Conflict, not 500 | http,409,conflict,generation,concurrency,lifecycle,spring-mvc,controller,error-handling | [DECISIONS.md](DECISIONS.md) | active
 
 ## Workflow
 - W1 | First Feature MVP Achieved: Hello World Tomcat | milestone, mvp, hello-world, docker, spring-mvc, tomcat | [WORKLOG.md](WORKLOG.md) | active
@@ -78,3 +82,4 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - W13 | Feature 006 Profile Page DAO and Service/Controller Layers Completed | milestone,feature-006,dao,service,controller,profile | [WORKLOG.md](WORKLOG.md) | active
 - W14 | Feature 006 bug fixes — CSRF, connection pool, favicon | milestone,feature-006,bugfix,csrf,rollback,favicon | [WORKLOG.md](WORKLOG.md) | active
 - W15 | Feature 007 Review Page — backend DTO fix + frontend adapter + tabbed editing UI | milestone,feature-007,review-page,backend-fix,frontend-adapter,primevue-tabs | [WORKLOG.md](WORKLOG.md) | active
+- W16 | Feature 007 Export View, Cover Letter, Generation Concurrency, and OpenRouter fixes completed | milestone,feature-007,export-view,cover-letter,generation-concurrency,openrouter,diagnostics,retry,fixes | [WORKLOG.md](WORKLOG.md) | active

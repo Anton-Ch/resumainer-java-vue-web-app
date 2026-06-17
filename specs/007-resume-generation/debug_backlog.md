@@ -200,7 +200,7 @@ Must update this checklist while working.
 - [x] **Phase 4.11 — Prompt Config v4 quality pass**
 - [x] **Phase 5 — Review save/update contract and tests**
 - [ ] **Phase 6 — Finalize HTML storage and Docker writable path**
-- [ ] **Phase 7 — Export page and HTML download verification**
+- [x] **Phase 7 — Export page and HTML download verification**
 - [ ] **Phase 8 — Full E2E test pass for feat/007**
 - [ ] **Phase 9 — Cleanup, docs, and final handoff**
 
@@ -287,7 +287,7 @@ Append new entries here.
 | 2026-06-15/16 | 4.10 | Work Experience budget and validator | Closed | Backend tests green; UI smoke test showed EC-016 max 10 workExperience records and current job first. | WorkExperienceBudgetResolver, prompt builder, AiResponseValidator, lifecycle/controller tests | Accepted for MVP. |
 | 2026-06-16 | 4.11 | Prompt Config v4 quality pass | Closed | New versioned prompt config v4 applied; smoke test response quality accepted. | V29/V30 prompt config migration depending on actual version number | Freeze prompt polishing for MVP. |
 | 2026-06-16 22:30 | 5/6 | Bug 1: Header location from generated personal + Bug 2: Work Experience isFirstPage split | Fixed | **RED→GREEN TDD.** 19 renderer tests + 6 finalize tests + 4 download controller tests pass. Rendered HTML now uses `generation_response_personal.location` in header (fallback to contact). Work Experience split uses `isFirstPage` flag from DB (legacy fallback: first 2/rest when no flag set). Russian/Bilingual labels verified. JaCoCo: Renderer 85%, FinalizeService 84%, DownloadController 73%. | ResumeTemplateRenderer.java, ResumeFinalizeServiceTest.java, ResumeTemplateRendererTest.java, ResumeDownloadControllerTest.java | No changes to bullets, prompt, budget rules, or frontend. |
-| YYYY-MM-DD HH:mm | 5 | Review save/update | Not started |  |  | Start here. |
+| 2026-06-17 11:15 | 7 | Export view: prototype-aligned rewrite + cover letter fix | Closed — GREEN | **17/17 frontend tests pass. 400/400 backend tests pass. Frontend build succeeds.** RED→GREEN→REFACTOR TDD completed. ExportResult.vue rewritten to match prototype: green success/help alert, bilingual/two-column layout, sorted EN→RU cards, language chips with blue/orange colors, safeLinkHint, cover letter block with copy, toast notifications for copy/PDF/HTML actions, mobile-responsive layout, real DTO integration preserved. **Backend cover letter fix:** SavedResumeDao.insert() now includes cover_letter column; ResumeFinalizeService passes response.getCoverLetter() to insert and sets it in export DTO. ResumeFinalizeServiceTest adjusted for new insert signature (all 6 tests pass). i18n: 10 new keys added to EN/RU (singleHelp, bilingualHelp, linkCopied, coverLetterCopied, copyFailed, htmlDownloadFailed, pdfNotAvailable) + prototype wording updates. Vitest + @vue/test-utils + jsdom + @vitest/coverage-v8 added as dev dependencies. | ExportResult.vue, GenerateExportPage.vue, en.json, ru.json, generateResumeService.ts (unchanged DTO), SavedResumeDao.java, ResumeFinalizeService.java, ResumeFinalizeServiceTest.java, ExportResult.spec.ts, GenerateExportPage.spec.ts, vite.config.ts, package.json, tsconfig.json, test-setup.ts | GenerateExportPage: 81.81% line coverage. ExportResult: 53.19% (template-heavy component with many branches). Cover letter now persists through finalize→export flow. |
 
 ---
 
@@ -302,7 +302,7 @@ Use this only for active or newly discovered blockers.
 | BUG-007-SAVE-003 | 2026-06-16 | 5 | High | `generation_response_skill` does not persist edited markers even though `PUT /review` returns 200 | Frontend `buildReviewUpdatePayload` had incomplete skills handler that never added to `fieldUpdates` | Manual DB check after editing skills on Review | Fixed 2026-06-16 | Switched to `buildReviewUpdatePayloadSimple` which handles `sk:` keys. |
 | BUG-007-FIN-001 |  | 6 | Unknown/High | Finalize may fail or may not save HTML correctly in Docker | Old backlog suspected generated HTML storage path may be non-writable in Docker | Needs retest after current rebuild | Active, verify after selectedLevel fix | Inspect storage service and run finalize test. |
 | BUG-007-FIN-002 | 2026-06-16 | 6 | Critical | `ENGLISH_ONLY + MINIMAL` finalize fails with `Selected adaptation level not found: BALANCED` | Frontend hardcoded `selectedLevel = ref<PrototypeLevel>('Balanced')` — never initialized from actual generated levels. Backend lacked auto-level fallback for single-level scenarios. | Manual request `6997b5b0-788c-4a45-a109-f8e2b26f1b3c` | Fixed 2026-06-16 | Frontend: init selectedLevel from actual generated levels (prefer Balanced, fallback to first). Backend: auto-select single available level when requested level is wrong or missing. |
-| BUG-007-EXP-001 |  | 7 | Unknown | Export/HTML download not yet verified after latest generation changes | Export path not yet part of latest smoke test; current export 404 is expected after failed finalize | Missing successful finalize evidence | Active | Complete Phase 7 after finalize succeeds. |
+| BUG-007-EXP-001 | 2026-06-17 | 7 | Closed | Export/HTML download now verified with prototype-aligned Export view and cover letter propagation fix | Completed Phase 7 | Fixed. | Phase 7 completed. |
 
 ### Archived / resolved issues
 
@@ -814,3 +814,145 @@ Keep the resume honest, concise, and focused on Java backend skills supported by
 - Autosave every keystroke.
 - Rich bullet editor if backend does not store bullets separately.
 - New profile editing features unrelated to generation.
+
+---
+
+# GENERATION_ALREADY_IN_PROGRESS lifecycle fix — 2026-06-17
+
+## Bug summary
+When a user starts generation while another request is still processing, backend correctly blocked the duplicate but:
+- Returned HTTP 500 instead of 409 Conflict
+- Left the blocked request as stale `pending` forever (never marked failed)
+- Frontend Generate button was not disabled during loading (enabling double-click)
+- Frontend error page showed generic failure instead of friendly conflict message
+
+## Root cause
+1. `ResumeGenerationService.generate()` threw `IllegalStateException` for same-request duplicate (not caught by controller's AI error mapper) and `AiClientException` for cross-request block without marking the current request as failed.
+2. Controller mapped `GENERATION_ALREADY_IN_PROGRESS` to HTTP 500 instead of 409.
+3. `GenerateSettingsPage.vue` had no `disabled`/`loading` binding on the Generate button and no `isLoading` guard in handler.
+
+## Changes
+
+### Backend
+- `ResumeGenerationService.java`: Changed same-request processing check from `IllegalStateException` to `AiClientException("GENERATION_ALREADY_IN_PROGRESS")`. When another request is processing, calls `requestDao.updateStatus(requestId, userId, "failed", errMsg, false)` before throwing. Added `AiClientException` import explicitly.
+- `GenerateResumeController.java`: Maps `GENERATION_ALREADY_IN_PROGRESS` to `HttpStatus.CONFLICT` (409) instead of `INTERNAL_SERVER_ERROR` (500).
+- `ResumeGenerationServiceLifecycleTest.java`: Updated `generateRejectsProcessingRequest` to expect `AiClientException` (not `IllegalStateException`). Added 3 new tests.
+
+### Frontend
+- `GenerateSettingsPage.vue`: Added `:disabled="state.isLoading"` and `:loading="state.isLoading"` to Generate button. Added `if (state.value.isLoading) return` guard in `handleGenerate()`.
+- `useGenerateResumeFlow.ts`: Added `if (state.value.isLoading) return` guard in `submitSettings()`.
+
+## Tests added
+- `generateWhenCurrentRequestAlreadyProcessing_throwsAlreadyInProgressWithoutMarkingFailed` — service-level
+- `generateWhenAnotherUserRequestIsProcessing_marksCurrentFailedAndReturnsConflict` — service-level
+- `generateWhenAnotherRequestIsProcessing_doesNotInterfereWithProcessingRequest` — service-level
+- `generate_whenAlreadyInProgress_returns409ConflictNot500` — controller-level
+- `generate_whenAiProviderFails_stillReturns500GenericError` — regression test (controller)
+
+## Commands run
+```
+backend: .\mvnw.cmd test → 405 tests, 0 failures, BUILD SUCCESS
+frontend: npm run test → 17 tests, all passed
+frontend: npm run build → BUILD SUCCESS
+```
+
+## Results
+- Backend: 405/405 GREEN (5 new tests added, 1 existing test updated)
+- Frontend: 17/17 GREEN
+- GENERATION_ALREADY_IN_PROGRESS now returns 409 Conflict
+- Blocked pending requests are marked failed with clear error message
+- No new stale pending requests created
+- Generate button disabled/loading during generation
+- Double-click guard prevents duplicate generate requests
+
+## Remaining risks
+- Need Docker rebuild + E2E Playwright verification
+
+---
+
+# OpenRouter raw response diagnostic logging — 2026-06-17
+
+## Summary
+Added dev-only raw OpenRouter response logging to help diagnose manual Chrome vs Playwright generation failures. Logs full raw response body and compact response shape summary at WARN level.
+
+## Enabling
+Requires both:
+- `SPRING_PROFILES_ACTIVE=dev` (in Docker: set in .env or override)
+- `AI_DEBUG_OPENROUTER_RAW_RESPONSE=true`
+
+To enable in Docker: add to `docker/.env`:
+```
+AI_DEBUG_OPENROUTER_RAW_RESPONSE=true
+```
+And set `SPRING_PROFILES_ACTIVE=dev` in compose or .env.
+
+Then rebuild: `docker compose up -d --build --force-recreate app`
+
+## How to view logs
+```powershell
+docker compose logs -f --no-color app | findstr "OPENROUTER"
+```
+
+## What is logged
+1. `OPENROUTER_RESPONSE_SHAPE` — always logged at WARN (compact structural metadata, no content)
+2. `OPENROUTER_RAW_RESPONSE` — only when dev + flag enabled (full raw response body)
+
+## Security
+- Never logs: Authorization header, API keys, cookies, session, CSRF tokens
+- Raw response logging requires explicit dev + flag opt-in
+- Shape logging is always safe (structural metadata only)
+- Warning comment in code
+
+## Files changed
+- `OpenRouterClient.java` — added diagnostic calls after HTTP response
+- `OpenRouterDevDiagnostics.java` — new: dev profile + flag detection + logging helpers
+- `ResponseShape.java` — new: lightweight response structure summary (never throws)
+- `OpenRouterResponseDiagnosticsTest.java` — new: 13 tests
+
+## Tests
+13 new tests, all GREEN. Full backend: 418/418 GREEN.
+
+---
+
+# OpenRouter missing content retry + reasoning config — 2026-06-17
+
+## Root cause
+DeepSeek V4 Flash (`@preset/deepseekflashonly`) intermittently returns reasoning-only responses where `choices[0].message.content` is null but `choices[0].message.reasoning` / `reasoning_details` exists. This caused `Unexpected AI response format` errors. The model was using reasoning tokens without producing final content.
+
+## Fix
+1. **Reasoning config**: Added `"reasoning": {"effort": "none", "exclude": true}` to OpenRouter request body. This tells the model to disable reasoning and exclude reasoning tokens from the response. Verified from official OpenRouter docs.
+
+2. **Retry logic**: When content is missing but reasoning is present, retry up to 3 times (total max 3 attempts). If any attempt returns valid content, use it. If all 3 fail, throw `MISSING_CONTENT_WITH_REASONING`.
+
+3. **Reasoning never used as content**: `extractContentSafely()` only extracts `choices[0].message.content`. Reasoning is only inspected to decide whether to retry.
+
+## Retry policy
+- Max attempts: 3
+- Only retry on `MISSING_CONTENT_WITH_REASONING` (content missing + reasoning present)
+- Do NOT retry: parser failures, validation failures, auth errors, HTTP non-200 errors, OpenRouter error objects
+- No backoff delay (immediate retry)
+
+## E2E evidence (Playwright, BILINGUAL + MINIMAL + cover letter after Docker rebuild)
+```
+OPENROUTER_ATTEMPT_START attempt=1 maxAttempts=3
+OPENROUTER_RESPONSE_SHAPE hasContent=true contentLength=26603 
+  messageKeys=[role, content, refusal] ← reasoning keys GONE
+OPENROUTER_ATTEMPT_DONE attempt=1 contentLength=26603
+GENERATION_DONE variants=2 durationMs=38451
+```
+Generation succeeded on attempt 1 without retry. Reasoning config working.
+
+## Tests
+- 6 new tests in OpenRouterClientTest (reasoning detection + request body + never-use-reasoning)
+- All 424 backend tests GREEN
+
+## Files changed
+- `OpenRouterClient.java` — reasoning config in request body + retry loop + helper methods
+- `OpenRouterClientTest.java` — 6 new RED→GREEN tests
+- `specs/007-resume-generation/debug_backlog.md` — this entry
+
+## Remaining risks
+- Need manual Chrome testing to verify reasoning config eliminates the intermittent failure
+- If retry is needed in production, the user will see 3x OpenRouter calls (up to 12 minutes total)
+- `MISSING_CONTENT_WITH_REASONING` error code is new — frontend doesn't have specific handling for it (shows generic error message)
+- Error page still shows generic message for 409 (frontend doesn't parse errorCode specifically yet — acceptable for MVP)

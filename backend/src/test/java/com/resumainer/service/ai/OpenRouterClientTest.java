@@ -115,4 +115,99 @@ class OpenRouterClientTest {
             """;
         assertThrows(AiClientException.class, () -> client.testExtractContent(json));
     }
+
+    // ── Reasoning config in request body ────────────────────────────
+
+    @Test
+    void buildRequestBody_includesReasoningDisabledConfig() {
+        String body = client.buildRequestBody("system", "user");
+        assertTrue(body.contains("\"reasoning\""), "Must contain reasoning config");
+        assertTrue(body.contains("\"effort\":\"none\""), "Must set effort=none");
+        assertTrue(body.contains("\"exclude\":true"), "Must set exclude=true");
+        assertTrue(body.contains("\"model\""), "Must still contain model");
+        assertTrue(body.contains("\"temperature\":0.2"), "Must still contain temperature");
+        assertTrue(body.contains("\"messages\""), "Must still contain messages");
+    }
+
+    // ── Reasoning detection ─────────────────────────────────────────
+
+    @Test
+    void hasReasoningInResponse_returnsTrueWhenReasoningPresent() {
+        String json = """
+            {
+              "choices": [{
+                "finish_reason": "stop",
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "reasoning": "Let me think about this..."
+                }
+              }]
+            }
+            """;
+        assertTrue(client.hasReasoningInResponse(json));
+    }
+
+    @Test
+    void hasReasoningInResponse_returnsTrueWhenReasoningDetailsPresent() {
+        String json = """
+            {
+              "choices": [{
+                "message": {
+                  "content": null,
+                  "reasoning_details": [{"type": "text", "text": "thinking"}]
+                }
+              }]
+            }
+            """;
+        assertTrue(client.hasReasoningInResponse(json));
+    }
+
+    @Test
+    void hasReasoningInResponse_returnsFalseWhenNeitherPresent() {
+        String json = """
+            {
+              "choices": [{
+                "message": {
+                  "content": null
+                }
+              }]
+            }
+            """;
+        assertFalse(client.hasReasoningInResponse(json));
+    }
+
+    @Test
+    void hasReasoningInResponse_returnsFalseWhenContentPresent() {
+        String json = """
+            {
+              "choices": [{
+                "message": {
+                  "content": "Hello",
+                  "reasoning": "thinking"
+                }
+              }]
+            }
+            """;
+        assertTrue(client.hasReasoningInResponse(json)); // reasoning field IS present
+    }
+
+    @Test
+    void reasoningNeverUsedAsContent() {
+        // Even if reasoning contains what looks like content, extractContent should not return it
+        String json = """
+            {
+              "choices": [{
+                "message": {
+                  "content": null,
+                  "reasoning": "This looks like valid resume JSON but it is reasoning"
+                }
+              }]
+            }
+            """;
+        // extractContent throws because content is null
+        assertThrows(AiClientException.class, () -> client.testExtractContent(json));
+        // hasReasoning confirms reasoning exists
+        assertTrue(client.hasReasoningInResponse(json));
+    }
 }

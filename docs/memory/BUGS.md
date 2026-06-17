@@ -776,3 +776,49 @@ Any standalone MockMvc test for a controller that can throw `ServiceException` M
 2. Test the expected HTTP status code for unauthenticated access, not a redirect.
 
 Related to B10 (MockMvc standalone session handling) but distinct — this is about exception handling, not session persistence.
+
+---
+
+### 2026-06-17 - DeepSeek V4 Flash returns reasoning-only responses with null content intermittently
+
+**Status**
+Active
+
+**Symptoms**
+OpenRouter HTTP 200 response has `choices[0].message.content: null` while `choices[0].message.reasoning` / `reasoning_details` exists. Backend log: "OpenRouter response missing choices[0].message.content". Generation fails with "Unexpected AI response format." The OPENROUTER_RESPONSE_SHAPE diagnostic shows `hasContent=false, messageKeys=[role, content, refusal, reasoning, reasoning_details]`.
+
+**Root Cause**
+DeepSeek V4 Flash (`@preset/deepseekflashonly`) by default may produce reasoning tokens without final content. The model "thinks" but doesn't produce the generated text.
+
+**Fix**
+1. Add `"reasoning": {"effort": "none", "exclude": true}` to OpenRouter request body. Verified against official OpenRouter docs.
+2. Retry loop (max 3 attempts) when content is missing but reasoning is present (`MISSING_CONTENT_WITH_REASONING`). If any attempt returns valid content, use it. If all 3 fail, throw `AiClientException("MISSING_CONTENT_WITH_REASONING")`.
+3. Never parse reasoning as content. `extractContentSafely()` only reads `choices[0].message.content`.
+
+**Prevention**
+- Always log response shape for AI provider diagnostics.
+- Never trust AI model output to always include content — add graceful retry.
+- Verify provider-specific API parameters against official docs before implementing.
+- Do not use model reasoning/diagnostics as business content.
+
+---
+
+### 2026-06-17 - Cover letter column exists in migration but INSERT SQL omits it
+
+**Status**
+Active
+
+**Symptoms**
+Cover letter is visible on Review page, `generate.cover_letter` is included in the prompt, `ResumeGenerationResponse.getCoverLetter()` returns the generated text, but the Export page never shows the cover letter block. DB query shows `cover_letter IS NULL` for all saved_resumes rows.
+
+**Root Cause**
+The `saved_resumes.cover_letter` column was created in V8 migration and read correctly in SELECT queries (`SavedResumeDao.findByGenerationRequestId`, `findById`), but the INSERT statement in `SavedResumeDao.insert()` did not include the `cover_letter` column. `ResumeFinalizeService` also did not pass `response.getCoverLetter()` to the insert method or set it in the export DTO.
+
+**Fix**
+1. Added `cover_letter` to INSERT SQL: `+ "public_code, public_url_link, html_file_path, pdf_file_path, cover_letter, "`.
+2. Added `String coverLetter` parameter to both `insert()` method overloads.
+3. Updated `ResumeFinalizeService` to pass `response.getCoverLetter()` to insert and `item.setCoverLetter(coverLetter)` in export DTO.
+4. Updated `ResumeFinalizeServiceTest` mock signatures to include new parameter.
+
+**Prevention**
+When adding a database column via migration, always verify all INSERT, UPDATE, and SELECT paths. Add a DAO integration test that inserts a full row and reads back every column.
