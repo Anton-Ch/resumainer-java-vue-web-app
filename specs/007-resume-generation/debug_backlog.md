@@ -956,3 +956,35 @@ Generation succeeded on attempt 1 without retry. Reasoning config working.
 - If retry is needed in production, the user will see 3x OpenRouter calls (up to 12 minutes total)
 - `MISSING_CONTENT_WITH_REASONING` error code is new — frontend doesn't have specific handling for it (shows generic error message)
 - Error page still shows generic message for 409 (frontend doesn't parse errorCode specifically yet — acceptable for MVP)
+
+---
+
+# Exported HTML contact header — optional fields fix — 2026-06-17
+
+## Bug
+Exported HTML resume header showed only phone | email | location. Profile-owned optional contact fields (LinkedIn URL, Portfolio URL, Telegram, WhatsApp) existed in the DB and were SELECTed by ProfilePromptDao but never included in the returned contact map or rendered in the HTML header.
+
+## Root cause
+1. `ProfilePromptDao.loadContact()` SELECTed `linkedin_url, portfolio_url, telegram, whatsapp` but never `.put()` them in the map.
+2. `ResumeTemplateRenderer.buildContactLine()` only rendered phone, email, location.
+
+## Fix
+1. `ProfilePromptDao.loadContact()` — added `map.put("linkedinUrl", ...)`, `portfolioUrl`, `telegram`, `whatsapp`.
+2. `ResumeTemplateRenderer` — added `buildSecondaryContactLine()` rendering: `LinkedIn: <url> | Portfolio: <url> | Telegram: <handle> | WhatsApp: <number>`. Portfolio label bilingual (EN: "Portfolio", RU: "Портфолио"). Added `getString(map, keys...)` helper supporting both camelCase and snake_case keys.
+3. `buildHeader()` renders both primary and secondary contact lines as separate `<div class="contact-line">` elements.
+
+## Fields added
+LinkedIn URL, Portfolio/Website URL, Telegram, WhatsApp
+
+## Tests
+6 new renderer tests: all-inclusive EN, RU label, blank-skip, XSS-escape, snake_case keys, generated personal location precedence. All 438 backend tests GREEN.
+
+## Commands
+```
+.\mvnw.cmd test -Dtest=ResumeTemplateRendererTest → 26/26 GREEN
+.\mvnw.cmd test → 438/438 GREEN
+```
+
+## Remaining risks
+- Need Docker rebuild for manual HTML verification
+- Profile contact fields must have actual values for the fix to produce visible output

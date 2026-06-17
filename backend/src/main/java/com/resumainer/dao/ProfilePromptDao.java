@@ -76,6 +76,10 @@ public class ProfilePromptDao {
                 map.put("resumeEmail", rs.getString("resume_email"));
                 map.put("location", rs.getString("location"));
                 map.put("professionalTitle", rs.getString("professional_title"));
+                map.put("linkedinUrl", rs.getString("linkedin_url"));
+                map.put("portfolioUrl", rs.getString("portfolio_url"));
+                map.put("telegram", rs.getString("telegram"));
+                map.put("whatsapp", rs.getString("whatsapp"));
                 return map;
             }
         } catch (SQLException e) {
