@@ -62,6 +62,15 @@ class UserHomeControllerTest {
     }
 
     @Test
+    void getHomeSummary_serviceError_returns500() throws Exception {
+        when(userHomeService.getHomeSummary(userId)).thenThrow(new RuntimeException("DB error"));
+
+        mockMvc.perform(get("/api/user/home")
+                        .sessionAttr("user", userSession))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
     void getHomeSummary_readyProfile_returnsCorrectData() throws Exception {
         SavedResume lastResume = new SavedResume();
         lastResume.setId(5L);

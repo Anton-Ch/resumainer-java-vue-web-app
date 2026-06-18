@@ -266,4 +266,27 @@ class OpenRouterResponseDiagnosticsTest {
         assertFalse(OpenRouterDevDiagnostics.isDebugFlagEnabled(""));
         assertFalse(OpenRouterDevDiagnostics.isDebugFlagEnabled("1"));
     }
+
+    // ── Logging method smoke tests ────────────────────────────────
+    // These verify log methods don't throw. In test env SPRING_PROFILES_ACTIVE
+    // is null, so the guard (isRawResponseLoggingEnabled) returns false early.
+    // The env-dependent wrapper methods (isDevProfileActive, isDebugFlagEnabled,
+    // isRawResponseLoggingEnabled) cannot be fully covered without env var
+    // manipulation, which is intentionally avoided for stability.
+
+    @Test
+    void logRawResponse_doesNotThrow_whenGuardReturnsFalse() {
+        // SPRING_PROFILES_ACTIVE is null in test → guard returns early
+        OpenRouterDevDiagnostics.logRawResponse("deepseek/deepseek-v4", 200, "{}");
+        OpenRouterDevDiagnostics.logRawResponse("model", 500, null);
+    }
+
+    @Test
+    void logResponseShape_doesNotThrow_withVariousInputs() {
+        // Always safe — shape extraction never throws per ResponseShape contract
+        OpenRouterDevDiagnostics.logResponseShape("model", 200, "{}");
+        OpenRouterDevDiagnostics.logResponseShape("model", 500, null);
+        OpenRouterDevDiagnostics.logResponseShape("model", 200, "invalid json{{{");
+        OpenRouterDevDiagnostics.logResponseShape(null, 0, "");
+    }
 }

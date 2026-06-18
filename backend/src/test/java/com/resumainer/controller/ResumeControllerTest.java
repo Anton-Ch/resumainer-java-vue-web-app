@@ -1,6 +1,7 @@
 package com.resumainer.controller;
 
 import com.resumainer.dto.UserSession;
+import com.resumainer.exception.GlobalExceptionHandler;
 import com.resumainer.model.PagedResponse;
 import com.resumainer.model.SavedResume;
 import com.resumainer.service.ResumeService;
@@ -27,7 +28,9 @@ class ResumeControllerTest {
     void setUp() {
         resumeService = mock(ResumeService.class);
         ResumeController controller = new ResumeController(resumeService);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
         userId = UUID.randomUUID();
         userSession = new UserSession(userId, "test@test.com", "USER");
     }
@@ -90,6 +93,12 @@ class ResumeControllerTest {
     }
 
     @Test
+    void deleteResume_withoutSession_returns401() throws Exception {
+        mockMvc.perform(delete("/api/resumes/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void deleteResume_ownedByUser_returns200() throws Exception {
         when(resumeService.deleteResume(userId, 1L)).thenReturn(true);
 
@@ -106,5 +115,24 @@ class ResumeControllerTest {
         mockMvc.perform(delete("/api/resumes/999")
                         .sessionAttr("user", userSession))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void listResumes_internalError_returns500() throws Exception {
+        when(resumeService.listResumes(any(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), anyString(), anyInt(), anyInt()))
+                .thenThrow(new RuntimeException("Unexpected error"));
+
+        mockMvc.perform(get("/api/resumes")
+                        .sessionAttr("user", userSession))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void deleteResume_internalError_returns500() throws Exception {
+        when(resumeService.deleteResume(userId, 1L)).thenThrow(new RuntimeException("Delete failed"));
+
+        mockMvc.perform(delete("/api/resumes/1")
+                        .sessionAttr("user", userSession))
+                .andExpect(status().isInternalServerError());
     }
 }
