@@ -79,4 +79,18 @@ class ResumeDownloadControllerTest {
         assertThrows(com.resumainer.exception.ServiceException.class, () ->
                 controller.downloadHtml(session, 5L));
     }
+
+    @Test
+    void downloadHtml_internalError_returns500() {
+        SavedResumeDao.SavedResumeRow row = new SavedResumeDao.SavedResumeRow();
+        row.id = 5L;
+        row.htmlFilePath = "/path/to/file.html";
+        when(savedResumeDao.findById(5L, userId)).thenReturn(row);
+        when(fileStorage.resolvePath(anyString())).thenThrow(new RuntimeException("I/O error"));
+
+        org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> response =
+                controller.downloadHtml(session, 5L);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
 }

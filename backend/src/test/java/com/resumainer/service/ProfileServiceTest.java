@@ -132,11 +132,12 @@ class ProfileServiceTest {
     void updateContactDetails_savesAndReturnsUpdated() {
         ContactDetail existing = new ContactDetail();
         existing.setUserId(userId);
-        when(contactDetailDao.findByUserId(userId)).thenReturn(existing);
 
         ContactDetail updated = new ContactDetail();
         updated.setFullName("Jane");
-        when(contactDetailDao.findByUserId(userId)).thenReturn(updated);
+        when(contactDetailDao.findByUserId(userId))
+                .thenReturn(existing)    // first call: get existing
+                .thenReturn(updated);    // second call: get updated
 
         ContactDetail result = profileService.updateContactDetails(userId, new ContactDetail());
 
@@ -189,6 +190,18 @@ class ProfileServiceTest {
         assertFalse(profileService.deleteWorkExperience(userId, 999L));
     }
 
+    @Test
+    void updateWorkExperience_setsIdAndUserId() {
+        WorkExperience exp = new WorkExperience();
+        exp.setJobTitle("Senior Dev");
+
+        profileService.updateWorkExperience(userId, 42L, exp);
+
+        assertEquals(Long.valueOf(42L), exp.getId());
+        assertEquals(userId, exp.getUserId());
+        verify(workExperienceDao).update(exp);
+    }
+
     // ========================================================================
     // Education
     // ========================================================================
@@ -211,6 +224,66 @@ class ProfileServiceTest {
         assertEquals("MIT", result.getInstitutionNameEn());
     }
 
+    @Test
+    void getEducations_returnsList() {
+        when(educationDao.findByUserId(userId)).thenReturn(List.of(new Education()));
+
+        assertEquals(1, profileService.getEducations(userId).size());
+    }
+
+    @Test
+    void updateEducation_setsIdAndUserId() {
+        Education edu = new Education();
+        edu.setInstitutionNameRu("МГУ");
+        edu.setInstitutionNameEn("MSU");
+        edu.setDegreeRu("Бакалавр");
+        edu.setDegreeEn("Bachelor");
+        edu.setFieldOfStudyRu("Информатика");
+        edu.setFieldOfStudyEn("CS");
+
+        profileService.updateEducation(userId, 42L, edu);
+
+        assertEquals(Long.valueOf(42L), edu.getId());
+        assertEquals(userId, edu.getUserId());
+        verify(educationDao).update(edu);
+    }
+
+    @Test
+    void updateEducation_throwsOnMissingRuFields() {
+        Education edu = new Education();
+        edu.setInstitutionNameEn("MSU");
+        edu.setDegreeEn("Bachelor");
+        edu.setFieldOfStudyEn("CS");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> profileService.updateEducation(userId, 1L, edu));
+    }
+
+    @Test
+    void createEducation_throwsOnMissingEnFields() {
+        Education edu = new Education();
+        edu.setInstitutionNameRu("МГУ");
+        edu.setDegreeRu("Бакалавр");
+        edu.setFieldOfStudyRu("Информатика");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> profileService.createEducation(userId, edu));
+    }
+
+    @Test
+    void deleteEducation_owned_returnsTrue() {
+        when(educationDao.softDelete(1L, userId)).thenReturn(true);
+
+        assertTrue(profileService.deleteEducation(userId, 1L));
+    }
+
+    @Test
+    void deleteEducation_notOwned_returnsFalse() {
+        when(educationDao.softDelete(999L, userId)).thenReturn(false);
+
+        assertFalse(profileService.deleteEducation(userId, 999L));
+    }
+
     // ========================================================================
     // Projects
     // ========================================================================
@@ -225,6 +298,39 @@ class ProfileServiceTest {
 
         assertEquals(userId, result.getUserId());
         assertEquals("My App", result.getProjectName());
+    }
+
+    @Test
+    void getProjects_returnsList() {
+        when(projectDao.findByUserId(userId)).thenReturn(List.of(new Project()));
+
+        assertEquals(1, profileService.getProjects(userId).size());
+    }
+
+    @Test
+    void updateProject_setsIdAndUserId() {
+        Project p = new Project();
+        p.setProjectName("New App");
+
+        profileService.updateProject(userId, 42L, p);
+
+        assertEquals(Long.valueOf(42L), p.getId());
+        assertEquals(userId, p.getUserId());
+        verify(projectDao).update(p);
+    }
+
+    @Test
+    void deleteProject_owned_returnsTrue() {
+        when(projectDao.softDelete(1L, userId)).thenReturn(true);
+
+        assertTrue(profileService.deleteProject(userId, 1L));
+    }
+
+    @Test
+    void deleteProject_notOwned_returnsFalse() {
+        when(projectDao.softDelete(999L, userId)).thenReturn(false);
+
+        assertFalse(profileService.deleteProject(userId, 999L));
     }
 
     // ========================================================================
@@ -261,6 +367,32 @@ class ProfileServiceTest {
                 "start_date", "desc", null, null, null);
 
         assertEquals(10, page.getSize());
+    }
+
+    @Test
+    void updateCourse_setsIdAndUserId() {
+        CourseCertificate c = new CourseCertificate();
+        c.setName("Kubernetes");
+
+        profileService.updateCourse(userId, 42L, c);
+
+        assertEquals(Long.valueOf(42L), c.getId());
+        assertEquals(userId, c.getUserId());
+        verify(courseCertificateDao).update(c);
+    }
+
+    @Test
+    void deleteCourse_owned_returnsTrue() {
+        when(courseCertificateDao.softDelete(1L, userId)).thenReturn(true);
+
+        assertTrue(profileService.deleteCourse(userId, 1L));
+    }
+
+    @Test
+    void deleteCourse_notOwned_returnsFalse() {
+        when(courseCertificateDao.softDelete(999L, userId)).thenReturn(false);
+
+        assertFalse(profileService.deleteCourse(userId, 999L));
     }
 
     @Test
@@ -313,6 +445,64 @@ class ProfileServiceTest {
         assertEquals("Java", result.get("skills"));
         assertEquals("US", result.get("citizenship"));
         assertEquals(List.of("remote"), result.get("acceptableWorkFormats"));
+    }
+
+    @Test
+    void getAdditionalInfo_withPartialInfo_handlesNulls_safely() {
+        AdditionalProfileInfo info = new AdditionalProfileInfo();
+        info.setSkills(null);
+        info.setCitizenship("US");
+        when(additionalProfileInfoDao.findByUserId(userId)).thenReturn(info);
+        when(userDao.findById(userId)).thenReturn(null);
+        when(workFormatDao.findByUserId(userId)).thenReturn(List.of());
+
+        Map<String, Object> result = profileService.getAdditionalInfo(userId);
+
+        assertNull(result.get("username"));
+        assertNull(result.get("skills"));
+        assertEquals("US", result.get("citizenship"));
+    }
+
+    @Test
+    void updateAdditionalInfo_noUsername_skipsUserUpdate() throws Exception {
+        Connection conn = mock(Connection.class);
+        when(dataSource.getConnection()).thenReturn(conn);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("skills", "Java");
+        data.put("citizenship", "US");
+        data.put("dateOfBirth", "1990-05-15");
+
+        profileService.updateAdditionalInfo(userId, data);
+
+        verify(userDao, never()).updateUsername(any(), any(), any());
+        verify(conn).commit();
+    }
+
+    @Test
+    void updateAdditionalInfo_noFormatCodes_skipsFormatUpdate() throws Exception {
+        Connection conn = mock(Connection.class);
+        when(dataSource.getConnection()).thenReturn(conn);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("username", "test");
+        data.put("citizenship", "US");
+        data.put("dateOfBirth", "1990-05-15");
+
+        profileService.updateAdditionalInfo(userId, data);
+
+        verify(workFormatDao, never()).saveUserFormats(any(), any(), any());
+        verify(conn).commit();
+    }
+
+    @Test
+    void updateAdditionalInfo_nullConnection_rollbackDoesNothing() {
+        profileService = new ProfileService(null, contactDetailDao, workExperienceDao,
+                educationDao, projectDao, courseCertificateDao,
+                additionalProfileInfoDao, workFormatDao, userDao);
+        // updateAdditionalInfo with null datasource -> connection will be null
+        assertThrows(Exception.class,
+                () -> profileService.updateAdditionalInfo(userId, Map.of("citizenship", "US")));
     }
 
     @Test
