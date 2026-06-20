@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-20
 
-**Status**: Draft
+**Status**: Draft *(brainstormed 2026-06-20)*
 
 **Input**: Implement production PDF/HTML resume generation for ResumAIner using the approved standalone HTML-to-PDF spike. Also complete the prerequisite bullet-point review and persistence work needed for reliable resume rendering. The rendering engine MUST be ported from the approved spike instead of being invented from scratch.
 
@@ -47,7 +47,7 @@ As a logged-in user, I want the system to generate a professional PDF resume tha
 3. **Given** a two-page PDF, **Then** page 1 includes the footer note "SEE THE NEXT PAGE" (English) / "СМ. СЛЕДУЮЩУЮ СТРАНИЦУ" (Russian), and page 2 includes the header note "SEE THE PREVIOUS PAGE" / "СМ. ПРЕДЫДУЩУЮ СТРАНИЦУ".
 4. **Given** the PDF is generated, **Then** all visible resume text is selectable/extractable text, not an image-only rendering.
 5. **Given** a generated PDF would overflow, **When** fitting runs, **Then** the system uses a deterministic feedback loop to adjust font size, line height, and gaps within configured limits.
-6. **Given** content cannot fit within the configured limits, **When** fitting fails, **Then** finalization fails safely and does not create a partial saved resume.
+6. **Given** content cannot fit within the configured limits, **When** fitting fails, **Then** the system shows the message "Resume could not be generated. Please try again and reduce the longest texts in your resume fields." and provides a "Try again" button that returns to the Review page with all edits preserved and the generation request status reset to allow re-finalization.
 7. **Given** the PDF renderer produces a trailing blank page, **Then** the automated cleanup logic removes it before validation.
 
 ---
@@ -121,6 +121,10 @@ As a logged-in user, I want Download PDF and Open PDF to work after finalization
 - User downloads HTML/PDF after soft-delete — must be denied.
 - Public route is guessed or brute-forced — must not leak information.
 - Font files are missing or not resolvable at runtime — must fail gracefully.
+- User clicks Finalize while finalization is already in progress — must show status message, not start duplicate work.
+- User-edited bullet text contains HTML tags, script, or CSS markup — must be HTML-escaped before template insertion.
+- PDF storage directory is not writable or runs out of disk space — must fail gracefully with cleanup.
+- Generation request status is stuck in FINALIZING due to crash — must be recoverable on next valid action.
 
 ---
 
@@ -158,11 +162,15 @@ As a logged-in user, I want Download PDF and Open PDF to work after finalization
   - Page 1 footer: "SEE THE NEXT PAGE" (English) / "СМ. СЛЕДУЮЩУЮ СТРАНИЦУ" (Russian)
   - Page 2+ header: "SEE THE PREVIOUS PAGE" (English) / "СМ. ПРЕДЫДУЩУЮ СТРАНИЦУ" (Russian)
 - **FR-008-023**: The renderer MUST use PDF-safe styling. Browser-only styling primitives MUST NOT be used in PDF templates.
+- **FR-008-023-1**: All user-editable text that enters the HTML-to-PDF rendering pipeline (bullet points, personal info lines, any Review-editable fields) MUST be HTML-escaped before template insertion to prevent markup injection. No user-controlled HTML formatting is supported in MVP.
 - **FR-008-024**: The system MUST use existing production budget configuration and resolver for content distribution and page splitting.
 - **FR-008-025**: The system MUST NOT introduce rendering-engine-only mock or test tables into production database migrations.
 - **FR-008-026**: The system MUST add production fitting configuration tables or an equivalent production configuration source for fit limits and fill targets.
 - **FR-008-027**: The system MUST store PDF status and metadata on saved resumes or equivalent persisted records.
 - **FR-008-028**: If PDF/HTML finalization fails, the system MUST roll back database changes and clean up generated files to avoid partial saved resumes and orphan artifacts.
+- **FR-008-028-1**: On fitting failure, the system MUST display the message: "Resume could not be generated. Please try again and reduce the longest texts in your resume fields." and provide a "Try again" action that returns the user to the Review page with all previously saved edits preserved and the generation request status reset to a state that permits re-finalization.
+- **FR-008-028-2**: The system MUST prevent concurrent finalization by setting the generation request status to FINALIZING before starting PDF/HTML generation. While in this status, any additional finalization attempts MUST return a user-readable message that finalization is already in progress without starting duplicate work. On completion (success or failure), the status MUST be reset to unblock further actions.
+- **FR-008-028-3**: The frontend MUST display a loading state during finalization that reuses the existing AI-generation wait screen pattern, with randomly rotating status phrases adapted for the finalization context (e.g., "Generating your resume PDF...", "Optimizing page layout...", "Preparing final files..."). The loading state MUST be shown from the moment Finalize is clicked until the result (success or failure) is returned.
 - **FR-008-029**: Bilingual finalization MUST be atomic. If one language fails PDF/HTML generation, neither language is saved as finalized.
 - **FR-008-030**: Authenticated PDF download MUST be owner-scoped.
 - **FR-008-031**: The public PDF route MUST not expose private HTML, cover letter text, raw file paths, or deleted/disabled resumes.
@@ -184,7 +192,8 @@ As a logged-in user, I want Download PDF and Open PDF to work after finalization
 - **PDF Page Plan**: Page allocation result for page 1, page 2, and page 3 fallback. Backed by production budget resolver.
 - **PDF Fit Limits**: Production configuration for minimum/maximum font size, line height, spacing gaps, maximum fitting attempts, and page-to-page delta limits.
 - **PDF Fill Target**: Production configuration for minimum/maximum fill percentage per target page, language, and content context.
-- **Saved Resume PDF Metadata**: PDF status, file path, generated timestamp, page count, render configuration used, and failure information stored on the saved resume record.
+- **PDF Storage**: Generated PDF and parity HTML files stored on the filesystem in a configurable directory. Metadata (status, file path, page count, timestamps) tracked in the database via saved resume record. Files cleaned up on rollback via explicit compensation logic.
+- **Saved Resume PDF Metadata**: PDF status, file path (relative, never exposed raw), generated timestamp, page count, render configuration used, and failure information stored on the saved resume record.
 - **Legacy HTML Renderer**: Existing HTML renderer retained for future fallback or reference but not used for this feature's finalization path.
 
 ---
@@ -238,7 +247,7 @@ This feature MUST comply with the ResumAIner Constitution principles:
 - The approved rendering pipeline reference implementation is available for inspection and porting.
 - The reference implementation includes source code, example output, logs, and reference data for verification.
 - The existing project already contains production budget configuration tables and a work experience budget resolver. Implementation must inspect and reuse these before adding anything new.
-- Font files already exist in the backend static resources. Do not download or introduce unrelated fonts unless explicitly approved.
+- Font files (Inter for body text, Manrope for headings) are ported from the spike into backend static resources for PDF rendering use only. Both are OFL-licensed. Existing web fonts are not affected.
 - The current saved resume model may already include some PDF or public-link fields. Inspect before adding database migrations. Add only missing fields.
 - The legacy HTML renderer exists and must remain available but unused by the new finalization path.
 - Resume generation via AI is already implemented. This feature focuses on bullet hardening plus final render and export.
@@ -268,3 +277,30 @@ This feature MUST comply with the ResumAIner Constitution principles:
 - **Q: Should the old HTML renderer be deleted?** → **A:** No. Keep it as deprecated reference or fallback, but do not use it in the new finalization path.
 - **Q: What testing discipline is required?** → **A:** Test-driven development, useful tests, targeted coverage for new and modified feature code. Tests must verify real behavior, not just coverage numbers.
 - **Q: What coding style should be used?** → **A:** KISS: simple, professional, readable, minimal cleverness, no unnecessary abstractions.
+- **Q: Where should generated PDF/HTML files be stored?** → **A:** Files on filesystem (configurable storage directory), metadata (status, path, page count, timestamps) in database via saved resume record. Compensation logic cleans up files on DB rollback.
+- **Q: Which fonts should the PDF renderer use?** → **A:** Port Inter (body) and Manrope (headings) from the spike for PDF rendering only. These fonts are isolated to the PDF pipeline and do not affect existing web fonts. Both fonts are OFL-licensed and free to use.
+- **Q: What happens when fitting engine exhausts all attempts?** → **A:** Show error message: "Resume could not be generated. Please try again and reduce the longest texts in your resume fields." Provide a "Try again" button that returns the user to the Review page, preserves all previously entered edits, and resets the generation request status to a state that allows re-finalization without deadlocking the request.
+- **Q: Should user-edited bullet text be HTML-escaped before PDF rendering?** → **A:** Yes. All user-edited bullet text and any user-modifiable text that goes into the HTML-to-PDF template MUST be HTML-escaped. No formatting markup is supported in bullets for MVP.
+- **Q: How to handle concurrent finalization (double-click Finalize)?** → **A:** Use a FINALIZING status on the generation request. While in this status, any further finalization attempts return a message "Finalization is already in progress." Once complete (success or failure), the status is reset/unblocked. The UI MUST show a loading state similar to the existing AI generation wait screen, with randomly rotating status phrases adapted for finalization context (e.g., "Generating your resume PDF...", "Optimizing page layout...", "Preparing final files...").
+
+---
+
+## Brainstorm Log
+
+### Session 2026-06-20
+
+**5 open questions explored and resolved:**
+
+1. **PDF/HTML storage** → Files on configurable filesystem directory; metadata (status, path, page count, timestamps) in database via saved resume record. Compensation logic cleans up files on DB rollback. *(Added FR-008-028, updated Key Entities)*
+
+2. **PDF fonts** → Inter (body) and Manrope (headings) ported from spike, isolated to PDF pipeline. Both OFL-licensed. Existing web fonts unaffected. *(Updated Assumptions)*
+
+3. **Fitting failure UX** → Error message: "Resume could not be generated. Please try again and reduce the longest texts in your resume fields." "Try again" button returns to Review page with edits preserved, request status reset to allow re-finalization. *(Added FR-008-028-1, updated User Story 2 Scenario 6)*
+
+4. **Bullet text HTML safety** → All user-editable text entering HTML-to-PDF pipeline MUST be HTML-escaped before template insertion. No user-controlled formatting in MVP. *(Added FR-008-023-1)*
+
+5. **Concurrent finalization** → FINALIZING status on generation request blocks duplicate finalization. UI shows loading screen reusing existing AI-generation wait pattern with rotating phrases. On completion (success/failure), status resets. *(Added FR-008-028-2, FR-008-028-3, edge cases)*
+
+**New edge cases identified**: Concurrent finalization, HTML/script injection in bullets, unwritable storage directory, stuck FINALIZING status after crash.
+
+**Total impact**: 3 new FRs added, 4 new edge cases, 1 assumption updated, 1 key entity refined.
