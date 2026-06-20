@@ -60,10 +60,10 @@ indexing:
     - .spec-kit-memory/**
 project_profile:
   language: java
-  framework: spring mvc
+  framework: spring-mvc
   shared_memory:
     enabled: true
     sync_channels:
       - global
       - java
-      - spring mvc
+      - spring-mvc
