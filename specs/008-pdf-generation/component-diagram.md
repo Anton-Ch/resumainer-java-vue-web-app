@@ -22,7 +22,7 @@ flowchart TB
     end
 
     subgraph CONTROLLERS["Spring MVC Controllers"]
-        GenCtrl["GenerateResumeController\n/finalize + /export + /candidate/{code}"]
+        GenCtrl["GenerateResumeController\n/finalize + /export + /{username}/{code}"]
         DLController["ResumeDownloadController\n/pdf + /html downloads"]
     end
 
@@ -108,21 +108,21 @@ flowchart TB
     RenderConfigSvc --> RenderConfigDao
 
     %% Public route
-    GenCtrl -->|"GET /candidate/{code}"| SavedResumeDao
+    GenCtrl -->|"GET /{username}/{code}"| SavedResumeDao
 ```
 
 ## Component Breakdown
 
 ### GenerateResumeController (Updated)
 
-**Role**: Entry point for finalization and export flows. Now handles real PDF/HTML generation orchestration and the public `/candidate/{code}` route (replacing 501 placeholder).
+**Role**: Entry point for finalization and export flows. Now handles real PDF/HTML generation orchestration and the public `/{username}/{code}` route (replacing 501 placeholder).
 
 **Why this exists as a separate component**: Single responsibility — all generate/resume HTTP endpoints in one place. The existing controller already owns the generate flow; adding finalization here keeps the API cohesive.
 
 **Key interactions**:
 - → `ResumeReviewService`: delegates review save before finalization
 - → `ResumeFinalizeService`: orchestrates PDF/HTML generation + file promotion + DB commit
-- ← `SavedResumeDao`: serves public PDF via `/candidate/{code}` lookup
+- ← `SavedResumeDao`: serves public PDF via `/{username}/{code}` lookup
 
 ### ResumeDownloadController (New)
 
