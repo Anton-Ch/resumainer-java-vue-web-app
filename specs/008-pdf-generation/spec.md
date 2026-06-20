@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-20
 
-**Status**: Draft *(brainstormed 2026-06-20)*
+**Status**: Final *(specified 2026-06-20, brainstormed 2026-06-20, planned 2026-06-20)*
 
 **Input**: Implement production PDF/HTML resume generation for ResumAIner using the approved standalone HTML-to-PDF spike. Also complete the prerequisite bullet-point review and persistence work needed for reliable resume rendering. The rendering engine MUST be ported from the approved spike instead of being invented from scratch.
 
@@ -214,7 +214,7 @@ As a logged-in user, I want Download PDF and Open PDF to work after finalization
 - **SC-008-010**: No production database migration includes rendering-engine-only mock or test tables.
 - **SC-008-011**: Automated backend build and test suite passes without errors.
 - **SC-008-012**: Automated frontend build passes without errors.
-- **SC-008-013**: New and modified feature code targets useful automated test coverage.
+- **SC-008-013**: New and modified feature code achieves at least 80% useful automated test coverage (no superficial coverage-only tests).
 - **SC-008-014**: Implementation follows KISS principles and the active project constitution.
 
 ---

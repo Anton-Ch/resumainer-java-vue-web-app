@@ -21,7 +21,7 @@ flowchart TB
 
     subgraph WEB["Web Server  Tomcat + Nginx"]
         direction TB
-        Nginx["Nginx\nStatic assets + reverse proxy\n/app/ → Vue SPA\n/api/ → Tomcat\n/candidate/ → Tomcat"]
+        Nginx["Nginx\nStatic assets + reverse proxy\n/app/ → Vue SPA\n/api/ → Tomcat\n/{username}/ → Tomcat"]
         Tomcat["Apache Tomcat 10\nSpring MVC 6.x\nJava 21"]
     end
 
@@ -83,7 +83,7 @@ flowchart TB
     Controllers -->|"Stream file\n(path traversal check)"| FS
 
     %% Public route (unauthenticated)
-    Recruiter -->|"GET /candidate/{publicCode}"| Nginx
+    Recruiter -->|"GET /{username}/{publicCode}"| Nginx
     Nginx --> Tomcat
     Tomcat --> Controllers
     Controllers -->|"Rate-limited 30/min/IP"| DAOs
@@ -194,6 +194,6 @@ sequenceDiagram
 - **Single-user finalization**: FINALIZING status prevents concurrent finalization for the same request. No multi-user contention on finalization.
 - **File cleanup on failure**: Staged files deleted before DB rollback. No orphan artifacts.
 - **Bilingual atomicity**: EN and RU finalization within one transaction scope. Both succeed or neither.
-- **Rate limiting**: Public route `/candidate/{code}` limited to 30 requests/minute/IP. Prevents brute-force enumeration of public codes.
+- **Rate limiting**: Public route `/{username}/{code}` limited to 30 requests/minute/IP. Prevents brute-force enumeration of public codes.
 - **Path traversal protection**: Download controllers validate resolved file path is within storage root before reading (SEC-001).
 - **No background queue**: MVP does not use job queues. Finalization is synchronous with loading screen UX. The plan notes this can evolve to async in a future iteration.

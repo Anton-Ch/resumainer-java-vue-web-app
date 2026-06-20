@@ -21,7 +21,7 @@ flowchart TB
     end
 
     subgraph CONTROLLER["Controller Layer"]
-        GenCtrl["GenerateResumeController\n/finalize, /export, /candidate/{code}"]
+        GenCtrl["GenerateResumeController\n/finalize, /export, /{username}/{code}"]
         DlCtrl["ResumeDownloadController\n/pdf, /html downloads"]
     end
 
@@ -112,7 +112,7 @@ flowchart TB
 
 **Depended on by**: Presentation Layer (Vue SPA)
 
-**Why this boundary exists**: Controllers do not contain business logic — they translate between HTTP and the service layer. The public route (`/candidate/{code}`) lives here with rate limiting applied before service delegation.
+**Why this boundary exists**: Controllers do not contain business logic — they translate between HTTP and the service layer. The public route (`/{username}/{code}`) lives here with rate limiting applied before service delegation.
 
 ### Service Layer — Review Sub-Layer
 
