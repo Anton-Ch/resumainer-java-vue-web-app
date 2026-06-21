@@ -194,7 +194,8 @@ public class ResumeFinalizeService {
                                 requestId, languageCode, pdfResult.getErrorReason());
                     }
                 } catch (Exception e) {
-                    log.warn("PDF generation skipped for {}: {}", languageCode, e.getMessage());
+                    log.warn("PDF generation failed for {}: {}", languageCode, e.toString());
+                    log.debug("PDF generation failure detail", e);
                 }
 
                 // 4. Insert saved_resume row

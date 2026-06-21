@@ -68,7 +68,7 @@ public class OpenHtmlPdfGenerationService implements PdfGenerationService {
         File debugDir = new File(outputDir, "debug");
 
         FitResult result = getFitEngine().fit(renderData, pagePlan,
-                null, // targets loaded from config by fit engine
+                java.util.Collections.emptyList(),
                 htmlFile, pdfFile, debugDir, false);
 
         FitAttempt selected = result.selectedAttempt();

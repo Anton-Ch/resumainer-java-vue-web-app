@@ -22,14 +22,69 @@ public final class ContentExpectationBuilder {
         addIfPresent(expected, sectionTitle(data, "Education", "Образование"));
         addAspirationsExpected(expected, data);
         addPersonalExpected(expected, data);
-        for (ResumeRenderData.RenderWorkItem w : data.getWorkExperience()) {
-            addIfPresent(expected, w.getJobTitle());
+        if (data.getWorkExperience() != null) {
+            for (ResumeRenderData.RenderWorkItem w : data.getWorkExperience()) {
+                addIfPresent(expected, w.getJobTitle());
+            }
         }
-        for (ResumeRenderData.RenderProjectItem p : data.getProjects()) {
-            addIfPresent(expected, p.getProjectName());
+        if (data.getProjects() != null) {
+            for (ResumeRenderData.RenderProjectItem p : data.getProjects()) {
+                addIfPresent(expected, p.getProjectName());
+            }
         }
-        for (ResumeRenderData.RenderCourseItem c : data.getCourses()) {
-            addIfPresent(expected, c.getName());
+        if (data.getCourses() != null) {
+            for (ResumeRenderData.RenderCourseItem c : data.getCourses()) {
+                addIfPresent(expected, c.getName());
+            }
+        }
+        return uniqueNonBlank(expected);
+    }
+
+    /** Build expected text anchors for a single planned page during isolated fitting. */
+    public List<String> buildForPlannedPage(ResumeRenderData data, PagePlan plan, int plannedPageNumber) {
+        List<String> expected = new ArrayList<>();
+        if (plannedPageNumber == 1) {
+            addHeaderExpected(expected, data);
+            addIfPresent(expected, sectionTitle(data, "Professional Summary", "О себе"));
+            addIfPresent(expected, sectionTitle(data, "Work Experience", "Опыт работы"));
+            addIfPresent(expected, sectionTitle(data, "Skills", "Навыки"));
+            addIfPresent(expected, sectionTitle(data, "Education", "Образование"));
+            // Page 1 work items
+            List<ResumeRenderData.RenderWorkItem> work = data.getWorkExperience();
+            int p1Count = Math.min(plan.getPage1WorkCount(), work != null ? work.size() : 0);
+            for (int i = 0; i < p1Count; i++) {
+                addIfPresent(expected, work.get(i).getJobTitle());
+            }
+            if (data.getCourses() != null) {
+                for (ResumeRenderData.RenderCourseItem c : data.getCourses()) {
+                    addIfPresent(expected, c.getName());
+                }
+            }
+            if (plan.getTargetPageCount() == 1) {
+                addAspirationsExpected(expected, data);
+                addPersonalExpected(expected, data);
+            }
+        } else if (plannedPageNumber == 2) {
+            if (data.getProjects() != null) {
+                for (ResumeRenderData.RenderProjectItem p : data.getProjects()) {
+                    addIfPresent(expected, p.getProjectName());
+                }
+            }
+            List<ResumeRenderData.RenderWorkItem> work = data.getWorkExperience();
+            int p1Count = Math.min(plan.getPage1WorkCount(), work != null ? work.size() : 0);
+            int p2Count = Math.min(plan.getPage2AdditionalWorkCount(), work != null ? work.size() - p1Count : 0);
+            for (int i = p1Count; i < p1Count + p2Count; i++) {
+                addIfPresent(expected, work.get(i).getJobTitle());
+            }
+            if (data.getProjects() != null && !data.getProjects().isEmpty()) addIfPresent(expected, sectionTitle(data, "Projects and Volunteering", "Проекты и волонтёрство"));
+            if (p2Count > 0) addIfPresent(expected, sectionTitle(data, "Additional Work Experience", "Дополнительный опыт работы"));
+            if (plan.getTargetPageCount() <= 2) {
+                addAspirationsExpected(expected, data);
+                addPersonalExpected(expected, data);
+            }
+        } else if (plannedPageNumber == 3) {
+            addAspirationsExpected(expected, data);
+            addPersonalExpected(expected, data);
         }
         return uniqueNonBlank(expected);
     }
