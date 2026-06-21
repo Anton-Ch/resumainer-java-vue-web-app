@@ -48,6 +48,11 @@ public class GenerationRequestDao {
             "SELECT COUNT(*) FROM resume_generation_request "
             + "WHERE user_id = ? AND status = 'processing'";
 
+    private static final String TRY_MARK_FINALIZING =
+            "UPDATE resume_generation_request "
+            + "SET status = 'finalizing', error_message = NULL "
+            + "WHERE id = ? AND user_id = ? AND status = 'completed'";
+
     private final DataSource dataSource;
 
     public GenerationRequestDao(DataSource dataSource) {
@@ -78,8 +83,18 @@ public class GenerationRequestDao {
     }
 
     public void updateStatus(UUID requestId, UUID userId, String status, String errorMessage, boolean completed) {
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(UPDATE_STATUS)) {
+        try (Connection conn = dataSource.getConnection()) {
+            updateStatus(conn, requestId, userId, status, errorMessage, completed);
+        } catch (SQLException e) {
+            log.error("Error updating request status: {}", requestId, e);
+            throw new RuntimeException("Database error updating request status", e);
+        }
+    }
+
+    /** Connection-aware overload for transaction composition (Phase 22C). */
+    public void updateStatus(Connection conn, UUID requestId, UUID userId,
+                              String status, String errorMessage, boolean completed) {
+        try (PreparedStatement stmt = conn.prepareStatement(UPDATE_STATUS)) {
             stmt.setString(1, status);
             stmt.setString(2, errorMessage);
             stmt.setBoolean(3, completed);
@@ -87,7 +102,6 @@ public class GenerationRequestDao {
             stmt.setObject(5, userId);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            log.error("Error updating request status: {}", requestId, e);
             throw new RuntimeException("Database error updating request status", e);
         }
     }
@@ -149,6 +163,27 @@ public class GenerationRequestDao {
         } catch (SQLException e) {
             log.error("Error checking processing requests for user: {}", userId, e);
             throw new RuntimeException("Database error checking processing requests", e);
+        }
+    }
+
+    /**
+     * Atomically marks a generation request as finalizing.
+     * Only succeeds when the current status is 'completed' (post-generation).
+     *
+     * @param requestId the generation request ID
+     * @param userId    the owning user ID (owner-scoped)
+     * @return true if the status was updated (lock acquired), false otherwise
+     */
+    public boolean tryMarkFinalizing(UUID requestId, UUID userId) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(TRY_MARK_FINALIZING)) {
+            stmt.setObject(1, requestId);
+            stmt.setObject(2, userId);
+            int rows = stmt.executeUpdate();
+            return rows > 0;
+        } catch (SQLException e) {
+            log.error("Error marking request as finalizing: {}", requestId, e);
+            throw new RuntimeException("Database error marking request as finalizing", e);
         }
     }
 

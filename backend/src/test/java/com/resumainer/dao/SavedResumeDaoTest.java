@@ -276,4 +276,17 @@ class SavedResumeDaoTest {
         when(resultSet.getString("pdf_file_path")).thenReturn("/path/file.pdf");
         when(resultSet.getString("cover_letter")).thenReturn("Cover text");
     }
+
+    // ─── updatePdfMetadata with Connection (Phase 22C) ────────────
+
+    @Test
+    void updatePdfMetadata_withProvidedConnection_usesProvidedConnectionAndDoesNotOpenNew() throws Exception {
+        dao.updatePdfMetadata(connection, 1L, "READY", "/path/file.pdf",
+                1, "default-v1", null, null);
+
+        // Uses provided connection
+        verify(connection).prepareStatement(contains("UPDATE saved_resumes SET pdf_status"));
+        // Does NOT open a new connection
+        verify(dataSource, never()).getConnection();
+    }
 }

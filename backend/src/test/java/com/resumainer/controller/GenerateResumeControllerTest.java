@@ -403,6 +403,27 @@ class GenerateResumeControllerTest {
                 .andExpect(jsonPath("$.error").value("Failed to finalize resume. Please try again."));
     }
 
+    @Test
+    void finalizeRequest_finalizationAlreadyInProgress_returns409() throws Exception {
+        UUID requestId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        when(resumeFinalizeService.finalizeRequest(requestId, userId, "BALANCED"))
+                .thenThrow(new RuntimeException("Finalization already in progress. Please wait for it to complete."));
+
+        String json = objectMapper.writeValueAsString(Map.of(
+                "selectedAdaptationLevel", "BALANCED"
+        ));
+
+        mockMvc.perform(post("/api/generate/requests/{requestId}/finalize", requestId)
+                        .sessionAttr("user", user)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Finalization already in progress. Please wait for it to complete."));
+    }
+
     // ============================================================
     // getExport (GET /api/generate/requests/{id}/export)
     // ============================================================

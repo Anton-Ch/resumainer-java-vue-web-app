@@ -16,25 +16,32 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.*;
 
 /**
- * Finalizes a generation request: renders HTML, saves to disk, and creates
- * saved_resume records. Handles file compensation on DB failure.
+ * Finalizes a generation request using the OpenHTML/PDF parity pipeline
+ * (Feature 008). Generates PDF-parity HTML + validated PDF, inserts
+ * saved_resume records, and returns export DTO with download URLs.
+ *
+ * Legacy {@link ResumeTemplateRenderer} is no longer used in finalization.
+ * FINALIZING status lock, JDBC transactions, and bilingual atomicity
+ * are deferred to Phase 22B/22C.
  */
 @Service
 public class ResumeFinalizeService {
 
     private static final Logger log = LoggerFactory.getLogger(ResumeFinalizeService.class);
 
+    private static final String STORAGE_BASE = "generated_results";
+
     private final DataSource dataSource;
     private final GenerationRequestDao requestDao;
     private final GenerationResponseDao responseDao;
-    private final GenerationResponsePersonalDao personalDao;
     private final SavedResumeDao savedResumeDao;
-    private final ResumeTemplateRenderer templateRenderer;
     private final GeneratedFileStorageService fileStorage;
     private final ProfilePromptDao profilePromptDao;
     private final UserDao userDao;
@@ -45,9 +52,7 @@ public class ResumeFinalizeService {
     public ResumeFinalizeService(DataSource dataSource,
                                   GenerationRequestDao requestDao,
                                   GenerationResponseDao responseDao,
-                                  GenerationResponsePersonalDao personalDao,
                                   SavedResumeDao savedResumeDao,
-                                  ResumeTemplateRenderer templateRenderer,
                                   GeneratedFileStorageService fileStorage,
                                   ProfilePromptDao profilePromptDao,
                                   UserDao userDao,
@@ -57,9 +62,7 @@ public class ResumeFinalizeService {
         this.dataSource = dataSource;
         this.requestDao = requestDao;
         this.responseDao = responseDao;
-        this.personalDao = personalDao;
         this.savedResumeDao = savedResumeDao;
-        this.templateRenderer = templateRenderer;
         this.fileStorage = fileStorage;
         this.profilePromptDao = profilePromptDao;
         this.userDao = userDao;
@@ -69,7 +72,9 @@ public class ResumeFinalizeService {
     }
 
     /**
-     * Finalizes a generation request: renders HTML, saves files, inserts saved_resume rows.
+     * Finalizes a generation request: generates PDF-parity HTML + PDF
+     * through OpenHtmlPdfGenerationService, inserts saved_resume rows,
+     * and returns export DTO with download URLs.
      *
      * @param requestId              the generation request ID
      * @param userId                 the authenticated user ID
@@ -81,6 +86,25 @@ public class ResumeFinalizeService {
         if (request == null) {
             throw new IllegalArgumentException("Generation request not found.");
         }
+
+        // Phase 22B: Guard against concurrent finalization
+        String currentStatus = request.getStatus();
+        if ("finalizing".equals(currentStatus)) {
+            throw new RuntimeException("Finalization already in progress. Please wait for it to complete.");
+        }
+
+        boolean locked = requestDao.tryMarkFinalizing(requestId, userId);
+        if (!locked) {
+            // Re-read: another request may have grabbed the lock
+            ResumeGenerationRequest latest = requestDao.findById(requestId, userId);
+            if (latest != null && "finalizing".equals(latest.getStatus())) {
+                throw new RuntimeException("Finalization already in progress. Please wait for it to complete.");
+            }
+            throw new RuntimeException("Generation request is not ready for finalization. Current status: "
+                    + (latest != null ? latest.getStatus() : "unknown"));
+        }
+
+        log.info("FINALIZATION_LOCK_ACQUIRED requestId={} userId={}", requestId, userId);
 
         // Load all responses
         List<ResumeGenerationResponse> allResponses = responseDao.findResponsesByRequestId(requestId);
@@ -95,7 +119,6 @@ public class ResumeFinalizeService {
         if (selectedAdaptationLevel != null && !selectedAdaptationLevel.isBlank()) {
             long requestedId = mapAdaptationLevelId(selectedAdaptationLevel);
             if (!availableLevelIds.contains(requestedId)) {
-                // If selected level is invalid and only one level exists, auto-select it
                 if (availableLevelIds.size() == 1) {
                     long singleLevelId = availableLevelIds.iterator().next();
                     effectiveLevel = adaptationLevelName(singleLevelId);
@@ -114,7 +137,6 @@ public class ResumeFinalizeService {
                 effectiveLevel = selectedAdaptationLevel;
             }
         } else if (availableLevelIds.size() == 1) {
-            // No level specified and only one available — auto-select it
             effectiveLevel = adaptationLevelName(availableLevelIds.iterator().next());
             log.info("No adaptation level selected — auto-selecting single available level: {}",
                     effectiveLevel);
@@ -144,114 +166,186 @@ public class ResumeFinalizeService {
         List<Map<String, Object>> profileEducation = profilePromptDao.loadEducation(userId);
         Map<String, Object> contactData = profilePromptDao.loadContact(userId);
 
-        // Track created files for compensation
+        // Track created files for cleanup on failure
         List<String> createdFiles = new ArrayList<>();
-        List<Long> createdResumeIds = new ArrayList<>();
 
+        // Stage 1: Generate all artifacts — no DB writes
+        List<Artifact> artifacts = new ArrayList<>();
         try {
-            ExportResultDto export = new ExportResultDto();
-            List<SavedResumeExportDto> exportItems = new ArrayList<>();
-
             for (ResumeGenerationResponse response : toFinalize) {
                 String languageCode = response.getLanguageId() == 1L ? "EN" : "RU";
 
-                // 1. Render HTML
+                // 1. Load response data
                 GenerationResponseDao.ResponseBundle bundle = responseDao.loadResponseBundle(response.getId());
-                // Use collision-safe code generation with uniqueness check
                 String publicCode = PublicCodeGenerator.generateWithRetry(
                         code -> savedResumeDao.findPublicCodeByCode(code) == null);
 
-                // 2. Save HTML to disk (legacy renderer)
-                String htmlPath = templateRenderer.renderAndSave(
-                        bundle, profileEducation, contactData,
-                        languageCode, finalSelectedLevel,
-                        fileStorageUsername, publicCode);
-                createdFiles.add(htmlPath);
+                // 2. Build render data and page plan
+                ResumeRenderData renderData = buildRenderData(bundle, contactData,
+                        profileEducation, languageCode, finalSelectedLevel);
+                int totalWork = bundle.experience != null ? bundle.experience.size() : 0;
+                int totalProjects = bundle.projects != null ? bundle.projects.size() : 0;
+                int totalCourses = bundle.courses != null ? bundle.courses.size() : 0;
+                PagePlan pagePlan = pagePlanBuilder.build(totalWork, totalProjects, totalCourses);
 
-                // Prepare saved_resume data
-                String resumeTitle = request.getVacancyTitle() != null ? request.getVacancyTitle() : "Resume";
-                String vacancy = request.getVacancyTitle() != null ? request.getVacancyTitle() : "";
-                String company = request.getCompanyName() != null ? request.getCompanyName() : "";
-                String coverLetter = response.getCoverLetter();
-
-                // 3. Generate PDF via new pipeline (Feature 008)
-                String pdfPath = null;
-                Integer pdfPageCount = null;
+                // 3. Determine output directory
+                String baseFileName = "resume_" + languageCode.toLowerCase();
+                Path outputDir = Paths.get(STORAGE_BASE, fileStorageUsername, publicCode);
                 try {
-                    ResumeRenderData renderData = buildRenderData(bundle, contactData,
-                            profileEducation, languageCode, finalSelectedLevel);
-                    int totalWork = bundle.experience != null ? bundle.experience.size() : 0;
-                    int totalProjects = bundle.projects != null ? bundle.projects.size() : 0;
-                    int totalCourses = bundle.courses != null ? bundle.courses.size() : 0;
-                    PagePlan pagePlan = pagePlanBuilder.build(totalWork, totalProjects, totalCourses);
-
-                    File htmlFile = new File(htmlPath);
-                    File outputDir = htmlFile.getParentFile();
-
-                    OpenHtmlPdfGenerationService.PdfGenerationResult pdfResult =
-                            pdfGenerationService.generate(renderData, pagePlan, outputDir, "resume_" + languageCode.toLowerCase());
-
-                    if (pdfResult.isSuccess()) {
-                        pdfPath = pdfResult.getPdfPath();
-                        pdfPageCount = pdfResult.getPageCount();
-                        createdFiles.add(pdfResult.getHtmlPath());
-                        createdFiles.add(pdfPath);
-                        log.info("PDF_GENERATED requestId={} lang={} pages={}",
-                                requestId, languageCode, pdfPageCount);
-                    } else {
-                        log.warn("PDF_FITTING_FAILED requestId={} lang={} reason={}",
-                                requestId, languageCode, pdfResult.getErrorReason());
-                    }
+                    Files.createDirectories(outputDir);
                 } catch (Exception e) {
-                    log.warn("PDF generation failed for {}: {}", languageCode, e.toString());
-                    log.debug("PDF generation failure detail", e);
+                    throw new RuntimeException("Failed to create output directory for finalization", e);
                 }
 
-                // 4. Insert saved_resume row
-                long savedId = savedResumeDao.insert(userId, resumeTitle, vacancy, company,
-                        languageCode, finalSelectedLevel,
-                        publicCode, "/" + realUsername + "/" + publicCode,
-                        htmlPath, pdfPath, coverLetter,
-                        requestId, response.getId(),
-                        targetLevelId, response.getLanguageId());
-                createdResumeIds.add(savedId);
+                // 4. Generate PDF-parity HTML + PDF through the unified pipeline
+                log.debug("Calling pdfGenerationService.generate() for lang={}", languageCode);
+                OpenHtmlPdfGenerationService.PdfGenerationResult pdfResult =
+                        pdfGenerationService.generate(renderData, pagePlan, outputDir.toFile(), baseFileName);
 
-                // 5. Update PDF metadata if generated
-                if (pdfPath != null && pdfPageCount != null) {
-                    savedResumeDao.updatePdfMetadata(savedId, "READY", pdfPath,
-                            pdfPageCount, "default-v1", null, null);
+                if (!pdfResult.isSuccess()) {
+                    throw new RuntimeException("PDF generation failed: " + pdfResult.getErrorReason());
                 }
 
-                // 6. Build export DTO
-                SavedResumeExportDto item = new SavedResumeExportDto();
-                item.setSavedResumeId(savedId);
-                item.setLanguageCode(languageCode);
-                item.setAdaptationLevel(finalSelectedLevel);
-                item.setHtmlDownloadUrl("/api/generate/resumes/" + savedId + "/html");
-                item.setPdfDownloadUrl("/api/generate/resumes/" + savedId + "/pdf");
-                item.setPdfOpenUrl("/candidate/" + publicCode);
-                item.setPublicUrlLink("/candidate/" + publicCode);
-                item.setPdfAvailable(pdfPath != null);
-                item.setPdfMessage(pdfPath == null ? "PDF generation failed. You can retry finalization." : null);
-                item.setCoverLetter(coverLetter);
-                exportItems.add(item);
+                String htmlPath = pdfResult.getHtmlPath();
+                String pdfPath = pdfResult.getPdfPath();
+                int pdfPageCount = pdfResult.getPageCount();
+
+                createdFiles.add(htmlPath);
+                createdFiles.add(pdfPath);
+
+                log.info("PDF_GENERATED requestId={} lang={} pages={}",
+                        requestId, languageCode, pdfPageCount);
+
+                // Collect artifact data — no DB writes yet
+                Artifact artifact = new Artifact();
+                artifact.response = response;
+                artifact.languageCode = languageCode;
+                artifact.publicCode = publicCode;
+                artifact.publicUrl = "/" + realUsername + "/" + publicCode;
+                artifact.htmlPath = htmlPath;
+                artifact.pdfPath = pdfPath;
+                artifact.pdfPageCount = pdfPageCount;
+                artifact.coverLetter = response.getCoverLetter();
+                artifact.resumeTitle = request.getVacancyTitle() != null ? request.getVacancyTitle() : "Resume";
+                artifact.vacancy = request.getVacancyTitle() != null ? request.getVacancyTitle() : "";
+                artifact.company = request.getCompanyName() != null ? request.getCompanyName() : "";
+                artifacts.add(artifact);
             }
 
-            export.setResumes(exportItems);
-            log.info("Finalized {} resumes for request: {}", exportItems.size(), requestId);
-            return export;
+            // Stage 2: Single JDBC transaction for all DB writes
+            return persistArtifactsInTransaction(requestId, userId, artifacts,
+                    finalSelectedLevel, targetLevelId, createdFiles, realUsername);
 
         } catch (Exception e) {
-            // File compensation: clean up orphaned files
+            // File compensation: clean up generated files on failure
             for (String filePath : createdFiles) {
                 try {
                     java.nio.file.Files.deleteIfExists(java.nio.file.Paths.get(filePath));
                 } catch (Exception ignored) {
-                    log.warn("Failed to clean up orphaned file: {}", filePath);
+                    log.warn("Failed to clean up created file: {}", filePath);
                 }
             }
+
+            // Phase 22B: Restore request status on failure so user can retry
+            safeRestoreStatus(requestId, userId);
+
             log.error("Finalization failed for request: {}", requestId, e);
             throw new RuntimeException("Failed to finalize resume. Please try again.", e);
+        }
+    }
+
+    // ── Stage 2: Single JDBC transaction for all DB writes ───────────────
+
+    /**
+     * Persists all artifacts inside a single JDBC transaction.
+     * Uses the project's custom connection pool via injected DataSource.
+     */
+    private ExportResultDto persistArtifactsInTransaction(UUID requestId, UUID userId,
+                                                           List<Artifact> artifacts,
+                                                           String adaptationLevel, long targetLevelId,
+                                                           List<String> createdFiles,
+                                                           String realUsername) {
+        Connection conn = null;
+        try {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+
+            ExportResultDto export = new ExportResultDto();
+            List<SavedResumeExportDto> exportItems = new ArrayList<>();
+
+            for (Artifact a : artifacts) {
+                long savedId = savedResumeDao.insert(conn,
+                        userId, a.resumeTitle, a.vacancy, a.company,
+                        a.languageCode, adaptationLevel,
+                        a.publicCode, a.publicUrl,
+                        a.htmlPath, a.pdfPath, a.coverLetter,
+                        requestId, a.response.getId(),
+                        targetLevelId, a.response.getLanguageId());
+
+                savedResumeDao.updatePdfMetadata(conn, savedId, "READY", a.pdfPath,
+                        a.pdfPageCount, "default-v1", null, null);
+
+                SavedResumeExportDto item = new SavedResumeExportDto();
+                item.setSavedResumeId(savedId);
+                item.setLanguageCode(a.languageCode);
+                item.setAdaptationLevel(adaptationLevel);
+                item.setHtmlDownloadUrl("/api/generate/resumes/" + savedId + "/html");
+                item.setPdfDownloadUrl("/api/generate/resumes/" + savedId + "/pdf");
+                item.setPdfOpenUrl("/api/generate/resumes/" + savedId + "/pdf?disposition=inline");
+                item.setPublicUrlLink(a.publicUrl);
+                item.setPdfAvailable(true);
+                item.setPdfMessage(null);
+                item.setCoverLetter(a.coverLetter);
+                exportItems.add(item);
+            }
+
+            // Phase 22B: Restore request status inside transaction
+            requestDao.updateStatus(conn, requestId, userId, "completed", null, false);
+
+            conn.commit();
+            log.info("TRANSACTION_COMMITTED requestId={} resumes={}", requestId, artifacts.size());
+
+            export.setResumes(exportItems);
+            return export;
+
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                    log.warn("TRANSACTION_ROLLED_BACK requestId={}", requestId);
+                } catch (Exception rollbackEx) {
+                    log.error("Rollback failed for request: {}", requestId, rollbackEx);
+                }
+            }
+            throw new RuntimeException("Database error during finalization", e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (Exception autoCommitEx) {
+                    log.warn("Failed to restore autoCommit for request: {}", requestId, autoCommitEx);
+                }
+
+                try {
+                    conn.close(); // returns to custom pool through proxy
+                } catch (Exception closeEx) {
+                    log.warn("Connection close error for request: {}", requestId, closeEx);
+                }
+            }
+        }
+    }
+
+    /**
+     * Restore generation request status to completed after finalization.
+     * Does not update completed_at (completed=false).
+     * Failures are logged but do not hide the original error.
+     */
+    private void safeRestoreStatus(UUID requestId, UUID userId) {
+        try {
+            requestDao.updateStatus(requestId, userId, "completed", null, false);
+            log.debug("Request status restored to completed: requestId={}", requestId);
+        } catch (Exception e) {
+            log.warn("Failed to restore request status after finalization: requestId={}", requestId, e);
         }
     }
 
@@ -314,7 +408,6 @@ public class ResumeFinalizeService {
                 w.setDescription(exp.getDescription());
                 w.setLocation(exp.getLocation());
                 w.setFirstPage(exp.isFirstPage());
-                // Bullet points loaded separately — placeholder for Phase 3 integration
                 input.workItems.add(w);
             }
         }
@@ -373,5 +466,21 @@ public class ResumeFinalizeService {
             log.warn("Failed to load username for userId={}", userId);
         }
         return userId.toString().replace("-", "_");
+    }
+
+    // ── Internal holder for generated artifact data before DB persistence ──
+
+    private static class Artifact {
+        ResumeGenerationResponse response;
+        String languageCode;
+        String publicCode;
+        String publicUrl;
+        String htmlPath;
+        String pdfPath;
+        int pdfPageCount;
+        String coverLetter;
+        String resumeTitle;
+        String vacancy;
+        String company;
     }
 }
