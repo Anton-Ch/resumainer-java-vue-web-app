@@ -341,7 +341,13 @@ public class GenerateResumeController {
      * Only serves active, non-deleted resumes. No cover letter, no private HTML.
      */
     @GetMapping("/candidate/{publicCode}")
-    public ResponseEntity<Resource> publicResume(@PathVariable String publicCode) {
+    public ResponseEntity<Resource> publicResume(@PathVariable String publicCode,
+                                                  jakarta.servlet.http.HttpServletRequest request) {
+        String clientIp = request.getRemoteAddr();
+        String maskedIp = clientIp.contains(".") ?
+                clientIp.substring(0, clientIp.lastIndexOf('.') + 1) + "x" : clientIp;
+        log.info("PUBLIC_PDF_ACCESS code={} ip={} ua={}",
+                publicCode, maskedIp, request.getHeader("User-Agent"));
         log.debug("GET /candidate/{}", publicCode);
 
         if (publicCode == null || publicCode.isBlank()) {
