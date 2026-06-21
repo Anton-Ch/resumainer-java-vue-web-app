@@ -219,6 +219,14 @@ public class GenerateResumeController {
         } catch (IllegalArgumentException e) {
             return noCache(ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(java.util.Map.of("error", e.getMessage())));
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().contains("Finalization already in progress")) {
+                return noCache(ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(java.util.Map.of("error", e.getMessage())));
+            }
+            log.warn("Finalization failed for request: {}", requestId, e);
+            return noCache(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("error", "Failed to finalize resume. Please try again.")));
         } catch (Exception e) {
             log.warn("Finalization failed for request: {}", requestId, e);
             return noCache(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

@@ -258,6 +258,57 @@ class GenerationRequestDaoTest {
                 () -> dao.hasProcessingRequest(userId));
     }
 
+    // ─── tryMarkFinalizing (Phase 22B) ───────────────────────────
+
+    @Test
+    void tryMarkFinalizing_returnsTrue_whenCompletedRequestUpdated() throws Exception {
+        when(statement.executeUpdate()).thenReturn(1);
+
+        boolean result = dao.tryMarkFinalizing(requestId, userId);
+
+        assertTrue(result);
+        verify(statement).setObject(1, requestId);
+        verify(statement).setObject(2, userId);
+        verify(statement).executeUpdate();
+    }
+
+    @Test
+    void tryMarkFinalizing_returnsFalse_whenNoRowsUpdated() throws Exception {
+        when(statement.executeUpdate()).thenReturn(0);
+
+        boolean result = dao.tryMarkFinalizing(requestId, userId);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void tryMarkFinalizing_usesCompletedStatusGuard() throws Exception {
+        when(statement.executeUpdate()).thenReturn(1);
+
+        dao.tryMarkFinalizing(requestId, userId);
+
+        // Verify the SQL was the conditional UPDATE (check connection.prepareStatement arg)
+        verify(connection).prepareStatement(contains("status = 'completed'"));
+    }
+
+    @Test
+    void tryMarkFinalizing_throwsException_onSqlError() throws Exception {
+        when(statement.executeUpdate()).thenThrow(new SQLException("DB error"));
+
+        assertThrows(RuntimeException.class,
+                () -> dao.tryMarkFinalizing(requestId, userId));
+    }
+
+    // ─── updateStatus with Connection (Phase 22C) ──────────────────
+
+    @Test
+    void updateStatus_withProvidedConnection_usesProvidedConnection() throws Exception {
+        dao.updateStatus(connection, requestId, userId, "completed", null, false);
+
+        verify(connection).prepareStatement(contains("UPDATE resume_generation_request SET status"));
+        verify(dataSource, never()).getConnection();
+    }
+
     // ─── helper ──────────────────────────────────────────────────
 
     private ResumeGenerationRequest makeFullRequest() {

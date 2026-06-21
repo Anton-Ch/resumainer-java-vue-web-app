@@ -78,3 +78,76 @@ Evidence:
 - pagePlanBuilder.build grep in production: 1
 - PagePlanBuilderTest @Test count: 4
 - Full backend: BUILD SUCCESS
+
+### Phase 22A fixes applied
+
+- ResumeFinalizeService no longer uses ResumeTemplateRenderer.renderAndSave(...) for finalized resume HTML.
+- Removed ResumeTemplateRenderer and GenerationResponsePersonalDao from ResumeFinalizeService constructor.
+- Finalized saved_resume.html_file_path now stores PDF-parity HTML from OpenHtmlPdfGenerationService PdfGenerationResult.
+- Finalization throws (no insert) when PDF generation fails or returns fitting failure.
+- finalizeRequest DTO URLs use Phase 19 format: publicUrlLink=/{username}/{publicCode}, pdfOpenUrl=/api/generate/resumes/{id}/pdf?disposition=inline.
+- /candidate/{publicCode} removed from finalizeRequest response.
+- ResumeTemplateRenderer remains @Deprecated in codebase; only ResumeTemplateRendererTest calls it.
+
+Evidence:
+- ResumeFinalizeService renderAndSave grep: 0
+- ResumeFinalizeService /candidate/ grep: 0
+- Production renderAndSave callers: 0 (only declaration in ResumeTemplateRenderer)
+- pdfGenerationService.generate grep in finalization: present (line 184)
+- pagePlanBuilder.build grep in finalization: present (line 170)
+- renderDataBuilder.buildRenderData grep: present (line 351)
+- ResumeFinalizeServiceTest: 11/11 PASS (4 new + 7 updated existing)
+- Related PDF/render tests (ResumeRenderDataBuilderTest, PagePlanBuilderTest): 7/7 PASS
+- Full backend: BUILD SUCCESS (836 tests, 0 failures)
+
+### Phase 22C fixes applied
+
+- Finalization now generates all language artifacts before writing saved_resume rows (two-stage flow).
+- saved_resume inserts and pdf metadata updates run in one JDBC transaction using project DataSource/custom connection pool.
+- Added Connection-aware DAO overloads: SavedResumeDao.updatePdfMetadata(Connection), GenerationRequestDao.updateStatus(Connection).
+- Bilingual finalization is all-or-nothing for DB writes.
+- DB failure after partial inserts rolls back all saved_resume writes.
+- Metadata update failure rolls back saved_resume writes.
+- Artifact generation failure before DB writes inserts no saved_resume rows.
+- Generated files are cleaned up on artifact or DB failure.
+- Status reset inside transaction on success; best-effort reset outside transaction on failure.
+- Phase 22A preserved: renderAndSave=0, /candidate/=0 in ResumeFinalizeService.
+- Phase 22B preserved: tryMarkFinalizing lock, 409 conflict behavior remain.
+
+Evidence:
+- SavedResumeDao updatePdfMetadata(Connection): present
+- GenerationRequestDao updateStatus(Connection): present
+- ResumeFinalizeService setAutoCommit/commit/rollback: present (lines 271, 305, 314)
+- ResumeFinalizeService renderAndSave grep: 0
+- ResumeFinalizeService /candidate/ grep: 0
+- single transaction success test: PASS
+- DB failure rollback test: PASS
+- metadata failure rollback test: PASS
+- bilingual second-language failure no-insert test: PASS
+- targeted backend tests: 84 PASS (DAO+service+controller)
+- Full backend: BUILD SUCCESS (836 tests, 0 failures)
+
+### Phase 22B fixes applied
+
+- Added V35 migration to allow resume_generation_request.status = 'finalizing'.
+- Added atomic GenerationRequestDao.tryMarkFinalizing(requestId, userId) conditional status update.
+- ResumeFinalizeService acquires finalization lock before PDF/HTML generation starts.
+- Concurrent finalization attempts are rejected before PDF generation and saved_resume insert.
+- ResumeFinalizeService restores request status to 'completed' after success and failure.
+- GenerateResumeController maps finalization-in-progress to HTTP 409 Conflict.
+- Phase 22A behavior preserved: no legacy ResumeTemplateRenderer in finalization, no /candidate/ URLs, no HTML-only saved resume on PDF failure.
+
+Evidence:
+- V35 migration: finalizing in CHECK constraint
+- tryMarkFinalizing grep: present (DAO lines 51, 168)
+- finalizing status grep: present (DAO line 53, service lines 91, 99)
+- ResumeFinalizeService renderAndSave grep: 0
+- ResumeFinalizeService /candidate/ grep: 0
+- already-finalizing no-generate/no-insert test: PASS
+- lock-not-acquired concurrent-finalizing test: PASS
+- PDF failure restores status test: PASS
+- fitting failure restores status test: PASS
+- success restores status test: PASS
+- GenerateResumeController 409 test: PASS
+- Targeted backend tests (DAO+Service+Controller): 62 PASS
+- Full backend: BUILD SUCCESS (830 tests, 0 failures)
