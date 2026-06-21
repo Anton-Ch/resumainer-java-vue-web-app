@@ -188,24 +188,51 @@ async function onDownloadHtml(item: SavedResumeExportDto) {
 }
 
 function onDownloadPdf(item: SavedResumeExportDto) {
-  toast.add({
-    severity: 'info',
-    summary: item.pdfMessage || t('generate.export.pdfNotAvailable'),
-    life: 3000
-  })
+  if (!item.pdfAvailable) {
+    toast.add({
+      severity: 'info',
+      summary: item.pdfMessage || t('generate.export.pdfNotAvailable'),
+      life: 3000
+    })
+    return
+  }
+  generateApi.downloadPdf(item.savedResumeId)
+    .then(blob => {
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `resume_${normalizedLanguage(item.languageCode)}_${normalizedLevel(item.adaptationLevel)}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    })
+    .catch(() => {
+      toast.add({
+        severity: 'error',
+        summary: t('generate.export.pdfDownloadFailed') || 'PDF download failed',
+        life: 3000
+      })
+    })
 }
 
 function onOpenPdf(item: SavedResumeExportDto) {
-  if (item.pdfAvailable && item.pdfOpenUrl) {
-    window.open(item.pdfOpenUrl, '_blank', 'noopener,noreferrer')
+  if (!item.pdfAvailable) {
+    toast.add({
+      severity: 'info',
+      summary: item.pdfMessage || t('generate.export.pdfNotAvailable'),
+      life: 3000
+    })
     return
   }
-
-  toast.add({
-    severity: 'info',
-    summary: item.pdfMessage || t('generate.export.pdfNotAvailable'),
-    life: 3000
-  })
+  generateApi.openPdf(item.savedResumeId)
+    .catch(() => {
+      toast.add({
+        severity: 'error',
+        summary: t('generate.export.pdfOpenFailed') || 'Failed to open PDF',
+        life: 3000
+      })
+    })
 }
 </script>
 

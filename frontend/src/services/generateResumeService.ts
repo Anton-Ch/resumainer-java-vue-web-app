@@ -126,17 +126,22 @@ export async function downloadHtml(savedResumeId: number): Promise<Blob> {
   return response.blob()
 }
 
-/**
- * Placeholder: PDF download deferred to feat/008.
- * In feat/007, this returns a placeholder response.
- */
-export async function downloadPdf(_savedResumeId: number): Promise<void> {
-  console.warn('PDF download is not available in feat/007. Deferred to feat/008-pdf-conversion.')
+/** Download PDF (authenticated, owner-scoped). Feature 008. */
+export async function downloadPdf(savedResumeId: number): Promise<Blob> {
+  const response = await fetch(`${RESUME_BASE}/${savedResumeId}/pdf`, {
+    credentials: 'include'
+  })
+  if (!response.ok) throw new Error('Failed to download PDF')
+  return response.blob()
 }
 
-/**
- * Placeholder: open PDF deferred to feat/008.
- */
-export async function openPdf(_publicUrlLink: string): Promise<void> {
-  console.warn('PDF open is not available in feat/007. Deferred to feat/008-pdf-conversion.')
+/** Open PDF inline in new tab. Feature 008. */
+export async function openPdf(savedResumeId: number): Promise<void> {
+  const response = await fetch(`${RESUME_BASE}/${savedResumeId}/pdf?disposition=inline`, {
+    credentials: 'include'
+  })
+  if (!response.ok) throw new Error('Failed to open PDF')
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+  window.open(url, '_blank')
 }
