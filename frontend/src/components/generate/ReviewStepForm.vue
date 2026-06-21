@@ -166,6 +166,26 @@
                     </section>
                   </template>
                 </div>
+                <!-- Feature 008: bullet editing — render bullets after fields -->
+                <div v-if="getWorkBullets(recordId).length > 0" class="review-bullets-section">
+                  <h5 class="bullets-heading">{{ t('generate.review.bullets.heading') }}</h5>
+                  <div v-for="(bullet, bi) in getWorkBullets(recordId)" :key="bi" class="vue-card field-card bullet-card">
+                    <div class="bullet-header">
+                      <span class="bullet-index">{{ t('generate.review.bullets.index', { n: bullet.bulletOrder + 1 }) }}</span>
+                      <span v-if="bullet.isEdited" class="vue-chip chip-edited">{{ t('generate.review.bullets.edited') }}</span>
+                    </div>
+                    <Textarea
+                      :modelValue="bullet.bulletText"
+                      @update:modelValue="setWorkBullet(recordId, bullet.bulletOrder, $event)"
+                      :rows="2"
+                      class="field-input bullet-input"
+                      :class="{ 'p-invalid': bulletError(recordId, bullet.bulletOrder) }"
+                    />
+                    <small v-if="bulletError(recordId, bullet.bulletOrder)" class="p-error bullet-error">
+                      {{ t('generate.review.bullets.emptyError') }}
+                    </small>
+                  </div>
+                </div>
               </div>
               <div v-if="hasVariants" class="tab-footer">
                 <AdaptationLevelRadioGroup
@@ -365,6 +385,26 @@
                       </template>
                     </section>
                   </template>
+                </div>
+                <!-- Feature 008: bullet editing for each project record -->
+                <div v-if="getProjBullets(recordId).length > 0" class="review-bullets-section">
+                  <h5 class="bullets-heading">{{ t('generate.review.bullets.heading') }}</h5>
+                  <div v-for="(bullet, bi) in getProjBullets(recordId)" :key="bi" class="vue-card field-card bullet-card">
+                    <div class="bullet-header">
+                      <span class="bullet-index">{{ t('generate.review.bullets.index', { n: bullet.bulletOrder + 1 }) }}</span>
+                      <span v-if="bullet.isEdited" class="vue-chip chip-edited">{{ t('generate.review.bullets.edited') }}</span>
+                    </div>
+                    <Textarea
+                      :modelValue="bullet.bulletText"
+                      @update:modelValue="setProjBullet(recordId, bullet.bulletOrder, $event)"
+                      :rows="2"
+                      class="field-input bullet-input"
+                      :class="{ 'p-invalid': bulletError(recordId, bullet.bulletOrder) }"
+                    />
+                    <small v-if="bulletError(recordId, bullet.bulletOrder)" class="p-error bullet-error">
+                      {{ t('generate.review.bullets.emptyError') }}
+                    </small>
+                  </div>
                 </div>
               </div>
               <div v-if="hasVariants" class="tab-footer">
@@ -601,12 +641,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type {
   GeneratedVariant,
   GeneratedSkillGroup,
-  PrototypeLevel
+  PrototypeLevel,
+  BulletReviewItem
 } from '@/types/generate'
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
@@ -923,6 +964,88 @@ function setProjectField(lang: string, sourceId: string, fieldKey: string, level
     }
   }
 }
+
+// Feature 008: bullet editing functions for work experience and projects
+
+function getWorkBullets(sourceId: string): BulletReviewItem[] {
+  const allVariants = [...props.enVariants, ...props.ruVariants]
+  for (const v of allVariants) {
+    const exp = v.workExperience.find(e => e.sourceId === sourceId)
+    if (exp && exp.bullets && exp.bullets.length > 0) return exp.bullets
+  }
+  return []
+}
+
+function setWorkBullet(sourceId: string, bulletOrder: number, text: string) {
+  const allVariants = [...props.enVariants, ...props.ruVariants]
+  for (const v of allVariants) {
+    const exp = v.workExperience.find(e => e.sourceId === sourceId)
+    if (exp && exp.bullets) {
+      const bullet = exp.bullets.find(b => b.bulletOrder === bulletOrder)
+      if (bullet) { bullet.bulletText = text; return }
+    }
+  }
+}
+
+function getProjBullets(sourceId: string): BulletReviewItem[] {
+  const allVariants = [...props.enVariants, ...props.ruVariants]
+  for (const v of allVariants) {
+    const prj = v.projects.find(p => p.sourceId === sourceId)
+    if (prj && prj.bullets && prj.bullets.length > 0) return prj.bullets
+  }
+  return []
+}
+
+function setProjBullet(sourceId: string, bulletOrder: number, text: string) {
+  const allVariants = [...props.enVariants, ...props.ruVariants]
+  for (const v of allVariants) {
+    const prj = v.projects.find(p => p.sourceId === sourceId)
+    if (prj && prj.bullets) {
+      const bullet = prj.bullets.find(b => b.bulletOrder === bulletOrder)
+      if (bullet) { bullet.bulletText = text; return }
+    }
+  }
+}
+
+// Feature 008: T037 — bullet validation (reject empty/whitespace)
+const bulletErrors = reactive(new Map<string, boolean>())
+
+function bulletError(sourceId: string, bulletOrder: number): boolean {
+  return bulletErrors.get(sourceId + ':' + bulletOrder) ?? false
+}
+
+function validateBullets(): boolean {
+  bulletErrors.clear()
+  let hasError = false
+  const allVariants = [...props.enVariants, ...props.ruVariants]
+  for (const v of allVariants) {
+    for (const exp of v.workExperience) {
+      if (exp.bullets) {
+        for (const b of exp.bullets) {
+          if (!b.bulletText || b.bulletText.trim() === '') {
+            bulletErrors.set(exp.sourceId + ':' + b.bulletOrder, true)
+            hasError = true
+          }
+        }
+      }
+    }
+    for (const prj of v.projects) {
+      if (prj.bullets) {
+        for (const b of prj.bullets) {
+          if (!b.bulletText || b.bulletText.trim() === '') {
+            bulletErrors.set(prj.sourceId + ':' + b.bulletOrder, true)
+            hasError = true
+          }
+        }
+      }
+    }
+  }
+  return !hasError
+}
+
+// Feature 008: T038 — MVP Review UI does NOT add, delete, or reorder bullets.
+// Future enhancement: bullet CRUD operations (add, remove, reorder) may be added here
+// by extending the GeneratedExperience/GeneratedProject.bullets array and the save payload.
 
 // ── Personal Information ────────────────────────────────────────────
 

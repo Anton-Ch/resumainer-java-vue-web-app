@@ -113,14 +113,14 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 - [x] T032 [TDD] Update `ResumeReviewService.save()` in `backend/src/main/java/com/resumainer/service/ResumeReviewService.java` to update bullet text and set `is_edited = true` on changed bullets. Reject empty/whitespace-only bullets with descriptive error. (II, IV)
 - [x] T033 [TDD] Add service/controller tests: bullet edit save (text updated in DB), bullet reload (edited text returned), empty bullet rejection, owner-scoped access. (II, V)
 - [x] T034 [TDD] Run `mvn test -pl backend` — review service and controller tests pass. (II)
-- [ ] T035 [P] Update `frontend/src/types/generate.ts` with bullet DTO types matching backend `GenerationReviewDto` shape. (I)
-- [ ] T036 [P] Update `GeneratedRecordGroup.vue` and `ReviewStepForm.vue` in `frontend/src/components/generate/` to render each bullet as separate editable text input under its parent work/project record. Record-first grouping preserved. (III)
-- [ ] T037 [P] Add frontend validation: bullet cannot be empty/whitespace-only. Show inline error message. (III)
-- [ ] T038 [P] Ensure MVP Review UI does NOT add, delete, or reorder bullets. Add code comment for future extensibility. (I, III)
-- [ ] T039 [TDD] Add frontend tests (Vitest + Vue Test Utils): rendering bullet fields under correct records, editing marks dirty state, save payload includes bullets, empty bullet validation shown. (II, III)
-- [ ] T040 [TDD] Run `npm test -- --run` in frontend — all tests pass. (II)
-- [ ] T041 [REVIEW] Manual smoke: generate with MockAiClient → Review → edit bullet → save → reload → edited bullet persists. (II, III)
-- [ ] T042 [REVIEW] `npm run build` passes. (I)
+- [x] T035 [P] Update `frontend/src/types/generate.ts` with bullet DTO types matching backend `GenerationReviewDto` shape. (I)
+- [x] T036 [P] Update `GeneratedRecordGroup.vue` and `ReviewStepForm.vue` in `frontend/src/components/generate/` to render each bullet as separate editable text input under its parent work/project record. Record-first grouping preserved. (III)
+- [x] T037 [P] Add frontend validation: bullet cannot be empty/whitespace-only. Show inline error message. (III)
+- [x] T038 [P] Ensure MVP Review UI does NOT add, delete, or reorder bullets. Add code comment for future extensibility. (I, III)
+- [x] T039 [TDD] Add frontend tests (Vitest + Vue Test Utils): rendering bullet fields under correct records, editing marks dirty state, save payload includes bullets, empty bullet validation shown. (II, III)
+- [x] T040 [TDD] Run `npm test -- --run` in frontend — all tests pass. (II)
+- [x] T041 [REVIEW] Manual smoke: generate with MockAiClient → Review → edit bullet → save → reload → edited bullet persists. (II, III)
+- [x] T042 [REVIEW] `npm run build` passes. (I)
 
 **Checkpoint**: User can edit generated bullets; backend persists them. ✅ All tests + build pass.
 

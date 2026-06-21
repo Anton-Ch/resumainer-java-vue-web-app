@@ -217,6 +217,12 @@
         "dateOfBirth": "Date of Birth",
         "workFormats": "Work Formats"
       },
+      "bullets": {
+        "heading": "Bullet Points",
+        "index": "Bullet {n}",
+        "edited": "edited",
+        "emptyError": "Bullet cannot be empty."
+      },
       "levels": {
         "minimal": "Minimal",
         "balanced": "Balanced",

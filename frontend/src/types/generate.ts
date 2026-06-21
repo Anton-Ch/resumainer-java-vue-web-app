@@ -56,6 +56,14 @@ export interface RecordReviewGroup {
   recordId: string
   orderInResume: number
   fieldVariants: Record<string, AdaptationVariant[]>
+  bullets?: BulletReviewItem[]   // Feature 008: structured bullet points
+}
+
+export interface BulletReviewItem {
+  bulletOrder: number
+  bulletText: string
+  isEdited: boolean
+  updateKey: string   // opaque key: "sectionKey:recordId:bulletPoints:bulletOrder"
 }
 
 export interface AdaptationVariant {
@@ -82,7 +90,7 @@ export interface GeneratedExperience {
   location: string
   dateRange: string
   description: string
-  // bullets not stored separately in backend; kept in description
+  bullets?: BulletReviewItem[]   // Feature 008: structured bullet points
 }
 
 export interface GeneratedCourse {
@@ -99,7 +107,7 @@ export interface GeneratedProject {
   role: string
   dateRange: string
   description: string
-  // bullets not stored separately in backend; kept in description
+  bullets?: BulletReviewItem[]   // Feature 008: structured bullet points
 }
 
 export interface GeneratedSkillGroup {
