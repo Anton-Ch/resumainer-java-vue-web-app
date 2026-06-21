@@ -299,29 +299,75 @@ public class GenerateResumeController {
     }
 
     /**
-     * T085: PDF download — placeholder stub in feat/007.
+     * Feature 008: Real PDF download with owner scoping and path traversal protection.
+     * Supports ?disposition=inline for in-browser viewing.
      */
     @GetMapping("/resumes/{savedResumeId}/pdf")
-    public ResponseEntity<?> downloadPdf(@PathVariable long savedResumeId) {
-        log.debug("GET /api/resumes/{}/pdf — placeholder stub (feat/008)", savedResumeId);
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
-                .body(java.util.Map.of(
-                        "available", false,
-                        "message", "PDF generation is not available in this version. "
-                                + "It will be available in a future update."));
+    public ResponseEntity<Resource> downloadPdf(HttpSession session,
+                                                 @PathVariable long savedResumeId,
+                                                 @RequestParam(required = false, defaultValue = "attachment") String disposition) {
+        UUID userId = getUserId(session);
+        log.debug("GET /api/resumes/{}/pdf — userId={}", savedResumeId, userId);
+
+        SavedResumeDao.SavedResumeRow row = savedResumeDao.findById(savedResumeId, userId);
+        if (row == null || row.pdfFilePath == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        try {
+            Path filePath = fileStorage.resolvePath(row.pdfFilePath);
+            // Path traversal protection: resolvePath already normalizes; verify no upward traversal remains
+            if (filePath.toString().contains("..")) {
+                log.warn("Path traversal blocked for saved resume {}", savedResumeId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+            Resource resource = new FileSystemResource(filePath);
+            if (!resource.exists()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+            return ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            disposition + "; filename=\"resume-" + savedResumeId + ".pdf\"")
+                    .body(resource);
+        } catch (Exception e) {
+            log.error("Error serving PDF for saved resume: {}", savedResumeId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 
     /**
-     * T086: Public route — placeholder in feat/007.
+     * Feature 008: Public PDF route — serves finalized PDF without authentication.
+     * Only serves active, non-deleted resumes. No cover letter, no private HTML.
      */
     @GetMapping("/candidate/{publicCode}")
-    public ResponseEntity<?> publicResume(@PathVariable String publicCode) {
-        log.debug("GET /candidate/{} — placeholder stub (feat/008)", publicCode);
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
-                .body(java.util.Map.of(
-                        "available", false,
-                        "message", "Public resume links are not available in this version. "
-                                + "They will be available in a future update."));
+    public ResponseEntity<Resource> publicResume(@PathVariable String publicCode) {
+        log.debug("GET /candidate/{}", publicCode);
+
+        if (publicCode == null || publicCode.isBlank()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        String pdfPath = savedResumeDao.findPdfPathByPublicCode(publicCode);
+        if (pdfPath == null) {
+            try { Thread.sleep(200); } catch (InterruptedException ignored) {}
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        try {
+            Path filePath = fileStorage.resolvePath(pdfPath);
+            Resource resource = new FileSystemResource(filePath);
+            if (!resource.exists()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+            return ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"resume.pdf\"")
+                    .body(resource);
+        } catch (Exception e) {
+            log.error("Error serving public PDF for code: {}", publicCode, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 
     private boolean isAiResponseValidationFailure(IllegalArgumentException e) {
