@@ -5,16 +5,18 @@ import com.resumainer.dto.generate.ExportResultDto;
 import com.resumainer.dto.generate.SavedResumeExportDto;
 import com.resumainer.model.ResumeGenerationRequest;
 import com.resumainer.model.ResumeGenerationResponse;
+import com.resumainer.model.pdf.*;
+import com.resumainer.service.pdf.ResumeRenderDataBuilder;
 import com.resumainer.util.PublicCodeGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
+import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Finalizes a generation request: renders HTML, saves to disk, and creates
@@ -33,6 +35,8 @@ public class ResumeFinalizeService {
     private final ResumeTemplateRenderer templateRenderer;
     private final GeneratedFileStorageService fileStorage;
     private final ProfilePromptDao profilePromptDao;
+    private final OpenHtmlPdfGenerationService pdfGenerationService;
+    private final ResumeRenderDataBuilder renderDataBuilder;
 
     public ResumeFinalizeService(DataSource dataSource,
                                   GenerationRequestDao requestDao,
@@ -41,7 +45,9 @@ public class ResumeFinalizeService {
                                   SavedResumeDao savedResumeDao,
                                   ResumeTemplateRenderer templateRenderer,
                                   GeneratedFileStorageService fileStorage,
-                                  ProfilePromptDao profilePromptDao) {
+                                  ProfilePromptDao profilePromptDao,
+                                  OpenHtmlPdfGenerationService pdfGenerationService,
+                                  ResumeRenderDataBuilder renderDataBuilder) {
         this.dataSource = dataSource;
         this.requestDao = requestDao;
         this.responseDao = responseDao;
@@ -50,6 +56,8 @@ public class ResumeFinalizeService {
         this.templateRenderer = templateRenderer;
         this.fileStorage = fileStorage;
         this.profilePromptDao = profilePromptDao;
+        this.pdfGenerationService = pdfGenerationService;
+        this.renderDataBuilder = renderDataBuilder;
     }
 
     /**
@@ -141,29 +149,62 @@ public class ResumeFinalizeService {
                 String publicCode = PublicCodeGenerator.generateWithRetry(
                         code -> savedResumeDao.findPublicCodeByCode(code) == null);
 
-                // 2. Save HTML to disk
+                // 2. Save HTML to disk (legacy renderer)
                 String htmlPath = templateRenderer.renderAndSave(
                         bundle, profileEducation, contactData,
                         languageCode, finalSelectedLevel,
                         username, publicCode);
                 createdFiles.add(htmlPath);
 
-                // 3. Prepare saved_resume data
+                // Prepare saved_resume data
                 String resumeTitle = request.getVacancyTitle() != null ? request.getVacancyTitle() : "Resume";
                 String vacancy = request.getVacancyTitle() != null ? request.getVacancyTitle() : "";
                 String company = request.getCompanyName() != null ? request.getCompanyName() : "";
                 String coverLetter = response.getCoverLetter();
 
+                // 3. Generate PDF via new pipeline (Feature 008)
+                String pdfPath = null;
+                Integer pdfPageCount = null;
+                try {
+                    ResumeRenderData renderData = buildRenderData(bundle, contactData,
+                            profileEducation, languageCode, finalSelectedLevel);
+                    int totalWork = bundle.experience != null ? bundle.experience.size() : 0;
+                    int totalProjects = bundle.projects != null ? bundle.projects.size() : 0;
+                    int totalCourses = bundle.courses != null ? bundle.courses.size() : 0;
+                    PagePlan pagePlan = renderDataBuilder.buildPagePlan(totalWork, totalProjects, totalCourses);
+
+                    File htmlFile = new File(htmlPath);
+                    File outputDir = htmlFile.getParentFile();
+
+                    OpenHtmlPdfGenerationService.PdfGenerationResult pdfResult =
+                            pdfGenerationService.generate(renderData, pagePlan, outputDir, "resume_" + languageCode.toLowerCase());
+
+                    if (pdfResult.isSuccess()) {
+                        pdfPath = pdfResult.getPdfPath();
+                        pdfPageCount = pdfResult.getPageCount();
+                        createdFiles.add(pdfResult.getHtmlPath());
+                        createdFiles.add(pdfPath);
+                    }
+                } catch (Exception e) {
+                    log.warn("PDF generation skipped for {}: {}", languageCode, e.getMessage());
+                }
+
                 // 4. Insert saved_resume row
                 long savedId = savedResumeDao.insert(userId, resumeTitle, vacancy, company,
                         languageCode, finalSelectedLevel,
                         publicCode, "/candidate/" + publicCode,
-                        htmlPath, null, coverLetter, // pdf_file_path = null in feat/007
+                        htmlPath, pdfPath, coverLetter,
                         requestId, response.getId(),
                         targetLevelId, response.getLanguageId());
                 createdResumeIds.add(savedId);
 
-                // 5. Build export DTO
+                // 5. Update PDF metadata if generated
+                if (pdfPath != null && pdfPageCount != null) {
+                    savedResumeDao.updatePdfMetadata(savedId, "READY", pdfPath,
+                            pdfPageCount, "default-v1", null, null);
+                }
+
+                // 6. Build export DTO
                 SavedResumeExportDto item = new SavedResumeExportDto();
                 item.setSavedResumeId(savedId);
                 item.setLanguageCode(languageCode);
@@ -172,8 +213,8 @@ public class ResumeFinalizeService {
                 item.setPdfDownloadUrl("/api/generate/resumes/" + savedId + "/pdf");
                 item.setPdfOpenUrl("/candidate/" + publicCode);
                 item.setPublicUrlLink("/candidate/" + publicCode);
-                item.setPdfAvailable(false);
-                item.setPdfMessage("PDF generation is not available yet. It will be available in a future update.");
+                item.setPdfAvailable(pdfPath != null);
+                item.setPdfMessage(pdfPath == null ? "PDF generation failed. You can retry finalization." : null);
                 item.setCoverLetter(coverLetter);
                 exportItems.add(item);
             }
@@ -212,5 +253,95 @@ public class ResumeFinalizeService {
             case 3:  return "MAXIMUM";
             default: return "UNKNOWN";
         }
+    }
+
+    /** Build ResumeRenderData from response bundle + profile data (Feature 008). */
+    private ResumeRenderData buildRenderData(GenerationResponseDao.ResponseBundle bundle,
+                                              Map<String, Object> contactData,
+                                              List<Map<String, Object>> education,
+                                              String languageCode, String adaptationLevel) {
+        ResumeRenderDataBuilder.RenderDataInput input = new ResumeRenderDataBuilder.RenderDataInput();
+        input.languageCode = languageCode;
+        input.professionalTitle = bundle.response.getProfessionalTitle();
+        input.professionalSummary = bundle.response.getProfessionalSummary();
+        input.professionalAspirations = bundle.response.getProfessionalAspirations();
+        input.valueLine = bundle.response.getValueLine();
+
+        // Contact data from profile
+        if (contactData != null) {
+            input.fullName = str(contactData.get("full_name"));
+            input.phone = str(contactData.get("phone"));
+            input.email = str(contactData.get("email"));
+            input.location = str(contactData.get("location"));
+            input.linkedin = str(contactData.get("linkedin"));
+            input.portfolio = str(contactData.get("portfolio"));
+            input.telegram = str(contactData.get("telegram"));
+            input.whatsapp = str(contactData.get("whatsapp"));
+        }
+
+        // Education from profile
+        if (education != null) {
+            for (Map<String, Object> edu : education) {
+                String line = str(edu.get("institution")) + " — " + str(edu.get("degree"));
+                input.educationLines.add(line);
+            }
+        }
+
+        // Work experience from bundle
+        if (bundle.experience != null) {
+            for (com.resumainer.model.GenerationResponseExperience exp : bundle.experience) {
+                ResumeRenderData.RenderWorkItem w = new ResumeRenderData.RenderWorkItem();
+                w.setJobTitle(exp.getJobTitle());
+                w.setCompanyName(exp.getCompanyName());
+                w.setDescription(exp.getDescription());
+                w.setLocation(exp.getLocation());
+                w.setFirstPage(exp.isFirstPage());
+                // Bullet points loaded separately — placeholder for Phase 3 integration
+                input.workItems.add(w);
+            }
+        }
+
+        // Projects from bundle
+        if (bundle.projects != null) {
+            for (com.resumainer.model.GenerationResponseProject proj : bundle.projects) {
+                ResumeRenderData.RenderProjectItem p = new ResumeRenderData.RenderProjectItem();
+                p.setProjectName(proj.getProjectName());
+                p.setRole(proj.getRole());
+                p.setDescription(proj.getDescription());
+                input.projectItems.add(p);
+            }
+        }
+
+        // Courses from bundle
+        if (bundle.courses != null) {
+            for (com.resumainer.model.GenerationResponseCourse crs : bundle.courses) {
+                ResumeRenderData.RenderCourseItem c = new ResumeRenderData.RenderCourseItem();
+                c.setName(crs.getName());
+                c.setProvider(crs.getProvider());
+                c.setCourseFocus(crs.getCourseFocus());
+                input.courseItems.add(c);
+            }
+        }
+
+        // Skills from bundle
+        if (bundle.skills != null) {
+            Map<String, List<String>> groups = new LinkedHashMap<>();
+            for (com.resumainer.model.GenerationResponseSkill sk : bundle.skills) {
+                groups.computeIfAbsent(sk.getSkillGroup(), k -> new ArrayList<>())
+                        .add(sk.getSkillName());
+            }
+            for (Map.Entry<String, List<String>> entry : groups.entrySet()) {
+                ResumeRenderData.RenderSkillGroup sg = new ResumeRenderData.RenderSkillGroup();
+                sg.setGroupName(entry.getKey());
+                sg.setSkills(entry.getValue());
+                input.skillGroups.add(sg);
+            }
+        }
+
+        return renderDataBuilder.buildRenderData(input);
+    }
+
+    private String str(Object obj) {
+        return obj != null ? obj.toString() : "";
     }
 }
