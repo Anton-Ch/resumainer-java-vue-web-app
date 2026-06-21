@@ -183,6 +183,15 @@ function applySectionToVariant(
         const uk = getUpdateKey(record, f)
         if (uk) meta[`we:${groupKey}:${f}`] = uk
       }
+      // Feature 008: pass bullet points with their update keys
+      if (record.bullets && record.bullets.length > 0) {
+        exp.bullets = record.bullets
+        for (const bullet of record.bullets) {
+          if (bullet.updateKey) {
+            meta[`we:${groupKey}:bullet_${bullet.bulletOrder}`] = bullet.updateKey
+          }
+        }
+      }
       variant.workExperience = [...(variant.workExperience ?? []), exp]
       break
     }
@@ -216,6 +225,15 @@ function applySectionToVariant(
       for (const f of ['projectName', 'role', 'description'] as const) {
         const uk = getUpdateKey(record, f)
         if (uk) meta[`pr:${groupKey}:${f}`] = uk
+      }
+      // Feature 008: pass bullet points with their update keys
+      if (record.bullets && record.bullets.length > 0) {
+        prj.bullets = record.bullets
+        for (const bullet of record.bullets) {
+          if (bullet.updateKey) {
+            meta[`pr:${groupKey}:bullet_${bullet.bulletOrder}`] = bullet.updateKey
+          }
+        }
       }
       variant.projects = [...(variant.projects ?? []), prj]
       break
@@ -301,6 +319,14 @@ export function buildReviewUpdatePayload(
           fieldUpdates[uk] = String((exp as any)[f] ?? '')
         }
       }
+      // Feature 008: collect bullet edits
+      if (exp.bullets && exp.bullets.length > 0) {
+        for (const bullet of exp.bullets) {
+          if (bullet.updateKey && bullet.bulletText) {
+            fieldUpdates[bullet.updateKey] = bullet.bulletText
+          }
+        }
+      }
     }
 
     // Course fields
@@ -319,6 +345,14 @@ export function buildReviewUpdatePayload(
         const uk = meta[`pr:${prj.sourceId}:${f}`]
         if (uk) {
           fieldUpdates[uk] = String((prj as any)[f] ?? '')
+        }
+      }
+      // Feature 008: collect bullet edits
+      if (prj.bullets && prj.bullets.length > 0) {
+        for (const bullet of prj.bullets) {
+          if (bullet.updateKey && bullet.bulletText) {
+            fieldUpdates[bullet.updateKey] = bullet.bulletText
+          }
         }
       }
     }
