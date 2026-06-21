@@ -283,6 +283,42 @@ public class GenerationResponseDao {
         }
     }
 
+    /** Update an experience bullet text and mark it as edited (Feature 008). */
+    public void updateExperienceBullet(UUID experienceId, int bulletOrder, String text) {
+        String sql = "UPDATE generation_response_experience_bullet SET bullet_text = ?, is_edited = TRUE, updated_at = NOW() WHERE experience_id = ? AND bullet_order = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, text);
+            stmt.setObject(2, experienceId);
+            stmt.setInt(3, bulletOrder);
+            int updated = stmt.executeUpdate();
+            if (updated == 0) {
+                throw new IllegalArgumentException("Bullet not found: experience=" + experienceId + ", order=" + bulletOrder);
+            }
+        } catch (SQLException e) {
+            log.error("Error updating experience bullet: experienceId={}, order={}", experienceId, bulletOrder, e);
+            throw new RuntimeException("Failed to update bullet text", e);
+        }
+    }
+
+    /** Update a project bullet text and mark it as edited (Feature 008). */
+    public void updateProjectBullet(UUID projectId, int bulletOrder, String text) {
+        String sql = "UPDATE generation_response_project_bullet SET bullet_text = ?, is_edited = TRUE, updated_at = NOW() WHERE project_id = ? AND bullet_order = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, text);
+            stmt.setObject(2, projectId);
+            stmt.setInt(3, bulletOrder);
+            int updated = stmt.executeUpdate();
+            if (updated == 0) {
+                throw new IllegalArgumentException("Bullet not found: project=" + projectId + ", order=" + bulletOrder);
+            }
+        } catch (SQLException e) {
+            log.error("Error updating project bullet: projectId={}, order={}", projectId, bulletOrder, e);
+            throw new RuntimeException("Failed to update bullet text", e);
+        }
+    }
+
     // --- Safe update methods (used by ResumeReviewService) ---
 
     /** Column allowlist for resume_generation_response */

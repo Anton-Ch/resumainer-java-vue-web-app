@@ -460,4 +460,48 @@ class ResumeReviewServiceTest {
         resp.setCoverLetter(null);
         return resp;
     }
+
+    // ─── Bullet point save tests (Feature 008) ──────────────────────────
+
+    @Test
+    void saveReview_experienceBullet_updatesBulletText() {
+        UUID expId = UUID.randomUUID();
+        String updateKey = "work_experience:" + expId + ":bulletPoints:0";
+
+        service.saveReview(requestId, userId, updateKey, "Updated bullet text");
+
+        verify(responseDao).updateExperienceBullet(expId, 0, "Updated bullet text");
+    }
+
+    @Test
+    void saveReview_projectBullet_updatesBulletText() {
+        UUID projId = UUID.randomUUID();
+        String updateKey = "projects:" + projId + ":bulletPoints:2";
+
+        service.saveReview(requestId, userId, updateKey, "New project bullet");
+
+        verify(responseDao).updateProjectBullet(projId, 2, "New project bullet");
+    }
+
+    @Test
+    void saveReview_bulletEmptyText_rejects() {
+        UUID expId = UUID.randomUUID();
+        String updateKey = "work_experience:" + expId + ":bulletPoints:0";
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                service.saveReview(requestId, userId, updateKey, "   "));
+
+        assertTrue(ex.getMessage().contains("Bullet point text cannot be empty"));
+    }
+
+    @Test
+    void saveReview_bulletInvalidOrder_rejects() {
+        UUID expId = UUID.randomUUID();
+        String updateKey = "work_experience:" + expId + ":bulletPoints:abc";
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                service.saveReview(requestId, userId, updateKey, "Some text"));
+
+        assertTrue(ex.getMessage().contains("Invalid bullet order"));
+    }
 }

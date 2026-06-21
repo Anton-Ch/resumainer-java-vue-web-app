@@ -53,6 +53,7 @@ public class GenerationReviewDto {
         private UUID recordId;
         private int orderInResume;
         private Map<String, List<AdaptationVariant>> fieldVariants;
+        private List<BulletReviewItem> bullets;  // Feature 008: structured bullet points
 
         public UUID getRecordId() { return recordId; }
         public void setRecordId(UUID recordId) { this.recordId = recordId; }
@@ -60,6 +61,25 @@ public class GenerationReviewDto {
         public void setOrderInResume(int orderInResume) { this.orderInResume = orderInResume; }
         public Map<String, List<AdaptationVariant>> getFieldVariants() { return fieldVariants; }
         public void setFieldVariants(Map<String, List<AdaptationVariant>> fieldVariants) { this.fieldVariants = fieldVariants; }
+        public List<BulletReviewItem> getBullets() { return bullets; }
+        public void setBullets(List<BulletReviewItem> bullets) { this.bullets = bullets; }
+    }
+
+    /** Feature 008: editable bullet point item under a work/project record. */
+    public static class BulletReviewItem {
+        private int bulletOrder;
+        private String bulletText;
+        private boolean isEdited;
+        private String updateKey;  // opaque key: "sectionKey:recordId:bulletPoints:adaptationCode:bulletOrder"
+
+        public int getBulletOrder() { return bulletOrder; }
+        public void setBulletOrder(int bulletOrder) { this.bulletOrder = bulletOrder; }
+        public String getBulletText() { return bulletText; }
+        public void setBulletText(String bulletText) { this.bulletText = bulletText; }
+        public boolean isEdited() { return isEdited; }
+        public void setEdited(boolean edited) { isEdited = edited; }
+        public String getUpdateKey() { return updateKey; }
+        public void setUpdateKey(String updateKey) { this.updateKey = updateKey; }
     }
 
     public static class AdaptationVariant {
