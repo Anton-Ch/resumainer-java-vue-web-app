@@ -164,16 +164,16 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Bring spike data models into production backend.
 
-- [ ] T054 [SPIKE] [TDD] Port/adapt spike models into `backend/src/main/java/com/resumainer/model/pdf/`:
-  - `FitLimits` — min/max font, line-height, gaps, max attempts, delta limit
-  - `FitState` — current fit parameters (mutable within fitting loop)
-  - `FillTarget` — min/max fill per page/language/context
-  - `FitAttempt` — recorded attempt parameters + result
-  - `FitResult` — final outcome (success/failure + metrics)
-  - `PdfMetrics` — page count, text extracted, fill percentages
+- [x] T054 [SPIKE] [TDD] Port/adapt spike models into `backend/src/main/java/com/resumainer/model/pdf/`:
+  - `FitState` — mutable fit parameters (class, adapted from spike record to support fitting loop mutations)
+  - `PdfMetrics` — page count, text extraction, fill ratios (record)
+  - `FitAttempt` — recorded attempt parameters + result (record, paths as String)
+  - `FitResult` — final outcome with selected attempt and all attempts (record)
+  - `PagePlan` — page allocation result (class, adapted from spike to use integer counts instead of spike-specific types)
+  - `ResumeRenderData` — immutable render input with inner types for work/project/course/skill items (class, renamed from spike ResumeData, adapted for production data sources)
   Keep them simple immutable records/classes. Use production naming conventions (no spike-specific prefixes). (I)
-- [ ] T055 [TDD] Port spike models: `PagePlan` (page allocation result), `ResumeRenderData` (immutable render input, renamed from spike `ResumeData`). (I)
-- [ ] T056 [TDD] Run `mvn test -pl backend` — model compilation succeeds, no test regressions. (II)
+- [x] T055 [TDD] Port spike models: `PagePlan` (page allocation result), `ResumeRenderData` (immutable render input, renamed from spike `ResumeData`). (I)
+- [x] T056 [TDD] Run `mvn test -pl backend` — model compilation succeeds, no test regressions. (II)
 
 **Checkpoint**: Spike models ported and compilable. ✅ Tests pass.
 
