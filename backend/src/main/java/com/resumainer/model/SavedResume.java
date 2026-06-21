@@ -19,6 +19,8 @@ public class SavedResume {
     private String publicUrl;
     private String pdfUrl;
     private String coverLetter;
+    private String pdfStatus;        // Feature 008: PENDING, GENERATING, READY, FAILED
+    private Integer pdfPageCount;   // Feature 008: boxed Integer per B9 guard
 
     public SavedResume() {
     }
@@ -102,4 +104,9 @@ public class SavedResume {
     public void setCoverLetter(String coverLetter) {
         this.coverLetter = coverLetter;
     }
+
+    public String getPdfStatus() { return pdfStatus; }
+    public void setPdfStatus(String pdfStatus) { this.pdfStatus = pdfStatus; }
+    public Integer getPdfPageCount() { return pdfPageCount; }
+    public void setPdfPageCount(Integer pdfPageCount) { this.pdfPageCount = pdfPageCount; }
 }

@@ -124,6 +124,8 @@ public class SavedResumeDao {
                 row.htmlFilePath = rs.getString("html_file_path");
                 row.pdfFilePath = rs.getString("pdf_file_path");
                 row.coverLetter = rs.getString("cover_letter");
+                row.pdfStatus = rs.getString("pdf_status");
+                row.pdfPageCount = rs.getObject("pdf_page_count") != null ? rs.getInt("pdf_page_count") : null;
                 return row;
             }
         } catch (SQLException e) {
@@ -194,5 +196,31 @@ public class SavedResumeDao {
         public String htmlFilePath;
         public String pdfFilePath;
         public String coverLetter;
+        public String pdfStatus;
+        public Integer pdfPageCount;
+    }
+
+    /** Update PDF generation result on a saved resume (Feature 008). */
+    public void updatePdfMetadata(long savedResumeId, String pdfStatus, String pdfFilePath,
+                                   Integer pdfPageCount, String renderProfile,
+                                   String errorCode, String errorMessage) {
+        String sql = "UPDATE saved_resumes SET pdf_status = ?, pdf_file_path = ?, pdf_page_count = ?, "
+                   + "pdf_render_profile = ?, pdf_generation_error_code = ?, "
+                   + "pdf_generation_error_message = ?, pdf_generated_at = NOW() WHERE id = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, pdfStatus);
+            stmt.setString(2, pdfFilePath);
+            if (pdfPageCount != null) stmt.setInt(3, pdfPageCount);
+            else stmt.setNull(3, Types.INTEGER);
+            stmt.setString(4, renderProfile);
+            stmt.setString(5, errorCode);
+            stmt.setString(6, errorMessage);
+            stmt.setLong(7, savedResumeId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            log.error("Error updating PDF metadata for resume: {}", savedResumeId, e);
+            throw new RuntimeException("Failed to update PDF metadata", e);
+        }
     }
 }

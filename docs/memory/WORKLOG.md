@@ -37,6 +37,29 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-21 - Feature 008 Phase Group 1 (Bullet Points) Completed
+
+**Status**
+Active
+
+**Why this is durable**
+Phase Group 1 delivered a complete vertical slice: database schema → DAO → AI prompt contract → parser → validator → transactional persistence → review DTO → opaque update keys → frontend adapter → Vue editing UI with validation. Five commits, 770 backend + 17 frontend tests passing. This demonstrates the full TDD + Spec Kit workflow for a cross-layer feature.
+
+**Summary**
+- Phase 1 (1b3f6b4): V30 migration with UUID FK bullet tables, model classes, DAO insert/read with PreparedStatement
+- Phase 2 (4338ba6): Updated buildJsonContract to include bulletPoints arrays for AI. Updated MockAiClient sample responses
+- Phase 3 (01cfd48): AiResponseParser parses bulletPoints; AiResponseValidator enforces max 250 chars; GenerationResponsePersistenceService persists bullets in same JDBC transaction via RETURNING id
+- Phase 4 Backend (aa52f77): BulletReviewItem DTO, update-key format sectionKey:recordId:bulletPoints:bulletOrder, saveReview dispatch, DAO update methods
+- Phase 4 Frontend (f3c62eb): Vue ReviewStepForm bullet editing UI with Textarea inputs, reactive validation, EN/RU i18n
+
+**Key patterns established**
+- Bullet update-key format: opaque backend-owned keys (D27 pattern)
+- Connection-accepting DAO overloads for transaction support (D10)
+- B15 guard: UUID FK to match parent entity PKs (caught during plan review, fixed before implementation)
+- Docker BuildKit cache pitfall: must docker rmi --force before rebuild (B25)
+
 ### 2026-06-17 - Feature 007 Export View, Cover Letter, Generation Concurrency, and OpenRouter fixes completed
 
 **Status**
