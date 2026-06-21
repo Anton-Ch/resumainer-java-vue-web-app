@@ -354,6 +354,65 @@ class AiResponseValidatorTest {
         assertTrue(ex.getMessage().contains("projects[].description is required"));
     }
 
+    // --- Bullet point validation (Feature 008) ---
+
+    @Test
+    void validate_bulletPointsWithinLimit_passes() {
+        AiResponseParser.ParsedVariant variant = fullVariant();
+        variant.experience.get(0).bulletPoints = List.of("Valid bullet point under 250 chars");
+
+        assertDoesNotThrow(() ->
+                validator.validate(List.of(variant), true, fullProfilePayload()));
+    }
+
+    @Test
+    void validate_bulletPointExceeds250Chars_rejects() {
+        AiResponseParser.ParsedVariant variant = fullVariant();
+        String longBullet = "A".repeat(251);
+        variant.experience.get(0).bulletPoints = List.of(longBullet);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                validator.validate(List.of(variant), true, fullProfilePayload()));
+
+        assertTrue(ex.getMessage().contains("bullet point exceeds maximum length"),
+                "Expected message about bullet length limit, got: " + ex.getMessage());
+    }
+
+    @Test
+    void validate_projectBulletExceeds250Chars_rejects() {
+        AiResponseParser.ParsedVariant variant = fullVariant();
+        String longBullet = "B".repeat(251);
+        variant.projects.get(0).bulletPoints = List.of(longBullet);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                validator.validate(List.of(variant), true, fullProfilePayload()));
+
+        assertTrue(ex.getMessage().contains("bullet point exceeds maximum length"));
+    }
+
+    @Test
+    void validate_whitespaceOnlyBullet_rejects() {
+        AiResponseParser.ParsedVariant variant = fullVariant();
+        variant.experience.get(0).bulletPoints = List.of("   ");
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                validator.validate(List.of(variant), true, fullProfilePayload()));
+
+        assertTrue(ex.getMessage().contains("bullet point is empty"),
+                "Expected message about empty bullet, got: " + ex.getMessage());
+    }
+
+    @Test
+    void validate_emptyBulletText_rejects() {
+        AiResponseParser.ParsedVariant variant = fullVariant();
+        variant.experience.get(0).bulletPoints = List.of("");
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                validator.validate(List.of(variant), true, fullProfilePayload()));
+
+        assertTrue(ex.getMessage().contains("bullet point is empty"));
+    }
+
     private AiResponseParser.ParsedVariant variant(String languageCode,
                                                    String adaptationLevel,
                                                    String coverLetter) {

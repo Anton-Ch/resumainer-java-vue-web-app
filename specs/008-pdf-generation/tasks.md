@@ -91,14 +91,14 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Parse, validate, and persist bullets transactionally.
 
-- [ ] T022 [TDD] Update `AiResponseParser` to parse work experience `bulletPoints` arrays from AI JSON response. Reject null, non-array, empty array, or whitespace-only bullets where bullets are required per adaptation level. (II)
-- [ ] T023 [TDD] Update `AiResponseParser` to parse project `bulletPoints` arrays. Reject invalid shape (non-array, missing field). (II)
-- [ ] T024 [TDD] Update `AiResponseValidator` to enforce max 250 chars per bullet. Produce user-readable validation error messages. (II, III)
-- [ ] T025 [TDD] Update `GenerationResponsePersistenceService` to insert bullets within the same JDBC transaction as parent response/section rows. On any bullet failure → rollback entire generation response. Use connection-accepting DAO overloads (D10). Catch `Exception` (not just `SQLException`) for rollback (D23). (II, IV)
-- [ ] T026 [TDD] Add parser tests for: EN-only, RU-only, Bilingual, All levels, valid bullets, missing `bulletPoints` field, null/empty array, whitespace-only bullets, non-array type. (II)
-- [ ] T027 [TDD] Add persistence tests: all response rows + bullet rows inserted atomically, rollback on bullet failure, orphan cleanup on parent deletion. (II, IV)
-- [ ] T028 [TDD] Run `mvn test -pl backend` — all tests pass including parser, validator, and persistence tests. (II)
-- [ ] T029 [REVIEW] Run targeted backend tests: `AiResponseParserTest`, `AiResponseValidatorTest`, `GenerationResponsePersistenceServiceTest`. All GREEN. (II)
+- [x] T022 [TDD] Update `AiResponseParser` to parse work experience `bulletPoints` arrays from AI JSON response. Reject null, non-array, empty array, or whitespace-only bullets where bullets are required per adaptation level. (II)
+- [x] T023 [TDD] Update `AiResponseParser` to parse project `bulletPoints` arrays. Reject invalid shape (non-array, missing field). (II)
+- [x] T024 [TDD] Update `AiResponseValidator` to enforce max 250 chars per bullet. Produce user-readable validation error messages. (II, III)
+- [x] T025 [TDD] Update `GenerationResponsePersistenceService` to insert bullets within the same JDBC transaction as parent response/section rows. On any bullet failure → rollback entire generation response. Use connection-accepting DAO overloads (D10). Catch `Exception` (not just `SQLException`) for rollback (D23). (II, IV)
+- [x] T026 [TDD] Add parser tests for: EN-only, RU-only, Bilingual, All levels, valid bullets, missing `bulletPoints` field, null/empty array, whitespace-only bullets, non-array type. (II)
+- [x] T027 [TDD] Add persistence tests: all response rows + bullet rows inserted atomically, rollback on bullet failure, orphan cleanup on parent deletion. (II, IV)
+- [x] T028 [TDD] Run `mvn test -pl backend` — all tests pass including parser, validator, and persistence tests. (II)
+- [x] T029 [REVIEW] Run targeted backend tests: `AiResponseParserTest`, `AiResponseValidatorTest`, `GenerationResponsePersistenceServiceTest`. All GREEN. (II)
 
 **Checkpoint**: AI response with bullets is parsed, validated, and persisted safely. ✅ All backend tests pass.
 

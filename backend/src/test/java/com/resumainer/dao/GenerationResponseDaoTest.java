@@ -487,6 +487,10 @@ class GenerationResponseDaoTest {
         exp.setEndDate(null);
         exp.setOrderInResume(0);
 
+        UUID expId = UUID.randomUUID();
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getObject("id")).thenReturn(expId);
+
         dao.insertExperience(exp, connection);
 
         verify(connection).prepareStatement(contains("source_id"));
@@ -500,7 +504,7 @@ class GenerationResponseDaoTest {
         verify(statement).setDate(8, Date.valueOf(LocalDate.of(2025, 5, 1)));
         verify(statement).setNull(9, java.sql.Types.DATE);
         verify(statement).setInt(10, 0);
-        verify(statement).executeUpdate();
+        verify(statement).executeQuery(); // RETURNING id
     }
 
     @Test
@@ -540,6 +544,10 @@ class GenerationResponseDaoTest {
         project.setEndDate(null);
         project.setOrderInResume(2);
 
+        UUID projId = UUID.randomUUID();
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getObject("id")).thenReturn(projId);
+
         dao.insertProject(project, connection);
 
         verify(connection).prepareStatement(contains("source_id"));
@@ -552,7 +560,7 @@ class GenerationResponseDaoTest {
         verify(statement).setDate(7, Date.valueOf(LocalDate.of(2026, 5, 1)));
         verify(statement).setNull(8, java.sql.Types.DATE);
         verify(statement).setInt(9, 2);
-        verify(statement).executeUpdate();
+        verify(statement).executeQuery(); // RETURNING id
     }
 
     // ─── helper ───────────────────────────────────────────────────
