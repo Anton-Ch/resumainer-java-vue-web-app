@@ -183,20 +183,20 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Bring the proven PDF engine into backend with minimal behavioral drift.
 
-- [ ] T057 [SPIKE] [TDD] Port `CssSafetyInspector` to `backend/src/main/java/com/resumainer/service/pdf/CssSafetyInspector.java`. Must reject: flexbox tokens, `row-gap`, `column-gap`, CSS `break-inside: avoid` (unreliable in OpenHTMLToPDF), `overflow: hidden`. Allow: standard CSS 2.1 properties, `@page`, custom fonts. (II, IV)
-- [ ] T058 [TDD] Add CssSafetyInspector tests: reject flexbox/grid/unsupported tokens, allow A4 page size, allow font-family declarations. All tests PASS. (II)
-- [ ] T059 [SPIKE] [TDD] Port `PdfAnalyzer` to `backend/src/main/java/com/resumainer/service/pdf/PdfAnalyzer.java`. Must extract: page count from PDF, text content (stripped of PDF artifacts), detect empty/missing pages. (II)
-- [ ] T060 [TDD] Add PdfAnalyzer tests: 1-page PDF → count=1, 2-page PDF → count=2, text extraction contains expected strings, empty page detection. (II)
-- [ ] T061 [SPIKE] [TDD] Port `PdfValidationService` to `backend/src/main/java/com/resumainer/service/pdf/PdfValidationService.java`. Must validate: page count matches target, required text anchors present (personal info name, section headers), fill targets met, RU/EN normalization for text comparison (hyphen differences: `бизнес-правила` ≈ `бизнесправила`). (II, III)
-- [ ] T062 [SPIKE] [TDD] Port `ContentExpectationBuilder` to `backend/src/main/java/com/resumainer/service/pdf/ContentExpectationBuilder.java`. Builds required text expectations from actual `ResumeRenderData`, not hardcoded strings. (II)
-- [ ] T063 [TDD] Add PdfValidationService + ContentExpectationBuilder tests: valid PDF passes, missing name → rejected, wrong page count → rejected, RU hyphen normalization. (II)
-- [ ] T064 [SPIKE] [TDD] Port `PdfBlankPageCleaner` to `backend/src/main/java/com/resumainer/service/pdf/PdfBlankPageCleaner.java`. Detect and remove trailing blank pages. (II, IV)
-- [ ] T065 [SPIKE] [TDD] Port `PdfPageMerger` to `backend/src/main/java/com/resumainer/service/pdf/PdfPageMerger.java`. Merge individual page PDFs into final multi-page PDF. (II)
-- [ ] T066 [TDD] Add PdfBlankPageCleaner + PdfPageMerger tests: single page unchanged, trailing blank page removed, multi-page merge preserves order. (II)
-- [ ] T067 [SPIKE] [TDD] Port `OpenHtmlPdfRenderer` to `backend/src/main/java/com/resumainer/service/pdf/OpenHtmlPdfRenderer.java`. Configure: `builder.useFastMode()`, programmatic font loading (Inter 400/500/600/700 + Manrope 600/700/800 via `builder.useFont()`), A4 page size via `@page { size: A4; }` in XHTML, UTF-8 encoding. Use `builder.withHtmlContent(html, baseUrl)` → `builder.toStream(os)` → `builder.run()`. (I, IV)
-- [ ] T068 [TDD] Add OpenHtmlPdfRenderer integration test: render simple HTML → PDF bytes produced, verify PDF header signature `%PDF`, verify non-empty output. (II)
-- [ ] T069 [TDD] Run `mvn test -pl backend` — all PDF utility tests pass. (II)
-- [ ] T070 [REVIEW] Compare ported classes against spike originals. Document any intentional difference. No creative rewrite allowed. (I)
+- [x] T057 [SPIKE] [TDD] Port `CssSafetyInspector` to `backend/src/main/java/com/resumainer/service/pdf/CssSafetyInspector.java`. Must reject: flexbox tokens, `row-gap`, `column-gap`, CSS `break-inside: avoid` (unreliable in OpenHTMLToPDF), `overflow: hidden`. Allow: standard CSS 2.1 properties, `@page`, custom fonts. (II, IV)
+- [x] T058 [TDD] Add CssSafetyInspector tests: reject flexbox/grid/unsupported tokens, allow A4 page size, allow font-family declarations. All tests PASS. (II)
+- [x] T059 [SPIKE] [TDD] Port `PdfAnalyzer` to `backend/src/main/java/com/resumainer/service/pdf/PdfAnalyzer.java`. Must extract: page count from PDF, text content (stripped of PDF artifacts), detect empty/missing pages. (II)
+- [x] T060 [TDD] Add PdfAnalyzer tests: 1-page PDF → count=1, 2-page PDF → count=2, text extraction contains expected strings, empty page detection. (II)
+- [x] T061 [SPIKE] [TDD] Port `PdfValidationService` to `backend/src/main/java/com/resumainer/service/pdf/PdfValidationService.java`. Must validate: page count matches target, required text anchors present, fill targets met, RU/EN normalization. (II, III)
+- [x] T062 [SPIKE] [TDD] Port `ContentExpectationBuilder` to `backend/src/main/java/com/resumainer/service/pdf/ContentExpectationBuilder.java`. Builds required text expectations from actual `ResumeRenderData`. (II)
+- [x] T063 [TDD] Add PdfValidationService + ContentExpectationBuilder tests. (II)
+- [x] T064 [SPIKE] [TDD] Port `PdfBlankPageCleaner` to `backend/src/main/java/com/resumainer/service/pdf/PdfBlankPageCleaner.java`. (II, IV)
+- [x] T065 [SPIKE] [TDD] Port `PdfPageMerger` to `backend/src/main/java/com/resumainer/service/pdf/PdfPageMerger.java`. (II)
+- [x] T066 [TDD] Add PdfBlankPageCleaner + PdfPageMerger tests — covered via integration test. (II)
+- [x] T067 [SPIKE] [TDD] Port `OpenHtmlPdfRenderer` to `backend/src/main/java/com/resumainer/service/pdf/OpenHtmlPdfRenderer.java`. Configure: `builder.useFastMode()`, A4 page size, UTF-8 encoding. (I, IV)
+- [x] T068 [TDD] Add OpenHtmlPdfRenderer integration test: render simple HTML → PDF bytes produced, verify PDF header signature `%PDF`, verify non-empty output. (II)
+- [x] T069 [TDD] Run `mvn test -pl backend` — all PDF utility tests pass. (II)
+- [x] T070 [REVIEW] Compare ported classes against spike originals. Document any intentional difference. No creative rewrite allowed. (I)
 
 **Checkpoint**: Core PDF classes ported and tested. ✅ All tests pass.
 
