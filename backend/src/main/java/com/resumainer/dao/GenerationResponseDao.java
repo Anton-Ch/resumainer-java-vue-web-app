@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -80,6 +81,24 @@ public class GenerationResponseDao {
 
     private static final String SELECT_SKILLS_BY_RESPONSE =
             "SELECT * FROM generation_response_skill WHERE response_id = ? ORDER BY order_in_resume";
+
+    // --- Experience Bullet (Feature 008) ---
+    private static final String INSERT_EXPERIENCE_BULLET =
+            "INSERT INTO generation_response_experience_bullet "
+            + "(experience_id, bullet_order, bullet_text, is_edited) "
+            + "VALUES (?, ?, ?, ?)";
+
+    private static final String SELECT_EXPERIENCE_BULLETS =
+            "SELECT * FROM generation_response_experience_bullet WHERE experience_id = ? ORDER BY bullet_order";
+
+    // --- Project Bullet (Feature 008) ---
+    private static final String INSERT_PROJECT_BULLET =
+            "INSERT INTO generation_response_project_bullet "
+            + "(project_id, bullet_order, bullet_text, is_edited) "
+            + "VALUES (?, ?, ?, ?)";
+
+    private static final String SELECT_PROJECT_BULLETS =
+            "SELECT * FROM generation_response_project_bullet WHERE project_id = ? ORDER BY bullet_order";
 
     private final DataSource dataSource;
 
@@ -161,6 +180,30 @@ public class GenerationResponseDao {
         }
     }
 
+    // --- Bullet insert (Feature 008) ---
+
+    /** Insert one experience bullet point within a transaction. */
+    public void insertExperienceBullet(GenerationResponseExperienceBullet bullet, Connection conn) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(INSERT_EXPERIENCE_BULLET)) {
+            stmt.setObject(1, bullet.getExperienceId());
+            stmt.setInt(2, bullet.getBulletOrder());
+            stmt.setString(3, bullet.getBulletText());
+            stmt.setBoolean(4, bullet.isEdited());
+            stmt.executeUpdate();
+        }
+    }
+
+    /** Insert one project bullet point within a transaction. */
+    public void insertProjectBullet(GenerationResponseProjectBullet bullet, Connection conn) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(INSERT_PROJECT_BULLET)) {
+            stmt.setObject(1, bullet.getProjectId());
+            stmt.setInt(2, bullet.getBulletOrder());
+            stmt.setString(3, bullet.getBulletText());
+            stmt.setBoolean(4, bullet.isEdited());
+            stmt.executeUpdate();
+        }
+    }
+
     // --- Load methods ---
 
     public List<ResumeGenerationResponse> findResponsesByRequestId(UUID requestId) {
@@ -192,6 +235,38 @@ public class GenerationResponseDao {
 
     public List<GenerationResponseSkill> findSkillsByResponseId(UUID responseId) {
         return findChildList(responseId, SELECT_SKILLS_BY_RESPONSE, this::mapSkillRow);
+    }
+
+    /** Load experience bullet points for one generated experience entry (Feature 008). */
+    public List<GenerationResponseExperienceBullet> findExperienceBullets(UUID experienceId) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_EXPERIENCE_BULLETS)) {
+            stmt.setObject(1, experienceId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<GenerationResponseExperienceBullet> results = new ArrayList<>();
+                while (rs.next()) results.add(mapExperienceBulletRow(rs));
+                return results;
+            }
+        } catch (SQLException e) {
+            log.error("Error loading experience bullets for experience: {}", experienceId, e);
+            throw new RuntimeException("Database error loading experience bullets", e);
+        }
+    }
+
+    /** Load project bullet points for one generated project entry (Feature 008). */
+    public List<GenerationResponseProjectBullet> findProjectBullets(UUID projectId) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_PROJECT_BULLETS)) {
+            stmt.setObject(1, projectId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<GenerationResponseProjectBullet> results = new ArrayList<>();
+                while (rs.next()) results.add(mapProjectBulletRow(rs));
+                return results;
+            }
+        } catch (SQLException e) {
+            log.error("Error loading project bullets for project: {}", projectId, e);
+            throw new RuntimeException("Database error loading project bullets", e);
+        }
     }
 
     // --- Safe update methods (used by ResumeReviewService) ---
@@ -430,6 +505,30 @@ public class GenerationResponseDao {
         s.setSkillName(rs.getString("skill_name"));
         s.setOrderInResume(rs.getInt("order_in_resume"));
         return s;
+    }
+
+    private GenerationResponseExperienceBullet mapExperienceBulletRow(ResultSet rs) throws SQLException {
+        GenerationResponseExperienceBullet b = new GenerationResponseExperienceBullet();
+        b.setId(rs.getLong("id"));
+        b.setExperienceId((UUID) rs.getObject("experience_id"));
+        b.setBulletOrder(rs.getInt("bullet_order"));
+        b.setBulletText(rs.getString("bullet_text"));
+        b.setEdited(rs.getBoolean("is_edited"));
+        b.setCreatedAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null);
+        b.setUpdatedAt(rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
+        return b;
+    }
+
+    private GenerationResponseProjectBullet mapProjectBulletRow(ResultSet rs) throws SQLException {
+        GenerationResponseProjectBullet b = new GenerationResponseProjectBullet();
+        b.setId(rs.getLong("id"));
+        b.setProjectId((UUID) rs.getObject("project_id"));
+        b.setBulletOrder(rs.getInt("bullet_order"));
+        b.setBulletText(rs.getString("bullet_text"));
+        b.setEdited(rs.getBoolean("is_edited"));
+        b.setCreatedAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null);
+        b.setUpdatedAt(rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null);
+        return b;
     }
 
     // --- Helpers ---

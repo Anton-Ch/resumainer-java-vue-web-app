@@ -58,14 +58,14 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Ensure bullets are first-class persisted data without duplicating existing schema.
 
-- [ ] T007 [TDD] Inspect current migrations and DB models for existing work/project bullet storage. If tables already exist, write tests against existing schema before modifying. (II, IV)
-- [ ] T008 [TDD] If work experience bullet table is missing, create additive Flyway migration `V{NEXT}__add_generation_response_bullet_tables.sql`. Include: `id BIGSERIAL PK`, `experience_id BIGINT FK → generation_response_experience(id) ON DELETE CASCADE`, `bullet_order INT NOT NULL`, `bullet_text VARCHAR(250) NOT NULL CHECK (TRIM(bullet_text) <> '')`, `is_edited BOOLEAN DEFAULT FALSE`, `created_at/updated_at TIMESTAMP`, `UNIQUE(experience_id, bullet_order)`. Verify FK type matches referenced PK (B15 guard). (I, IV)
-- [ ] T009 [TDD] If project bullet table is missing, create addition in same migration. Include: `id BIGSERIAL PK`, `project_id BIGINT FK → generation_response_project(id) ON DELETE CASCADE`, same column pattern. (I, IV)
-- [ ] T010 [TDD] Create `GenerationResponseExperienceBullet` and `GenerationResponseProjectBullet` model classes in `backend/src/main/java/com/resumainer/model/`. Simple fields, no over-abstracted inheritance. Use `Integer` (boxed) for nullable fields per B9 guard. (I)
-- [ ] T011 [TDD] Update `GenerationResponseExperience` and `GenerationResponseProject` models to include `List<...Bullet>` field. (I)
-- [ ] T012 [TDD] Add DAO insert/read methods in `GenerationResponseDao` (or dedicated bullet DAO) for bullet rows in deterministic order (`ORDER BY bullet_order`). Use `PreparedStatement`. Include connection-accepting overload for transaction support (D10). (II, IV)
-- [ ] T013 [TDD] Add DAO tests proving: bullet round-trip (write → read = same data), order preservation, empty/whitespace-only bullet rejection, cascade delete on parent removal. (II)
-- [ ] T014 [TDD] Run `mvn test -pl backend` — all tests pass including new DAO tests. (II)
+- [x] T007 [TDD] Inspect current migrations and DB models for existing work/project bullet storage. If tables already exist, write tests against existing schema before modifying. (II, IV)
+- [x] T008 [TDD] If work experience bullet table is missing, create additive Flyway migration `V{NEXT}__add_generation_response_bullet_tables.sql`. Include: `id BIGSERIAL PK`, `experience_id UUID FK → generation_response_experience(id) ON DELETE CASCADE`, `bullet_order INT NOT NULL`, `bullet_text VARCHAR(250) NOT NULL CHECK (TRIM(bullet_text) <> '')`, `is_edited BOOLEAN DEFAULT FALSE`, `created_at/updated_at TIMESTAMP`, `UNIQUE(experience_id, bullet_order)`. Verify FK type matches referenced PK — `generation_response_experience.id` is UUID (V20 migration), NOT BIGINT (B15 guard). (I, IV)
+- [x] T009 [TDD] If project bullet table is missing, create addition in same migration. Include: `id BIGSERIAL PK`, `project_id UUID FK → generation_response_project(id) ON DELETE CASCADE`, same column pattern. `generation_response_project.id` is UUID (V20). (I, IV)
+- [x] T010 [TDD] Create `GenerationResponseExperienceBullet` and `GenerationResponseProjectBullet` model classes in `backend/src/main/java/com/resumainer/model/`. Simple fields, no over-abstracted inheritance. Use `Integer` (boxed) for nullable fields per B9 guard. (I)
+- [x] T011 [TDD] Update `GenerationResponseExperience` and `GenerationResponseProject` models to include `List<...Bullet>` field. (I)
+- [x] T012 [TDD] Add DAO insert/read methods in `GenerationResponseDao` (or dedicated bullet DAO) for bullet rows in deterministic order (`ORDER BY bullet_order`). Use `PreparedStatement`. Include connection-accepting overload for transaction support (D10). (II, IV)
+- [x] T013 [TDD] Add DAO tests proving: bullet round-trip (write → read = same data), order preservation, empty/whitespace-only bullet rejection, cascade delete on parent removal. (II)
+- [x] T014 [TDD] Run `mvn test -pl backend` — all tests pass including new DAO tests. (II)
 - [ ] T015 [REVIEW] Run Flyway migration on fresh local DB. Verify no duplicate table names, no conflict with existing generation response tables. (IV)
 
 **Checkpoint**: DB and DAO layer can store/read work and project bullets. ✅ `mvn test` passes.

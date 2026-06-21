@@ -2,6 +2,8 @@ package com.resumainer.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -25,6 +27,8 @@ public class GenerationResponseExperience {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private List<GenerationResponseExperienceBullet> bullets = new ArrayList<>();
 
     public GenerationResponseExperience() {
     }
@@ -67,4 +71,7 @@ public class GenerationResponseExperience {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public List<GenerationResponseExperienceBullet> getBullets() { return bullets; }
+    public void setBullets(List<GenerationResponseExperienceBullet> bullets) { this.bullets = bullets; }
 }

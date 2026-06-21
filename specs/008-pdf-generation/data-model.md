@@ -7,7 +7,7 @@
 | Column | Type | Constraints | Notes |
 |---|---|---|---|
 | id | BIGSERIAL | PK | D7: BIGSERIAL for lookup tables |
-| experience_id | BIGINT | FK → generation_response_experience(id), ON DELETE CASCADE | B15: verify FK type matches PK |
+| experience_id | UUID | FK → generation_response_experience(id), ON DELETE CASCADE | B15: parent PK is UUID (V20 migration) |
 | bullet_order | INT | NOT NULL | Deterministic order from AI response |
 | bullet_text | VARCHAR(250) | NOT NULL, CHECK(TRIM(bullet_text) <> '') | FR-008-004, FR-008-007 |
 | is_edited | BOOLEAN | NOT NULL, DEFAULT FALSE | Tracks user edits |
@@ -21,7 +21,7 @@ UNIQUE (experience_id, bullet_order)
 | Column | Type | Constraints | Notes |
 |---|---|---|---|
 | id | BIGSERIAL | PK | |
-| project_id | BIGINT | FK → generation_response_project(id), ON DELETE CASCADE | |
+| project_id | UUID | FK → generation_response_project(id), ON DELETE CASCADE | Parent PK is UUID (V20) |
 | bullet_order | INT | NOT NULL | |
 | bullet_text | VARCHAR(250) | NOT NULL, CHECK(TRIM(bullet_text) <> '') | |
 | is_edited | BOOLEAN | NOT NULL, DEFAULT FALSE | |

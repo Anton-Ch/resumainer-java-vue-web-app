@@ -243,7 +243,7 @@ Inspect existing generation response tables first. If missing, add:
 ```sql
 generation_response_experience_bullet (
   id BIGSERIAL PRIMARY KEY,                                          -- D7: BIGSERIAL for lookup tables
-  experience_id BIGINT NOT NULL REFERENCES generation_response_experience(id) ON DELETE CASCADE,
+  experience_id UUID NOT NULL REFERENCES generation_response_experience(id) ON DELETE CASCADE,  -- V20: parent PK is UUID
   bullet_order INT NOT NULL,
   bullet_text VARCHAR(250) NOT NULL CHECK (TRIM(bullet_text) <> ''),  -- FR-008-004: non-empty
   is_edited BOOLEAN NOT NULL DEFAULT FALSE,
@@ -254,7 +254,7 @@ generation_response_experience_bullet (
 
 generation_response_project_bullet (
   id BIGSERIAL PRIMARY KEY,
-  project_id BIGINT NOT NULL REFERENCES generation_response_project(id) ON DELETE CASCADE,
+  project_id UUID NOT NULL REFERENCES generation_response_project(id) ON DELETE CASCADE,  -- V20: parent PK is UUID
   bullet_order INT NOT NULL,
   bullet_text VARCHAR(250) NOT NULL CHECK (TRIM(bullet_text) <> ''),
   is_edited BOOLEAN NOT NULL DEFAULT FALSE,
