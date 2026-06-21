@@ -21,7 +21,11 @@ import java.util.stream.Collectors;
  * Loads template file from classpath, keeps ALL CSS/JS intact,
  * replaces only placeholder comments with data.
  * Template selection: one-page vs two-page based on content volume.
+ *
+ * @deprecated Replaced by PDF/HTML parity renderer ({@link com.resumainer.service.pdf.XhtmlTemplateRenderer})
+ * in feat/008. Kept as legacy reference/fallback only. Do not use in new finalization flow.
  */
+@Deprecated
 @Service
 public class ResumeTemplateRenderer {
 
