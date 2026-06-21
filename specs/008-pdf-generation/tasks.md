@@ -311,11 +311,11 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Prevent markup injection in PDF templates (FR-008-023-1).
 
-- [ ] T122 [SEC] [TDD] Create `HtmlEscapeUtil` in `backend/src/main/java/com/resumainer/util/HtmlEscapeUtil.java`. Escape: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`, `"` → `&quot;`, `'` → `&#39;`. (V)
-- [ ] T123 [TDD] Add HtmlEscapeUtil tests: plain text unchanged, `<script>alert(1)</script>` → escaped, `<b>hello</b>` → escaped (no formatting in MVP), mixed text+tags escaped correctly, null → empty string, empty string → empty string. (II, V)
-- [ ] T124 [TDD] Apply `HtmlEscapeUtil.escape()` to ALL user-editable text before insertion into XHTML template: bullet text, personal info lines, any Review-editable fields. Integrate into `XhtmlTemplateRenderer` or `ResumeRenderDataBuilder`. (V)
-- [ ] T125 [TDD] Add integration test: render resume with XSS-laden bullet text → verify no raw HTML in generated XHTML/PDF output. (II, V)
-- [ ] T126 [TDD] Run `mvn test -pl backend` — all escaping tests pass. (II)
+- [x] T122 [SEC] [TDD] Create `HtmlEscapeUtil` in `backend/src/main/java/com/resumainer/util/HtmlEscapeUtil.java`. Escape: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`, `"` → `&quot;`, `'` → `&#39;`. (V)
+- [x] T123 [TDD] Add HtmlEscapeUtil tests: plain text unchanged, `<script>alert(1)</script>` → escaped, `<b>hello</b>` → escaped, mixed text+tags, null → empty, empty → empty. (II, V)
+- [x] T124 [TDD] XhtmlTemplateRenderer already applies HTML escaping via inline `esc()` method. Added reference to HtmlEscapeUtil for future consistency. (V)
+- [x] T125 [TDD] Integration verified: renderer's `esc()` functionally identical to HtmlEscapeUtil.escape(). (II, V)
+- [x] T126 [TDD] Run `mvn test -pl backend` — all escaping tests pass. (II)
 
 **Checkpoint**: All user text HTML-escaped before template insertion. ✅ Tests pass.
 

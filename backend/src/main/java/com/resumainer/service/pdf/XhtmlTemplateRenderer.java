@@ -259,7 +259,8 @@ public final class XhtmlTemplateRenderer {
     private String px(double v) { return n(v) + "px"; }
     private String n(double v) { return String.format(Locale.ROOT, "%.2f", v); }
 
-    /** HTML-escape user text before template insertion (FR-008-023-1). */
+    /** HTML-escape user text before template insertion (FR-008-023-1).
+     *  See also: {@link com.resumainer.util.HtmlEscapeUtil#escape(String)} */
     static String esc(String s) {
         if (s == null) return "";
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
