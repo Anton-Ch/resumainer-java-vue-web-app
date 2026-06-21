@@ -101,7 +101,10 @@ public class ResumeReviewService {
                             fieldVariant(e.getId(), "description", e.getDescription(), e.getResponseId(), resp, "work_experience")
                     );
                 });
-        if (workExp != null) sections.addAll(workExp);
+        if (workExp != null) {
+            loadBulletsForSection(workExp, "work_experience", true);
+            sections.addAll(workExp);
+        }
 
         // 3. Courses (child records)
         List<SectionReviewGroup> courses = buildChildRecordsSection(
@@ -129,7 +132,10 @@ public class ResumeReviewService {
                             fieldVariant(p.getId(), "description", p.getDescription(), p.getResponseId(), resp, "projects")
                     );
                 });
-        if (projects != null) sections.addAll(projects);
+        if (projects != null) {
+            loadBulletsForSection(projects, "projects", true);
+            sections.addAll(projects);
+        }
 
         // 5. Skills (grouped by skill_group)
         sections.add(buildSkillsSection(responses));
@@ -238,6 +244,38 @@ public class ResumeReviewService {
         if (record instanceof GenerationResponseCourse) return ((GenerationResponseCourse) record).getId();
         if (record instanceof GenerationResponseProject) return ((GenerationResponseProject) record).getId();
         throw new IllegalArgumentException("Unknown record type: " + record.getClass());
+    }
+
+    /** Load bullet points for each record in work_experience or projects sections (Feature 008). */
+    private void loadBulletsForSection(List<SectionReviewGroup> sectionGroups, String sectionKey, boolean isExperience) {
+        for (SectionReviewGroup section : sectionGroups) {
+            if (section.getRecords() == null) continue;
+            for (RecordReviewGroup record : section.getRecords()) {
+                List<BulletReviewItem> bulletItems = new ArrayList<>();
+                if (isExperience) {
+                    List<GenerationResponseExperienceBullet> bullets = responseDao.findExperienceBullets(record.getRecordId());
+                    for (GenerationResponseExperienceBullet b : bullets) {
+                        BulletReviewItem item = new BulletReviewItem();
+                        item.setBulletOrder(b.getBulletOrder());
+                        item.setBulletText(b.getBulletText());
+                        item.setEdited(b.isEdited());
+                        item.setUpdateKey(sectionKey + ":" + record.getRecordId() + ":bulletPoints:" + b.getBulletOrder());
+                        bulletItems.add(item);
+                    }
+                } else {
+                    List<GenerationResponseProjectBullet> bullets = responseDao.findProjectBullets(record.getRecordId());
+                    for (GenerationResponseProjectBullet b : bullets) {
+                        BulletReviewItem item = new BulletReviewItem();
+                        item.setBulletOrder(b.getBulletOrder());
+                        item.setBulletText(b.getBulletText());
+                        item.setEdited(b.isEdited());
+                        item.setUpdateKey(sectionKey + ":" + record.getRecordId() + ":bulletPoints:" + b.getBulletOrder());
+                        bulletItems.add(item);
+                    }
+                }
+                record.setBullets(bulletItems);
+            }
+        }
     }
 
     private int getOrderInResume(Object record) {
@@ -390,13 +428,13 @@ public class ResumeReviewService {
                     "professionalAspirations", "coverLetter"
             ),
             "work_experience", Set.of(
-                    "jobTitle", "companyName", "description"
+                    "jobTitle", "companyName", "description", "bulletPoints"
             ),
             "courses", Set.of(
                     "courseName", "provider", "courseFocus"
             ),
             "projects", Set.of(
-                    "projectName", "role", "description"
+                    "projectName", "role", "description", "bulletPoints"
             ),
             "skills", Set.of(
                     "groupName", "skills"
@@ -459,13 +497,21 @@ public class ResumeReviewService {
                 saveResponseField(recordIdStr, fieldName, value);
                 break;
             case "work_experience":
-                saveExperienceField(recordIdStr, fieldName, value);
+                if ("bulletPoints".equals(fieldName)) {
+                    saveExperienceBullet(recordIdStr, adaptationCode, value);
+                } else {
+                    saveExperienceField(recordIdStr, fieldName, value);
+                }
                 break;
             case "courses":
                 saveCourseField(recordIdStr, fieldName, value);
                 break;
             case "projects":
-                saveProjectField(recordIdStr, fieldName, value);
+                if ("bulletPoints".equals(fieldName)) {
+                    saveProjectBullet(recordIdStr, adaptationCode, value);
+                } else {
+                    saveProjectField(recordIdStr, fieldName, value);
+                }
                 break;
             case "skills":
                 saveSkillField(recordIdStr, fieldName, value, groupIdx, adaptationCode);
@@ -490,6 +536,21 @@ public class ResumeReviewService {
         responseDao.updateExperienceField(experienceId, fieldName, value);
     }
 
+    private void saveExperienceBullet(String experienceIdStr, String bulletOrderStr, String value) {
+        UUID experienceId = UUID.fromString(experienceIdStr);
+        // Reject empty/whitespace-only bullet edits
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException("Bullet point text cannot be empty.");
+        }
+        int bulletOrder;
+        try {
+            bulletOrder = Integer.parseInt(bulletOrderStr);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid bullet order: " + bulletOrderStr);
+        }
+        responseDao.updateExperienceBullet(experienceId, bulletOrder, value);
+    }
+
     private void saveCourseField(String courseIdStr, String fieldName, String value) {
         UUID courseId = UUID.fromString(courseIdStr);
         responseDao.updateCourseField(courseId, fieldName, value);
@@ -498,6 +559,20 @@ public class ResumeReviewService {
     private void saveProjectField(String projectIdStr, String fieldName, String value) {
         UUID projectId = UUID.fromString(projectIdStr);
         responseDao.updateProjectField(projectId, fieldName, value);
+    }
+
+    private void saveProjectBullet(String projectIdStr, String bulletOrderStr, String value) {
+        UUID projectId = UUID.fromString(projectIdStr);
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException("Bullet point text cannot be empty.");
+        }
+        int bulletOrder;
+        try {
+            bulletOrder = Integer.parseInt(bulletOrderStr);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid bullet order: " + bulletOrderStr);
+        }
+        responseDao.updateProjectBullet(projectId, bulletOrder, value);
     }
 
     private void saveSkillField(String responseIdStr, String fieldName, String value,

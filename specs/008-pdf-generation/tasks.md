@@ -108,11 +108,11 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Expose and edit bullets on Review page.
 
-- [ ] T030 [TDD] Update `GenerationReviewDto` in `backend/src/main/java/com/resumainer/dto/generate/` to include bullet list under each generated work/project record. Preserve record-first grouping. (I, III)
-- [ ] T031 [TDD] Update review update-key format to support bullet edits. Use backend-owned opaque update keys (D27 pattern). Frontend must not construct raw DB paths. (I, V)
-- [ ] T032 [TDD] Update `ResumeReviewService.save()` in `backend/src/main/java/com/resumainer/service/ResumeReviewService.java` to update bullet text and set `is_edited = true` on changed bullets. Reject empty/whitespace-only bullets with descriptive error. (II, IV)
-- [ ] T033 [TDD] Add service/controller tests: bullet edit save (text updated in DB), bullet reload (edited text returned), empty bullet rejection, owner-scoped access. (II, V)
-- [ ] T034 [TDD] Run `mvn test -pl backend` — review service and controller tests pass. (II)
+- [x] T030 [TDD] Update `GenerationReviewDto` in `backend/src/main/java/com/resumainer/dto/generate/` to include bullet list under each generated work/project record. Preserve record-first grouping. (I, III)
+- [x] T031 [TDD] Update review update-key format to support bullet edits. Use backend-owned opaque update keys (D27 pattern). Frontend must not construct raw DB paths. (I, V)
+- [x] T032 [TDD] Update `ResumeReviewService.save()` in `backend/src/main/java/com/resumainer/service/ResumeReviewService.java` to update bullet text and set `is_edited = true` on changed bullets. Reject empty/whitespace-only bullets with descriptive error. (II, IV)
+- [x] T033 [TDD] Add service/controller tests: bullet edit save (text updated in DB), bullet reload (edited text returned), empty bullet rejection, owner-scoped access. (II, V)
+- [x] T034 [TDD] Run `mvn test -pl backend` — review service and controller tests pass. (II)
 - [ ] T035 [P] Update `frontend/src/types/generate.ts` with bullet DTO types matching backend `GenerationReviewDto` shape. (I)
 - [ ] T036 [P] Update `GeneratedRecordGroup.vue` and `ReviewStepForm.vue` in `frontend/src/components/generate/` to render each bullet as separate editable text input under its parent work/project record. Record-first grouping preserved. (III)
 - [ ] T037 [P] Add frontend validation: bullet cannot be empty/whitespace-only. Show inline error message. (III)
