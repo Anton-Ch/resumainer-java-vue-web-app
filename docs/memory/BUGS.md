@@ -822,3 +822,26 @@ The `saved_resumes.cover_letter` column was created in V8 migration and read cor
 
 **Prevention**
 When adding a database column via migration, always verify all INSERT, UPDATE, and SELECT paths. Add a DAO integration test that inserts a full row and reads back every column.
+
+---
+
+### 2026-06-21 - Docker BuildKit: COPY . . cache survives --no-cache — must docker rmi --force
+
+**Status**
+Active
+
+**Why this is durable**
+Docker BuildKit caches the `COPY . .` layer based on file checksums. The `--no-cache` flag only affects `RUN` layers, not `COPY` layers. When source files change but the built output does not reflect the changes, the root cause is almost always a stale `COPY` cache layer. This is a cross-project pattern affecting any Docker multi-stage build with `COPY . .` followed by a build step.
+
+**Symptoms**
+- `npm run build` / `mvn package` succeeds locally with correct output
+- `docker-compose build --no-cache` succeeds but container still has old code
+- Content-hash-based output filenames (e.g., `index-XYZ.js`) are identical between old and "new" builds, confirming no actual rebuild occurred
+
+**Mitigation**
+1. First line of defense: `docker rmi <image> --force` before `docker-compose build`
+2. Alternative: use BuildKit `--no-cache-filter` to target specific stages: `docker build --no-cache-filter=build ...`
+3. Verification always: `docker exec <container> sh -c "grep -c '<unique-string>' /path/to/built/assets/*.js"` to confirm expected code is in the container
+
+**Evidence**
+Feature 008 Phase 4 Frontend: `ReviewStepForm.vue` had bullet editing template code, local `npm run build` included it, but `docker-compose build --no-cache frontend` produced a container without it. `docker rmi docker-frontend --force` followed by rebuild resolved the issue. Built filenames changed from stale to fresh only after image deletion.
