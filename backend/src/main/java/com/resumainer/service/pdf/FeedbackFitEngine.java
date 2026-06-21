@@ -1,0 +1,332 @@
+package com.resumainer.service.pdf;
+
+import com.resumainer.model.PdfFillTarget;
+import com.resumainer.model.PdfFitLimits;
+import com.resumainer.model.pdf.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.*;
+
+/**
+ * Iterative feedback fitting engine for PDF page layout.
+ * Uses round-robin shrink/grow on font, line-height, and gaps to fit content
+ * within the target page count. Bounded by max_attempts from DB config.
+ *
+ * Ported from spike V12.1 FeedbackFitEngine. Adapted: spike FitLimits→PdfFitLimits,
+ * FitState record→mutable class, FillTarget→PdfFillTarget, Path→File.
+ */
+public final class FeedbackFitEngine {
+    private static final Logger log = LoggerFactory.getLogger(FeedbackFitEngine.class);
+    private static final double STEP_PERCENT = 0.10; // 10% step per iteration
+
+    private final XhtmlTemplateRenderer renderer;
+    private final OpenHtmlPdfRenderer pdfRenderer;
+    private final PdfAnalyzer analyzer;
+    private final PdfValidationService validator;
+    private final PdfPageMerger merger = new PdfPageMerger();
+    private final ContentExpectationBuilder contentExpectationBuilder = new ContentExpectationBuilder();
+    private final PdfBlankPageCleaner blankPageCleaner;
+    private final CssSafetyInspector cssSafetyInspector = new CssSafetyInspector();
+    private final PdfFitLimits limits;
+
+    public FeedbackFitEngine(XhtmlTemplateRenderer renderer, OpenHtmlPdfRenderer pdfRenderer,
+                              PdfAnalyzer analyzer, PdfValidationService validator, PdfFitLimits limits) {
+        this.renderer = renderer;
+        this.pdfRenderer = pdfRenderer;
+        this.analyzer = analyzer;
+        this.validator = validator;
+        this.blankPageCleaner = new PdfBlankPageCleaner(analyzer);
+        this.limits = limits;
+    }
+
+    public FitResult fit(ResumeRenderData data, PagePlan plan, List<PdfFillTarget> targets,
+                          File htmlFile, File pdfFile, File debugDir, boolean debugAttempts) {
+        List<FitAttempt> allAttempts = new ArrayList<>();
+        FitResult result = fitWithTargetPageCount(data, plan, targets, htmlFile, pdfFile, debugDir, debugAttempts, allAttempts);
+        if (result.selectedAttempt() != null && result.selectedAttempt().valid()) return result;
+
+        // 3-page fallback for 2-page plans that cannot fit
+        if (plan.getTargetPageCount() == 2) {
+            PagePlan fallback = new PagePlan();
+            fallback.setTargetPageCount(3);
+            fallback.setPage1WorkCount(plan.getPage1WorkCount());
+            fallback.setPage2AdditionalWorkCount(plan.getPage2AdditionalWorkCount());
+            fallback.setPage2ProjectCount(plan.getPage2ProjectCount());
+
+            FitResult fbResult = fitWithTargetPageCount(data, fallback, targets, htmlFile, pdfFile,
+                    new File(debugDir, "fallback-3-pages"), debugAttempts, allAttempts);
+            if (fbResult.selectedAttempt() != null && better(fbResult.selectedAttempt(), result.selectedAttempt()))
+                return new FitResult(fbResult.selectedAttempt(), allAttempts);
+        }
+        return new FitResult(result.selectedAttempt(), allAttempts);
+    }
+
+    private FitResult fitWithTargetPageCount(ResumeRenderData data, PagePlan plan, List<PdfFillTarget> targets,
+                                              File htmlFile, File pdfFile, File debugDir, boolean debugAttempts,
+                                              List<FitAttempt> allAttempts) {
+        File attemptsRoot = null;
+        try {
+            Files.createDirectories(htmlFile.getParentFile().toPath());
+            Files.createDirectories(pdfFile.getParentFile().toPath());
+            attemptsRoot = debugAttempts ? debugDir : Files.createTempDirectory("pdf-fit-attempts-").toFile();
+            attemptsRoot.mkdirs();
+
+            List<File> pagePdfFiles = new ArrayList<>();
+            List<FitState> selectedPageStates = new ArrayList<>();
+            FitState baseState = FitState.fromMaxima(limits);
+
+            for (int page = 1; page <= plan.getTargetPageCount(); page++) {
+                FitState start = page == 1 ? baseState : copyFontFrom(baseState, FitState.fromMaxima(limits));
+                PdfFillTarget pageTarget = targetForPage(targets, page);
+                FitAttempt pageAttempt = fitSinglePlannedPage(data, plan, page, pageTarget, start,
+                        new File(attemptsRoot, "page-" + page), debugAttempts, allAttempts);
+                selectedPageStates.add(pageAttempt.state());
+                if (page == 1) baseState = pageAttempt.state();
+                pagePdfFiles.add(new File(pageAttempt.pdfPath()));
+                if (!pageAttempt.valid()) return new FitResult(pageAttempt, allAttempts);
+            }
+
+            FitState combinedState = mergeSelectedStates(selectedPageStates);
+            String combinedHtml = renderer.render(data, plan, combinedState);
+            String cssProblem = cssSafetyInspector.inspect(combinedHtml);
+            if (!"OK".equals(cssProblem))
+                throw new IllegalStateException("Unsafe CSS in combined HTML: " + cssProblem);
+            Files.writeString(htmlFile.toPath(), combinedHtml, StandardCharsets.UTF_8);
+            merger.merge(pagePdfFiles, pdfFile);
+
+            PdfMetrics metrics = analyzer.analyze(pdfFile);
+            String reason = validator.validate(metrics, plan.getTargetPageCount(), targets,
+                    contentExpectationBuilder.build(data, plan));
+            FitAttempt finalAttempt = new FitAttempt(allAttempts.size() + 1, plan.getTargetPageCount(),
+                    combinedState, metrics, "OK".equals(reason), reason,
+                    htmlFile.getPath(), pdfFile.getPath());
+            allAttempts.add(finalAttempt);
+            return new FitResult(finalAttempt, allAttempts);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to fit and assemble PDF", e);
+        } finally {
+            if (!debugAttempts && attemptsRoot != null) deleteRecursively(attemptsRoot);
+        }
+    }
+
+    private FitAttempt fitSinglePlannedPage(ResumeRenderData data, PagePlan plan, int plannedPage,
+                                             PdfFillTarget target, FitState initialState,
+                                             File debugDir, boolean debugAttempts, List<FitAttempt> allAttempts) {
+        FitState state = copyState(initialState);
+        FitAttempt best = null;
+        int maxAttempts = limits.getMaxAttempts();
+        for (int i = 1; i <= maxAttempts; i++) {
+            File htmlFile = new File(debugDir, String.format("attempt_%02d.html", i));
+            File pdfFile = new File(debugDir, String.format("attempt_%02d.pdf", i));
+            FitAttempt attempt = renderSingleAttempt(i, data, plan, plannedPage, target, state, htmlFile, pdfFile);
+            allAttempts.add(attempt);
+            best = chooseBetter(best, attempt, target);
+            if (log.isDebugEnabled()) {
+                log.debug("plannedPage={} attempt={} valid={} reason={} pages={}",
+                        plannedPage, i, attempt.valid(), attempt.reason(),
+                        attempt.metrics().actualPageCount());
+            }
+            if (attempt.valid()) return attempt;
+            state = nextStateForPage(state, attempt, target, plannedPage, i);
+        }
+        return best;
+    }
+
+    private FitAttempt renderSingleAttempt(int attemptNumber, ResumeRenderData data, PagePlan plan,
+                                            int plannedPage, PdfFillTarget target, FitState state,
+                                            File htmlFile, File pdfFile) {
+        try {
+            Files.createDirectories(htmlFile.getParentFile().toPath());
+            String html = renderer.renderSinglePage(data, plan, state, plannedPage);
+            String cssProblem = cssSafetyInspector.inspect(html);
+            if (!"OK".equals(cssProblem))
+                throw new IllegalStateException("Unsafe CSS: " + cssProblem);
+            Files.writeString(htmlFile.toPath(), html, StandardCharsets.UTF_8);
+            pdfRenderer.render(html, pdfFile);
+            int removed = blankPageCleaner.removeTrailingBlankPages(pdfFile);
+            if (removed > 0) log.debug("removedTrailingBlankPages={} page={} attempt={}", removed, plannedPage, attemptNumber);
+            PdfMetrics metrics = analyzer.analyze(pdfFile);
+            String reason = validator.validate(metrics, 1,
+                    target != null ? List.of(target) : List.of(),
+                    contentExpectationBuilder.build(data, plan));
+            return new FitAttempt(attemptNumber, 1, copyState(state), metrics,
+                    "OK".equals(reason), "PAGE" + plannedPage + ":" + reason,
+                    htmlFile.getPath(), pdfFile.getPath());
+        } catch (Exception e) {
+            throw new IllegalStateException("Fit attempt failed page=" + plannedPage + " attempt=" + attemptNumber, e);
+        }
+    }
+
+    private PdfFillTarget targetForPage(List<PdfFillTarget> targets, int pageNumber) {
+        if (targets == null) return null;
+        for (PdfFillTarget t : targets) {
+            if (t.getPageNumber() == pageNumber) return t;
+        }
+        return null;
+    }
+
+    private FitState nextStateForPage(FitState s, FitAttempt attempt, PdfFillTarget target, int page, int attemptIndex) {
+        PdfMetrics metrics = attempt.metrics();
+        boolean missingOrClipped = attempt.reason().contains("MISSING_TEXTS") || attempt.reason().contains("TRAILING_BLANK_PAGE");
+        double maxFill = target != null && target.getMaxFill() != null ? target.getMaxFill().doubleValue() : 0.96;
+        boolean overflow = missingOrClipped || metrics.actualPageCount() > 1
+                || metrics.fillRatios().getOrDefault(1, 0.0) > maxFill;
+        double minFill = target != null ? target.getMinFill().doubleValue() : 0.80;
+        boolean underfill = !missingOrClipped && metrics.fillRatios().getOrDefault(1, 0.0) < minFill;
+        if (overflow) return shrinkRoundRobin(s, page, attemptIndex, page == 1);
+        if (underfill) return growRoundRobin(s, page, attemptIndex, page == 1);
+        return s;
+    }
+
+    private FitState shrinkRoundRobin(FitState s, int page, int attemptIndex, boolean allowFontChange) {
+        int phase = (attemptIndex - 1) % (allowFontChange ? 4 : 3);
+        double down = 1.0 - STEP_PERCENT;
+        FitState result = copyState(s);
+        if (phase == 0) {
+            double v = pageSectionGap(s, page) * down;
+            setPageSectionGap(result, page, clamp(v, limits.getSectionGapMinPx().doubleValue(), limits.getSectionGapMaxPx().doubleValue()));
+        } else if (phase == 1) {
+            applyContentGaps(result, down);
+        } else if (phase == 2) {
+            double v = pageLineHeight(s, page) * down;
+            setPageLineHeight(result, page, clamp(v, limits.getLineHeightMin().doubleValue(), limits.getLineHeightMax().doubleValue()));
+        } else if (allowFontChange) {
+            result.setBodyFontPx(clamp(s.getBodyFontPx() * down,
+                    limits.getBodyFontMinPx().doubleValue(), limits.getBodyFontMaxPx().doubleValue()));
+        }
+        return result;
+    }
+
+    private FitState growRoundRobin(FitState s, int page, int attemptIndex, boolean allowFontChange) {
+        int phase = (attemptIndex - 1) % (allowFontChange ? 4 : 3);
+        double up = 1.0 + STEP_PERCENT;
+        FitState result = copyState(s);
+        if (allowFontChange && phase == 0) {
+            result.setBodyFontPx(clamp(s.getBodyFontPx() * up,
+                    limits.getBodyFontMinPx().doubleValue(), limits.getBodyFontMaxPx().doubleValue()));
+        } else if ((!allowFontChange && phase == 0) || (allowFontChange && phase == 1)) {
+            double v = pageLineHeight(s, page) * up;
+            setPageLineHeight(result, page, clamp(v, limits.getLineHeightMin().doubleValue(), limits.getLineHeightMax().doubleValue()));
+        } else if ((!allowFontChange && phase == 1) || (allowFontChange && phase == 2)) {
+            applyContentGaps(result, up);
+        } else {
+            double v = pageSectionGap(s, page) * up;
+            setPageSectionGap(result, page, clamp(v, limits.getSectionGapMinPx().doubleValue(), limits.getSectionGapMaxPx().doubleValue()));
+        }
+        return result;
+    }
+
+    private FitAttempt chooseBetter(FitAttempt a, FitAttempt b, PdfFillTarget target) {
+        if (a == null) return b;
+        return score(b, target) < score(a, target) ? b : a;
+    }
+
+    private double score(FitAttempt a, PdfFillTarget target) {
+        double sc = Math.abs(a.metrics().actualPageCount() - 1) * 100.0;
+        for (var e : a.metrics().fillRatios().entrySet()) {
+            if (e.getKey() > 1) sc += e.getValue() * 10.0;
+        }
+        double fill = a.metrics().fillRatios().getOrDefault(1, 0.0);
+        double minFill = target != null ? target.getMinFill().doubleValue() : 0.80;
+        double maxFill = target != null && target.getMaxFill() != null ? target.getMaxFill().doubleValue() : 0.96;
+        if (fill < minFill) sc += minFill - fill;
+        if (fill > maxFill) sc += fill - maxFill;
+        if (a.reason().contains("MISSING_TEXTS")) sc += 50.0;
+        return sc;
+    }
+
+    private boolean better(FitAttempt a, FitAttempt b) {
+        if (b == null) return true;
+        if (a.valid() != b.valid()) return a.valid();
+        return a.metrics().actualPageCount() < b.metrics().actualPageCount();
+    }
+
+    private FitState mergeSelectedStates(List<FitState> states) {
+        FitState result = new FitState();
+        result.setBodyFontPx(states.get(0).getBodyFontPx());
+        result.setPage1LineHeight(states.get(0).getPage1LineHeight());
+        result.setPage2LineHeight(states.size() > 1 ? states.get(1).getPage2LineHeight() : states.get(0).getPage2LineHeight());
+        result.setPage3LineHeight(states.size() > 2 ? states.get(2).getPage3LineHeight() : (states.size() > 1 ? states.get(1).getPage3LineHeight() : states.get(0).getPage3LineHeight()));
+        result.setPage1SectionGapPx(states.get(0).getPage1SectionGapPx());
+        result.setPage2SectionGapPx(states.size() > 1 ? states.get(1).getPage2SectionGapPx() : states.get(0).getPage2SectionGapPx());
+        result.setPage3SectionGapPx(states.size() > 2 ? states.get(2).getPage3SectionGapPx() : (states.size() > 1 ? states.get(1).getPage3SectionGapPx() : states.get(0).getPage3SectionGapPx()));
+        result.setItemGapPx(states.stream().mapToDouble(FitState::getItemGapPx).min().orElse(0));
+        result.setParagraphGapPx(states.stream().mapToDouble(FitState::getParagraphGapPx).min().orElse(0));
+        result.setBulletGapPx(states.stream().mapToDouble(FitState::getBulletGapPx).min().orElse(0));
+        return result;
+    }
+
+    private FitState copyFontFrom(FitState source, FitState target) {
+        FitState result = copyState(target);
+        result.setBodyFontPx(source.getBodyFontPx());
+        return result;
+    }
+
+    private void applyContentGaps(FitState s, double multiplier) {
+        s.setItemGapPx(clamp(s.getItemGapPx() * multiplier, limits.getItemGapMinPx().doubleValue(), limits.getItemGapMaxPx().doubleValue()));
+        s.setParagraphGapPx(clamp(s.getParagraphGapPx() * multiplier, limits.getParagraphGapMinPx().doubleValue(), limits.getParagraphGapMaxPx().doubleValue()));
+        s.setBulletGapPx(clamp(s.getBulletGapPx() * multiplier, limits.getBulletGapMinPx().doubleValue(), limits.getBulletGapMaxPx().doubleValue()));
+    }
+
+    private double pageLineHeight(FitState s, int page) {
+        return page == 1 ? s.getPage1LineHeight() : page == 2 ? s.getPage2LineHeight() : s.getPage3LineHeight();
+    }
+
+    private double pageSectionGap(FitState s, int page) {
+        return page == 1 ? s.getPage1SectionGapPx() : page == 2 ? s.getPage2SectionGapPx() : s.getPage3SectionGapPx();
+    }
+
+    private void setPageLineHeight(FitState s, int page, double v) {
+        switch (page) {
+            case 1: s.setPage1LineHeight(v); break;
+            case 2: s.setPage2LineHeight(v); break;
+            case 3: s.setPage3LineHeight(v); break;
+        }
+    }
+
+    private void setPageSectionGap(FitState s, int page, double v) {
+        switch (page) {
+            case 1: s.setPage1SectionGapPx(v); break;
+            case 2: s.setPage2SectionGapPx(v); break;
+            case 3: s.setPage3SectionGapPx(v); break;
+        }
+    }
+
+    private FitState copyState(FitState source) {
+        FitState s = new FitState();
+        s.setBodyFontPx(source.getBodyFontPx());
+        s.setPage1LineHeight(source.getPage1LineHeight());
+        s.setPage2LineHeight(source.getPage2LineHeight());
+        s.setPage3LineHeight(source.getPage3LineHeight());
+        s.setPage1SectionGapPx(source.getPage1SectionGapPx());
+        s.setPage2SectionGapPx(source.getPage2SectionGapPx());
+        s.setPage3SectionGapPx(source.getPage3SectionGapPx());
+        s.setItemGapPx(source.getItemGapPx());
+        s.setParagraphGapPx(source.getParagraphGapPx());
+        s.setBulletGapPx(source.getBulletGapPx());
+        return s;
+    }
+
+    private void deleteRecursively(File root) {
+        try {
+            if (root == null || !root.exists()) return;
+            File[] files = root.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if (f.isDirectory()) deleteRecursively(f);
+                    f.delete();
+                }
+            }
+            root.delete();
+        } catch (Exception ignored) {}
+    }
+
+    private double clamp(double v, double min, double max) {
+        return Math.max(min, Math.min(max, v));
+    }
+}
