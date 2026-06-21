@@ -53,10 +53,10 @@ public final class XhtmlTemplateRenderer {
 
     private String css(FitState f) {
         return "@page{size:A4;margin:0;}"
-                + "@font-face{font-family:'Inter';src:url('fonts/Inter-400.ttf');font-weight:400;}"
-                + "@font-face{font-family:'Inter';src:url('fonts/Inter-600.ttf');font-weight:600;}"
-                + "@font-face{font-family:'Inter';src:url('fonts/Inter-700.ttf');font-weight:700;}"
-                + "@font-face{font-family:'Manrope';src:url('fonts/Manrope-700.ttf');font-weight:700;}"
+                + "@font-face{font-family:'Inter';src:url('Inter-400.ttf');font-weight:400;}"
+                + "@font-face{font-family:'Inter';src:url('Inter-600.ttf');font-weight:600;}"
+                + "@font-face{font-family:'Inter';src:url('Inter-700.ttf');font-weight:700;}"
+                + "@font-face{font-family:'Manrope';src:url('Manrope-700.ttf');font-weight:700;}"
                 + "body{margin:0;background:#f5f6f8;color:#111;font-family:'Inter',Arial,Helvetica,sans-serif;}"
                 + "main.resume-page{width:210mm;height:297mm;min-height:297mm;box-sizing:border-box;background:#fff;page-break-after:always;position:relative;}"
                 + "main.resume-page:last-child{page-break-after:auto;}"

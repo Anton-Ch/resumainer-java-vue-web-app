@@ -29,13 +29,15 @@ public final class PdfValidationService {
         }
         List<String> missingTexts = missingTexts(metrics.extractedText(), expectedTexts);
         if (!missingTexts.isEmpty()) return "MISSING_TEXTS " + missingTexts;
-        for (PdfFillTarget t : targets) {
+        if (targets != null) {
+            for (PdfFillTarget t : targets) {
             double fill = metrics.fillRatios().getOrDefault(t.getPageNumber(), 0.0);
             if (fill <= 0.001) return "PAGE_EMPTY page=" + t.getPageNumber();
             if (fill < t.getMinFill().doubleValue())
                 return "UNDERFILLED page=" + t.getPageNumber() + " fill=" + fill + " min=" + t.getMinFill();
             if (t.getMaxFill() != null && fill > t.getMaxFill().doubleValue())
                 return "OVERFILLED page=" + t.getPageNumber() + " fill=" + fill + " max=" + t.getMaxFill();
+            }
         }
         return "OK";
     }

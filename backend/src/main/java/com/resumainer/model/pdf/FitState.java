@@ -38,6 +38,26 @@ public class FitState {
         return s;
     }
 
+    /** Start fitting from midpoints (defaults in spike). Engine can grow or shrink from here. */
+    public static FitState fromMidpoint(PdfFitLimits limits) {
+        FitState s = new FitState();
+        s.bodyFontPx = mid(limits.getBodyFontMinPx(), limits.getBodyFontMaxPx());
+        s.page1LineHeight = mid(limits.getLineHeightMin(), limits.getLineHeightMax());
+        s.page2LineHeight = mid(limits.getLineHeightMin(), limits.getLineHeightMax());
+        s.page3LineHeight = mid(limits.getLineHeightMin(), limits.getLineHeightMax());
+        s.page1SectionGapPx = mid(limits.getSectionGapMinPx(), limits.getSectionGapMaxPx());
+        s.page2SectionGapPx = mid(limits.getSectionGapMinPx(), limits.getSectionGapMaxPx());
+        s.page3SectionGapPx = mid(limits.getSectionGapMinPx(), limits.getSectionGapMaxPx());
+        s.itemGapPx = mid(limits.getItemGapMinPx(), limits.getItemGapMaxPx());
+        s.paragraphGapPx = mid(limits.getParagraphGapMinPx(), limits.getParagraphGapMaxPx());
+        s.bulletGapPx = mid(limits.getBulletGapMinPx(), limits.getBulletGapMaxPx());
+        return s;
+    }
+
+    private static double mid(java.math.BigDecimal min, java.math.BigDecimal max) {
+        return (min.doubleValue() + max.doubleValue()) / 2.0;
+    }
+
     public double getBodyFontPx() { return bodyFontPx; }
     public void setBodyFontPx(double bodyFontPx) { this.bodyFontPx = bodyFontPx; }
     public double getPage1LineHeight() { return page1LineHeight; }

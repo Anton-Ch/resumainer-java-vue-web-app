@@ -91,14 +91,16 @@ public class SavedResumeDao {
             "SELECT id, user_id, resume_title, vacancy, company, language, "
             + "adaptation_level, public_code, public_url_link, html_file_path, "
             + "pdf_file_path, generation_request_id, response_id, "
-            + "adaptation_level_id, language_id, cover_letter, is_deleted "
+            + "adaptation_level_id, language_id, cover_letter, is_deleted, "
+            + "pdf_status, pdf_page_count "
             + "FROM saved_resumes WHERE generation_request_id = ? AND user_id = ? AND is_deleted = FALSE";
 
     private static final String SELECT_BY_ID =
             "SELECT id, user_id, resume_title, vacancy, company, language, "
             + "adaptation_level, public_code, public_url_link, html_file_path, "
             + "pdf_file_path, generation_request_id, response_id, "
-            + "adaptation_level_id, language_id, cover_letter, is_deleted "
+            + "adaptation_level_id, language_id, cover_letter, is_deleted, "
+            + "pdf_status, pdf_page_count "
             + "FROM saved_resumes WHERE id = ? AND user_id = ? AND is_deleted = FALSE";
 
     /**
@@ -187,6 +189,8 @@ public class SavedResumeDao {
                     row.htmlFilePath = rs.getString("html_file_path");
                     row.pdfFilePath = rs.getString("pdf_file_path");
                     row.coverLetter = rs.getString("cover_letter");
+                    row.pdfStatus = rs.getString("pdf_status");
+                    row.pdfPageCount = rs.getObject("pdf_page_count") != null ? rs.getInt("pdf_page_count") : null;
                     results.add(row);
                 }
                 return results;

@@ -46,24 +46,29 @@ public final class FeedbackFitEngine {
 
     public FitResult fit(ResumeRenderData data, PagePlan plan, List<PdfFillTarget> targets,
                           File htmlFile, File pdfFile, File debugDir, boolean debugAttempts) {
-        List<FitAttempt> allAttempts = new ArrayList<>();
-        FitResult result = fitWithTargetPageCount(data, plan, targets, htmlFile, pdfFile, debugDir, debugAttempts, allAttempts);
-        if (result.selectedAttempt() != null && result.selectedAttempt().valid()) return result;
+        try {
+            List<FitAttempt> allAttempts = new ArrayList<>();
+            FitResult result = fitWithTargetPageCount(data, plan, targets, htmlFile, pdfFile, debugDir, debugAttempts, allAttempts);
+            if (result.selectedAttempt() != null && result.selectedAttempt().valid()) return result;
 
-        // 3-page fallback for 2-page plans that cannot fit
-        if (plan.getTargetPageCount() == 2) {
-            PagePlan fallback = new PagePlan();
-            fallback.setTargetPageCount(3);
-            fallback.setPage1WorkCount(plan.getPage1WorkCount());
-            fallback.setPage2AdditionalWorkCount(plan.getPage2AdditionalWorkCount());
-            fallback.setPage2ProjectCount(plan.getPage2ProjectCount());
+            // 3-page fallback for 2-page plans that cannot fit
+            if (plan.getTargetPageCount() == 2) {
+                PagePlan fallback = new PagePlan();
+                fallback.setTargetPageCount(3);
+                fallback.setPage1WorkCount(plan.getPage1WorkCount());
+                fallback.setPage2AdditionalWorkCount(plan.getPage2AdditionalWorkCount());
+                fallback.setPage2ProjectCount(plan.getPage2ProjectCount());
 
-            FitResult fbResult = fitWithTargetPageCount(data, fallback, targets, htmlFile, pdfFile,
-                    new File(debugDir, "fallback-3-pages"), debugAttempts, allAttempts);
-            if (fbResult.selectedAttempt() != null && better(fbResult.selectedAttempt(), result.selectedAttempt()))
-                return new FitResult(fbResult.selectedAttempt(), allAttempts);
+                FitResult fbResult = fitWithTargetPageCount(data, fallback, targets, htmlFile, pdfFile,
+                        new File(debugDir, "fallback-3-pages"), debugAttempts, allAttempts);
+                if (fbResult.selectedAttempt() != null && better(fbResult.selectedAttempt(), result.selectedAttempt()))
+                    return new FitResult(fbResult.selectedAttempt(), allAttempts);
+            }
+            return new FitResult(result.selectedAttempt(), allAttempts);
+        } catch (Exception e) {
+            log.error("PDF fitting failed completely", e);
+            throw e;
         }
-        return new FitResult(result.selectedAttempt(), allAttempts);
     }
 
     private FitResult fitWithTargetPageCount(ResumeRenderData data, PagePlan plan, List<PdfFillTarget> targets,
@@ -78,10 +83,10 @@ public final class FeedbackFitEngine {
 
             List<File> pagePdfFiles = new ArrayList<>();
             List<FitState> selectedPageStates = new ArrayList<>();
-            FitState baseState = FitState.fromMaxima(limits);
+            FitState baseState = FitState.fromMidpoint(limits);
 
             for (int page = 1; page <= plan.getTargetPageCount(); page++) {
-                FitState start = page == 1 ? baseState : copyFontFrom(baseState, FitState.fromMaxima(limits));
+                FitState start = page == 1 ? baseState : copyFontFrom(baseState, FitState.fromMidpoint(limits));
                 PdfFillTarget pageTarget = targetForPage(targets, page);
                 FitAttempt pageAttempt = fitSinglePlannedPage(data, plan, page, pageTarget, start,
                         new File(attemptsRoot, "page-" + page), debugAttempts, allAttempts);
@@ -108,6 +113,7 @@ public final class FeedbackFitEngine {
             allAttempts.add(finalAttempt);
             return new FitResult(finalAttempt, allAttempts);
         } catch (Exception e) {
+            log.error("Failed to fit and assemble PDF", e);
             throw new IllegalStateException("Failed to fit and assemble PDF", e);
         } finally {
             if (!debugAttempts && attemptsRoot != null) deleteRecursively(attemptsRoot);
@@ -153,7 +159,7 @@ public final class FeedbackFitEngine {
             PdfMetrics metrics = analyzer.analyze(pdfFile);
             String reason = validator.validate(metrics, 1,
                     target != null ? List.of(target) : List.of(),
-                    contentExpectationBuilder.build(data, plan));
+                    contentExpectationBuilder.buildForPlannedPage(data, plan, plannedPage));
             return new FitAttempt(attemptNumber, 1, copyState(state), metrics,
                     "OK".equals(reason), "PAGE" + plannedPage + ":" + reason,
                     htmlFile.getPath(), pdfFile.getPath());
@@ -241,12 +247,14 @@ public final class FeedbackFitEngine {
     }
 
     private boolean better(FitAttempt a, FitAttempt b) {
+        if (a == null) return false;
         if (b == null) return true;
         if (a.valid() != b.valid()) return a.valid();
         return a.metrics().actualPageCount() < b.metrics().actualPageCount();
     }
 
     private FitState mergeSelectedStates(List<FitState> states) {
+        if (states.isEmpty()) return FitState.fromMidpoint(limits);
         FitState result = new FitState();
         result.setBodyFontPx(states.get(0).getBodyFontPx());
         result.setPage1LineHeight(states.get(0).getPage1LineHeight());
