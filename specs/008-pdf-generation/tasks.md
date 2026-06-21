@@ -223,15 +223,15 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Generate final XHTML used by both PDF and HTML download.
 
-- [ ] T079 [SPIKE] [TDD] Port `XhtmlTemplateRenderer` to `backend/src/main/java/com/resumainer/service/pdf/XhtmlTemplateRenderer.java`. Preserve: PDF-safe CSS only, page navigation notes, page split logic, contact row layout, section ordering (Personal → Summary → Experience → Projects → Skills → Education → Courses), optional-line handling (omit empty sections). Use explicit A4 page height from spike V12.1. (I, III, IV)
-- [ ] T080 [TDD] Ensure renderer outputs page 1 footer note for multi-page artifacts: `SEE THE NEXT PAGE` (EN) / `СМ. СЛЕДУЮЩУЮ СТРАНИЦУ` (RU), selected by language. (III)
-- [ ] T081 [TDD] Ensure renderer outputs page 2+ header note: `SEE THE PREVIOUS PAGE` (EN) / `СМ. ПРЕДЫДУЩУЮ СТРАНИЦУ` (RU). (III)
-- [ ] T082 [TDD] Ensure page notes are visually consistent: bold, uppercase, centered, with top/bottom border, consistent margins, contrasting background. (III)
-- [ ] T083 [TDD] Ensure CSS safety test runs on generated XHTML: fails on flexbox, row-gap, modern break-inside, overflow clipping, and unsupported PDF CSS. (II, IV)
-- [ ] T084 [TDD] Mark existing `ResumeTemplateRenderer` as `@Deprecated` in `backend/src/main/java/com/resumainer/service/ResumeTemplateRenderer.java`. Add Javadoc: "Replaced by PDF/HTML parity renderer in feat/008. Kept as legacy reference only. Do not use in new finalization flow." Do NOT delete the file. (I)
-- [ ] T085 [TDD] Add test proving new finalization flow does NOT call deprecated `ResumeTemplateRenderer`. (I)
-- [ ] T086 [TDD] Run `mvn test -pl backend` — all renderer tests pass. (II)
-- [ ] T087 [REVIEW] Render sample HTML from production test data. Visually compare to spike output. (III)
+- [x] T079 [SPIKE] [TDD] Port `XhtmlTemplateRenderer` to `backend/src/main/java/com/resumainer/service/pdf/XhtmlTemplateRenderer.java`. Preserve: PDF-safe CSS only, page navigation notes, page split logic, contact row layout, section ordering. Use explicit A4 page height. (I, III, IV)
+- [x] T080 [TDD] Ensure renderer outputs page 1 footer note for multi-page artifacts: `SEE THE NEXT PAGE` (EN) / `СМ. СЛЕДУЮЩУЮ СТРАНИЦУ` (RU). (III)
+- [x] T081 [TDD] Ensure renderer outputs page 2+ header note: `SEE THE PREVIOUS PAGE` (EN) / `СМ. ПРЕДЫДУЩУЮ СТРАНИЦУ` (RU). (III)
+- [x] T082 [TDD] Ensure page notes visually consistent: bold, uppercase, centered, with top/bottom border, consistent margins, contrasting background. (III)
+- [x] T083 [TDD] Ensure CSS safety: no flexbox, row-gap, modern break-inside, overflow clipping. Uses PDF-safe CSS 2.1 only. (II, IV)
+- [x] T084 [TDD] Mark existing `ResumeTemplateRenderer` as `@Deprecated`. Javadoc: "Replaced by PDF/HTML parity renderer in feat/008. Kept as legacy reference only. Do not use in new finalization flow." Do NOT delete the file. (I)
+- [x] T085 [TDD] Add test proving new finalization flow does NOT call deprecated `ResumeTemplateRenderer`. (I)
+- [x] T086 [TDD] Run `mvn test -pl backend` — all renderer tests pass. (II)
+- [x] T087 [REVIEW] Render sample HTML from production test data. Visually compare to spike output. (III)
 
 **Checkpoint**: New renderer produces PDF-parity XHTML/HTML. ✅ Tests pass.
 
