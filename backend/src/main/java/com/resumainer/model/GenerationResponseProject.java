@@ -2,6 +2,8 @@ package com.resumainer.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class GenerationResponseProject {
@@ -11,6 +13,8 @@ public class GenerationResponseProject {
     private String location; private LocalDate startDate; private LocalDate endDate;
     private int orderInResume;
     private LocalDateTime createdAt; private LocalDateTime updatedAt;
+
+    private List<GenerationResponseProjectBullet> bullets = new ArrayList<>();
 
     public GenerationResponseProject() {}
 
@@ -26,4 +30,6 @@ public class GenerationResponseProject {
     public int getOrderInResume() { return orderInResume; } public void setOrderInResume(int orderInResume) { this.orderInResume = orderInResume; }
     public LocalDateTime getCreatedAt() { return createdAt; } public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; } public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public List<GenerationResponseProjectBullet> getBullets() { return bullets; } public void setBullets(List<GenerationResponseProjectBullet> bullets) { this.bullets = bullets; }
 }
