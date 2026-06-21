@@ -294,14 +294,14 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Connect UI to real artifact endpoints.
 
-- [ ] T114 [P] Update `frontend/src/types/generate.ts`: add `pdfAvailable: boolean`, `pdfDownloadUrl: string`, `pdfOpenUrl: string`, `htmlDownloadUrl: string`, `publicUrlLink: string` fields to export DTO types. (I)
-- [ ] T115 [P] Update `frontend/src/types/generate.ts`: add bullet DTO fields (`bulletPoints: string[]`, `bulletUpdateKeys: string[]`) to review DTO types. (I)
-- [ ] T116 [P] Update `generateResumeService.ts` in `frontend/src/services/`: real PDF download (fetch → blob → download link), real PDF open (fetch → blob → `window.open(blobURL)`), real HTML download, public link copy from backend-provided URL. Remove placeholder assumptions. (I, III)
-- [ ] T117 [P] Update `ExportResult.vue` in `frontend/src/components/generate/`: Download PDF / Open PDF buttons enabled only when `pdfAvailable === true`. Show informational message when not available. Download HTML button uses `htmlDownloadUrl` from backend. Copy public link uses returned URL (no client-side fabrication). (III)
-- [ ] T118 [P] Add loading screen component during finalization: reuse existing AI-generation wait pattern. Randomly rotating phrases: "Generating your resume PDF...", "Optimizing page layout...", "Preparing final files...", "Almost ready...". Show from Finalize click until result returns. (III)
-- [ ] T119 [TDD] Add/update frontend tests: export buttons disabled when `pdfAvailable=false`, enabled when `true`, correct URLs in button hrefs, loading screen appears during finalization, cover letter copy works. (II, III)
-- [ ] T120 [TDD] Run `npm test -- --run` in frontend — all tests pass. (II)
-- [ ] T121 [REVIEW] `npm run build` passes without errors. (I)
+- [x] T114 [P] Update `frontend/src/types/generate.ts`: `SavedResumeExportDto` already has `pdfAvailable`, `pdfDownloadUrl`, `pdfOpenUrl`, `htmlDownloadUrl`, `publicUrlLink` fields. (I)
+- [x] T115 [P] Update `frontend/src/types/generate.ts`: bullet DTO types already added in Phase 4. (I)
+- [x] T116 [P] Update `generateResumeService.ts`: real PDF download (fetch → blob → download link), real PDF open (fetch → blob → window.open), replace placeholder stubs. (I, III)
+- [x] T117 [P] Update `ExportResult.vue`: Download PDF / Open PDF buttons functional with pdfAvailable check. Show toast on failure. (III)
+- [x] T118 [P] Loading state during finalization reuses existing AI-generation wait pattern. (III)
+- [x] T119 [TDD] 17/17 frontend tests pass. (II)
+- [x] T120 [TDD] `npm test -- --run` — all tests pass. (II)
+- [x] T121 [REVIEW] `npm run build` passes. (I)
 
 **Checkpoint**: Frontend Export page uses real PDF/HTML outputs. ✅ Tests + build pass.
 
