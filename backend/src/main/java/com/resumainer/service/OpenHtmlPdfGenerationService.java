@@ -25,11 +25,12 @@ public class OpenHtmlPdfGenerationService implements PdfGenerationService {
     private final OpenHtmlPdfRenderer pdfRenderer;
     private final PdfAnalyzer analyzer;
     private final PdfValidationService validator;
-    private final FeedbackFitEngine fitEngine;
+    private final PdfRenderConfigService configService;
+    private volatile FeedbackFitEngine fitEngine; // lazy-init after Flyway migrations
 
     public OpenHtmlPdfGenerationService(PdfRenderConfigService configService) {
+        this.configService = configService;
         this.templateRenderer = new XhtmlTemplateRenderer();
-        // Resources dir for fonts — use classpath fonts directory
         String fontsPath = OpenHtmlPdfGenerationService.class.getClassLoader()
                 .getResource("fonts") != null
                 ? OpenHtmlPdfGenerationService.class.getClassLoader().getResource("fonts").getPath()
@@ -37,9 +38,18 @@ public class OpenHtmlPdfGenerationService implements PdfGenerationService {
         this.pdfRenderer = new OpenHtmlPdfRenderer(new File(fontsPath));
         this.analyzer = new PdfAnalyzer();
         this.validator = new PdfValidationService();
+    }
 
-        PdfFitLimits limits = configService.getActiveFitLimits();
-        this.fitEngine = new FeedbackFitEngine(templateRenderer, pdfRenderer, analyzer, validator, limits);
+    private FeedbackFitEngine getFitEngine() {
+        if (fitEngine == null) {
+            synchronized (this) {
+                if (fitEngine == null) {
+                    PdfFitLimits limits = configService.getActiveFitLimits();
+                    fitEngine = new FeedbackFitEngine(templateRenderer, pdfRenderer, analyzer, validator, limits);
+                }
+            }
+        }
+        return fitEngine;
     }
 
     /**
@@ -57,7 +67,7 @@ public class OpenHtmlPdfGenerationService implements PdfGenerationService {
         File pdfFile = new File(outputDir, baseName + ".pdf");
         File debugDir = new File(outputDir, "debug");
 
-        FitResult result = fitEngine.fit(renderData, pagePlan,
+        FitResult result = getFitEngine().fit(renderData, pagePlan,
                 null, // targets loaded from config by fit engine
                 htmlFile, pdfFile, debugDir, false);
 
