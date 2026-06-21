@@ -148,6 +148,21 @@ public class SavedResumeDao {
         }
     }
 
+    /** Feature 008: Find PDF file path by public code for public route serving. */
+    public String findPdfPathByPublicCode(String publicCode) {
+        String sql = "SELECT pdf_file_path FROM saved_resumes WHERE public_code = ? AND is_deleted = FALSE AND pdf_file_path IS NOT NULL";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, publicCode);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getString("pdf_file_path") : null;
+            }
+        } catch (SQLException e) {
+            log.error("Error finding PDF path for public code: {}", publicCode, e);
+            throw new RuntimeException("Database error looking up public code", e);
+        }
+    }
+
     /**
      * Finds all saved resumes for a generation request, owner-scoped.
      */

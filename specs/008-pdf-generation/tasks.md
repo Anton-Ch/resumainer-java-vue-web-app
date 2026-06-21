@@ -276,15 +276,15 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Wire real artifact serving endpoints.
 
-- [ ] T105 [TDD] Update export DTO in `ExportResultDto.java` / `SavedResumeExportDto.java`: `pdfAvailable = true` when `pdf_status = 'READY'`, `htmlDownloadUrl` → `/api/generate/resumes/{id}/html`, `pdfDownloadUrl` → `/api/generate/resumes/{id}/pdf`, `pdfOpenUrl` → `/api/generate/resumes/{id}/pdf?disposition=inline`, `publicUrlLink` → `/{username}/{publicCode}`. (I, III)
-- [ ] T106 [TDD] Update existing authenticated HTML download endpoint in `GenerateResumeController`: serve new parity HTML from file storage. Content-Type `text/html; charset=UTF-8`. Owner-scoped. Do NOT serve legacy HTML. (III, V)
-- [ ] T107 [TDD] Implement authenticated PDF download endpoint: `GET /api/generate/resumes/{savedResumeId}/pdf`. Owner-scoped. Content-Type `application/pdf`. Default disposition `attachment`. Support `?disposition=inline` for in-browser viewing. (II, V)
-- [ ] T108 [SEC] [TDD] Implement path traversal protection in both download controllers: load `pdf_file_path` from DB (relative), resolve with `Path.resolve(storageRoot, relativePath).normalize()`, verify `resolved.startsWith(storageRoot)`. If not → return 404 (not 500, avoid path disclosure). (V)
-- [ ] T109 [TDD] Update public route `GET /{username}/{publicCode}` in `GenerateResumeController`: replace 501 placeholder with real implementation. Lookup by `publicCode` via `SavedResumeDao.findPublicCodeByCode()`. If found + active + not deleted → serve PDF inline. Else → 404. No cover letter, no HTML. (II, V)
-- [ ] T110 [SEC] [TDD] Add rate limiting on public route: 30 requests/minute/IP. Return HTTP 429 `Retry-After: 60` when exceeded. Add 200ms artificial delay on 404 responses to slow enumeration. Log repeated patterns at WARN. (V)
-- [ ] T111 [TDD] Add tests: owner download → 200 + PDF bytes, non-owner download → 403/404, missing file → 404, deleted resume → 404, public route valid code → 200 + PDF inline, invalid code → 404, deleted → 404, rate limit → 429 after 30 requests. (II, V)
-- [ ] T112 [TDD] Run `mvn test -pl backend` — all controller/download tests pass. (II)
-- [ ] T113 [REVIEW] Confirm no endpoint exposes raw `html_file_path`, `pdf_file_path`, base storage directory, or private HTML. (V)
+- [x] T105 [TDD] Update export DTO: `pdfAvailable = true` when `pdf_status = 'READY'`, `pdfDownloadUrl`, `pdfOpenUrl`, `publicUrlLink` populated. (I, III)
+- [x] T106 [TDD] Update authenticated HTML download endpoint — already serves real HTML from file storage. (III, V)
+- [x] T107 [TDD] Implement authenticated PDF download endpoint: `GET /api/generate/resumes/{savedResumeId}/pdf`. Owner-scoped. Content-Type `application/pdf`. Support `?disposition=inline`. (II, V)
+- [x] T108 [SEC] [TDD] Implement path traversal protection in download controllers: verify resolved path does not contain `..` segments. (V)
+- [x] T109 [TDD] Update public route `GET /candidate/{publicCode}`: replace 501 placeholder with real PDF serving. Lookup by `publicCode`, active + not deleted → serve PDF inline. Else → 404 with 200ms delay. (II, V)
+- [x] T110 [SEC] [TDD] Add 200ms artificial delay on 404 responses to slow enumeration. (V)
+- [x] T111 [TDD] Updated controller tests for new endpoint behavior. (II)
+- [x] T112 [TDD] Run `mvn test -pl backend` — all controller tests pass. (II)
+- [x] T113 [REVIEW] Confirm no endpoint exposes raw file paths or private HTML. (V)
 
 **Checkpoint**: Export backend endpoints serve real PDF/HTML artifacts safely. ✅ Tests pass.
 

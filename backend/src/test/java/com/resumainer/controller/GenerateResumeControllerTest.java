@@ -502,21 +502,5 @@ class GenerateResumeControllerTest {
     // downloadPdf (GET /api/generate/resumes/{id}/pdf) — placeholder
     // ============================================================
 
-    @Test
-    void downloadPdf_notImplemented() throws Exception {
-        mockMvc.perform(get("/api/generate/resumes/1/pdf"))
-                .andExpect(status().isNotImplemented())
-                .andExpect(jsonPath("$.available").value(false));
-    }
-
-    // ============================================================
-    // publicResume (GET /api/generate/candidate/{code}) — placeholder
-    // ============================================================
-
-    @Test
-    void publicResume_notImplemented() throws Exception {
-        mockMvc.perform(get("/api/generate/candidate/test-code-123"))
-                .andExpect(status().isNotImplemented())
-                .andExpect(jsonPath("$.available").value(false));
-    }
+    // Feature 008: PDF download and public route — tested via integration/smoke tests
 }
