@@ -149,7 +149,21 @@ public class GenerationResponsePersistenceService {
             exp.setStartDate(parseDate(item.startDate));
             exp.setEndDate(parseDate(item.endDate));
             exp.setOrderInResume(i);
-            responseDao.insertExperience(exp, conn);
+            UUID expId = responseDao.insertExperience(exp, conn);
+
+            // Persist bullet points (Feature 008)
+            if (item.bulletPoints != null && !item.bulletPoints.isEmpty()) {
+                for (int bi = 0; bi < item.bulletPoints.size(); bi++) {
+                    String bulletText = item.bulletPoints.get(bi);
+                    if (bulletText != null && !bulletText.trim().isEmpty()) {
+                        GenerationResponseExperienceBullet bullet = new GenerationResponseExperienceBullet();
+                        bullet.setExperienceId(expId);
+                        bullet.setBulletOrder(bi);
+                        bullet.setBulletText(bulletText);
+                        responseDao.insertExperienceBullet(bullet, conn);
+                    }
+                }
+            }
         }
     }
 
@@ -180,7 +194,21 @@ public class GenerationResponsePersistenceService {
             project.setStartDate(parseDate(item.startDate));
             project.setEndDate(parseDate(item.endDate));
             project.setOrderInResume(i);
-            responseDao.insertProject(project, conn);
+            UUID projId = responseDao.insertProject(project, conn);
+
+            // Persist bullet points (Feature 008)
+            if (item.bulletPoints != null && !item.bulletPoints.isEmpty()) {
+                for (int bi = 0; bi < item.bulletPoints.size(); bi++) {
+                    String bulletText = item.bulletPoints.get(bi);
+                    if (bulletText != null && !bulletText.trim().isEmpty()) {
+                        GenerationResponseProjectBullet bullet = new GenerationResponseProjectBullet();
+                        bullet.setProjectId(projId);
+                        bullet.setBulletOrder(bi);
+                        bullet.setBulletText(bulletText);
+                        responseDao.insertProjectBullet(bullet, conn);
+                    }
+                }
+            }
         }
     }
 

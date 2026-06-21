@@ -58,6 +58,7 @@ public class AiResponseValidator {
             validateWorkExperienceBudget(variant, profilePayload);
             validateCourses(variant, profilePayload);
             validateProjects(variant, profilePayload);
+            validateBulletPoints(variant);
         }
     }
 
@@ -338,6 +339,44 @@ public class AiResponseValidator {
                 throw new IllegalArgumentException(
                         "AI response validation failed in " + context
                                 + ": duplicate project sourceId: " + item.sourceId);
+            }
+        }
+    }
+
+    private void validateBulletPoints(AiResponseParser.ParsedVariant variant) {
+        String context = variantContext(variant);
+
+        // Validate work experience bullets
+        if (variant.experience != null) {
+            for (int i = 0; i < variant.experience.size(); i++) {
+                AiResponseParser.ExperienceItem exp = variant.experience.get(i);
+                validateBullets(exp.bulletPoints, "workExperience[" + i + "]", context);
+            }
+        }
+
+        // Validate project bullets
+        if (variant.projects != null) {
+            for (int i = 0; i < variant.projects.size(); i++) {
+                AiResponseParser.ProjectItem proj = variant.projects.get(i);
+                validateBullets(proj.bulletPoints, "projects[" + i + "]", context);
+            }
+        }
+    }
+
+    private void validateBullets(List<String> bullets, String parentPath, String context) {
+        if (bullets == null || bullets.isEmpty()) return; // bullets are optional in MVP
+        for (int j = 0; j < bullets.size(); j++) {
+            String bullet = bullets.get(j);
+            if (bullet == null || bullet.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        "AI response validation failed in " + context
+                                + ": " + parentPath + ".bulletPoints[" + j + "] bullet point is empty");
+            }
+            if (bullet.length() > 250) {
+                throw new IllegalArgumentException(
+                        "AI response validation failed in " + context
+                                + ": " + parentPath + ".bulletPoints[" + j + "] bullet point exceeds maximum length: "
+                                + bullet.length() + " > 250");
             }
         }
     }

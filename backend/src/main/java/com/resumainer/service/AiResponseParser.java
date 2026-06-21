@@ -48,6 +48,7 @@ public class AiResponseParser {
         public String startDate;
         public String endDate;
         public boolean isFirstPage = true;
+        public List<String> bulletPoints = new ArrayList<>();
     }
 
     public static class CourseItem {
@@ -64,6 +65,7 @@ public class AiResponseParser {
         public String description;
         public String startDate;
         public String endDate;
+        public List<String> bulletPoints = new ArrayList<>();
     }
 
     public static class SkillItem {
@@ -269,6 +271,7 @@ public class AiResponseParser {
                 e.startDate = getString(item, "startDate", "start_date");
                 e.endDate = getString(item, "endDate", "end_date");
                 e.isFirstPage = getBoolean(item, "isFirstPage", "is_first_page", true);
+                e.bulletPoints = parseBulletPoints(item);
                 if (e.jobTitle != null) list.add(e);
             }
         }
@@ -303,6 +306,7 @@ public class AiResponseParser {
                 p.description = getString(item, "description");
                 p.startDate = getString(item, "startDate", "start_date");
                 p.endDate = getString(item, "endDate", "end_date");
+                p.bulletPoints = parseBulletPoints(item);
                 if (p.projectName != null) list.add(p);
             }
         }
@@ -377,5 +381,19 @@ public class AiResponseParser {
         if (field == null) field = node.get(key2);
         if (field != null && field.isBoolean()) return field.asBoolean();
         return defaultValue;
+    }
+
+    private List<String> parseBulletPoints(JsonNode item) {
+        List<String> bullets = new ArrayList<>();
+        JsonNode arr = item.get("bulletPoints");
+        if (arr == null) arr = item.get("bullet_points");
+        if (arr != null && arr.isArray()) {
+            for (JsonNode bullet : arr) {
+                if (bullet.isTextual()) {
+                    bullets.add(bullet.asText());
+                }
+            }
+        }
+        return bullets;
     }
 }

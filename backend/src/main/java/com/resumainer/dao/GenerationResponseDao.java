@@ -50,7 +50,7 @@ public class GenerationResponseDao {
             "INSERT INTO generation_response_experience "
                     + "(response_id, source_id, job_title, company_name, description, location, "
                     + "is_first_page, start_date, end_date, order_in_resume) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
 
     private static final String SELECT_EXPERIENCE_BY_RESPONSE =
             "SELECT * FROM generation_response_experience WHERE response_id = ? ORDER BY order_in_resume";
@@ -68,7 +68,7 @@ public class GenerationResponseDao {
     private static final String INSERT_PROJECT =
             "INSERT INTO generation_response_project "
                     + "(response_id, source_id, project_name, role, description, location, start_date, end_date, order_in_resume) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
 
     private static final String SELECT_PROJECTS_BY_RESPONSE =
             "SELECT * FROM generation_response_project WHERE response_id = ? ORDER BY order_in_resume";
@@ -126,7 +126,7 @@ public class GenerationResponseDao {
         }
     }
 
-    public void insertExperience(GenerationResponseExperience exp, Connection conn) throws SQLException {
+    public UUID insertExperience(GenerationResponseExperience exp, Connection conn) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement(INSERT_EXPERIENCE)) {
             stmt.setObject(1, exp.getResponseId());
             stmt.setString(2, exp.getSourceId());
@@ -138,7 +138,14 @@ public class GenerationResponseDao {
             stmt.setDate(8, Date.valueOf(exp.getStartDate()));
             setDateOrNull(stmt, 9, exp.getEndDate());
             stmt.setInt(10, exp.getOrderInResume());
-            stmt.executeUpdate();
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    UUID id = (UUID) rs.getObject("id");
+                    exp.setId(id);
+                    return id;
+                }
+            }
+            throw new SQLException("Insert experience did not return an id");
         }
     }
 
@@ -155,7 +162,7 @@ public class GenerationResponseDao {
         }
     }
 
-    public void insertProject(GenerationResponseProject project, Connection conn) throws SQLException {
+    public UUID insertProject(GenerationResponseProject project, Connection conn) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement(INSERT_PROJECT)) {
             stmt.setObject(1, project.getResponseId());
             stmt.setString(2, project.getSourceId());
@@ -166,7 +173,14 @@ public class GenerationResponseDao {
             stmt.setDate(7, Date.valueOf(project.getStartDate()));
             setDateOrNull(stmt, 8, project.getEndDate());
             stmt.setInt(9, project.getOrderInResume());
-            stmt.executeUpdate();
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    UUID id = (UUID) rs.getObject("id");
+                    project.setId(id);
+                    return id;
+                }
+            }
+            throw new SQLException("Insert project did not return an id");
         }
     }
 

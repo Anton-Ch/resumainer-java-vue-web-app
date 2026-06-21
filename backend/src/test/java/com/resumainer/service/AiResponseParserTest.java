@@ -447,6 +447,71 @@ class AiResponseParserTest {
                 "project sourceId must be preserved");
     }
 
+    @Test
+    void parse_parsesWorkExperienceBulletPoints() {
+        String json = variantJson().replace(
+                "\"description\": \"Gathered requirements.\"",
+                "\"description\": \"Gathered requirements.\",\n                  \"bulletPoints\": [\"Reduced reporting time by 30%\", \"Automated 5 manual workflows\"]"
+        );
+        List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+
+        AiResponseParser.ExperienceItem exp = variants.get(0).experience.get(0);
+        assertNotNull(exp.bulletPoints, "bulletPoints must not be null");
+        assertEquals(2, exp.bulletPoints.size());
+        assertEquals("Reduced reporting time by 30%", exp.bulletPoints.get(0));
+        assertEquals("Automated 5 manual workflows", exp.bulletPoints.get(1));
+    }
+
+    @Test
+    void parse_parsesProjectBulletPoints() {
+        String json = variantJson().replace(
+                "\"description\": \"Optimized reporting workflow.\"",
+                "\"description\": \"Optimized reporting workflow.\",\n                  \"bulletPoints\": [\"Improved query performance by 40%\"]"
+        );
+        List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+
+        AiResponseParser.ProjectItem proj = variants.get(0).projects.get(0);
+        assertNotNull(proj.bulletPoints, "bulletPoints must not be null");
+        assertEquals(1, proj.bulletPoints.size());
+        assertEquals("Improved query performance by 40%", proj.bulletPoints.get(0));
+    }
+
+    @Test
+    void parse_bulletPointsMissing_returnsEmptyList() {
+        String json = variantJson(); // no bulletPoints in default JSON
+        List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+
+        AiResponseParser.ExperienceItem exp = variants.get(0).experience.get(0);
+        assertNotNull(exp.bulletPoints, "bulletPoints must not be null when missing");
+        assertTrue(exp.bulletPoints.isEmpty(), "bulletPoints must be empty when not in JSON");
+    }
+
+    @Test
+    void parse_bulletPointsEmptyArray_returnsEmptyList() {
+        String json = variantJson().replace(
+                "\"description\": \"Gathered requirements.\"",
+                "\"description\": \"Gathered requirements.\",\n                  \"bulletPoints\": []"
+        );
+        List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+
+        AiResponseParser.ExperienceItem exp = variants.get(0).experience.get(0);
+        assertNotNull(exp.bulletPoints);
+        assertTrue(exp.bulletPoints.isEmpty());
+    }
+
+    @Test
+    void parse_bulletPointsWhitespaceOnly_keptForLaterValidation() {
+        String json = variantJson().replace(
+                "\"description\": \"Gathered requirements.\"",
+                "\"description\": \"Gathered requirements.\",\n                  \"bulletPoints\": [\"   \"]"
+        );
+        List<AiResponseParser.ParsedVariant> variants = parser.parse(json, "ENGLISH_ONLY", "BALANCED");
+
+        AiResponseParser.ExperienceItem exp = variants.get(0).experience.get(0);
+        assertEquals(1, exp.bulletPoints.size());
+        assertEquals("   ", exp.bulletPoints.get(0)); // parser keeps, validator rejects
+    }
+
     private String variantJson() {
         return variantJson("Business Analyst", "Summary");
     }
