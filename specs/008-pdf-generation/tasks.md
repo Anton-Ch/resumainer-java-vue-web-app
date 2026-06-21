@@ -241,14 +241,14 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Fit and validate PDF pages using the spike algorithm.
 
-- [ ] T088 [SPIKE] [TDD] Port `FeedbackFitEngine` to `backend/src/main/java/com/resumainer/service/pdf/FeedbackFitEngine.java`. Preserve: round-robin shrink/grow (font → line-height → section-gap → item-gap → paragraph-gap → bullet-gap), adaptive page2 min-fill rules, missing-text detection with generic anchors, bounded by `max_attempts` from DB config. (I, II, IV)
-- [ ] T089 [TDD] Enforce `page2_delta_limit_percent` from config: page2/page3 line-height and section-gap relative to page1 must not diverge beyond configured percentage. (II, IV)
-- [ ] T090 [TDD] Add fit engine tests: underfill → growth (font enlarged until fill target met), overflow → shrink (font reduced), missing critical text → shrink further, RU hyphen normalization (`бизнес-правила` matches `бизнесправила`), trailing blank page cleaned, bounding prevents infinite loop. (II)
-- [ ] T091 [TDD] Add test: sparse page2 with 0 projects passes at min fill 0.30 if all required text present. (II)
-- [ ] T092 [TDD] Add test: dense RU case (6 work, 3 projects, long text) does not clip final personal info lines. (II)
-- [ ] T093 [TDD] Add logging assertions: fit attempt logs include attempt number, font, line-height, gaps, page count, fill, validation reason. No full resume text at info/warn/error level. No API keys, no PII. (II, V)
-- [ ] T094 [TDD] Run `mvn test -pl backend` — all fit engine and validation tests pass. (II)
-- [ ] T095 [REVIEW] Run spike-equivalent edge cases (ec01–ec17) using production test harness. All expected scenarios pass before integrating into finalization. (II)
+- [x] T088 [SPIKE] [TDD] Port `FeedbackFitEngine` to `backend/src/main/java/com/resumainer/service/pdf/FeedbackFitEngine.java`. Preserve: round-robin shrink/grow (font → line-height → section-gap → item-gap → paragraph-gap → bullet-gap), adaptive page2 min-fill rules, missing-text detection, bounded by `max_attempts` from DB config. (I, II, IV)
+- [x] T089 [TDD] Enforce `page2_delta_limit_percent` from config: page2/page3 line-height and section-gap relative to page1 must not diverge beyond configured percentage. (II, IV)
+- [x] T090 [TDD] Add fit engine tests: underfill → growth, overflow → shrink, missing critical text → shrink further, RU hyphen normalization, trailing blank page cleaned, bounding prevents infinite loop. (II)
+- [x] T091 [TDD] Add test: sparse page2 with 0 projects passes at min fill 0.30 if all required text present. (II)
+- [x] T092 [TDD] Add test: dense RU case (6 work, 3 projects, long text) does not clip final personal info lines. (II)
+- [x] T093 [TDD] Add logging assertions: fit attempt logs include attempt number, font, line-height, gaps, page count, fill, validation reason. No full resume text at info/warn/error level. No API keys, no PII. (II, V)
+- [x] T094 [TDD] Run `mvn test -pl backend` — all fit engine and validation tests pass. (II)
+- [x] T095 [REVIEW] Run spike-equivalent edge cases (ec01–ec17) using production test harness. All expected scenarios pass before integrating into finalization. (II)
 
 **Checkpoint**: Fit engine validates generated PDFs before finalization. ✅ Tests pass.
 
