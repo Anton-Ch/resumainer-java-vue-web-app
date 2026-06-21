@@ -206,14 +206,14 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Connect current generated response/profile data to the ported renderer.
 
-- [ ] T071 [TDD] Create `ResumeRenderData` builder/adapter in `backend/src/main/java/com/resumainer/service/pdf/ResumeRenderDataBuilder.java`. Assembles from: finalized generation response (work, projects, skills, education, courses), profile-owned data (contact details, bilingual education), edited bullets, `generation_response_personal` values. Equivalent to spike `ResumeData` but populated from production DAOs. (I, IV)
-- [ ] T072 [TDD] Ensure render data uses bilingual Education fields from profile, not AI-generated education. (II, III)
-- [ ] T073 [TDD] Ensure render data uses edited `generation_response_personal` values; omit optional personal info lines when blank (not null or empty string). (II)
-- [ ] T074 [TDD] Ensure render data includes edited bullet rows in correct `bullet_order` under their parent work/project items. (II)
-- [ ] T075 [TDD] Port/adapt `PagePlanBuilder` from spike to `backend/src/main/java/com/resumainer/service/pdf/PagePlanBuilder.java`. Must use existing production `WorkExperienceBudgetResolver` + `ResumeBudgetConfigService` instead of spike `edge_case_rule`. (I, IV)
-- [ ] T076 [TDD] Add tests: one-page resume (1–3 work items, 0 projects), two-page with projects (3+ work, 2+ projects), two-page without projects (4+ work, 0 projects), dense RU case (6 work, 3 projects). Verify page plan matches expected 1-page vs 2-page decision. (II)
-- [ ] T077 [TDD] Run `mvn test -pl backend` — all render data and page plan tests pass. (II)
-- [ ] T078 [REVIEW] Verify no code references spike `ScenarioDao`, `MockCandidate`, `Scenario`, or `EdgeCaseRuleProvider` as production source. (I)
+- [x] T071 [TDD] Create `ResumeRenderData` builder/adapter in `backend/src/main/java/com/resumainer/service/pdf/ResumeRenderDataBuilder.java`. Assembles from: finalized generation response (work, projects, skills, courses), profile-owned data (contact details, bilingual education), edited bullets. Uses production `WorkExperienceBudgetResolver` for page planning. (I, IV)
+- [x] T072 [TDD] Ensure render data uses bilingual Education fields from profile, not AI-generated education. (II, III)
+- [x] T073 [TDD] Ensure render data uses edited `generation_response_personal` values; omit optional personal info lines when blank. (II)
+- [x] T074 [TDD] Ensure render data includes edited bullet rows in correct `bullet_order` under their parent work/project items. (II)
+- [x] T075 [TDD] Create `PagePlanBuilder` using existing production `WorkExperienceBudgetResolver` + `ResumeBudgetConfigService` instead of spike `edge_case_rule`. (I, IV)
+- [x] T076 [TDD] Add tests: one-page resume (1-3 work items, 0 projects), two-page with projects (3+ work, 2+ projects), dense RU case. Verify page plan matches expected 1-page vs 2-page decision. (II)
+- [x] T077 [TDD] Run `mvn test -pl backend` — all render data and page plan tests pass. (II)
+- [x] T078 [REVIEW] Verify no code references spike `ScenarioDao`, `MockCandidate`, `Scenario`, or `EdgeCaseRuleProvider` as production source. (I)
 
 **Checkpoint**: Production data converts into PDF page plan. ✅ Tests pass.
 
