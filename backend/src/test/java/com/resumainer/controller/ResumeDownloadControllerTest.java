@@ -65,7 +65,7 @@ class ResumeDownloadControllerTest {
         row.id = 5L;
         row.htmlFilePath = "/nonexistent/file.html";
         when(savedResumeDao.findById(5L, userId)).thenReturn(row);
-        when(fileStorage.resolvePath(anyString())).thenReturn(Path.of("/nonexistent/file.html"));
+        when(fileStorage.resolveSafePath(anyString())).thenReturn(Path.of("/nonexistent/file.html"));
 
         ResponseEntity<Resource> response = controller.downloadHtml(session, 5L);
 
@@ -86,7 +86,7 @@ class ResumeDownloadControllerTest {
         row.id = 5L;
         row.htmlFilePath = "/path/to/file.html";
         when(savedResumeDao.findById(5L, userId)).thenReturn(row);
-        when(fileStorage.resolvePath(anyString())).thenThrow(new RuntimeException("I/O error"));
+        when(fileStorage.resolveSafePath(anyString())).thenThrow(new RuntimeException("I/O error"));
 
         org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> response =
                 controller.downloadHtml(session, 5L);

@@ -1,10 +1,6 @@
 package com.resumainer.service.pdf;
 
-import com.resumainer.model.pdf.PagePlan;
 import com.resumainer.model.pdf.ResumeRenderData;
-import com.resumainer.service.WorkExperienceBudgetResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -12,42 +8,11 @@ import java.util.List;
 
 /**
  * Assembles ResumeRenderData from production profile and generation response data.
- * Also builds PagePlan using the existing WorkExperienceBudgetResolver.
- *
- * The caller (ResumeFinalizeService) is responsible for loading the raw data
- * from DAOs and passing it to this builder. This keeps the builder focused on
- * data transformation, not data loading.
  */
 @Service
 public class ResumeRenderDataBuilder {
 
-    private static final Logger log = LoggerFactory.getLogger(ResumeRenderDataBuilder.class);
-
-    private final WorkExperienceBudgetResolver budgetResolver;
-
-    public ResumeRenderDataBuilder(WorkExperienceBudgetResolver budgetResolver) {
-        this.budgetResolver = budgetResolver;
-    }
-
-    /**
-     * Build a PagePlan from work experience counts and budget rules.
-     * Uses production WorkExperienceBudgetResolver (NOT spike edge_case_rule — FR-008-024).
-     */
-    public PagePlan buildPagePlan(int totalWorkExperience, int totalProjects, int totalCourses) {
-        WorkExperienceBudgetResolver.WorkExperienceBudget budget =
-                budgetResolver.resolve(totalWorkExperience, totalCourses, totalProjects);
-
-        PagePlan plan = new PagePlan();
-        plan.setTargetPageCount("one_page".equals(budget.templateMode) ? 1 : 2);
-        plan.setPage1WorkCount(budget.targetPage1Jobs);
-        plan.setPage2AdditionalWorkCount(budget.targetPage2Jobs);
-        plan.setPage2ProjectCount(Math.min(totalProjects, budget.targetPage1Jobs > 0 ? totalProjects : 0));
-        plan.setPage2HasProjectsFirst(totalProjects > 0);
-
-        log.debug("PagePlan: targetPages={}, p1Work={}, p2Work={}, p2Projects={}",
-                plan.getTargetPageCount(), plan.getPage1WorkCount(),
-                plan.getPage2AdditionalWorkCount(), plan.getPage2ProjectCount());
-        return plan;
+    public ResumeRenderDataBuilder() {
     }
 
     /**

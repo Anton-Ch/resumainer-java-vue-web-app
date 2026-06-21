@@ -22,40 +22,24 @@ public class FitState {
 
     public FitState() {}
 
-    /** Start fitting from maximum values (engine shrinks first). */
-    public static FitState fromMaxima(PdfFitLimits limits) {
+    /** Start fitting from spike V12.1 default values (from config). */
+    public static FitState defaults(PdfFitLimits limits) {
         FitState s = new FitState();
-        s.bodyFontPx = limits.getBodyFontMaxPx().doubleValue();
-        s.page1LineHeight = limits.getLineHeightMax().doubleValue();
-        s.page2LineHeight = limits.getLineHeightMax().doubleValue();
-        s.page3LineHeight = limits.getLineHeightMax().doubleValue();
-        s.page1SectionGapPx = limits.getSectionGapMaxPx().doubleValue();
-        s.page2SectionGapPx = limits.getSectionGapMaxPx().doubleValue();
-        s.page3SectionGapPx = limits.getSectionGapMaxPx().doubleValue();
-        s.itemGapPx = limits.getItemGapMaxPx().doubleValue();
-        s.paragraphGapPx = limits.getParagraphGapMaxPx().doubleValue();
-        s.bulletGapPx = limits.getBulletGapMaxPx().doubleValue();
+        s.bodyFontPx = d(limits.getBodyFontDefaultPx(), 12.5);
+        s.page1LineHeight = d(limits.getLineHeightDefault(), 1.35);
+        s.page2LineHeight = d(limits.getLineHeightDefault(), 1.35);
+        s.page3LineHeight = d(limits.getLineHeightDefault(), 1.35);
+        s.page1SectionGapPx = d(limits.getSectionGapDefaultPx(), 15.0);
+        s.page2SectionGapPx = d(limits.getSectionGapDefaultPx(), 15.0);
+        s.page3SectionGapPx = d(limits.getSectionGapDefaultPx(), 15.0);
+        s.itemGapPx = d(limits.getItemGapDefaultPx(), 9.0);
+        s.paragraphGapPx = d(limits.getParagraphGapDefaultPx(), 5.0);
+        s.bulletGapPx = d(limits.getBulletGapDefaultPx(), 3.0);
         return s;
     }
 
-    /** Start fitting from midpoints (defaults in spike). Engine can grow or shrink from here. */
-    public static FitState fromMidpoint(PdfFitLimits limits) {
-        FitState s = new FitState();
-        s.bodyFontPx = mid(limits.getBodyFontMinPx(), limits.getBodyFontMaxPx());
-        s.page1LineHeight = mid(limits.getLineHeightMin(), limits.getLineHeightMax());
-        s.page2LineHeight = mid(limits.getLineHeightMin(), limits.getLineHeightMax());
-        s.page3LineHeight = mid(limits.getLineHeightMin(), limits.getLineHeightMax());
-        s.page1SectionGapPx = mid(limits.getSectionGapMinPx(), limits.getSectionGapMaxPx());
-        s.page2SectionGapPx = mid(limits.getSectionGapMinPx(), limits.getSectionGapMaxPx());
-        s.page3SectionGapPx = mid(limits.getSectionGapMinPx(), limits.getSectionGapMaxPx());
-        s.itemGapPx = mid(limits.getItemGapMinPx(), limits.getItemGapMaxPx());
-        s.paragraphGapPx = mid(limits.getParagraphGapMinPx(), limits.getParagraphGapMaxPx());
-        s.bulletGapPx = mid(limits.getBulletGapMinPx(), limits.getBulletGapMaxPx());
-        return s;
-    }
-
-    private static double mid(java.math.BigDecimal min, java.math.BigDecimal max) {
-        return (min.doubleValue() + max.doubleValue()) / 2.0;
+    private static double d(java.math.BigDecimal v, double fallback) {
+        return v != null ? v.doubleValue() : fallback;
     }
 
     public double getBodyFontPx() { return bodyFontPx; }

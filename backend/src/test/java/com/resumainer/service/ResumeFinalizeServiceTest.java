@@ -4,6 +4,7 @@ import com.resumainer.dao.*;
 import com.resumainer.model.ResumeGenerationRequest;
 import com.resumainer.model.ResumeGenerationResponse;
 import com.resumainer.service.ai.AiClientException;
+import com.resumainer.service.pdf.PagePlanBuilder;
 import com.resumainer.service.pdf.ResumeRenderDataBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,8 +37,10 @@ class ResumeFinalizeServiceTest {
     @Mock private ResumeTemplateRenderer templateRenderer;
     @Mock private GeneratedFileStorageService fileStorage;
     @Mock private ProfilePromptDao profilePromptDao;
+    @Mock private UserDao userDao;
     @Mock private OpenHtmlPdfGenerationService pdfGenerationService;
     @Mock private ResumeRenderDataBuilder renderDataBuilder;
+    @Mock private PagePlanBuilder pagePlanBuilder;
 
     private ResumeFinalizeService service;
     private final UUID requestId = UUID.randomUUID();
@@ -47,8 +50,8 @@ class ResumeFinalizeServiceTest {
     void setUp() {
         service = new ResumeFinalizeService(
                 dataSource, requestDao, responseDao, personalDao,
-                savedResumeDao, templateRenderer, fileStorage, profilePromptDao,
-                pdfGenerationService, renderDataBuilder);
+                savedResumeDao, templateRenderer, fileStorage, profilePromptDao, userDao,
+                pdfGenerationService, renderDataBuilder, pagePlanBuilder);
 
         // Default: request exists
         ResumeGenerationRequest request = new ResumeGenerationRequest();
