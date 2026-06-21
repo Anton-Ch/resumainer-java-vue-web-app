@@ -75,6 +75,28 @@ public class GeneratedFileStorageService {
         return Paths.get(relativePath).normalize();
     }
 
+    /**
+     * Resolves and validates a stored file path against the storage root.
+     * Rejects null, absolute, and traversal paths. Returns safe normalized Path.
+     * @throws SecurityException if path is unsafe
+     */
+    public Path resolveSafePath(String storedPath) {
+        if (storedPath == null || storedPath.isBlank()) {
+            throw new SecurityException("Path is null or blank");
+        }
+        // Strip BASE_DIR prefix if already present (paths stored relative to BASE_DIR)
+        String relative = storedPath;
+        if (relative.startsWith(BASE_DIR + "/") || relative.startsWith(BASE_DIR + "\\")) {
+            relative = relative.substring(BASE_DIR.length() + 1);
+        }
+        Path resolved = Paths.get(BASE_DIR, relative).normalize();
+        Path root = Paths.get(BASE_DIR).normalize().toAbsolutePath();
+        if (!resolved.toAbsolutePath().normalize().startsWith(root)) {
+            throw new SecurityException("Path traversal detected: " + storedPath);
+        }
+        return resolved;
+    }
+
     private String sanitizePathSegment(String segment) {
         if (segment == null || segment.isBlank()) return "unknown";
         // Remove path traversal sequences and non-alphanumeric chars

@@ -1,5 +1,6 @@
 package com.resumainer.service;
 
+import com.resumainer.model.PdfFillTarget;
 import com.resumainer.model.PdfFitLimits;
 import com.resumainer.model.pdf.*;
 import com.resumainer.service.pdf.*;
@@ -8,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Real PDF/HTML generation service for Feature 008.
@@ -67,8 +69,9 @@ public class OpenHtmlPdfGenerationService implements PdfGenerationService {
         File pdfFile = new File(outputDir, baseName + ".pdf");
         File debugDir = new File(outputDir, "debug");
 
+        List<PdfFillTarget> targets = configService.getActiveFillTargets();
         FitResult result = getFitEngine().fit(renderData, pagePlan,
-                java.util.Collections.emptyList(),
+                targets,
                 htmlFile, pdfFile, debugDir, false);
 
         FitAttempt selected = result.selectedAttempt();

@@ -22,7 +22,6 @@ import java.util.*;
  */
 public final class FeedbackFitEngine {
     private static final Logger log = LoggerFactory.getLogger(FeedbackFitEngine.class);
-    private static final double STEP_PERCENT = 0.10; // 10% step per iteration
 
     private final XhtmlTemplateRenderer renderer;
     private final OpenHtmlPdfRenderer pdfRenderer;
@@ -83,11 +82,14 @@ public final class FeedbackFitEngine {
 
             List<File> pagePdfFiles = new ArrayList<>();
             List<FitState> selectedPageStates = new ArrayList<>();
-            FitState baseState = FitState.fromMidpoint(limits);
+            FitState baseState = FitState.defaults(limits);
+
+            // Filter targets for this target page count only
+            List<PdfFillTarget> pageTargets = effectiveTargets(plan.getTargetPageCount(), targets);
 
             for (int page = 1; page <= plan.getTargetPageCount(); page++) {
-                FitState start = page == 1 ? baseState : copyFontFrom(baseState, FitState.fromMidpoint(limits));
-                PdfFillTarget pageTarget = targetForPage(targets, page);
+                FitState start = page == 1 ? baseState : copyFontFrom(baseState, FitState.defaults(limits));
+                PdfFillTarget pageTarget = targetForIsolatedPage(pageTargets, page);
                 FitAttempt pageAttempt = fitSinglePlannedPage(data, plan, page, pageTarget, start,
                         new File(attemptsRoot, "page-" + page), debugAttempts, allAttempts);
                 selectedPageStates.add(pageAttempt.state());
@@ -105,7 +107,7 @@ public final class FeedbackFitEngine {
             merger.merge(pagePdfFiles, pdfFile);
 
             PdfMetrics metrics = analyzer.analyze(pdfFile);
-            String reason = validator.validate(metrics, plan.getTargetPageCount(), targets,
+            String reason = validator.validate(metrics, plan.getTargetPageCount(), pageTargets,
                     contentExpectationBuilder.build(data, plan));
             FitAttempt finalAttempt = new FitAttempt(allAttempts.size() + 1, plan.getTargetPageCount(),
                     combinedState, metrics, "OK".equals(reason), reason,
@@ -168,14 +170,6 @@ public final class FeedbackFitEngine {
         }
     }
 
-    private PdfFillTarget targetForPage(List<PdfFillTarget> targets, int pageNumber) {
-        if (targets == null) return null;
-        for (PdfFillTarget t : targets) {
-            if (t.getPageNumber() == pageNumber) return t;
-        }
-        return null;
-    }
-
     private FitState nextStateForPage(FitState s, FitAttempt attempt, PdfFillTarget target, int page, int attemptIndex) {
         PdfMetrics metrics = attempt.metrics();
         boolean missingOrClipped = attempt.reason().contains("MISSING_TEXTS") || attempt.reason().contains("TRAILING_BLANK_PAGE");
@@ -189,18 +183,53 @@ public final class FeedbackFitEngine {
         return s;
     }
 
+    double stepPercent() {
+        return limits.getStepPercent() != null ? limits.getStepPercent().doubleValue() : 0.10;
+    }
+
+    /** Filter fill targets for the requested target page count only. Package-private for testing. */
+    List<PdfFillTarget> effectiveTargets(int targetPageCount, List<PdfFillTarget> allTargets) {
+        if (allTargets == null) return List.of();
+        return allTargets.stream()
+                .filter(t -> t.getTargetPageCount() == targetPageCount)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    /** Return the fill target for a specific page during isolated page fitting. Package-private for testing. */
+    PdfFillTarget targetForIsolatedPage(List<PdfFillTarget> targets, int pageNumber) {
+        if (targets == null) return null;
+        return targets.stream()
+                .filter(t -> t.getPageNumber() == pageNumber)
+                .findFirst().orElse(null);
+    }
+
+    /** Clamp page2/page3 line-height and section-gap delta from page1. Package-private for testing. */
+    double clampDeltaFromPage1(double proposed, double page1Value, double globalMin, double globalMax) {
+        double delta = limits.getPage2DeltaLimitPercent() != null
+                ? limits.getPage2DeltaLimitPercent().doubleValue() : 0.65;
+        double deltaMin = page1Value * (1.0 - delta);
+        double deltaMax = page1Value * (1.0 + delta);
+        return clamp(proposed, Math.max(globalMin, deltaMin), Math.min(globalMax, deltaMax));
+    }
+
     private FitState shrinkRoundRobin(FitState s, int page, int attemptIndex, boolean allowFontChange) {
         int phase = (attemptIndex - 1) % (allowFontChange ? 4 : 3);
-        double down = 1.0 - STEP_PERCENT;
+        double down = 1.0 - stepPercent();
         FitState result = copyState(s);
         if (phase == 0) {
             double v = pageSectionGap(s, page) * down;
-            setPageSectionGap(result, page, clamp(v, limits.getSectionGapMinPx().doubleValue(), limits.getSectionGapMaxPx().doubleValue()));
+            double clamped = page == 1
+                    ? clamp(v, limits.getSectionGapMinPx().doubleValue(), limits.getSectionGapMaxPx().doubleValue())
+                    : clampDeltaFromPage1(v, s.getPage1SectionGapPx(), limits.getSectionGapMinPx().doubleValue(), limits.getSectionGapMaxPx().doubleValue());
+            setPageSectionGap(result, page, clamped);
         } else if (phase == 1) {
             applyContentGaps(result, down);
         } else if (phase == 2) {
             double v = pageLineHeight(s, page) * down;
-            setPageLineHeight(result, page, clamp(v, limits.getLineHeightMin().doubleValue(), limits.getLineHeightMax().doubleValue()));
+            double clamped = page == 1
+                    ? clamp(v, limits.getLineHeightMin().doubleValue(), limits.getLineHeightMax().doubleValue())
+                    : clampDeltaFromPage1(v, s.getPage1LineHeight(), limits.getLineHeightMin().doubleValue(), limits.getLineHeightMax().doubleValue());
+            setPageLineHeight(result, page, clamped);
         } else if (allowFontChange) {
             result.setBodyFontPx(clamp(s.getBodyFontPx() * down,
                     limits.getBodyFontMinPx().doubleValue(), limits.getBodyFontMaxPx().doubleValue()));
@@ -210,19 +239,25 @@ public final class FeedbackFitEngine {
 
     private FitState growRoundRobin(FitState s, int page, int attemptIndex, boolean allowFontChange) {
         int phase = (attemptIndex - 1) % (allowFontChange ? 4 : 3);
-        double up = 1.0 + STEP_PERCENT;
+        double up = 1.0 + stepPercent();
         FitState result = copyState(s);
         if (allowFontChange && phase == 0) {
             result.setBodyFontPx(clamp(s.getBodyFontPx() * up,
                     limits.getBodyFontMinPx().doubleValue(), limits.getBodyFontMaxPx().doubleValue()));
         } else if ((!allowFontChange && phase == 0) || (allowFontChange && phase == 1)) {
             double v = pageLineHeight(s, page) * up;
-            setPageLineHeight(result, page, clamp(v, limits.getLineHeightMin().doubleValue(), limits.getLineHeightMax().doubleValue()));
+            double clamped = page == 1
+                    ? clamp(v, limits.getLineHeightMin().doubleValue(), limits.getLineHeightMax().doubleValue())
+                    : clampDeltaFromPage1(v, s.getPage1LineHeight(), limits.getLineHeightMin().doubleValue(), limits.getLineHeightMax().doubleValue());
+            setPageLineHeight(result, page, clamped);
         } else if ((!allowFontChange && phase == 1) || (allowFontChange && phase == 2)) {
             applyContentGaps(result, up);
         } else {
             double v = pageSectionGap(s, page) * up;
-            setPageSectionGap(result, page, clamp(v, limits.getSectionGapMinPx().doubleValue(), limits.getSectionGapMaxPx().doubleValue()));
+            double clamped = page == 1
+                    ? clamp(v, limits.getSectionGapMinPx().doubleValue(), limits.getSectionGapMaxPx().doubleValue())
+                    : clampDeltaFromPage1(v, s.getPage1SectionGapPx(), limits.getSectionGapMinPx().doubleValue(), limits.getSectionGapMaxPx().doubleValue());
+            setPageSectionGap(result, page, clamped);
         }
         return result;
     }
@@ -254,7 +289,7 @@ public final class FeedbackFitEngine {
     }
 
     private FitState mergeSelectedStates(List<FitState> states) {
-        if (states.isEmpty()) return FitState.fromMidpoint(limits);
+        if (states.isEmpty()) return FitState.defaults(limits);
         FitState result = new FitState();
         result.setBodyFontPx(states.get(0).getBodyFontPx());
         result.setPage1LineHeight(states.get(0).getPage1LineHeight());

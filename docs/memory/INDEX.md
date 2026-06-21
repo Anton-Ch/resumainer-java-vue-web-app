@@ -35,6 +35,7 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - B23 | DeepSeek V4 Flash returns reasoning-only responses with null content intermittently | openrouter,deepseek,ai,reasoning,retry,missing-content,diagnostic,response-shape | [BUGS.md](BUGS.md) | active
 - B24 | Cover letter column exists in migration but INSERT SQL omits it | database,migration,dao,cover-letter,insert,column-propagation,saved-resumes | [BUGS.md](BUGS.md) | active
 - B25 | Docker BuildKit: COPY . . cache survives --no-cache — must docker rmi --force | docker, buildkit, cache, copy, no-cache, multi-stage, devops, frontend, rebuild | [BUGS.md](BUGS.md) | active
+- B26 | Dropped spike method causes universal validation failure in ported algorithm | spike,porting,fit-engine,content-expectation,missing-texts,validation,algorithm-drift | [BUGS.md](BUGS.md) | active
 
 ## Decisions
 - D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web.xml) | servlet, spring-mvc, jakarta-ee, tomcat, initialization, web.xml | [DECISIONS.md](DECISIONS.md) | active
@@ -85,3 +86,4 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - W15 | Feature 007 Review Page — backend DTO fix + frontend adapter + tabbed editing UI | milestone,feature-007,review-page,backend-fix,frontend-adapter,primevue-tabs | [WORKLOG.md](WORKLOG.md) | active
 - W16 | Feature 007 Export View, Cover Letter, Generation Concurrency, and OpenRouter fixes completed | milestone,feature-007,export-view,cover-letter,generation-concurrency,openrouter,diagnostics,retry,fixes | [WORKLOG.md](WORKLOG.md) | active
 - W17 | Feature 008 Phase Group 1 (Bullet Points + Review + Prompt/Parser) Completed | milestone,feature-008,phase-group-1,bullet-points,review,prompt,parser,tdd,cross-layer | [WORKLOG.md](WORKLOG.md) | active
+- W18 | Feature 008 Phase Group 3 — Spike Parity Fixes Completed (Phases 19-21) | milestone,feature-008,phase-group-3,spike-parity,export-dto,public-route,path-safety,fit-engine,page-plan,tdd | [WORKLOG.md](WORKLOG.md) | active

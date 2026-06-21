@@ -845,3 +845,25 @@ Docker BuildKit caches the `COPY . .` layer based on file checksums. The `--no-c
 
 **Evidence**
 Feature 008 Phase 4 Frontend: `ReviewStepForm.vue` had bullet editing template code, local `npm run build` included it, but `docker-compose build --no-cache frontend` produced a container without it. `docker rmi docker-frontend --force` followed by rebuild resolved the issue. Built filenames changed from stale to fresh only after image deletion.
+
+---
+
+### 2026-06-21 - Dropped spike method causes universal validation failure in ported algorithm
+
+**Status**
+Active
+
+**Why this is durable**
+When porting algorithmic code from a proven spike to production, the class-by-class audit must verify that every method is present AND correctly called. Omitting a single method (buildForPlannedPage) caused the PDF fit engine to fail every single validation attempt because the isolated page validator expected content from all pages, not just the page being fitted. This pattern applies to any algorithm port, not just PDF rendering.
+
+**Root cause**
+The spike had two ContentExpectationBuilder methods: build() for combined multi-page validation, and buildForPlannedPage() for isolated single-page validation during fitting. The port dropped buildForPlannedPage and used build() for both, causing the page 1 validator to demand page 2 content. Result: every fitting attempt returned MISSING_TEXTS.
+
+**Evidence**
+Feature 008 Phase Group 3 debugging: E2E tests showed PDF_FITTING_FAILED for every generation attempt with MISSING_TEXTS containing page 2 items while fitting page 1. The spike-vs-production audit matrix (T154-T156) identified this as a PARTIAL PORT gap.
+
+**Mitigation**
+1. Always compare production port method-by-method against the spike/spike source
+2. Create an audit matrix mapping every spike method/behavior to production equivalent before claiming port complete
+3. Test isolated page fitting separately from combined validation
+4. Package-private helper methods enable targeted unit tests without full integration setup

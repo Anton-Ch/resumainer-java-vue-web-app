@@ -52,7 +52,7 @@ class PdfRenderConfigDaoTest {
 
         assertNotNull(limits);
         assertEquals("default-v1", limits.getConfigKey());
-        assertEquals(30, limits.getMaxAttempts());
+        assertEquals(20, limits.getMaxAttempts());
         assertEquals(new BigDecimal("9.0"), limits.getBodyFontMinPx());
     }
 
@@ -80,19 +80,26 @@ class PdfRenderConfigDaoTest {
         when(resultSet.getString("config_key")).thenReturn("default-v1");
         when(resultSet.getBoolean("active")).thenReturn(true);
         when(resultSet.getBigDecimal("body_font_min_px")).thenReturn(new BigDecimal("9.0"));
+        when(resultSet.getBigDecimal("body_font_default_px")).thenReturn(new BigDecimal("12.5"));
         when(resultSet.getBigDecimal("body_font_max_px")).thenReturn(new BigDecimal("16.0"));
         when(resultSet.getBigDecimal("line_height_min")).thenReturn(new BigDecimal("1.05"));
+        when(resultSet.getBigDecimal("line_height_default")).thenReturn(new BigDecimal("1.35"));
         when(resultSet.getBigDecimal("line_height_max")).thenReturn(new BigDecimal("1.75"));
         when(resultSet.getBigDecimal("section_gap_min_px")).thenReturn(new BigDecimal("2.4"));
+        when(resultSet.getBigDecimal("section_gap_default_px")).thenReturn(new BigDecimal("15.0"));
         when(resultSet.getBigDecimal("section_gap_max_px")).thenReturn(new BigDecimal("50.0"));
         when(resultSet.getBigDecimal("item_gap_min_px")).thenReturn(new BigDecimal("2.4"));
+        when(resultSet.getBigDecimal("item_gap_default_px")).thenReturn(new BigDecimal("9.0"));
         when(resultSet.getBigDecimal("item_gap_max_px")).thenReturn(new BigDecimal("30.0"));
         when(resultSet.getBigDecimal("paragraph_gap_min_px")).thenReturn(new BigDecimal("1.6"));
+        when(resultSet.getBigDecimal("paragraph_gap_default_px")).thenReturn(new BigDecimal("5.0"));
         when(resultSet.getBigDecimal("paragraph_gap_max_px")).thenReturn(new BigDecimal("24.0"));
         when(resultSet.getBigDecimal("bullet_gap_min_px")).thenReturn(new BigDecimal("0.8"));
+        when(resultSet.getBigDecimal("bullet_gap_default_px")).thenReturn(new BigDecimal("3.0"));
         when(resultSet.getBigDecimal("bullet_gap_max_px")).thenReturn(new BigDecimal("18.0"));
-        when(resultSet.getInt("max_attempts")).thenReturn(30);
-        when(resultSet.getBigDecimal("page2_delta_limit_percent")).thenReturn(new BigDecimal("50.0"));
+        when(resultSet.getInt("max_attempts")).thenReturn(20);
+        when(resultSet.getBigDecimal("step_percent")).thenReturn(new BigDecimal("0.10"));
+        when(resultSet.getBigDecimal("page2_delta_limit_percent")).thenReturn(new BigDecimal("0.65"));
         when(resultSet.getTimestamp("created_at")).thenReturn(Timestamp.valueOf(LocalDateTime.now()));
     }
 

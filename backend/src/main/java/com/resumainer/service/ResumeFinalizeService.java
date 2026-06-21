@@ -5,7 +5,9 @@ import com.resumainer.dto.generate.ExportResultDto;
 import com.resumainer.dto.generate.SavedResumeExportDto;
 import com.resumainer.model.ResumeGenerationRequest;
 import com.resumainer.model.ResumeGenerationResponse;
+import com.resumainer.model.User;
 import com.resumainer.model.pdf.*;
+import com.resumainer.service.pdf.PagePlanBuilder;
 import com.resumainer.service.pdf.ResumeRenderDataBuilder;
 import com.resumainer.util.PublicCodeGenerator;
 import org.slf4j.Logger;
@@ -35,8 +37,10 @@ public class ResumeFinalizeService {
     private final ResumeTemplateRenderer templateRenderer;
     private final GeneratedFileStorageService fileStorage;
     private final ProfilePromptDao profilePromptDao;
+    private final UserDao userDao;
     private final OpenHtmlPdfGenerationService pdfGenerationService;
     private final ResumeRenderDataBuilder renderDataBuilder;
+    private final PagePlanBuilder pagePlanBuilder;
 
     public ResumeFinalizeService(DataSource dataSource,
                                   GenerationRequestDao requestDao,
@@ -46,8 +50,10 @@ public class ResumeFinalizeService {
                                   ResumeTemplateRenderer templateRenderer,
                                   GeneratedFileStorageService fileStorage,
                                   ProfilePromptDao profilePromptDao,
+                                  UserDao userDao,
                                   OpenHtmlPdfGenerationService pdfGenerationService,
-                                  ResumeRenderDataBuilder renderDataBuilder) {
+                                  ResumeRenderDataBuilder renderDataBuilder,
+                                  PagePlanBuilder pagePlanBuilder) {
         this.dataSource = dataSource;
         this.requestDao = requestDao;
         this.responseDao = responseDao;
@@ -56,8 +62,10 @@ public class ResumeFinalizeService {
         this.templateRenderer = templateRenderer;
         this.fileStorage = fileStorage;
         this.profilePromptDao = profilePromptDao;
+        this.userDao = userDao;
         this.pdfGenerationService = pdfGenerationService;
         this.renderDataBuilder = renderDataBuilder;
+        this.pagePlanBuilder = pagePlanBuilder;
     }
 
     /**
@@ -131,7 +139,8 @@ public class ResumeFinalizeService {
                 .toList();
 
         // Load profile education, username, and contact for rendering
-        String username = request.getUserId().toString().replace("-", "_");
+        String fileStorageUsername = request.getUserId().toString().replace("-", "_");
+        String realUsername = loadUsername(userId);
         List<Map<String, Object>> profileEducation = profilePromptDao.loadEducation(userId);
         Map<String, Object> contactData = profilePromptDao.loadContact(userId);
 
@@ -156,7 +165,7 @@ public class ResumeFinalizeService {
                 String htmlPath = templateRenderer.renderAndSave(
                         bundle, profileEducation, contactData,
                         languageCode, finalSelectedLevel,
-                        username, publicCode);
+                        fileStorageUsername, publicCode);
                 createdFiles.add(htmlPath);
 
                 // Prepare saved_resume data
@@ -174,7 +183,7 @@ public class ResumeFinalizeService {
                     int totalWork = bundle.experience != null ? bundle.experience.size() : 0;
                     int totalProjects = bundle.projects != null ? bundle.projects.size() : 0;
                     int totalCourses = bundle.courses != null ? bundle.courses.size() : 0;
-                    PagePlan pagePlan = renderDataBuilder.buildPagePlan(totalWork, totalProjects, totalCourses);
+                    PagePlan pagePlan = pagePlanBuilder.build(totalWork, totalProjects, totalCourses);
 
                     File htmlFile = new File(htmlPath);
                     File outputDir = htmlFile.getParentFile();
@@ -201,7 +210,7 @@ public class ResumeFinalizeService {
                 // 4. Insert saved_resume row
                 long savedId = savedResumeDao.insert(userId, resumeTitle, vacancy, company,
                         languageCode, finalSelectedLevel,
-                        publicCode, "/candidate/" + publicCode,
+                        publicCode, "/" + realUsername + "/" + publicCode,
                         htmlPath, pdfPath, coverLetter,
                         requestId, response.getId(),
                         targetLevelId, response.getLanguageId());
@@ -352,5 +361,17 @@ public class ResumeFinalizeService {
 
     private String str(Object obj) {
         return obj != null ? obj.toString() : "";
+    }
+
+    private String loadUsername(UUID userId) {
+        try {
+            User user = userDao.findById(userId);
+            if (user != null && user.getUsername() != null && !user.getUsername().isBlank()) {
+                return user.getUsername();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to load username for userId={}", userId);
+        }
+        return userId.toString().replace("-", "_");
     }
 }

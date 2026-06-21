@@ -473,7 +473,7 @@ class GenerateResumeControllerTest {
         row.id = 1L;
         row.htmlFilePath = "/path/to/file.html";
         when(savedResumeDao.findById(1L, userId)).thenReturn(row);
-        when(fileStorage.resolvePath("/path/to/file.html")).thenReturn(tempFile);
+        when(fileStorage.resolveSafePath("/path/to/file.html")).thenReturn(tempFile);
 
         mockMvc.perform(get("/api/generate/resumes/1/html")
                         .sessionAttr("user", user))
@@ -491,7 +491,7 @@ class GenerateResumeControllerTest {
         row.id = 1L;
         row.htmlFilePath = "/path/to/file.html";
         when(savedResumeDao.findById(1L, userId)).thenReturn(row);
-        when(fileStorage.resolvePath(anyString())).thenThrow(new RuntimeException("Storage error"));
+        when(fileStorage.resolveSafePath(anyString())).thenThrow(new RuntimeException("Storage error"));
 
         mockMvc.perform(get("/api/generate/resumes/1/html")
                         .sessionAttr("user", user))

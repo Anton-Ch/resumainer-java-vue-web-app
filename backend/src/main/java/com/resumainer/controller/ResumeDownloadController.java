@@ -50,7 +50,7 @@ public class ResumeDownloadController {
         }
 
         try {
-            Path filePath = fileStorage.resolvePath(row.htmlFilePath);
+            Path filePath = fileStorage.resolveSafePath(row.htmlFilePath);
             Resource resource = new FileSystemResource(filePath);
             if (!resource.exists()) {
                 log.warn("HTML file not found: {}", row.htmlFilePath);
@@ -61,6 +61,9 @@ public class ResumeDownloadController {
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "inline; filename=\"resume-" + savedResumeId + ".html\"")
                     .body(resource);
+        } catch (SecurityException e) {
+            log.warn("Path safety rejected for legacy HTML saved resume {}", savedResumeId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
             log.error("Error serving HTML: {}", savedResumeId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);

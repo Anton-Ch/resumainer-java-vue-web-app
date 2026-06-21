@@ -39,6 +39,27 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-21 - Feature 008 Phase Group 3 — Spike Parity Fixes Completed (Phases 19-21)
+
+**Status**
+Active
+
+**Why this is durable**
+Phases 19-21 repaired critical drift between the production implementation and the approved V12.1 spike. The audit matrix (Phase 18) identified 10 high-confidence bugs. Fixes spanned the full stack: export DTO contract, public routes, path safety, PDF fit config, fit engine parity, and page planning. Key patterns: class-by-class audit, RED-GREEN TDD, and storage-root based path validation.
+
+**Summary**
+- Phase 19: Export DTO fixed (pdfAvailable from DB, /{username}/{publicCode}), public route moved to PublicResumeController outside /api/**, old /candidate/ route removed, resolveSafePath() added to all download controllers, DAO lookup requires username+code+READY status
+- Phase 20: V34 migration added step_percent + 7 default value columns to PdfFitLimits; PdfFitLimits/FitState updated; FeedbackFitEngine restored effectiveTargets(), targetForIsolatedPage(), clampDeltaFromPage1(), configurable stepPercent; OpenHtmlPdfGenerationService passes real fill targets from config; package-private methods for testability
+- Phase 21: PagePlanBuilder extracted from ResumeRenderDataBuilder; dedicated page planner using WorkExperienceBudgetResolver; 4 focused tests
+
+**Key patterns established**
+- B26: Dropping spike methods during port causes universal validation failures — audit matrix is mandatory
+- page2DeltaLimitPercent unit semantics: spike uses 0.65 (fraction), not 50.0 (percent)
+- Package-private visibility enables targeted regression tests without exposing implementation
+- Path safety: resolveSafePath() validates against storage root, rejects traversal/absolute paths
+
 ### 2026-06-21 - Feature 008 Phase Group 1 (Bullet Points) Completed
 
 **Status**

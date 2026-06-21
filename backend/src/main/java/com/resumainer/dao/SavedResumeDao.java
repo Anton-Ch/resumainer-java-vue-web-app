@@ -88,20 +88,22 @@ public class SavedResumeDao {
     }
 
     private static final String SELECT_BY_GENERATION_REQUEST =
-            "SELECT id, user_id, resume_title, vacancy, company, language, "
-            + "adaptation_level, public_code, public_url_link, html_file_path, "
-            + "pdf_file_path, generation_request_id, response_id, "
-            + "adaptation_level_id, language_id, cover_letter, is_deleted, "
-            + "pdf_status, pdf_page_count "
-            + "FROM saved_resumes WHERE generation_request_id = ? AND user_id = ? AND is_deleted = FALSE";
+            "SELECT sr.id, sr.user_id, sr.resume_title, sr.vacancy, sr.company, sr.language, "
+            + "sr.adaptation_level, sr.public_code, sr.public_url_link, sr.html_file_path, "
+            + "sr.pdf_file_path, sr.generation_request_id, sr.response_id, "
+            + "sr.adaptation_level_id, sr.language_id, sr.cover_letter, sr.is_deleted, "
+            + "sr.pdf_status, sr.pdf_page_count, u.username "
+            + "FROM saved_resumes sr JOIN users u ON sr.user_id = u.id "
+            + "WHERE sr.generation_request_id = ? AND sr.user_id = ? AND sr.is_deleted = FALSE";
 
     private static final String SELECT_BY_ID =
-            "SELECT id, user_id, resume_title, vacancy, company, language, "
-            + "adaptation_level, public_code, public_url_link, html_file_path, "
-            + "pdf_file_path, generation_request_id, response_id, "
-            + "adaptation_level_id, language_id, cover_letter, is_deleted, "
-            + "pdf_status, pdf_page_count "
-            + "FROM saved_resumes WHERE id = ? AND user_id = ? AND is_deleted = FALSE";
+            "SELECT sr.id, sr.user_id, sr.resume_title, sr.vacancy, sr.company, sr.language, "
+            + "sr.adaptation_level, sr.public_code, sr.public_url_link, sr.html_file_path, "
+            + "sr.pdf_file_path, sr.generation_request_id, sr.response_id, "
+            + "sr.adaptation_level_id, sr.language_id, sr.cover_letter, sr.is_deleted, "
+            + "sr.pdf_status, sr.pdf_page_count, u.username "
+            + "FROM saved_resumes sr JOIN users u ON sr.user_id = u.id "
+            + "WHERE sr.id = ? AND sr.user_id = ? AND sr.is_deleted = FALSE";
 
     /**
      * Finds a saved resume by ID, owner-scoped.
@@ -128,6 +130,7 @@ public class SavedResumeDao {
                 row.coverLetter = rs.getString("cover_letter");
                 row.pdfStatus = rs.getString("pdf_status");
                 row.pdfPageCount = rs.getObject("pdf_page_count") != null ? rs.getInt("pdf_page_count") : null;
+                row.username = rs.getString("username");
                 return row;
             }
         } catch (SQLException e) {
@@ -150,18 +153,22 @@ public class SavedResumeDao {
         }
     }
 
-    /** Feature 008: Find PDF file path by public code for public route serving. */
-    public String findPdfPathByPublicCode(String publicCode) {
-        String sql = "SELECT pdf_file_path FROM saved_resumes WHERE public_code = ? AND is_deleted = FALSE AND pdf_file_path IS NOT NULL";
+    /** Feature 008: Find PDF file path by username + public code for public route. */
+    public String findPdfPathByUsernameAndCode(String username, String publicCode) {
+        if (username == null || username.isBlank() || publicCode == null || publicCode.isBlank()) return null;
+        String sql = "SELECT sr.pdf_file_path FROM saved_resumes sr JOIN users u ON sr.user_id = u.id "
+                   + "WHERE u.username = ? AND sr.public_code = ? AND sr.is_deleted = FALSE "
+                   + "AND sr.pdf_file_path IS NOT NULL AND sr.pdf_status = 'READY'";
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, publicCode);
+            stmt.setString(1, username);
+            stmt.setString(2, publicCode);
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next() ? rs.getString("pdf_file_path") : null;
             }
         } catch (SQLException e) {
-            log.error("Error finding PDF path for public code: {}", publicCode, e);
-            throw new RuntimeException("Database error looking up public code", e);
+            log.error("Error finding PDF for user={} code={}", username, publicCode, e);
+            throw new RuntimeException("Database error", e);
         }
     }
 
@@ -191,6 +198,7 @@ public class SavedResumeDao {
                     row.coverLetter = rs.getString("cover_letter");
                     row.pdfStatus = rs.getString("pdf_status");
                     row.pdfPageCount = rs.getObject("pdf_page_count") != null ? rs.getInt("pdf_page_count") : null;
+                    row.username = rs.getString("username");
                     results.add(row);
                 }
                 return results;
@@ -217,6 +225,7 @@ public class SavedResumeDao {
         public String coverLetter;
         public String pdfStatus;
         public Integer pdfPageCount;
+        public String username;
     }
 
     /** Update PDF generation result on a saved resume (Feature 008). */
