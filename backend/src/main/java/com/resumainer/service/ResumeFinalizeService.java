@@ -123,6 +123,9 @@ public class ResumeFinalizeService {
         final long targetLevelId = mapAdaptationLevelId(effectiveLevel);
         final String finalSelectedLevel = effectiveLevel;
 
+        log.info("FINALIZATION_START requestId={} userId={} level={} languageMode={}",
+                requestId, userId, finalSelectedLevel, request.getLanguageMode());
+
         List<ResumeGenerationResponse> toFinalize = allResponses.stream()
                 .filter(r -> r.getAdaptationLevelId() == targetLevelId)
                 .toList();
@@ -184,6 +187,11 @@ public class ResumeFinalizeService {
                         pdfPageCount = pdfResult.getPageCount();
                         createdFiles.add(pdfResult.getHtmlPath());
                         createdFiles.add(pdfPath);
+                        log.info("PDF_GENERATED requestId={} lang={} pages={}",
+                                requestId, languageCode, pdfPageCount);
+                    } else {
+                        log.warn("PDF_FITTING_FAILED requestId={} lang={} reason={}",
+                                requestId, languageCode, pdfResult.getErrorReason());
                     }
                 } catch (Exception e) {
                     log.warn("PDF generation skipped for {}: {}", languageCode, e.getMessage());

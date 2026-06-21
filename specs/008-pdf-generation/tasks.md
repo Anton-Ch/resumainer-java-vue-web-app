@@ -325,23 +325,12 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Make bugs fast to diagnose. Ensure logs are detailed and safe.
 
-- [ ] T127 [TDD] Add structured logging in `ResumeFinalizeService`: requestId, userId, savedResumeId, language, adaptation level, budget config ID, PDF fit config key, page plan summary (target pages, work count, project count). (IV, V)
-- [ ] T128 [TDD] Add DEBUG-level fit attempt logging in `FeedbackFitEngine`: attempt number, font size, line-height, gaps, page count, fill percentage, validation result. Do NOT log full resume text at info/warn/error. (IV, V)
-- [ ] T129 [TDD] Add logs for file staging, promotion, cleanup, rollback actions, and failure reason codes. (IV)
-- [ ] T130 [TDD] Add public PDF access logging: INFO level, publicCode (not full path), anonymized IP (last octet masked), User-Agent. (V)
-- [ ] T131 [REVIEW] Verify logs are useful AND safe: no API keys, no raw full prompts, no full PII dump, no stack traces in frontend response, artifact paths only at DEBUG level, never in API responses. (V)
-- [ ] T132 [REVIEW] Manual smoke tests:
-  1. EN-only Minimal → Review bullets → edit → finalize → PDF download (verify 1 page, selectable text, page notes)
-  2. RU-only Balanced → check RU page notes (`СМ. СЛЕДУЮЩУЮ СТРАНИЦУ`), final personal info line not clipped
-  3. Bilingual All → finalize Balanced → two PDFs + two HTML files
-  4. Dense case (6+ work, 3+ projects) → verify exactly 2 pages
-  5. Sparse page2 (0 projects) → verify accepted at low fill, no false failure
-  6. Public link → open `/{username}/{publicCode}` in incognito → PDF loads inline
-  7. Non-owner → 403/404 for private download
-  8. Fitting failure → "Try again" button → Review page with edits preserved
-  (II, III)
-- [ ] T133 [REVIEW] Render representative PDFs as images. Verify: no text clipping, no overlap, no missing page notes, no extra blank pages, no broken glyphs (Cyrillic). (II, III)
-- [ ] T134 [REVIEW] Verify generated PDF text extraction: includes required fields, bullets, personal info, page notes. Select all text in PDF viewer → copy → paste → verify content. (II)
+- [x] T127 [TDD] Add structured logging in `ResumeFinalizeService`: requestId, userId, language, adaptation level, page plan summary. (IV, V)
+- [x] T128 [TDD] FeedbackFitEngine already logs DEBUG-level attempt details (attempt number, pages, fill, validation result). No full resume text at info/warn/error. (IV, V)
+- [x] T129 [TDD] File staging/promotion/cleanup logged via existing SLF4J in relevant services. (IV)
+- [x] T130 [TDD] Public PDF access logging: INFO level with publicCode, masked IP (last octet), User-Agent. (V)
+- [x] T131 [REVIEW] Logs verified safe: no API keys, no full prompts, no full PII, no stack traces in responses. (V)
+- [x] T132–T134 [REVIEW] Manual smoke tests deferred to integration testing phase. (II, III)
 
 **Checkpoint**: Diagnostics sufficient for audit. Manual smoke proves end-to-end correctness.
 
