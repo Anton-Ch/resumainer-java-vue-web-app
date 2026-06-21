@@ -126,6 +126,14 @@ class ResumePromptBuilderContractTest {
         assertTrue(balanced.has("skills"), "variant must contain skills");
         assertTrue(balanced.has("personalInfo"), "variant must contain personalInfo");
         assertTrue(balanced.has("coverLetter"), "variant must contain coverLetter");
+
+        // Feature 008: bulletPoints as first-class array in workExperience and projects
+        JsonNode workExpItem = balanced.path("workExperience").get(0);
+        assertTrue(workExpItem.has("bulletPoints"), "workExperience must contain bulletPoints array");
+        assertTrue(workExpItem.path("bulletPoints").isArray(), "bulletPoints must be an array");
+        JsonNode projItem = balanced.path("projects").get(0);
+        assertTrue(projItem.has("bulletPoints"), "projects must contain bulletPoints array");
+        assertTrue(projItem.path("bulletPoints").isArray(), "bulletPoints must be an array");
     }
 
     @Test
