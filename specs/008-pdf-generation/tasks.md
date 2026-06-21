@@ -76,12 +76,12 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Make AI output match the structured bullet model.
 
-- [ ] T016 [TDD] Update prompt config seed/migration so AI is instructed to return `bulletPoints` arrays for work experience. Prefer DB-backed prompt config update over Java hardcode if project already has prompt config tables. (I, II)
-- [ ] T017 [TDD] Update prompt config seed/migration so AI is instructed to return `bulletPoints` arrays for projects. (I, II)
-- [ ] T018 [TDD] Update `ResumePromptBuilder` tests to assert generated prompts mention `bulletPoints`, max 15 words/bullet target, max 250 chars/bullet hard limit, no fabricated facts, use profile-owned data, preserve source IDs. (II)
-- [ ] T019 [TDD] Update `MockAiClient` deterministic test responses to include `bulletPoints` for EN-only, RU-only, Bilingual, and all adaptation levels (Minimal, Balanced, Maximum, All). (II)
-- [ ] T020 [TDD] Run `mvn test -pl backend -Dtest="ResumePromptBuilderTest,MockAiClientTest"` — all prompt and mock AI tests pass. (II)
-- [ ] T021 [REVIEW] Verify no automated test calls real OpenRouter. (II, V)
+- [x] T016 [TDD] Update prompt config seed/migration so AI is instructed to return `bulletPoints` arrays for work experience. Prefer DB-backed prompt config update over Java hardcode if project already has prompt config tables. (I, II)
+- [x] T017 [TDD] Update prompt config seed/migration so AI is instructed to return `bulletPoints` arrays for projects. (I, II)
+- [x] T018 [TDD] Update `ResumePromptBuilder` tests to assert generated prompts mention `bulletPoints`, max 15 words/bullet target, max 250 chars/bullet hard limit, no fabricated facts, use profile-owned data, preserve source IDs. (II)
+- [x] T019 [TDD] Update `MockAiClient` deterministic test responses to include `bulletPoints` for EN-only, RU-only, Bilingual, and all adaptation levels (Minimal, Balanced, Maximum, All). (II)
+- [x] T020 [TDD] Run `mvn test -pl backend -Dtest="ResumePromptBuilderTest,MockAiClientTest"` — all prompt and mock AI tests pass. (II)
+- [x] T021 [REVIEW] Verify no automated test calls real OpenRouter. (II, V)
 
 **Checkpoint**: Prompt and mock AI contract produce structured bullets. ✅ Tests pass.
 

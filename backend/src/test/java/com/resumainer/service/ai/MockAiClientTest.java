@@ -29,6 +29,8 @@ class MockAiClientTest {
         assertTrue(response.contains("skills"));
         assertTrue(response.contains("personalInfo"));
         assertTrue(response.contains("Senior Java Developer"));
+        // Feature 008: bulletPoints as first-class array
+        assertTrue(response.contains("bulletPoints"), "Mock response must contain bulletPoints");
     }
 
     @Test

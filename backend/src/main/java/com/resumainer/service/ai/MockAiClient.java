@@ -30,6 +30,11 @@ public class MockAiClient implements AiClient {
                   "jobTitle": "Java Developer",
                   "companyName": "Tech Corp",
                   "description": "Developed REST APIs using Spring MVC and JDBC.",
+                  "bulletPoints": [
+                    "Led backend migration from legacy monolith to Spring MVC microservices, reducing deployment time by 40%",
+                    "Designed and implemented REST APIs serving 50K daily active users",
+                    "Mentored 3 junior developers on Spring best practices and code review process"
+                  ],
                   "location": "Astana, Kazakhstan",
                   "startDate": "2022-01",
                   "endDate": "2024-12",
@@ -37,7 +42,18 @@ public class MockAiClient implements AiClient {
                 }
               ],
               "courses": [],
-              "projects": [],
+              "projects": [
+                {
+                  "projectName": "ResumAIner",
+                  "role": "Backend Developer",
+                  "description": "AI-assisted resume adaptation platform.",
+                  "bulletPoints": [
+                    "Built PDF generation pipeline using OpenHTMLToPDF and PDFBox",
+                    "Implemented TDD workflow with 80%+ test coverage"
+                  ],
+                  "startDate": "2025-01"
+                }
+              ],
               "skills": [
                 { "skillGroup": "Programming Languages", "skillName": "Java" },
                 { "skillGroup": "Frameworks", "skillName": "Spring MVC" }
