@@ -300,6 +300,9 @@ public class GenerateResumeController {
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "inline; filename=\"resume-" + savedResumeId + ".html\"")
                     .body(resource);
+        } catch (SecurityException e) {
+            log.warn("Path safety rejected for HTML saved resume {}", savedResumeId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
             log.error("Error serving HTML for saved resume: {}", savedResumeId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
@@ -309,6 +312,7 @@ public class GenerateResumeController {
     /**
      * Feature 008: Real PDF download with owner scoping and path traversal protection.
      * Supports ?disposition=inline for in-browser viewing.
+     * Only "inline" and "attachment" are permitted; all other values silently fall back to "attachment".
      */
     @GetMapping("/resumes/{savedResumeId}/pdf")
     public ResponseEntity<Resource> downloadPdf(HttpSession session,
@@ -316,6 +320,9 @@ public class GenerateResumeController {
                                                  @RequestParam(required = false, defaultValue = "attachment") String disposition) {
         UUID userId = getUserId(session);
         log.debug("GET /api/resumes/{}/pdf — userId={}", savedResumeId, userId);
+
+        // Validate and sanitize disposition to prevent header injection
+        String safeDisposition = validateDisposition(disposition);
 
         SavedResumeDao.SavedResumeRow row = savedResumeDao.findById(savedResumeId, userId);
         if (row == null || row.pdfFilePath == null) {
@@ -325,10 +332,14 @@ public class GenerateResumeController {
         try {
             Path filePath = fileStorage.resolveSafePath(row.pdfFilePath);
             Resource resource = new FileSystemResource(filePath);
+            if (!resource.exists()) {
+                log.warn("PDF file not found for saved resume {}: {}", savedResumeId, row.pdfFilePath);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
             return ResponseEntity.ok()
                     .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
                     .header(HttpHeaders.CONTENT_DISPOSITION,
-                            disposition + "; filename=\"resume-" + savedResumeId + ".pdf\"")
+                            safeDisposition + "; filename=\"resume-" + savedResumeId + ".pdf\"")
                     .body(resource);
         } catch (SecurityException e) {
             log.warn("Path safety rejected for PDF saved resume {}", savedResumeId);
@@ -337,6 +348,23 @@ public class GenerateResumeController {
             log.error("Error serving PDF for saved resume: {}", savedResumeId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
+    }
+
+    /**
+     * Validates and sanitizes the Content-Disposition header value.
+     * Only "inline" and "attachment" are permitted. Any other value
+     * (including CRLF-injected strings) silently falls back to "attachment".
+     */
+    private String validateDisposition(String disposition) {
+        if (disposition == null) {
+            return "attachment";
+        }
+        // Strip CR/LF to prevent header injection
+        String sanitized = disposition.replace("\r", "").replace("\n", "").trim();
+        if ("inline".equalsIgnoreCase(sanitized)) {
+            return "inline";
+        }
+        return "attachment";
     }
 
     // Public resume route moved to PublicResumeController (GET /{username}/{publicCode}) — Feature 008

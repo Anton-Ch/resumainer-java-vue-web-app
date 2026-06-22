@@ -466,7 +466,7 @@ class GenerateResumeControllerTest {
     }
 
     // ============================================================
-    // downloadHtml (GET /api/generate/resumes/{id}/html)
+    // downloadHtml (GET /api/generate/resumes/{id}/html) — T186
     // ============================================================
 
     @Test
@@ -486,7 +486,6 @@ class GenerateResumeControllerTest {
         UUID userId = UUID.randomUUID();
         UserSession user = new UserSession(userId, "test@test.com", "USER");
 
-        // Create a real temp file so FileSystemResource.exists() returns true
         java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("test-resume", ".html");
         tempFile.toFile().deleteOnExit();
 
@@ -519,9 +518,241 @@ class GenerateResumeControllerTest {
                 .andExpect(status().isInternalServerError());
     }
 
+    @Test
+    void downloadHtml_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/generate/resumes/1/html"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void downloadHtml_nonOwner_returns404() throws Exception {
+        UUID ownerId = UUID.randomUUID();
+        UUID otherUserId = UUID.randomUUID();
+        UserSession user = new UserSession(otherUserId, "other@test.com", "USER");
+
+        when(savedResumeDao.findById(1L, otherUserId)).thenReturn(null);
+
+        mockMvc.perform(get("/api/generate/resumes/1/html")
+                        .sessionAttr("user", user))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void downloadHtml_missingFile_returns404() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        java.nio.file.Path nonExistentFile = java.nio.file.Paths.get("target/nonexistent.html");
+        SavedResumeDao.SavedResumeRow row = new SavedResumeDao.SavedResumeRow();
+        row.id = 1L;
+        row.htmlFilePath = "/missing/file.html";
+        when(savedResumeDao.findById(1L, userId)).thenReturn(row);
+        when(fileStorage.resolveSafePath("/missing/file.html")).thenReturn(nonExistentFile);
+
+        mockMvc.perform(get("/api/generate/resumes/1/html")
+                        .sessionAttr("user", user))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void downloadHtml_traversalPath_returns404() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        SavedResumeDao.SavedResumeRow row = new SavedResumeDao.SavedResumeRow();
+        row.id = 1L;
+        row.htmlFilePath = "../../etc/passwd";
+        when(savedResumeDao.findById(1L, userId)).thenReturn(row);
+        when(fileStorage.resolveSafePath("../../etc/passwd"))
+                .thenThrow(new SecurityException("Path traversal detected"));
+
+        mockMvc.perform(get("/api/generate/resumes/1/html")
+                        .sessionAttr("user", user))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void downloadHtml_nullStoredPath_returns404() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        SavedResumeDao.SavedResumeRow row = new SavedResumeDao.SavedResumeRow();
+        row.id = 1L;
+        row.htmlFilePath = null;
+        when(savedResumeDao.findById(1L, userId)).thenReturn(row);
+
+        mockMvc.perform(get("/api/generate/resumes/1/html")
+                        .sessionAttr("user", user))
+                .andExpect(status().isNotFound());
+    }
+
     // ============================================================
-    // downloadPdf (GET /api/generate/resumes/{id}/pdf) — placeholder
+    // downloadPdf (GET /api/generate/resumes/{id}/pdf) — T186
     // ============================================================
 
-    // Feature 008: PDF download and public route — tested via integration/smoke tests
+    @Test
+    void downloadPdf_attachment_returns200() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("test-resume", ".pdf");
+        tempFile.toFile().deleteOnExit();
+
+        SavedResumeDao.SavedResumeRow row = new SavedResumeDao.SavedResumeRow();
+        row.id = 1L;
+        row.pdfFilePath = "/path/to/file.pdf";
+        when(savedResumeDao.findById(1L, userId)).thenReturn(row);
+        when(fileStorage.resolveSafePath("/path/to/file.pdf")).thenReturn(tempFile);
+
+        mockMvc.perform(get("/api/generate/resumes/1/pdf")
+                        .sessionAttr("user", user))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/pdf"))
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"resume-1.pdf\""));
+    }
+
+    @Test
+    void downloadPdf_inline_returns200() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("test-resume", ".pdf");
+        tempFile.toFile().deleteOnExit();
+
+        SavedResumeDao.SavedResumeRow row = new SavedResumeDao.SavedResumeRow();
+        row.id = 1L;
+        row.pdfFilePath = "/path/to/file.pdf";
+        when(savedResumeDao.findById(1L, userId)).thenReturn(row);
+        when(fileStorage.resolveSafePath("/path/to/file.pdf")).thenReturn(tempFile);
+
+        mockMvc.perform(get("/api/generate/resumes/1/pdf")
+                        .param("disposition", "inline")
+                        .sessionAttr("user", user))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/pdf"))
+                .andExpect(header().string("Content-Disposition", "inline; filename=\"resume-1.pdf\""));
+    }
+
+    @Test
+    void downloadPdf_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/generate/resumes/1/pdf"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void downloadPdf_nonOwner_returns404() throws Exception {
+        UUID otherUserId = UUID.randomUUID();
+        UserSession user = new UserSession(otherUserId, "other@test.com", "USER");
+
+        when(savedResumeDao.findById(1L, otherUserId)).thenReturn(null);
+
+        mockMvc.perform(get("/api/generate/resumes/1/pdf")
+                        .sessionAttr("user", user))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void downloadPdf_deletedRow_returns404() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        when(savedResumeDao.findById(1L, userId)).thenReturn(null);
+
+        mockMvc.perform(get("/api/generate/resumes/1/pdf")
+                        .sessionAttr("user", user))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void downloadPdf_missingFile_returns404() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        java.nio.file.Path nonExistentFile = java.nio.file.Paths.get("target/nonexistent.pdf");
+        SavedResumeDao.SavedResumeRow row = new SavedResumeDao.SavedResumeRow();
+        row.id = 1L;
+        row.pdfFilePath = "/missing/file.pdf";
+        when(savedResumeDao.findById(1L, userId)).thenReturn(row);
+        when(fileStorage.resolveSafePath("/missing/file.pdf")).thenReturn(nonExistentFile);
+
+        mockMvc.perform(get("/api/generate/resumes/1/pdf")
+                        .sessionAttr("user", user))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void downloadPdf_traversalPath_returns404() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        SavedResumeDao.SavedResumeRow row = new SavedResumeDao.SavedResumeRow();
+        row.id = 1L;
+        row.pdfFilePath = "../../etc/passwd";
+        when(savedResumeDao.findById(1L, userId)).thenReturn(row);
+        when(fileStorage.resolveSafePath("../../etc/passwd"))
+                .thenThrow(new SecurityException("Path traversal detected"));
+
+        mockMvc.perform(get("/api/generate/resumes/1/pdf")
+                        .sessionAttr("user", user))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void downloadPdf_nullStoredPath_returns404() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        SavedResumeDao.SavedResumeRow row = new SavedResumeDao.SavedResumeRow();
+        row.id = 1L;
+        row.pdfFilePath = null;
+        when(savedResumeDao.findById(1L, userId)).thenReturn(row);
+
+        mockMvc.perform(get("/api/generate/resumes/1/pdf")
+                        .sessionAttr("user", user))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void downloadPdf_injectedDisposition_fallsBackToAttachment() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("test-resume", ".pdf");
+        tempFile.toFile().deleteOnExit();
+
+        SavedResumeDao.SavedResumeRow row = new SavedResumeDao.SavedResumeRow();
+        row.id = 1L;
+        row.pdfFilePath = "/path/to/file.pdf";
+        when(savedResumeDao.findById(1L, userId)).thenReturn(row);
+        when(fileStorage.resolveSafePath("/path/to/file.pdf")).thenReturn(tempFile);
+
+        // Header injection attempt: CRLF in disposition value must be neutralized
+        mockMvc.perform(get("/api/generate/resumes/1/pdf")
+                        .param("disposition", "inline\r\nX-Injected: malicious")
+                        .sessionAttr("user", user))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"resume-1.pdf\""));
+    }
+
+    @Test
+    void downloadPdf_unknownDisposition_fallsBackToAttachment() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UserSession user = new UserSession(userId, "test@test.com", "USER");
+
+        java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("test-resume", ".pdf");
+        tempFile.toFile().deleteOnExit();
+
+        SavedResumeDao.SavedResumeRow row = new SavedResumeDao.SavedResumeRow();
+        row.id = 1L;
+        row.pdfFilePath = "/path/to/file.pdf";
+        when(savedResumeDao.findById(1L, userId)).thenReturn(row);
+        when(fileStorage.resolveSafePath("/path/to/file.pdf")).thenReturn(tempFile);
+
+        // Unknown disposition value must be rejected, fall back to attachment
+        mockMvc.perform(get("/api/generate/resumes/1/pdf")
+                        .param("disposition", "evil")
+                        .sessionAttr("user", user))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"resume-1.pdf\""));
+    }
 }

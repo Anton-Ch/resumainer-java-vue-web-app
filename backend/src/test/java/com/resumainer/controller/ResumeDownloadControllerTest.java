@@ -38,6 +38,8 @@ class ResumeDownloadControllerTest {
         when(session.getAttribute("user")).thenReturn(userSession);
     }
 
+    // --- Basic behavior ---
+
     @Test
     void downloadHtml_returns404_whenRowNotFound() {
         when(savedResumeDao.findById(5L, userId)).thenReturn(null);
@@ -92,5 +94,57 @@ class ResumeDownloadControllerTest {
                 controller.downloadHtml(session, 5L);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    // --- T186: Non-owner access ---
+
+    @Test
+    void downloadHtml_nonOwner_returns404() {
+        UUID otherUserId = UUID.randomUUID();
+        HttpSession otherSession = mock(HttpSession.class);
+        UserSession otherUser = new UserSession();
+        otherUser.setUserId(otherUserId);
+        when(otherSession.getAttribute("user")).thenReturn(otherUser);
+
+        when(savedResumeDao.findById(5L, otherUserId)).thenReturn(null);
+
+        ResponseEntity<Resource> response = controller.downloadHtml(otherSession, 5L);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    // --- T186: Path traversal protection ---
+
+    @Test
+    void downloadHtml_traversalPath_returns404() {
+        SavedResumeDao.SavedResumeRow row = new SavedResumeDao.SavedResumeRow();
+        row.id = 5L;
+        row.htmlFilePath = "../../etc/passwd";
+        when(savedResumeDao.findById(5L, userId)).thenReturn(row);
+        when(fileStorage.resolveSafePath("../../etc/passwd"))
+                .thenThrow(new SecurityException("Path traversal detected"));
+
+        ResponseEntity<Resource> response = controller.downloadHtml(session, 5L);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    // --- T186: Null/blank stored path ---
+
+    @Test
+    void downloadHtml_nullStoredPath_returns404() {
+        SavedResumeDao.SavedResumeRow row = new SavedResumeDao.SavedResumeRow();
+        row.id = 5L;
+        row.htmlFilePath = null;
+        when(savedResumeDao.findById(5L, userId)).thenReturn(row);
+
+        ResponseEntity<Resource> response = controller.downloadHtml(session, 5L);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    // --- T185: Legacy endpoint is deprecated ---
+
+    @Test
+    void controller_isDeprecated() {
+        Deprecated annotation = ResumeDownloadController.class.getAnnotation(Deprecated.class);
+        assertNotNull(annotation, "ResumeDownloadController must be @Deprecated");
     }
 }
