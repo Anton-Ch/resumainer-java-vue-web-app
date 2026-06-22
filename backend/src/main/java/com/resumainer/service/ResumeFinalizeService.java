@@ -378,28 +378,34 @@ public class ResumeFinalizeService {
         input.professionalSummary = bundle.response.getProfessionalSummary();
         input.professionalAspirations = bundle.response.getProfessionalAspirations();
         input.valueLine = bundle.response.getValueLine();
+        input.coverLetter = bundle.response.getCoverLetter();
 
-        // Contact data from profile
+        // Contact data from profile.
+        // ProfilePromptDao.loadContact() uses camelCase keys, but keep snake_case fallback for legacy safety.
         if (contactData != null) {
-            input.fullName = str(contactData.get("full_name"));
-            input.phone = str(contactData.get("phone"));
-            input.email = str(contactData.get("email"));
-            input.location = str(contactData.get("location"));
-            input.linkedin = str(contactData.get("linkedin"));
-            input.portfolio = str(contactData.get("portfolio"));
-            input.telegram = str(contactData.get("telegram"));
-            input.whatsapp = str(contactData.get("whatsapp"));
+            input.fullName = firstText(contactData, "fullName", "full_name");
+            input.phone = firstText(contactData, "phone");
+            input.email = firstText(contactData, "resumeEmail", "email");
+            input.location = firstText(contactData, "location");
+            input.linkedin = firstText(contactData, "linkedinUrl", "linkedin");
+            input.portfolio = firstText(contactData, "portfolioUrl", "portfolio");
+            input.telegram = firstText(contactData, "telegram");
+            input.whatsapp = firstText(contactData, "whatsapp");
         }
 
-        // Education from profile
+        // Education from profile.
+        // ProfilePromptDao.loadEducation() returns bilingual camelCase keys.
         if (education != null) {
             for (Map<String, Object> edu : education) {
-                String line = str(edu.get("institution")) + " — " + str(edu.get("degree"));
-                input.educationLines.add(line);
+                String line = buildEducationLine(edu, languageCode);
+                if (hasText(line)) {
+                    input.educationLines.add(line);
+                }
             }
         }
 
-        // Work experience from bundle
+        // Work experience from generated response bundle.
+        // Bullets are loaded by GenerationResponseDao.loadResponseBundle().
         if (bundle.experience != null) {
             for (com.resumainer.model.GenerationResponseExperience exp : bundle.experience) {
                 ResumeRenderData.RenderWorkItem w = new ResumeRenderData.RenderWorkItem();
@@ -407,18 +413,23 @@ public class ResumeFinalizeService {
                 w.setCompanyName(exp.getCompanyName());
                 w.setDescription(exp.getDescription());
                 w.setLocation(exp.getLocation());
+                w.setDateRange(formatDateRange(exp.getStartDate(), exp.getEndDate(), languageCode));
                 w.setFirstPage(exp.isFirstPage());
+                w.setBulletPoints(experienceBulletTexts(exp));
                 input.workItems.add(w);
             }
         }
 
-        // Projects from bundle
+        // Projects from generated response bundle.
+        // Bullets are loaded by GenerationResponseDao.loadResponseBundle().
         if (bundle.projects != null) {
             for (com.resumainer.model.GenerationResponseProject proj : bundle.projects) {
                 ResumeRenderData.RenderProjectItem p = new ResumeRenderData.RenderProjectItem();
                 p.setProjectName(proj.getProjectName());
                 p.setRole(proj.getRole());
                 p.setDescription(proj.getDescription());
+                p.setDateRange(formatDateRange(proj.getStartDate(), proj.getEndDate(), languageCode));
+                p.setBulletPoints(projectBulletTexts(proj));
                 input.projectItems.add(p);
             }
         }
@@ -449,11 +460,126 @@ public class ResumeFinalizeService {
             }
         }
 
+        log.info("RENDER_DATA_SEMANTICS lang={} fullNamePresent={} emailPresent={} educationLines={} workItems={} workBullets={} projects={} projectBullets={} courses={} skills={}",
+                languageCode,
+                hasText(input.fullName),
+                hasText(input.email),
+                input.educationLines.size(),
+                input.workItems.size(),
+                countWorkBullets(input.workItems),
+                input.projectItems.size(),
+                countProjectBullets(input.projectItems),
+                input.courseItems.size(),
+                input.skillGroups.size());
+
         return renderDataBuilder.buildRenderData(input);
     }
 
-    private String str(Object obj) {
-        return obj != null ? obj.toString() : "";
+    private String buildEducationLine(Map<String, Object> edu, String languageCode) {
+        if (edu == null || edu.isEmpty()) return "";
+
+        boolean ru = "RU".equalsIgnoreCase(languageCode);
+
+        String institution = ru
+                ? firstText(edu, "institutionNameRu", "institutionNameEn", "institution", "institutionName")
+                : firstText(edu, "institutionNameEn", "institutionNameRu", "institution", "institutionName");
+        String degree = ru
+                ? firstText(edu, "degreeRu", "degreeEn", "degree")
+                : firstText(edu, "degreeEn", "degreeRu", "degree");
+        String field = ru
+                ? firstText(edu, "fieldOfStudyRu", "fieldOfStudyEn", "fieldOfStudy", "field")
+                : firstText(edu, "fieldOfStudyEn", "fieldOfStudyRu", "fieldOfStudy", "field");
+
+        List<String> leftParts = new ArrayList<>();
+        if (hasText(degree)) leftParts.add(degree);
+        if (hasText(field)) leftParts.add(field);
+
+        String left = String.join(": ", leftParts);
+
+        if (hasText(left) && hasText(institution)) {
+            return left + " | " + institution;
+        }
+        if (hasText(institution)) return institution;
+        return left;
+    }
+
+    private List<String> experienceBulletTexts(com.resumainer.model.GenerationResponseExperience exp) {
+        if (exp == null || exp.getBullets() == null || exp.getBullets().isEmpty()) return List.of();
+
+        return exp.getBullets().stream()
+                .filter(java.util.Objects::nonNull)
+                .sorted(java.util.Comparator.comparingInt(
+                        com.resumainer.model.GenerationResponseExperienceBullet::getBulletOrder))
+                .map(com.resumainer.model.GenerationResponseExperienceBullet::getBulletText)
+                .filter(this::hasText)
+                .toList();
+    }
+
+    private List<String> projectBulletTexts(com.resumainer.model.GenerationResponseProject project) {
+        if (project == null || project.getBullets() == null || project.getBullets().isEmpty()) return List.of();
+
+        return project.getBullets().stream()
+                .filter(java.util.Objects::nonNull)
+                .sorted(java.util.Comparator.comparingInt(
+                        com.resumainer.model.GenerationResponseProjectBullet::getBulletOrder))
+                .map(com.resumainer.model.GenerationResponseProjectBullet::getBulletText)
+                .filter(this::hasText)
+                .toList();
+    }
+
+    private String formatDateRange(java.time.LocalDate startDate, java.time.LocalDate endDate, String languageCode) {
+        if (startDate == null && endDate == null) return "";
+
+        String start = formatYearMonth(startDate);
+        String end = endDate != null
+                ? formatYearMonth(endDate)
+                : ("RU".equalsIgnoreCase(languageCode) ? "по настоящее время" : "till now");
+
+        if (!hasText(start)) return end;
+        if (!hasText(end)) return start;
+        return start + " - " + end;
+    }
+
+    private String formatYearMonth(java.time.LocalDate value) {
+        if (value == null) return "";
+        return String.format(java.util.Locale.ROOT, "%04d-%02d", value.getYear(), value.getMonthValue());
+    }
+
+    private String firstText(Map<String, Object> map, String... keys) {
+        if (map == null || keys == null) return "";
+
+        for (String key : keys) {
+            if (key == null) continue;
+            Object value = map.get(key);
+            if (value != null && hasText(value.toString())) {
+                return value.toString().trim();
+            }
+        }
+        return "";
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private int countWorkBullets(List<ResumeRenderData.RenderWorkItem> items) {
+        if (items == null) return 0;
+        return items.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(ResumeRenderData.RenderWorkItem::getBulletPoints)
+                .filter(java.util.Objects::nonNull)
+                .mapToInt(List::size)
+                .sum();
+    }
+
+    private int countProjectBullets(List<ResumeRenderData.RenderProjectItem> items) {
+        if (items == null) return 0;
+        return items.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(ResumeRenderData.RenderProjectItem::getBulletPoints)
+                .filter(java.util.Objects::nonNull)
+                .mapToInt(List::size)
+                .sum();
     }
 
     private String loadUsername(UUID userId) {

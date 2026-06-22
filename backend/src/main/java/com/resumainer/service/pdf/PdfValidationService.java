@@ -54,6 +54,7 @@ public final class PdfValidationService {
 
     static String normalize(String value) {
         if (value == null) return "";
+
         String normalized = Normalizer.normalize(value, Normalizer.Form.NFKC)
                 .replace('\u00ad', ' ')   // soft hyphen
                 .replace('\ufeff', ' ')   // BOM
@@ -61,7 +62,11 @@ public final class PdfValidationService {
                 .replace('Ё', 'Е')
                 .replace('ё', 'е')
                 .replaceAll("[\u2010-\u2015\u2212]", "-");
-        normalized = normalized.replaceAll("(?iu)(?<=\\p{L})-(?=\\p{L})", "");
+
+        // PDF extraction often changes punctuation, list markers, pipes, slashes,
+        // commas, periods, and bullets. Validate semantic token order instead.
+        normalized = normalized.replaceAll("[^\\p{L}\\p{N}]+", " ");
+
         return normalized.toUpperCase(Locale.ROOT).replaceAll("\\s+", " ").trim();
     }
 }

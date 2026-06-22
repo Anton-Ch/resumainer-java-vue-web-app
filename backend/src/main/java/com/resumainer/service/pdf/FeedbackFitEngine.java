@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
@@ -84,8 +85,8 @@ public final class FeedbackFitEngine {
             List<FitState> selectedPageStates = new ArrayList<>();
             FitState baseState = FitState.defaults(limits);
 
-            // Filter targets for this target page count only
-            List<PdfFillTarget> pageTargets = effectiveTargets(plan.getTargetPageCount(), targets);
+            // Select one effective target per planned page, with spike V12.1 adaptive rules.
+            List<PdfFillTarget> pageTargets = effectiveTargets(data, plan, targets);
 
             for (int page = 1; page <= plan.getTargetPageCount(); page++) {
                 FitState start = page == 1 ? baseState : copyFontFrom(baseState, FitState.defaults(limits));
@@ -187,20 +188,148 @@ public final class FeedbackFitEngine {
         return limits.getStepPercent() != null ? limits.getStepPercent().doubleValue() : 0.10;
     }
 
-    /** Filter fill targets for the requested target page count only. Package-private for testing. */
-    List<PdfFillTarget> effectiveTargets(int targetPageCount, List<PdfFillTarget> allTargets) {
-        if (allTargets == null) return List.of();
-        return allTargets.stream()
-                .filter(t -> t.getTargetPageCount() == targetPageCount)
-                .collect(java.util.stream.Collectors.toList());
+    /**
+     * Select one effective fill target per planned page.
+     * Applies spike V12.1 adaptive rules in code instead of depending on ambiguous DB duplicates.
+     * Package-private for tests.
+     */
+    List<PdfFillTarget> effectiveTargets(ResumeRenderData data, PagePlan plan, List<PdfFillTarget> allTargets) {
+        List<PdfFillTarget> selected = new ArrayList<>();
+        int targetPageCount = plan.getTargetPageCount();
+        for (int page = 1; page <= targetPageCount; page++) {
+            PdfFillTarget target = selectConfiguredTarget(data, plan, allTargets, targetPageCount, page);
+            if (target == null) {
+                target = defaultTarget(targetPageCount, page);
+            }
+            selected.add(applySpikeAdaptiveTarget(data, plan, target));
+        }
+        return selected;
     }
 
-    /** Return the fill target for a specific page during isolated page fitting. Package-private for testing. */
-    PdfFillTarget targetForIsolatedPage(List<PdfFillTarget> targets, int pageNumber) {
-        if (targets == null) return null;
-        return targets.stream()
-                .filter(t -> t.getPageNumber() == pageNumber)
-                .findFirst().orElse(null);
+    /**
+     * Return the physical-page-1 target for isolated planned-page fitting.
+     * A planned Page 2 rendered alone becomes a single-page PDF whose only physical page is 1.
+     * Therefore the target page_number must be remapped to 1 during isolated fitting.
+     * Package-private for tests.
+     */
+    PdfFillTarget targetForIsolatedPage(List<PdfFillTarget> targets, int plannedPageNumber) {
+        PdfFillTarget original = null;
+        if (targets != null) {
+            for (PdfFillTarget candidate : targets) {
+                if (candidate.getPageNumber() == plannedPageNumber) {
+                    original = candidate;
+                    break;
+                }
+            }
+        }
+        if (original == null) {
+            original = defaultTarget(1, 1);
+        }
+        PdfFillTarget isolated = copyTarget(original);
+        isolated.setTargetPageCount(1);
+        isolated.setPageNumber(1);
+        return isolated;
+    }
+
+    private PdfFillTarget selectConfiguredTarget(ResumeRenderData data, PagePlan plan, List<PdfFillTarget> allTargets,
+                                                 int targetPageCount, int pageNumber) {
+        if (allTargets == null || allTargets.isEmpty()) return null;
+        String languageCode = data != null && data.getLanguageCode() != null
+                ? data.getLanguageCode().trim().toUpperCase(Locale.ROOT)
+                : null;
+        int projectCount = pageNumber == 2 ? plan.getPage2ProjectCount() : 0;
+
+        List<PdfFillTarget> candidates = new ArrayList<>();
+        for (PdfFillTarget target : allTargets) {
+            if (target.getTargetPageCount() != targetPageCount) continue;
+            if (target.getPageNumber() != pageNumber) continue;
+            if (!languageMatches(target, languageCode)) continue;
+            if (!projectCountMatches(target, pageNumber, projectCount)) continue;
+            candidates.add(target);
+        }
+        if (candidates.isEmpty()) return null;
+
+        candidates.sort((a, b) -> {
+            int lang = Boolean.compare(b.getLanguageCode() != null, a.getLanguageCode() != null);
+            if (lang != 0) return lang;
+            int projectSpecific = Boolean.compare(isProjectSpecific(b), isProjectSpecific(a));
+            if (projectSpecific != 0) return projectSpecific;
+            int priority = Integer.compare(b.getPriority(), a.getPriority());
+            if (priority != 0) return priority;
+            return Long.compare(a.getId(), b.getId());
+        });
+        return candidates.get(0);
+    }
+
+    private boolean languageMatches(PdfFillTarget target, String languageCode) {
+        if (target.getLanguageCode() == null || target.getLanguageCode().isBlank()) return true;
+        if (languageCode == null || languageCode.isBlank()) return false;
+        return target.getLanguageCode().trim().equalsIgnoreCase(languageCode);
+    }
+
+    private boolean projectCountMatches(PdfFillTarget target, int pageNumber, int projectCount) {
+        if (pageNumber != 2) return true;
+        Integer min = target.getProjectCountMin();
+        Integer max = target.getProjectCountMax();
+        if (min != null && projectCount < min) return false;
+        if (max != null && projectCount > max) return false;
+        return true;
+    }
+
+    private boolean isProjectSpecific(PdfFillTarget target) {
+        return target.getProjectCountMin() != null || target.getProjectCountMax() != null;
+    }
+
+    private PdfFillTarget applySpikeAdaptiveTarget(ResumeRenderData data, PagePlan plan, PdfFillTarget original) {
+        PdfFillTarget target = copyTarget(original);
+        BigDecimal min = target.getMinFill();
+        BigDecimal max = target.getMaxFill();
+
+        if (target.getPageNumber() == 1
+                && plan.getTargetPageCount() == 1
+                && data != null
+                && "RU".equalsIgnoreCase(data.getLanguageCode())
+                && max != null) {
+            max = max.min(new BigDecimal("0.93"));
+        }
+
+        if (target.getPageNumber() == 2 && plan.getTargetPageCount() >= 2 && min != null) {
+            int page2ProjectCount = plan.getPage2ProjectCount();
+            if (page2ProjectCount == 0) {
+                min = min.min(new BigDecimal("0.30"));
+            } else if (page2ProjectCount == 1) {
+                min = min.min(new BigDecimal("0.44"));
+            }
+        }
+
+        target.setMinFill(min);
+        target.setMaxFill(max);
+        return target;
+    }
+
+    private PdfFillTarget defaultTarget(int targetPageCount, int pageNumber) {
+        PdfFillTarget target = new PdfFillTarget();
+        target.setTargetPageCount(targetPageCount);
+        target.setPageNumber(pageNumber);
+        target.setMinFill(pageNumber == 3 ? new BigDecimal("0.01") : new BigDecimal("0.80"));
+        target.setMaxFill(new BigDecimal("0.96"));
+        target.setPriority(0);
+        return target;
+    }
+
+    private PdfFillTarget copyTarget(PdfFillTarget source) {
+        PdfFillTarget copy = new PdfFillTarget();
+        copy.setId(source.getId());
+        copy.setFitLimitsId(source.getFitLimitsId());
+        copy.setTargetPageCount(source.getTargetPageCount());
+        copy.setPageNumber(source.getPageNumber());
+        copy.setLanguageCode(source.getLanguageCode());
+        copy.setProjectCountMin(source.getProjectCountMin());
+        copy.setProjectCountMax(source.getProjectCountMax());
+        copy.setMinFill(source.getMinFill());
+        copy.setMaxFill(source.getMaxFill());
+        copy.setPriority(source.getPriority());
+        return copy;
     }
 
     /** Clamp page2/page3 line-height and section-gap delta from page1. Package-private for testing. */

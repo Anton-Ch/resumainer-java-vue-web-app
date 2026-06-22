@@ -30,7 +30,8 @@ class PagePlanBuilderTest {
     @BeforeEach
     void setUp() {
         resolver = new WorkExperienceBudgetResolver(budgetConfigService);
-        builder = new PagePlanBuilder(resolver);
+        builder = new PagePlanBuilder(resolver, budgetConfigService);
+        lenient().when(budgetConfigService.getMaxProjects()).thenReturn(3);
     }
 
     @Test
@@ -77,6 +78,35 @@ class PagePlanBuilderTest {
         PagePlan plan = builder.build(1, 0, 0);
         assertEquals(1, plan.getTargetPageCount());
         assertEquals(1, plan.getPage1WorkCount());
+    }
+
+    @Test
+    void build_page2Empty_downgradesToOnePage() {
+        // A "two_page" rule where the user has only 2 work items and 0 projects.
+        // page1 gets 2, page2 gets 0 — page2 is empty → should be 1 page.
+        when(budgetConfigService.getWorkExperienceDistributionRules())
+                .thenReturn(List.of(rule("two_page", 2, 1, 1)));
+
+        PagePlan plan = builder.build(2, 0, 1);
+        assertEquals(1, plan.getTargetPageCount(),
+                "When page2 has 0 work and 0 projects, plan must be 1 page");
+        assertEquals(2, plan.getPage1WorkCount());
+        assertEquals(0, plan.getPage2AdditionalWorkCount());
+    }
+
+    @Test
+    void build_denseProfile_capsProjectsToV12SpikeBudget() {
+        when(budgetConfigService.getWorkExperienceDistributionRules())
+                .thenReturn(List.of(rule("two_page", 3, 5, 5)));
+        when(budgetConfigService.getMaxProjects()).thenReturn(3);
+
+        PagePlan plan = builder.build(10, 4, 7);
+
+        assertEquals(2, plan.getTargetPageCount());
+        assertEquals(3, plan.getPage1WorkCount());
+        assertEquals(5, plan.getPage2AdditionalWorkCount());
+        assertEquals(3, plan.getPage2ProjectCount());
+        assertTrue(plan.isPage2HasProjectsFirst());
     }
 
     private ResumeBudgetConfigDao.WorkExperienceDistributionRule rule(

@@ -159,12 +159,20 @@ public class SavedResumeDao {
         String sql = "SELECT sr.pdf_file_path FROM saved_resumes sr JOIN users u ON sr.user_id = u.id "
                    + "WHERE u.username = ? AND sr.public_code = ? AND sr.is_deleted = FALSE "
                    + "AND sr.pdf_file_path IS NOT NULL AND sr.pdf_status = 'READY'";
+        log.debug("findPdfPathByUsernameAndCode: user={}, code={}", username, publicCode);
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
             stmt.setString(2, publicCode);
             try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next() ? rs.getString("pdf_file_path") : null;
+                boolean hasRow = rs.next();
+                log.debug("findPdfPathByUsernameAndCode result: hasRow={}", hasRow);
+                if (hasRow) {
+                    String path = rs.getString("pdf_file_path");
+                    log.debug("findPdfPathByUsernameAndCode path: {}", path);
+                    return path;
+                }
+                return null;
             }
         } catch (SQLException e) {
             log.error("Error finding PDF for user={} code={}", username, publicCode, e);

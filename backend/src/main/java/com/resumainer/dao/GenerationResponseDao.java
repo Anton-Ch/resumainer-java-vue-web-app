@@ -478,10 +478,33 @@ public class GenerationResponseDao {
             throw new RuntimeException("Database error loading response bundle", e);
         }
         bundle.experience = findExperienceByResponseId(responseId);
+        attachExperienceBullets(bundle.experience);
+
         bundle.courses = findCoursesByResponseId(responseId);
+
         bundle.projects = findProjectsByResponseId(responseId);
+        attachProjectBullets(bundle.projects);
+
         bundle.skills = findSkillsByResponseId(responseId);
         return bundle;
+    }
+
+    private void attachExperienceBullets(List<GenerationResponseExperience> experiences) {
+        if (experiences == null || experiences.isEmpty()) return;
+
+        for (GenerationResponseExperience exp : experiences) {
+            if (exp == null || exp.getId() == null) continue;
+            exp.setBullets(findExperienceBullets(exp.getId()));
+        }
+    }
+
+    private void attachProjectBullets(List<GenerationResponseProject> projects) {
+        if (projects == null || projects.isEmpty()) return;
+
+        for (GenerationResponseProject project : projects) {
+            if (project == null || project.getId() == null) continue;
+            project.setBullets(findProjectBullets(project.getId()));
+        }
     }
 
     // --- Row mapping ---

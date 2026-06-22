@@ -70,8 +70,11 @@ public class PublicResumeController {
 
         try {
             Path filePath = fileStorage.resolveSafePath(pdfPath);
+            log.debug("PUBLIC_PDF resolved path: {}", filePath);
             Resource resource = new FileSystemResource(filePath);
-            if (!resource.exists()) {
+            boolean exists = resource.exists();
+            log.debug("PUBLIC_PDF resource exists: {} path={}", exists, filePath);
+            if (!exists) {
                 return publicNotFound();
             }
             return ResponseEntity.ok()

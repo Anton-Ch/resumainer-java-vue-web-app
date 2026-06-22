@@ -2,8 +2,7 @@ package com.resumainer.dto.generate;
 
 /**
  * Export DTO for one saved resume.
- * htmlDownloadUrl is functional in feat/007.
- * pdfDownloadUrl, pdfOpenUrl, publicUrlLink are placeholders until feat/008.
+ * All URLs are fully functional (Phase 23+).
  * pdfAvailable indicates whether real PDF is generated.
  */
 public class SavedResumeExportDto {
@@ -12,13 +11,13 @@ public class SavedResumeExportDto {
     private String languageCode;       // EN, RU
     private String adaptationLevel;    // MINIMAL, BALANCED, MAXIMUM
 
-    private String htmlDownloadUrl;    // real authenticated endpoint
-    private String pdfDownloadUrl;     // placeholder in feat/007
-    private String pdfOpenUrl;         // placeholder in feat/007
-    private String publicUrlLink;      // placeholder in feat/007
+    private String htmlDownloadUrl;    // GET /api/generate/resumes/{id}/html
+    private String pdfDownloadUrl;     // GET /api/generate/resumes/{id}/pdf
+    private String pdfOpenUrl;         // GET /api/generate/resumes/{id}/pdf?disposition=inline
+    private String publicUrlLink;      // /{username}/{publicCode}
 
-    private boolean pdfAvailable;      // false in feat/007
-    private String pdfMessage;         // "PDF generation coming in a future update"
+    private boolean pdfAvailable;      // true when pdf_status = READY
+    private String pdfMessage;         // null when PDF is ready
 
     private String coverLetter;        // null if not generated
 

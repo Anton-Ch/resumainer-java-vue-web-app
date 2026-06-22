@@ -326,7 +326,7 @@ public class ResumePromptBuilder {
                 + "        \"startDate\": \"YYYY-MM\",\n"
                 + "        \"endDate\": \"YYYY-MM or null\",\n"
                 + "        \"isFirstPage\": \"boolean - true for Page 1 records, false for Page 2 records\",\n"
-                + "        \"bulletPoints\": [\"string - short action/result bullet, max 250 chars, min 1\"]\n"
+                + "        \"bulletPoints\": [\"string - short action/result bullet, max 250 chars; Page 1 records should use budgeted bullets, Page 2 additional records must use [] when the budget says 0 bullets\"]\n"
                 + "      }],\n"
                 + "      \"courses\": [{\n"
                 + "        \"sourceId\": \"string - same as source courses.id\",\n"
@@ -340,7 +340,7 @@ public class ResumePromptBuilder {
                 + "        \"role\": \"string\",\n"
                 + "        \"description\": \"string\",\n"
                 + "        \"startDate\": \"YYYY-MM\",\n"
-                + "        \"bulletPoints\": [\"string - short action/result bullet, max 250 chars, min 1\"]\n"
+                + "        \"bulletPoints\": [\"string - short action/result bullet, max 250 chars; Page 1 records should use budgeted bullets, Page 2 additional records must use [] when the budget says 0 bullets\"]\n"
                 + "      }],\n"
                 + "      \"skills\": [{\n"
                 + "        \"skillGroup\": \"string\",\n"
@@ -393,11 +393,6 @@ public class ResumePromptBuilder {
         return sb.toString();
     }
 
-    /**
-     * Builds the # Resume budget rules section from active DB budget config.
-     * Values come from resume_section_budget_rules and WorkExperienceBudgetResolver,
-     * not hardcoded Java constants.
-     */
     private String buildBudgetSection(Map<String, Object> profilePayload) {
         try {
             int groupsMin = budgetConfigService.getSkillsGroups();
@@ -411,6 +406,8 @@ public class ResumePromptBuilder {
             int maxProj = budgetConfigService.getMaxProjects();
             int psMin = budgetConfigService.getProjectSentencesMin();
             int psMax = budgetConfigService.getProjectSentencesMax();
+            int pbMin = budgetConfigService.getProjectBulletsMin();
+            int pbMax = budgetConfigService.getProjectBulletsMax();
 
             return "Work Experience:\n"
                     + buildWorkExperienceBudgetSection(profilePayload)
@@ -426,8 +423,11 @@ public class ResumePromptBuilder {
                     + "- Keep courseFocus concise, ideally " + cfMin + "–" + cfMax + " words.\n"
                     + "\n"
                     + "Projects:\n"
-                    + "- Include up to " + maxProj + " projects.\n"
-                    + "- Keep project descriptions " + psMin + "–" + psMax + " sentences.\n";
+                    + "- Include no more than " + maxProj + " projects total, even if the Dynamic payload contains more projects.\n"
+                    + "- Select projects by relevance to the vacancy/company first, then by recency and implementation value.\n"
+                    + "- Keep project descriptions " + psMin + "–" + psMax + " sentences.\n"
+                    + "- For every included project, return " + pbMin + "–" + pbMax + " short project bulletPoints where source data supports them.\n"
+                    + "- Do not return all projects when the profile contains more projects than the budget.\n";
         } catch (Exception e) {
             log.warn("Failed to load budget config for prompt: {}", e.getMessage());
             return "Work Experience:\n"
@@ -435,7 +435,10 @@ public class ResumePromptBuilder {
                     + "\n"
                     + "Skills:\n"
                     + "- Group skills by category when possible.\n"
-                    + "- Return skills as a non-empty array.\n";
+                    + "- Return skills as a non-empty array.\n"
+                    + "\n"
+                    + "Projects:\n"
+                    + "- Select only the most relevant projects. Do not return all projects when the profile is dense.\n";
         }
     }
 
@@ -456,12 +459,14 @@ public class ResumePromptBuilder {
                 + "- Profile contains " + budget.totalProfileJobs + " work experience records, "
                 + budget.totalProfileCourses + " courses, and "
                 + budget.totalProfileProjects + " projects.\n"
-                + "- Return no more than " + budget.maxTotalJobs + " workExperience records total.\n"
+                + "- Return no more than " + budget.maxTotalJobs + " workExperience records total. This is a hard budget cap.\n"
                 + "- Page 1: return up to " + budget.targetPage1Jobs + " primary workExperience records.\n"
                 + "- The Page 1 count comes from the DB distribution rule, not from the priority list.\n"
                 + "- If the profile contains a current job, it must be the first workExperience record and must have \"isFirstPage\": true.\n"
                 + "- Fill remaining Page 1 slots by suitability for the vacancy and company, then by recency.\n"
                 + "- Page 2: return up to " + budget.targetPage2Jobs + " additional workExperience records from remaining jobs only.\n"
+                + "- Page 2 workExperience descriptions must be compact: one concise summary sentence per job.\n"
+                + "- Page 2 workExperience records must not have bulletPoints unless the budget explicitly says otherwise.\n"
                 + "- Mark Page 1 records with \"isFirstPage\": true and Page 2 records with \"isFirstPage\": false.\n"
                 + "- A source job can appear on only one page.\n"
                 + "- Do not return all workExperience records when the profile contains more records than the resolved budget.\n";

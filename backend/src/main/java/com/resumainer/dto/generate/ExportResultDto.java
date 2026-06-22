@@ -3,9 +3,7 @@ package com.resumainer.dto.generate;
 import java.util.List;
 
 /**
- * Export data returned after finalization.
- * htmlDownloadUrl is real in feat/007; pdfDownloadUrl, pdfOpenUrl, publicUrlLink
- * are placeholders until feat/008-pdf-conversion.
+ * Export data returned after finalization (Phase 23+).
  */
 public class ExportResultDto {
 

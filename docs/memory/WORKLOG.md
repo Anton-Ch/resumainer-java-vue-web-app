@@ -463,3 +463,25 @@ mvnw clean package → BUILD SUCCESS with 1 passing test.
 > - Deployed to staging
 
 This is a changelog entry, not a durable lesson. It records what happened, not what was learned.
+
+---
+
+### 2026-06-22 — Feature 008 Phases 23-27: download security, PDF fitting, semantic render repair
+
+**Status**  
+Active
+
+**Why this is durable**
+Phases 23-27 delivered the complete production PDF pipeline:
+- **Phase 23**: Download controller security fixes (Content-Disposition header injection fix, missing exists() check, SecurityException→500 bug), public route rate limiter, timing hardening
+- **Phase 24**: Frontend export/finalize flow repair — DTO URL contract, disabled PDF buttons, absolute public link, duplicate navigation fix, error handling, double-click prevention
+- **Phase 25**: V12.1 budget parity restoration (migration V36), resolveSafePath absolute path fix, isolated page target remap, adaptive page-2 min-fill
+- **Phase 26**: Semantic render data repair — contact camelCase keys, education bilingual keys, work/project bullet transfer, date range formatting
+- **Phase 27**: Semantic anchor tuning — stable token anchors, punctuation-insensitive normalization
+
+**Evidence**
+- Backend: 885+ tests, all PASS
+- Frontend: 34 tests, all PASS
+- Docker runtime: finalization HTTP 200, PDF 2 pages, PAGE1:OK, PAGE2:OK, fill ratios {1=0.92, 2=0.73}
+- Public route: GET /{username}/{publicCode} → 200 application/pdf (both backend :8080 and frontend :80)
+- Semantic proof: RENDER_DATA_SEMANTICS log confirms fullNamePresent=true, emailPresent=true, educationLines=6, workBullets=9, projectBullets=9

@@ -1,6 +1,10 @@
 package com.resumainer.service;
 
 import com.resumainer.dao.*;
+import com.resumainer.model.GenerationResponseExperience;
+import com.resumainer.model.GenerationResponseExperienceBullet;
+import com.resumainer.model.GenerationResponseProject;
+import com.resumainer.model.GenerationResponseProjectBullet;
 import com.resumainer.model.ResumeGenerationRequest;
 import com.resumainer.model.ResumeGenerationResponse;
 import com.resumainer.model.User;
@@ -11,14 +15,17 @@ import com.resumainer.service.pdf.ResumeRenderDataBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -692,5 +699,116 @@ class ResumeFinalizeServiceTest {
         r.setCompanyName("MockTech");
         r.setStatus(status);
         return r;
+    }
+
+    @Test
+    void finalizeRequest_buildRenderDataTransfersContactEducationDatesAndBullets() {
+        // Given: one EN MINIMAL response
+        ResumeGenerationResponse resp = createResponse(1L, 1L);
+        resp.setProfessionalTitle("Business Analyst");
+        resp.setProfessionalSummary("Summary text");
+        resp.setProfessionalAspirations("Growth text");
+        resp.setValueLine("BA | SQL | BPMN");
+        when(responseDao.findResponsesByRequestId(requestId)).thenReturn(List.of(resp));
+
+        GenerationResponseExperience exp = new GenerationResponseExperience();
+        exp.setId(UUID.randomUUID());
+        exp.setJobTitle("Business Analyst");
+        exp.setCompanyName("Bobrosoft");
+        exp.setDescription("Gathered requirements and modeled processes.");
+        exp.setLocation("Astana");
+        exp.setStartDate(LocalDate.of(2025, 5, 1));
+        exp.setEndDate(null);
+        exp.setFirstPage(true);
+        GenerationResponseExperienceBullet expBullet = new GenerationResponseExperienceBullet();
+        expBullet.setExperienceId(exp.getId());
+        expBullet.setBulletOrder(0);
+        expBullet.setBulletText("Defined acceptance criteria for dashboard delivery.");
+        exp.setBullets(List.of(expBullet));
+
+        GenerationResponseProject project = new GenerationResponseProject();
+        project.setId(UUID.randomUUID());
+        project.setProjectName("AI Resume Generation Platform");
+        project.setRole("Product Owner / Backend Developer");
+        project.setDescription("Built an AI-assisted resume flow.");
+        project.setStartDate(LocalDate.of(2026, 1, 1));
+        project.setEndDate(LocalDate.of(2026, 6, 1));
+        GenerationResponseProjectBullet projectBullet = new GenerationResponseProjectBullet();
+        projectBullet.setProjectId(project.getId());
+        projectBullet.setBulletOrder(0);
+        projectBullet.setBulletText("Implemented structured generation and review flow.");
+        project.setBullets(List.of(projectBullet));
+
+        GenerationResponseDao.ResponseBundle bundle = new GenerationResponseDao.ResponseBundle();
+        bundle.response = resp;
+        bundle.experience = List.of(exp);
+        bundle.projects = List.of(project);
+        bundle.courses = Collections.emptyList();
+        bundle.skills = Collections.emptyList();
+        when(responseDao.loadResponseBundle(resp.getId())).thenReturn(bundle);
+
+        when(profilePromptDao.loadContact(userId)).thenReturn(Map.of(
+                "fullName", "Vasya Pupkin",
+                "phone", "+7-777-777-77-77",
+                "resumeEmail", "vasya@example.com",
+                "location", "Astana, Kazakhstan",
+                "linkedinUrl", "https://linkedin.example/vasya",
+                "portfolioUrl", "https://portfolio.example/vasya",
+                "telegram", "@vasya",
+                "whatsapp", "+7-777-777-77-77"
+        ));
+        when(profilePromptDao.loadEducation(userId)).thenReturn(List.of(Map.of(
+                "institutionNameEn", "KAFU",
+                "institutionNameRu", "КАФУ",
+                "degreeEn", "Bachelor",
+                "degreeRu", "Бакалавр",
+                "fieldOfStudyEn", "Information Systems",
+                "fieldOfStudyRu", "Информационные системы"
+        )));
+
+        when(renderDataBuilder.buildRenderData(any())).thenAnswer(invocation -> {
+            ResumeRenderDataBuilder.RenderDataInput input = invocation.getArgument(0);
+            ResumeRenderData data = new ResumeRenderData();
+            data.setLanguageCode(input.languageCode);
+            data.setFullName(input.fullName);
+            data.setEmail(input.email);
+            data.setEducation(input.educationLines);
+            data.setWorkExperience(input.workItems);
+            data.setProjects(input.projectItems);
+            return data;
+        });
+
+        OpenHtmlPdfGenerationService.PdfGenerationResult pdfResult =
+                OpenHtmlPdfGenerationService.PdfGenerationResult.success(
+                        "/tmp/parity.html", "/tmp/parity.pdf", 1, null);
+        when(pdfGenerationService.generate(any(), any(), any(), anyString())).thenReturn(pdfResult);
+
+        // When
+        service.finalizeRequest(requestId, userId, "MINIMAL");
+
+        // Then
+        ArgumentCaptor<ResumeRenderDataBuilder.RenderDataInput> captor =
+                ArgumentCaptor.forClass(ResumeRenderDataBuilder.RenderDataInput.class);
+        verify(renderDataBuilder).buildRenderData(captor.capture());
+        ResumeRenderDataBuilder.RenderDataInput input = captor.getValue();
+
+        assertEquals("Vasya Pupkin", input.fullName);
+        assertEquals("vasya@example.com", input.email);
+        assertEquals("https://linkedin.example/vasya", input.linkedin);
+        assertEquals("https://portfolio.example/vasya", input.portfolio);
+
+        assertEquals(1, input.educationLines.size());
+        assertEquals("Bachelor: Information Systems | KAFU", input.educationLines.get(0));
+        assertFalse(input.educationLines.get(0).contains("—"));
+
+        assertEquals(1, input.workItems.size());
+        assertEquals("2025-05 - till now", input.workItems.get(0).getDateRange());
+        assertEquals(List.of("Defined acceptance criteria for dashboard delivery."),
+                input.workItems.get(0).getBulletPoints());
+
+        assertEquals(1, input.projectItems.size());
+        assertEquals("2026-01 - 2026-06", input.projectItems.get(0).getDateRange());
+        assertEquals(List.of("Implemented structured generation and review flow."),
+                input.projectItems.get(0).getBulletPoints());
     }
 }
