@@ -19,10 +19,18 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 /**
- * Standalone controller for resume file downloads.
- * Mapped at /api/resumes/ (without /generate/ prefix) as a fallback
- * for browsers that cache old JS with the legacy URL pattern.
+ * Standalone controller for legacy resume HTML download.
+ * <p>
+ * @deprecated Legacy compatibility fallback. The canonical authenticated HTML download
+ * endpoint is {@code GET /api/generate/resumes/{savedResumeId}/html} in
+ * {@link GenerateResumeController}. This legacy endpoint exists only to support
+ * browsers that may have cached old JS with the previous URL pattern.
+ * <p>
+ * Must NOT be used by new export DTO or frontend flow. Will be removed in a future version.
+ * <p>
+ * Mapped at /api/resumes/ (without /generate/ prefix). Owner-scoped and authenticated.
  */
+@Deprecated
 @RestController
 @RequestMapping("/api")
 public class ResumeDownloadController {

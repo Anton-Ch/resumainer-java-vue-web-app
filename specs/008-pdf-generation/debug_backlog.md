@@ -151,3 +151,111 @@ Evidence:
 - GenerateResumeController 409 test: PASS
 - Targeted backend tests (DAO+Service+Controller): 62 PASS
 - Full backend: BUILD SUCCESS (830 tests, 0 failures)
+
+### Phase 23 fixes applied
+
+#### Security vulnerabilities fixed (T186)
+
+1. **Content-Disposition header injection** in `GenerateResumeController.downloadPdf()`:
+   - Raw `disposition` query parameter was concatenated directly into `Content-Disposition` header
+   - CRLF injection: `?disposition=inline\r\nX-Injected:malicious` would inject custom HTTP headers
+   - **Fix**: Added `validateDisposition()` method — only "inline" or "attachment" allowed; CR/LF stripped; all other values silently fall back to "attachment"
+
+2. **Missing `resource.exists()` check** in `GenerateResumeController.downloadPdf()`:
+   - PDF endpoint returned 200 OK with empty body for non-existent files
+   - `downloadHtml()` had the check but `downloadPdf()` did not
+   - **Fix**: Added `if (!resource.exists()) return 404` before returning PDF response
+
+3. **SecurityException → 500 in `downloadHtml()`**:
+   - `catch (Exception e)` caught SecurityException and returned 500 instead of 404
+   - `downloadPdf()` already had specific `catch (SecurityException)` returning 404
+   - **Fix**: Added `catch (SecurityException e)` before generic exception handler, returning 404
+
+#### Legacy endpoint decision (T185)
+
+- `ResumeDownloadController` (`GET /api/resumes/{id}/html`): kept temporarily as **deprecated** legacy fallback
+- Marked with `@Deprecated` annotation and explicit javadoc: "Must NOT be used by new export DTO or frontend flow. Will be removed in a future version."
+- Remains owner-scoped, authenticated, path-safe, and tested
+- Export DTO continues using canonical `/api/generate/resumes/{id}/html`
+
+#### Public route rate limiter (T187)
+
+- **New class**: `PublicResumeRateLimiter` — minimal in-memory limiter
+- Limits: 10 requests per 60 seconds per IP (`request.getRemoteAddr()`)
+- On limit exceeded: returns 429 Too Many Requests with `Retry-After: 60` header
+- Thread-safe via `ConcurrentHashMap`, stale entries auto-cleaned
+- **Scope**: Public PDF route `GET /{username}/{publicCode}` ONLY
+- Does NOT apply to `/api/**`, authenticated downloads, static files, or general routes
+- No Redis, DB tables, external libraries, CAPTCHA, or distributed locks
+- Integrated into `PublicResumeController` constructor; rate check runs before any DB query
+
+#### Tests added/updated
+
+| File | Tests before | Tests after | Δ |
+|---|---|---|---|
+| GenerateResumeControllerTest | 23 | 38 | +15 |
+| ResumeDownloadControllerTest | 5 | 9 | +4 |
+| PublicResumeControllerTest | 5 | 15 | +10 |
+| PublicResumeRateLimiterTest | — | 6 | +6 |
+| **Total** | 33 | 68 | +35 |
+
+#### Context7 docs checked
+- Spring MVC: `ResponseEntity<Resource>` for binary file download with Content-Disposition
+- Spring MockMvc: `content().contentType()`, `header().string()` for file response assertions
+- Spring MockMvc standalone: header assertion string matching
+
+#### Decisions
+- Public route rate limiter: minimal in-memory, 10 requests/60s/IP, public route only
+- Legacy `/api/resumes/{id}/html`: kept temporarily as deprecated authenticated owner-scoped fallback; not used by new export flow
+- Disposition validation: only "inline" and "attachment" allowed; CR/LF stripped; unknown values → "attachment"
+
+#### Evidence
+- Targeted controller tests: 68/68 PASS
+- Rate limiter tests: 6/6 PASS
+- Full backend: BUILD SUCCESS (871 tests, 0 failures)
+- Frontend (unchanged): 17/17 PASS, build succeeds
+
+#### Browser/Playwright evidence
+- Playwright/e2e infrastructure NOT present in this project (no `playwright.config`, no e2e test files)
+- Frontend has Vitest component tests only (`.spec.ts`), not browser-level
+- Manual browser verification was not performed within this phase scope
+- All download controller behavior is verified through comprehensive MockMvc tests (68 tests) covering owner scoping, path traversal, disposition validation, content types, auth, and rate limiting
+
+#### Files changed
+- `backend/src/main/java/com/resumainer/controller/GenerateResumeController.java` — 3 bug fixes + validateDisposition()
+- `backend/src/main/java/com/resumainer/controller/ResumeDownloadController.java` — @Deprecated annotation + javadoc
+- `backend/src/main/java/com/resumainer/controller/PublicResumeController.java` — rate limiter integration
+- `backend/src/main/java/com/resumainer/service/PublicResumeRateLimiter.java` — NEW: minimal rate limiter
+- `backend/src/test/java/com/resumainer/controller/GenerateResumeControllerTest.java` — +15 download tests
+- `backend/src/test/java/com/resumainer/controller/ResumeDownloadControllerTest.java` — +4 security/legacy tests
+- `backend/src/test/java/com/resumainer/controller/PublicResumeControllerTest.java` — +10 comprehensive tests
+- `backend/src/test/java/com/resumainer/service/PublicResumeRateLimiterTest.java` — NEW: 6 rate limiter tests
+
+#### Remaining risks
+- **Low**: Rate limiter uses weakly-consistent ConcurrentHashMap removeIf — acceptable for rate limiting where occasional stale entries are harmless
+- **None**: No changes to PDF rendering, fitting, finalization, AI generation, or review logic
+
+#### Phase 23 senior hardening follow-up
+
+**Inconsistency fixed**: Timing mitigation was only applied to the `pdfPath == null` branch, leaving three other public 404 branches (blank/null params, missing physical file, path traversal) returning immediately. An attacker could distinguish "no such code" from "row exists but file missing" via response timing.
+
+**Fix**:
+- Created `publicNotFound()` private helper in `PublicResumeController` with uniform 200ms `Thread.sleep(200)` delay
+- All four public 404 branches now call `publicNotFound()`:
+  1. blank/null username/publicCode
+  2. `pdfPath == null` (no matching row)
+  3. `!resource.exists()` (missing physical file)
+  4. `SecurityException` (path traversal)
+- `InterruptedException` now properly restores interrupt status (`Thread.currentThread().interrupt()`) instead of silently ignoring
+- 429 rate-limited and 200 successful responses are **unchanged** — no artificial delay
+
+**Evidence**:
+- PublicResumeControllerTest: 20 tests (15 original + 5 timing tests), all PASS
+- Timing tests: 3 404-delay tests ≥150ms, 2 no-delay tests (200 <50ms, 429 <50ms) — all PASS
+- PublicResumeRateLimiterTest: 6/6 PASS
+- Full backend: **876/876** tests, BUILD SUCCESS
+- Frontend (unchanged): 17/17 PASS
+
+**Files changed**:
+- `backend/src/main/java/com/resumainer/controller/PublicResumeController.java` — `publicNotFound()` helper
+- `backend/src/test/java/com/resumainer/controller/PublicResumeControllerTest.java` — 5 timing tests
