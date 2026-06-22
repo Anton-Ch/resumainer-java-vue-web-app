@@ -7,11 +7,16 @@
       <GenerateStepper :currentStep="2" :disabledSteps="[3]" />
 
       <div class="step-content" v-if="reviewModel">
+        <div v-if="finalizeError" class="vue-alert vue-alert-error" style="margin-bottom: 16px;">
+          <i class="pi pi-exclamation-triangle" style="margin-top: 2px;"></i>
+          <span>{{ finalizeError }}</span>
+        </div>
         <ReviewStepForm
           :en-variants="reviewModel.enVariants"
           :ru-variants="reviewModel.ruVariants"
           :is-bilingual="reviewModel.isBilingual"
           :show-levels="reviewModel.showLevels"
+          :is-finalizing="isFinalizing"
           v-model:active-tab="activeTab"
           v-model:selected-level="selectedLevel"
           @save="handleSaveAndFinalize"
@@ -52,6 +57,8 @@ const reviewModel = ref<ReviewViewModel | null>(null)
 const loadError = ref<string | null>(null)
 const activeTab = ref('positioning')
 const selectedLevel = ref<PrototypeLevel>('Balanced')
+const isFinalizing = ref(false)
+const finalizeError = ref<string | null>(null)
 
 onMounted(async () => {
   if (!state.value.requestId || state.value.requestId === 'null') {
@@ -82,19 +89,37 @@ onMounted(async () => {
 
 async function handleSaveAndFinalize() {
   if (!state.value.requestId || !reviewModel.value) return
+  if (isFinalizing.value) return  // block double-click
 
-  // Build save payload for edited fields (includes personal_info and skills)
-  const payload = buildReviewUpdatePayloadSimple(reviewModel.value)
+  isFinalizing.value = true
+  finalizeError.value = null
 
-  // Save changes if any
-  if (Object.keys(payload.fieldUpdates).length > 0) {
-    await generateApi.saveReview(state.value.requestId, payload)
+  try {
+    // Build save payload for edited fields (includes personal_info, skills, bullets)
+    const payload = buildReviewUpdatePayloadSimple(reviewModel.value)
+
+    // Save changes if any (wait for completion before finalizing)
+    if (Object.keys(payload.fieldUpdates).length > 0) {
+      await generateApi.saveReview(state.value.requestId, payload)
+    }
+
+    // Finalize with selected adaptation level
+    // finalizeResume() handles navigation to /generate/export on success
+    await finalizeResume(toBackendLevel(selectedLevel.value) as any)
+  } catch (err: any) {
+    const message = err?.message || 'Failed to finalize resume.'
+    if (message.includes('409') || message.includes('Conflict') || message.includes('already in progress')) {
+      finalizeError.value = 'Finalization is already in progress. Please wait.'
+    } else if (message.includes('400') || message.includes('Bad Request')) {
+      finalizeError.value = 'Invalid request. Please check your data and try again.'
+    } else if (message.includes('422') || message.includes('Unprocessable')) {
+      finalizeError.value = 'Some review fields contain invalid data. Please correct them and try again.'
+    } else {
+      finalizeError.value = message
+    }
+  } finally {
+    isFinalizing.value = false
   }
-
-  // Finalize with selected adaptation level
-  await finalizeResume(toBackendLevel(selectedLevel.value) as any)
-
-  router.push('/generate/export')
 }
 </script>
 

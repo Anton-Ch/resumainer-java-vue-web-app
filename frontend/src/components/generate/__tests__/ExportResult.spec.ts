@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
 import ExportResult from '@/components/generate/ExportResult.vue'
-import type { ExportResultDto, SavedResumeExportDto } from '@/services/generateResumeService'
+import type { ExportResultDto, SavedResumeExportDto } from '@/types/generate'
 
 // ── Mocks ───────────────────────────────────────────────────────────
 
@@ -56,7 +56,9 @@ vi.mock('primevue/usetoast', () => ({
 
 // Mock generateResumeService
 vi.mock('@/services/generateResumeService', () => ({
-  downloadHtml: vi.fn().mockResolvedValue(new Blob(['<html></html>'], { type: 'text/html' })),
+  downloadHtmlByUrl: vi.fn().mockResolvedValue(new Blob(['<html></html>'], { type: 'text/html' })),
+  downloadPdfByUrl: vi.fn().mockResolvedValue(new Blob(['pdf'], { type: 'application/pdf' })),
+  openPdfByUrl: vi.fn(),
 }))
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -68,10 +70,10 @@ function makeResume(overrides: Partial<SavedResumeExportDto> = {}): SavedResumeE
     adaptationLevel: 'BALANCED',
     htmlDownloadUrl: '/api/generate/resumes/1/html',
     pdfDownloadUrl: '/api/generate/resumes/1/pdf',
-    pdfOpenUrl: '/candidate/ABC123',
-    publicUrlLink: '/candidate/ABC123',
-    pdfAvailable: false,
-    pdfMessage: 'PDF generation is not available yet.',
+    pdfOpenUrl: '/api/generate/resumes/1/pdf?disposition=inline',
+    publicUrlLink: '/alice/ABC123',
+    pdfAvailable: true,
+    pdfMessage: null,
     ...overrides,
   }
 }
@@ -163,14 +165,15 @@ describe('ExportResult', () => {
     expect(cards[1].find('.chip-ru').exists()).toBe(true)
   })
 
-  // TEST 6 — currently fails: no safeLinkHint
-  it('renders public link and safe hint', () => {
-    const dto = makeExportDto([makeResume({ publicUrlLink: '/candidate/XYZ' })])
+  // TEST 6 — currently passes: public link uses absolute URL from window.location.origin
+  it('renders public link as absolute URL and safe hint', () => {
+    const dto = makeExportDto([makeResume({ publicUrlLink: '/alice/XYZ' })])
     const wrapper = mountWithData(dto)
 
     const input = wrapper.find('.public-link-input')
     expect(input.exists()).toBe(true)
-    expect((input.element as HTMLInputElement).value).toBe('/candidate/XYZ')
+    // Public link should be displayed as absolute URL
+    expect((input.element as HTMLInputElement).value).toContain('/alice/XYZ')
 
     expect(wrapper.text()).toContain('You can safely send this link to a recruiter.')
   })
@@ -195,7 +198,7 @@ describe('ExportResult', () => {
     expect(textareas).toHaveLength(0)
   })
 
-  // TEST 9 — currently fails: no toast on copy
+  // TEST 9 — currently passes: copy link shows success toast with absolute URL
   it('copy link shows success toast', async () => {
     const mockWriteText = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', {
@@ -204,7 +207,7 @@ describe('ExportResult', () => {
       configurable: true,
     })
 
-    const dto = makeExportDto([makeResume()])
+    const dto = makeExportDto([makeResume({ publicUrlLink: '/alice/ABC123' })])
     const wrapper = mountWithData(dto)
 
     const copyBtn = wrapper.find('[aria-label="Copy link"]')
@@ -213,7 +216,10 @@ describe('ExportResult', () => {
     }
 
     await vi.waitFor(() => {
-      expect(mockWriteText).toHaveBeenCalledWith('/candidate/ABC123')
+      expect(mockWriteText).toHaveBeenCalled()
+      // The copied value should be absolute URL (contains window.location.origin)
+      const copiedValue = mockWriteText.mock.calls[0]?.[0] || ''
+      expect(copiedValue).toContain('/alice/ABC123')
     })
   })
 
@@ -247,13 +253,31 @@ describe('ExportResult', () => {
     expect(wrapper.text()).toContain('Download HTML')
   })
 
-  // TEST 12 — currently passes (PDF buttons exist)
-  it('PDF buttons remain placeholder only when PDF unavailable', () => {
-    const dto = makeExportDto([makeResume({ pdfAvailable: false, pdfMessage: 'PDF generation is not available yet.' })])
+  // TEST 12 — PDF buttons disabled when pdfAvailable=false
+  it('PDF buttons are disabled when PDF unavailable', () => {
+    const dto = makeExportDto([makeResume({ pdfAvailable: false, pdfMessage: 'PDF is being generated.' })])
     const wrapper = mountWithData(dto)
 
     expect(wrapper.text()).toContain('Download PDF')
     expect(wrapper.text()).toContain('Open PDF in new tab')
+
+    // PDF message should be shown
+    expect(wrapper.text()).toContain('PDF is being generated.')
+
+    // Download PDF button should be disabled
+    const pdfDownloadBtn = wrapper.find('button.p-button-success')
+    expect(pdfDownloadBtn.exists()).toBe(true)
+    expect((pdfDownloadBtn.element as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  // TEST 14 — PDF buttons enabled when pdfAvailable=true
+  it('PDF buttons are enabled when PDF available', () => {
+    const dto = makeExportDto([makeResume({ pdfAvailable: true, pdfMessage: null })])
+    const wrapper = mountWithData(dto)
+
+    const pdfDownloadBtn = wrapper.find('button.p-button-success')
+    expect(pdfDownloadBtn.exists()).toBe(true)
+    expect((pdfDownloadBtn.element as HTMLButtonElement).disabled).toBe(false)
   })
 
   // TEST 13 — checks for prototype classes

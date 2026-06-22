@@ -256,6 +256,143 @@ Evidence:
 - Full backend: **876/876** tests, BUILD SUCCESS
 - Frontend (unchanged): 17/17 PASS
 
-**Files changed**:
-- `backend/src/main/java/com/resumainer/controller/PublicResumeController.java` — `publicNotFound()` helper
-- `backend/src/test/java/com/resumainer/controller/PublicResumeControllerTest.java` — 5 timing tests
+### Phase 24 fixes applied
+
+#### Frontend audit (T189)
+
+**Files inspected**: `generateResumeService.ts`, `types/generate.ts`, `ExportResult.vue`, `ExportResult.spec.ts`, `GenerateExportPage.vue`, `GenerateExportPage.spec.ts`, `GenerateReviewPage.vue`, `useGenerateResumeFlow.ts`, `ReviewStepForm.vue`, `WhimsicalLoader.vue`, `en.json`, `ru.json`
+
+**Findings**:
+- 14 occurrences of `/candidate/` URLs in test fixtures and i18n — all are stale from feat/007, not used by backend
+- `generateResumeService.ts` comment claims "PDF/public-link methods are placeholders in feat/007" — stale
+- `ExportResultDto`/`SavedResumeExportDto` defined in both `generateResumeService.ts` (duplicate) and `types/generate.ts` (now consolidated)
+- `downloadHtml()`/`downloadPdf()`/`openPdf()` accept `savedResumeId` and construct URLs manually — ignore backend-provided DTO URLs
+- PDF buttons NOT disabled when `pdfAvailable === false` in template; runtime toast check instead
+- Public link displayed as relative path (`/candidate/ABC123`) instead of absolute URL
+- `GenerateReviewPage.handleSaveAndFinalize()` calls `router.push('/generate/export')` AFTER `finalizeResume()` which already navigates — duplicate navigation
+- No loading/blocking state during finalization — double-click not prevented
+- No error handling in `handleSaveAndFinalize` — `saveReview` failure doesn't stop `finalizeResume`, no try/catch
+- Bullet edits included in save payload but no validation that save completes before finalize
+
+#### DTO/type cleanup (T190)
+
+- Moved `SavedResumeExportDto` and `ExportResultDto` from `generateResumeService.ts` to `types/generate.ts`
+- Removed stale feat/007 placeholder comment from service
+- Updated all imports to use `@/types/generate`
+- No duplicate/conflicting types remain
+
+#### Service URL contract (T191)
+
+- Refactored `downloadHtml(savedResumeId)` → `downloadHtmlByUrl(htmlDownloadUrl: string)`
+- Refactored `downloadPdf(savedResumeId)` → `downloadPdfByUrl(pdfDownloadUrl: string)`
+- Refactored `openPdf(savedResumeId)` (blob-based) → `openPdfByUrl(pdfOpenUrl: string)` (direct window.open)
+- All methods validate URL is non-empty before fetch/window.open
+- Removed `RESUME_BASE` constant — no more URL construction from IDs
+
+#### ExportResult UI (T192)
+
+- Public link now displayed as absolute URL (`window.location.origin + relativePath`)
+- PDF Download and Open PDF buttons now have `:disabled="!item.pdfAvailable"` — disabled when PDF not ready
+- Inline `pdfMessage` shown when `pdfAvailable === false` (fallback to i18n key)
+- Handlers refactored to use `downloadHtmlByUrl`, `downloadPdfByUrl`, `openPdfByUrl`
+- Test fixtures: all `/candidate/` URLs replaced with canonical backend paths, `pdfAvailable: true` where appropriate
+- 14 tests (2 spec files), +1 new test (PDF buttons enabled when available)
+
+#### Finalization flow (T193)
+
+- `isFinalizing` ref added to `GenerateReviewPage` — blocks double-click
+- `finalizeError` ref for user-visible error messages
+- Removed duplicate `router.push('/generate/export')` from page handler (composable already navigates)
+- `ReviewStepForm` receives `isFinalizing` prop — all 6 "Save to PDF" buttons use `:loading="isFinalizing"` and `:disabled="isFinalizing"`
+- Error alert shown above form when finalization fails
+
+#### Error handling (T194)
+
+- `handleSaveAndFinalize()` wrapped in try/catch
+- `saveReview()` must complete before `finalizeResume()` starts
+- 409 (Conflict/FINALIZING) → "Finalization is already in progress."
+- 400 (Bad Request) → "Invalid request. Please check your data."
+- 422 (Unprocessable) → "Some review fields contain invalid data."
+- Generic errors → displayed with actual message
+- `isFinalizing` reset in `finally` block (no stuck spinner)
+
+#### Review save → finalize (T195)
+
+- `saveReview()` call awaits completion before `finalizeResume()`
+- If `saveReview` fails: error thrown, finalize not called, user sees error
+- Bullet edits are included in save payload (via existing `buildReviewUpdatePayloadSimple`)
+
+#### Evidence
+
+- Context7 docs checked:
+  - Vue 3 Guide (`/websites/vuejs_guide`): confirmed `try/catch` in async functions propagates errors; `throw` inside catch rethrows to caller as expected
+  - Vue Test Utils (`/vuejs/test-utils`): confirmed `trigger('click')`, `emitted()`, `attributes().toHaveProperty('disabled')`, and `shallowMount` with stubs
+  - Vitest (`/vitest-dev/vitest`): confirmed `vi.fn()`, `mockResolvedValue()`, `mockRejectedValue()`, `waitFor()`, and `expect().rejects.toThrow()` for async error assertions
+- Tests: 34/34 PASS (18 original + 16 new)
+- Build: `npm run build` succeeds (TypeScript + Vite)
+- No `/candidate/` references remain in source or test files
+- Backend unchanged — no backend test run needed
+
+#### Playwright/e2e status (T197)
+
+- Playwright infrastructure absent — no `playwright.config`, no `e2e/` directory
+- Vitest component tests provide equivalent evidence for UI behavior
+- Manual smoke testing recommended before merging to main:
+  - Verify "Save to PDF" button shows loading spinner during finalization
+  - Verify double-click on save button calls finalize only once
+  - Verify public link copies as absolute URL to clipboard
+  - Verify PDF buttons are disabled when PDF not available
+  - Verify no `/candidate/` appears in browser address bar or page content
+
+#### Files changed
+
+```
+frontend/src/services/generateResumeService.ts          (DTO types moved, URL-based methods, stale comment removed)
+frontend/src/types/generate.ts                          (+ExportResultDto, SavedResumeExportDto)
+frontend/src/composables/useGenerateResumeFlow.ts       (finalizeResume() rethrows errors)
+frontend/src/components/generate/ExportResult.vue        (DTO URLs, disabled buttons, absolute public link)
+frontend/src/components/generate/ReviewStepForm.vue      (isFinalizing prop, disabled/loading buttons)
+frontend/src/views/generate/GenerateReviewPage.vue       (error handling, loading state, no duplicate nav)
+frontend/src/views/generate/GenerateExportPage.vue       (import fix)
+frontend/src/composables/__tests__/useGenerateResumeFlow.spec.ts        (NEW — 6 tests)
+frontend/src/views/generate/__tests__/GenerateReviewPage.spec.ts        (NEW — 8 tests)
+frontend/src/components/generate/__tests__/ReviewStepForm.spec.ts       (NEW — 2 tests)
+frontend/src/components/generate/__tests__/ExportResult.spec.ts         (fixtures fixed, +1 test)
+frontend/src/views/generate/__tests__/GenerateExportPage.spec.ts        (fixtures fixed)
+specs/008-pdf-generation/debug_backlog.md                (Phase 24 + hardening)
+```
+
+#### Remaining risks
+
+- **Low**: Manual smoke testing not performed — backend Docker environment needed for full integration test
+- **Low**: `openPdfByUrl` uses `window.open` with `noopener,noreferrer` — simpler than blob download approach; works for authenticated inline PDF since browser session cookie is sent
+- **None**: No changes to PDF rendering, backend, fitting, or generation logic
+
+#### Phase 24 hardening follow-up
+
+**Context7 MCP docs checked**:
+- Vue 3 Guide (`/websites/vuejs_guide`): async `try/catch` error propagation confirmed — `throw err` inside catch rethrows to caller
+- Vue Test Utils (`/vuejs/test-utils`): `trigger()`, `emitted()`, `attributes().toHaveProperty('disabled')`, `shallowMount`, stubs
+- Vitest (`/vitest-dev/vitest`): `vi.fn()`, `mockResolvedValue()`, `mockRejectedValue()`, `waitFor()`, `expect().rejects.toThrow()`
+
+**Fixed finalize error propagation**:
+- `useGenerateResumeFlow.finalizeResume()` now rethrows errors after setting `state.errorMessage`
+- Previously: errors caught and swallowed — page-level `finalizeError` never rendered
+- Call sites audited: only `GenerateReviewPage.handleSaveAndFinalize()` calls `finalizeResume()` — its try/catch now works
+
+**Added tests**:
+- `useGenerateResumeFlow.spec.ts` — 6 tests: calls API, success state/navigation, failure errorMessage+rethrow, conflict propagation, no navigation on failure
+- `GenerateReviewPage.spec.ts` — 8 tests: redirect on missing requestId, loads review data, finalizeResume called, error alert on failure, double-click blocked, 409 error message, generic error, no duplicate navigation from page
+- `ReviewStepForm.spec.ts` — 2 tests: isFinalizing prop acceptance (false, true)
+- Total: 34 tests (18 original + 16 new), all PASS
+
+**Coverage**:
+- `npm run test:coverage`: global 28.02% lines — fails 80% threshold due to pre-existing uncovered components (Auth, Profile, Admin, etc.)
+- Changed files: `GenerateReviewPage.vue` 80.76%, `GenerateExportPage.vue` 86.66%, `ExportResult.vue` 44.77%, `useGenerateResumeFlow.ts` 22.8%
+- Threshold is configured globally, not per-file; pre-existing uncovered code blocks global pass
+- No superficial tests added — all new tests verify meaningful behavior
+
+**Commands**:
+- `npm test -- --run` → 34/34 PASS
+- `npm run test:coverage` → 28.02% global (threshold: 80%)
+- `npm run build` → succeeds
