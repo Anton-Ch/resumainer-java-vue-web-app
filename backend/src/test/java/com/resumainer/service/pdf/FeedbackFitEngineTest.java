@@ -3,6 +3,8 @@ package com.resumainer.service.pdf;
 import com.resumainer.model.PdfFillTarget;
 import com.resumainer.model.PdfFitLimits;
 import com.resumainer.model.pdf.FitState;
+import com.resumainer.model.pdf.PagePlan;
+import com.resumainer.model.pdf.ResumeRenderData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,42 +26,60 @@ class FeedbackFitEngineTest {
     @BeforeEach
     void setUp() {
         limits = createSpikeLimits();
-        // Null collaborators are safe — helper methods don't use renderer/pdf/analyzer/validator
         engine = new FeedbackFitEngine(null, null, null, null, limits);
     }
 
     @Test
-    void effectiveTargets_filtersByTargetPageCount() {
+    void effectiveTargets_selectsOneTargetPerPlannedPage() {
         List<PdfFillTarget> mixed = new ArrayList<>();
         mixed.add(makeTarget(1, 1, "0.80"));
         mixed.add(makeTarget(2, 1, "0.85"));
         mixed.add(makeTarget(2, 2, "0.50"));
         mixed.add(makeTarget(3, 1, "0.85"));
 
-        List<PdfFillTarget> result = engine.effectiveTargets(2, mixed);
+        ResumeRenderData data = new ResumeRenderData();
+        data.setLanguageCode("EN");
+        PagePlan plan = new PagePlan();
+        plan.setTargetPageCount(2);
+        plan.setPage2ProjectCount(3);
+
+        List<PdfFillTarget> result = engine.effectiveTargets(data, plan, mixed);
+
         assertEquals(2, result.size());
         assertTrue(result.stream().allMatch(t -> t.getTargetPageCount() == 2));
+        assertEquals(1, result.get(0).getPageNumber());
+        assertEquals(2, result.get(1).getPageNumber());
     }
 
     @Test
-    void targetForIsolatedPage_selectsCorrectPageNumber() {
+    void targetForIsolatedPage_remapsPlannedPage2ToPhysicalPage1() {
         List<PdfFillTarget> page2Targets = List.of(
                 makeTarget(2, 1, "0.85"),
                 makeTarget(2, 2, "0.50"));
 
-        PdfFillTarget p1 = engine.targetForIsolatedPage(page2Targets, 1);
-        assertNotNull(p1);
-        assertEquals(1, p1.getPageNumber());
-
         PdfFillTarget p2 = engine.targetForIsolatedPage(page2Targets, 2);
+
         assertNotNull(p2);
-        assertEquals(2, p2.getPageNumber());
+        assertEquals(1, p2.getTargetPageCount());
+        assertEquals(1, p2.getPageNumber());
+        assertEquals(new BigDecimal("0.50"), p2.getMinFill());
+        assertEquals(new BigDecimal("0.96"), p2.getMaxFill());
     }
 
     @Test
-    void targetForIsolatedPage_returnsNullForMissingPage() {
-        List<PdfFillTarget> targets = List.of(makeTarget(2, 1, "0.85"));
-        assertNull(engine.targetForIsolatedPage(targets, 3));
+    void effectiveTargets_appliesPage2AdaptiveMinFillForOneProject() {
+        List<PdfFillTarget> targets = List.of(
+                makeTarget(2, 1, "0.85"),
+                makeTarget(2, 2, "0.50"));
+        ResumeRenderData data = new ResumeRenderData();
+        data.setLanguageCode("EN");
+        PagePlan plan = new PagePlan();
+        plan.setTargetPageCount(2);
+        plan.setPage2ProjectCount(1);
+
+        List<PdfFillTarget> result = engine.effectiveTargets(data, plan, targets);
+
+        assertEquals(new BigDecimal("0.44"), result.get(1).getMinFill());
     }
 
     @Test

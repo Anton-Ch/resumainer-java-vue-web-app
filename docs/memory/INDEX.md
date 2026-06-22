@@ -36,6 +36,7 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - B24 | Cover letter column exists in migration but INSERT SQL omits it | database,migration,dao,cover-letter,insert,column-propagation,saved-resumes | [BUGS.md](BUGS.md) | active
 - B25 | Docker BuildKit: COPY . . cache survives --no-cache — must docker rmi --force | docker, buildkit, cache, copy, no-cache, multi-stage, devops, frontend, rebuild | [BUGS.md](BUGS.md) | active
 - B26 | Dropped spike method causes universal validation failure in ported algorithm | spike,porting,fit-engine,content-expectation,missing-texts,validation,algorithm-drift | [BUGS.md](BUGS.md) | active
+- B27 | Paths.get(first, more...) concatenates absolute paths instead of resolving them — check isAbsolute() first | java, path, nio, security, path-traversal, filesystem, bug, resolveSafePath, docker | [BUGS.md](BUGS.md) | active
 
 ## Decisions
 - D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web.xml) | servlet, spring-mvc, jakarta-ee, tomcat, initialization, web.xml | [DECISIONS.md](DECISIONS.md) | active
@@ -67,6 +68,8 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - D28 | Frontend adapter pattern for hierarchical backend DTO to flat view model | frontend,adapter,transformer,review,dto,view-model,decoupling,architecture | [DECISIONS.md](DECISIONS.md) | active
 - D29 | Verify external API parameters against official docs before implementation | openrouter,api,documentation,context7,reasoning,configuration,best-practice | [DECISIONS.md](DECISIONS.md) | active
 - D30 | GENERATION_ALREADY_IN_PROGRESS returns HTTP 409 Conflict, not 500 | http,409,conflict,generation,concurrency,lifecycle,spring-mvc,controller,error-handling | [DECISIONS.md](DECISIONS.md) | active
+- D31 | Frontend download service must consume backend-provided DTO URLs, not reconstruct from IDs | frontend, service, dto, url, contract, download, refactor, decoupling | [DECISIONS.md](DECISIONS.md) | active
+- D32 | Budget drift from proven spike capacity causes production PDF fitting failures — restore parity via migration | pdf, budget, spike, parity, migration, fitting, ec-016, v12.1, capacity, drift | [DECISIONS.md](DECISIONS.md) | active
 
 ## Workflow
 - W1 | First Feature MVP Achieved: Hello World Tomcat | milestone, mvp, hello-world, docker, spring-mvc, tomcat | [WORKLOG.md](WORKLOG.md) | active
@@ -87,3 +90,4 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - W16 | Feature 007 Export View, Cover Letter, Generation Concurrency, and OpenRouter fixes completed | milestone,feature-007,export-view,cover-letter,generation-concurrency,openrouter,diagnostics,retry,fixes | [WORKLOG.md](WORKLOG.md) | active
 - W17 | Feature 008 Phase Group 1 (Bullet Points + Review + Prompt/Parser) Completed | milestone,feature-008,phase-group-1,bullet-points,review,prompt,parser,tdd,cross-layer | [WORKLOG.md](WORKLOG.md) | active
 - W18 | Feature 008 Phase Group 3 — Spike Parity Fixes Completed (Phases 19-21) | milestone,feature-008,phase-group-3,spike-parity,export-dto,public-route,path-safety,fit-engine,page-plan,tdd | [WORKLOG.md](WORKLOG.md) | active
+- W19 | Feature 008 Phases 23-27: download security, PDF fitting, semantic render repair completed | milestone, feature-008, phase-23-27, pdf, download, security, fitting, semantic, budget, validation | [WORKLOG.md](WORKLOG.md) | active

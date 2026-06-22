@@ -110,8 +110,8 @@ public final class XhtmlTemplateRenderer {
         html.append("<main class=\"resume-page page-2 has-prev").append(hasNext ? " has-next" : "").append("\">");
         html.append("<div class=\"page-note-top\">").append(esc(label(data, "See the previous page", "См. предыдущую страницу"))).append("</div>");
         html.append("<div class=\"page-content\">");
-        List<ResumeRenderData.RenderProjectItem> projects = data.getProjects();
-        if (projects != null && !projects.isEmpty()) renderProjects(html, data, projects);
+        List<ResumeRenderData.RenderProjectItem> projects = page2Projects(data, plan);
+        if (!projects.isEmpty()) renderProjects(html, data, projects);
         List<ResumeRenderData.RenderWorkItem> p2Work = page2Work(data, plan);
         if (!p2Work.isEmpty()) renderWork(html, data, label(data, "Additional Work Experience", "Дополнительный опыт работы"), p2Work);
         if (!hasNext) {
@@ -190,16 +190,36 @@ public final class XhtmlTemplateRenderer {
     }
 
     private void renderProjects(StringBuilder html, ResumeRenderData data, List<ResumeRenderData.RenderProjectItem> projects) {
-        if (projects.isEmpty()) return;
+        if (projects == null || projects.isEmpty()) return;
+
         StringBuilder b = new StringBuilder();
         for (ResumeRenderData.RenderProjectItem p : projects) {
-            b.append("<div class=\"item-block\"><div class=\"item-title\">").append(esc(p.getProjectName())).append(" | ").append(esc(p.getRole())).append("</div>");
-            b.append("<div class=\"item-subtitle\">").append(join(p.getDateRange())).append("</div>");
-            b.append("<p>").append(esc(p.getDescription())).append("</p><ul>");
-            if (p.getBulletPoints() != null) {
-                for (String item : p.getBulletPoints()) b.append("<li>").append(esc(item)).append("</li>");
+            b.append("<div class=\"item-block\"><div class=\"item-title\">")
+                    .append(esc(p.getProjectName()))
+                    .append(" | ")
+                    .append(esc(p.getRole()))
+                    .append("</div>");
+
+            String subtitle = join(p.getDateRange());
+            if (subtitle != null && !subtitle.isBlank()) {
+                b.append("<div class=\"item-subtitle\">").append(subtitle).append("</div>");
             }
-            b.append("</ul></div>");
+
+            if (p.getDescription() != null && !p.getDescription().isBlank()) {
+                b.append("<p>").append(esc(p.getDescription())).append("</p>");
+            }
+
+            if (p.getBulletPoints() != null && !p.getBulletPoints().isEmpty()) {
+                b.append("<ul>");
+                for (String item : p.getBulletPoints()) {
+                    if (item != null && !item.isBlank()) {
+                        b.append("<li>").append(esc(item)).append("</li>");
+                    }
+                }
+                b.append("</ul>");
+            }
+
+            b.append("</div>");
         }
         section(html, label(data, "Projects and Volunteering", "Проекты и волонтёрство"), b.toString());
     }
@@ -234,6 +254,14 @@ public final class XhtmlTemplateRenderer {
         int p2Count = Math.min(plan.getPage2AdditionalWorkCount(), all.size() - p1Count);
         if (p2Count <= 0) return List.of();
         return all.subList(p1Count, p1Count + p2Count);
+    }
+
+    private List<ResumeRenderData.RenderProjectItem> page2Projects(ResumeRenderData data, PagePlan plan) {
+        List<ResumeRenderData.RenderProjectItem> all = data.getProjects();
+        if (all == null || all.isEmpty()) return List.of();
+        int count = Math.min(plan.getPage2ProjectCount(), all.size());
+        if (count <= 0) return List.of();
+        return all.subList(0, count);
     }
 
     // ── Helpers ─────────────────────────────────────────────────────

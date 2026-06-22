@@ -162,4 +162,67 @@ class GeneratedFileStorageServiceTest {
         String relativePath = service.saveFile(malicious, "code", "f.html", "content");
         assertFalse(relativePath.contains(".."), "Backslash traversal should be sanitized");
     }
+
+    // ── resolveSafePath tests (Blocker B fix) ──────────────────────────
+
+    @Test
+    void resolveSafePath_simpleRelative_resolvesCorrectly() {
+        Path result = service.resolveSafePath("user1/CODE1/file.pdf");
+        assertNotNull(result);
+        assertTrue(result.endsWith(Paths.get("user1/CODE1/file.pdf")));
+    }
+
+    @Test
+    void resolveSafePath_generatedResultsPrefix_stripsAndResolves() {
+        Path result = service.resolveSafePath("generated_results/user1/CODE1/file.pdf");
+        assertNotNull(result);
+        assertTrue(result.endsWith(Paths.get("user1/CODE1/file.pdf")));
+    }
+
+    @Test
+    void resolveSafePath_absolutePathInsideStorageRoot_resolvesCorrectly() throws IOException {
+        // Create a file under the storage root
+        Path storageRoot = Paths.get("generated_results").toAbsolutePath().normalize();
+        Path testDir = storageRoot.resolve("absTest");
+        Files.createDirectories(testDir);
+        Path testFile = testDir.resolve("test.pdf");
+        Files.writeString(testFile, "test");
+        try {
+            String absolutePath = testFile.toString();
+            Path result = service.resolveSafePath(absolutePath);
+            assertNotNull(result);
+            assertTrue(Files.exists(result), "Resolved path should exist when inside storage root");
+        } finally {
+            Files.walk(testDir).sorted(Comparator.reverseOrder()).forEach(p -> {
+                try { Files.deleteIfExists(p); } catch (IOException ignored) {}
+            });
+        }
+    }
+
+    @Test
+    void resolveSafePath_absolutePathOutsideStorageRoot_rejects() {
+        // An absolute path outside generated_results should be rejected
+        String outsidePath = System.getProperty("os.name").toLowerCase().contains("win")
+                ? "C:\\Windows\\System32\\config\\SAM"
+                : "/etc/passwd";
+        assertThrows(SecurityException.class, () -> service.resolveSafePath(outsidePath));
+    }
+
+    @Test
+    void resolveSafePath_traversal_rejects() {
+        assertThrows(SecurityException.class,
+                () -> service.resolveSafePath("generated_results/../../etc/passwd"));
+    }
+
+    @Test
+    void resolveSafePath_nullPath_rejects() {
+        assertThrows(SecurityException.class,
+                () -> service.resolveSafePath(null));
+    }
+
+    @Test
+    void resolveSafePath_blankPath_rejects() {
+        assertThrows(SecurityException.class,
+                () -> service.resolveSafePath("  "));
+    }
 }

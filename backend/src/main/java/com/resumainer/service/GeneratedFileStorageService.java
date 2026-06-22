@@ -77,21 +77,38 @@ public class GeneratedFileStorageService {
 
     /**
      * Resolves and validates a stored file path against the storage root.
-     * Rejects null, absolute, and traversal paths. Returns safe normalized Path.
+     * Handles both relative and absolute stored paths for backward compatibility.
+     * Rejects null, absolute outside-root, and traversal paths. Returns safe normalized Path.
      * @throws SecurityException if path is unsafe
      */
     public Path resolveSafePath(String storedPath) {
         if (storedPath == null || storedPath.isBlank()) {
             throw new SecurityException("Path is null or blank");
         }
-        // Strip BASE_DIR prefix if already present (paths stored relative to BASE_DIR)
+
+        Path root = Paths.get(BASE_DIR).normalize().toAbsolutePath();
+
+        // If path is already absolute, validate it falls inside the storage root
+        Path parsed = Paths.get(storedPath).normalize();
+        if (parsed.isAbsolute()) {
+            Path absolute = parsed.normalize();
+            if (absolute.startsWith(root)) {
+                return absolute;
+            }
+            throw new SecurityException("Path outside storage root: " + storedPath);
+        }
+
+        // Strip BASE_DIR prefix if already present in a relative path
         String relative = storedPath;
         if (relative.startsWith(BASE_DIR + "/") || relative.startsWith(BASE_DIR + "\\")) {
             relative = relative.substring(BASE_DIR.length() + 1);
         }
-        Path resolved = Paths.get(BASE_DIR, relative).normalize();
-        Path root = Paths.get(BASE_DIR).normalize().toAbsolutePath();
-        if (!resolved.toAbsolutePath().normalize().startsWith(root)) {
+
+        // Resolve relative path against storage root
+        Path resolved = root.resolve(relative).normalize();
+
+        // Security: verify still inside root after normalization
+        if (!resolved.startsWith(root)) {
             throw new SecurityException("Path traversal detected: " + storedPath);
         }
         return resolved;

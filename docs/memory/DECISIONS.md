@@ -841,3 +841,42 @@ When a user starts generation while another request is already processing, the b
 
 **Evidence**
 Backend diagnostics showed `Completed 500 INTERNAL_SERVER_ERROR` for blocked requests. 11 lifecycle tests + 5 controller tests verify 409 behavior and that blocked pending requests are marked failed.
+
+---
+
+### 2026-06-22 — Frontend download/open service must consume backend-provided DTO URLs, not reconstruct URLs from IDs
+
+**Status**
+Active
+
+**Why this is durable**
+The frontend service `generateResumeService.ts` had methods `downloadPdf(savedResumeId)`, `openPdf(savedResumeId)`, `downloadHtml(savedResumeId)` that constructed URLs from a `RESUME_BASE` constant and the saved resume ID. Meanwhile the backend DTO `SavedResumeExportDto` already carried `pdfDownloadUrl`, `pdfOpenUrl`, `htmlDownloadUrl`, and `publicUrlLink` — fully resolved canonical URLs. The ID-based construction bypassed backend route changes, ignored the `?disposition=inline` parameter, and created fragile coupling where any backend route rename would break the frontend.
+
+**Decision**
+Frontend download/open methods MUST accept the URL string directly from the DTO. Change `downloadPdf(savedResumeId: number): Promise<Blob>` to `downloadPdfByUrl(pdfDownloadUrl: string): Promise<Blob>`. Validate URL is non-empty before fetch. For inline PDF, use `window.open(url, '_blank', 'noopener,noreferrer')` instead of blob+createObjectURL round-trip.
+
+**Tradeoffs**
+- Gained: frontend no longer owns URL construction; backend can rename routes without frontend changes; public link uses absolute URL from `window.location.origin`
+- Made harder: service methods must guard against empty/missing DTO URLs (fallback to error toast)
+- Reconsider: when backend adds download auth tokens or signed URLs, the DTO contract already supports it
+
+---
+
+### 2026-06-22 — Budget drift from proven spike capacity causes production PDF fitting failures
+
+**Status**
+Active
+
+**Why this is durable**
+The V12.1 spike proved EC-016 with exactly 8 total work experience records (3+5 split) and 3 projects. Production seed config silently drifted to allow 10 work items (3+7 split) and 4 projects. This excess content entered the PDF pipeline where the fitting engine and content validation were never tested for that volume, causing `PAGE2:MISSING_TEXTS` and `PAGE2:PAGE_EMPTY` failures at runtime. The automated tests passed because they used mock data, not real dense profiles.
+
+**Decision**
+Any seed/config migration that increases content budget beyond spike-proven limits MUST simultaneously update the fitting engine, page planner, renderer, content expectation builder, and validation service to handle the new capacity. Budget parity between spike and production is a release gate — not a feature request.
+
+**Fix applied**
+Migration V36 restored V12.1 parity: EC-016 page2_jobs=5 (was 7), page2_max_additional_jobs=5 (was 7), max_projects=3 (was 4). `PagePlanBuilder` added `resolvePage2ProjectCount()` to cap projects to configured budget. `FeedbackFitEngine` and `ContentExpectationBuilder` were updated to match the restored limits.
+
+**Tradeoffs**
+- Gained: stable PDF generation for the proven EC-016 scenario
+- Made harder: dense profiles with 9+ source work items are capped to 8 rendered
+- Reconsider: when fitting engine is upgraded for 3-page layouts, the budgets can be expanded with matching fitting+validation updates

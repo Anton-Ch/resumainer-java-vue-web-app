@@ -49,7 +49,37 @@ class PdfValidationServiceTest {
     @Test
     void normalize_handlesCyrillicHyphens() {
         String result = PdfValidationService.normalize("бизнес-правила");
-        // After normalization, hyphen between letters is removed
-        assertFalse(result.contains("-"), "Hyphen between letters should be removed: " + result);
+        // After normalization, all non-letter/number chars become spaces — hyphen removed
+        assertFalse(result.contains("-"), "Hyphen should be removed: " + result);
+    }
+
+    @Test
+    void validate_matchesExpectedTextDespitePunctuationDifferences() {
+        PdfMetrics metrics = new PdfMetrics(
+                1,
+                true,
+                Map.of(1, 0.85),
+                "Defined acceptance criteria, for dashboard delivery. Stakeholder review and QA handoff."
+        );
+        PdfFillTarget target = new PdfFillTarget();
+        target.setPageNumber(1);
+        target.setMinFill(new java.math.BigDecimal("0.50"));
+        target.setMaxFill(new java.math.BigDecimal("0.96"));
+
+        String result = validator.validate(
+                metrics,
+                1,
+                List.of(target),
+                List.of("DEFINED ACCEPTANCE CRITERIA FOR DASHBOARD DELIVERY STAKEHOLDER REVIEW")
+        );
+
+        assertEquals("OK", result);
+    }
+
+    @Test
+    void normalize_tokenizesEmailAndUrlsConsistently() {
+        String result = PdfValidationService.normalize("vasya@example.com | https://portfolio.example/vasya");
+
+        assertEquals("VASYA EXAMPLE COM HTTPS PORTFOLIO EXAMPLE VASYA", result);
     }
 }

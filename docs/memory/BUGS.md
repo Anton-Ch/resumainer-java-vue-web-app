@@ -867,3 +867,25 @@ Feature 008 Phase Group 3 debugging: E2E tests showed PDF_FITTING_FAILED for eve
 2. Create an audit matrix mapping every spike method/behavior to production equivalent before claiming port complete
 3. Test isolated page fitting separately from combined validation
 4. Package-private helper methods enable targeted unit tests without full integration setup
+
+---
+
+### 2026-06-22 - Paths.get(first, more...) concatenates segments regardless of absoluteness — always check isAbsolute() before path resolution
+
+**Status**
+Active
+
+**Why this is durable**
+Unlike `Path.resolve()`, Java's `Paths.get(String first, String... more)` concatenates all segments indiscriminately. It does NOT detect that a segment is absolute. This caused the public PDF route `GET /{username}/{publicCode}` to return 404 on all Docker deployments for weeks. The stored DB path `/usr/local/tomcat/generated_results/93d41e45.../resume.pdf` was resolved by `Paths.get("generated_results", absolutePath)` into the nonsense path `generated_results/usr/local/tomcat/generated_results/.../resume.pdf`. File not found → 404 despite DB row and file both existing.
+
+**Root cause**
+`GeneratedFileStorageService.resolveSafePath()` used `Paths.get(BASE_DIR, storedPath)` without checking whether `storedPath` was absolute. On Linux, `Paths.get("a", "/b/c")` produces `a/b/c` — the `/` is just a character, not an absolute-path indicator. Meanwhile `Path.resolve("/b/c")` correctly returns `/b/c`.
+
+**Fix**
+Check `Path parsed = Paths.get(storedPath).normalize(); if (parsed.isAbsolute())` before concatenation. If absolute, use `Path.resolve()` semantics or direct the parsed path directly.
+
+**Prevention**
+Any code that stores file paths in a database and later resolves them MUST handle both absolute and relative stored paths. The storage format can change over time (old rows have absolute paths, new rows have relative paths). Always check `isAbsolute()` before concatenating with a base directory.
+
+**Tags**
+java, path, nio, security, path-traversal, filesystem, bug, resolveSafePath, docker
