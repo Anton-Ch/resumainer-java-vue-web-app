@@ -88,6 +88,8 @@
                       :label="t('generate.review.saveToPdf')"
                       icon="pi pi-save"
                       class="p-button-success p-button-lg"
+                      :loading="props.isFinalizing"
+                      :disabled="props.isFinalizing"
                       @click="$emit('save')"
                     />
                   </div>
@@ -208,6 +210,8 @@
                       :label="t('generate.review.saveToPdf')"
                       icon="pi pi-save"
                       class="p-button-success p-button-lg"
+                      :loading="props.isFinalizing"
+                      :disabled="props.isFinalizing"
                       @click="$emit('save')"
                     />
                   </div>
@@ -308,6 +312,8 @@
                       :label="t('generate.review.saveToPdf')"
                       icon="pi pi-save"
                       class="p-button-success p-button-lg"
+                      :loading="props.isFinalizing"
+                      :disabled="props.isFinalizing"
                       @click="$emit('save')"
                     />
                   </div>
@@ -428,6 +434,8 @@
                       :label="t('generate.review.saveToPdf')"
                       icon="pi pi-save"
                       class="p-button-success p-button-lg"
+                      :loading="props.isFinalizing"
+                      :disabled="props.isFinalizing"
                       @click="$emit('save')"
                     />
                   </div>
@@ -529,6 +537,8 @@
                       :label="t('generate.review.saveToPdf')"
                       icon="pi pi-save"
                       class="p-button-success p-button-lg"
+                      :loading="props.isFinalizing"
+                      :disabled="props.isFinalizing"
                       @click="$emit('save')"
                     />
                   </div>
@@ -626,6 +636,8 @@
                       :label="t('generate.review.saveToPdf')"
                       icon="pi pi-save"
                       class="p-button-success p-button-lg"
+                      :loading="props.isFinalizing"
+                      :disabled="props.isFinalizing"
                       @click="$emit('save')"
                     />
                   </div>
@@ -669,6 +681,7 @@ const props = defineProps<{
   showLevels: boolean
   activeTab: string
   selectedLevel: PrototypeLevel
+  isFinalizing?: boolean
 }>()
 
 const emit = defineEmits<{

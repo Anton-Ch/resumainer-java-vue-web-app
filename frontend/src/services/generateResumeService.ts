@@ -1,14 +1,15 @@
 /**
  * Generate Resume API service.
  * All state-changing requests use shared httpClient for CSRF handling.
- * PDF/public-link methods are placeholders in feat/007
- * (real PDF generation deferred to feat/008-pdf-conversion).
  */
 import { apiRequest } from './httpClient'
-import type { GenerationReviewDto, GenerationReviewUpdateDto } from '@/types/generate'
+import type {
+  GenerationReviewDto,
+  GenerationReviewUpdateDto,
+  ExportResultDto
+} from '@/types/generate'
 
 const BASE = '/api/generate'
-const RESUME_BASE = '/api/generate/resumes'
 
 export interface AiModelDto {
   id: string
@@ -27,23 +28,6 @@ export interface GenerationRequestCreateDto {
   languageMode: string
   adaptationSelection: string
   aiModelId: string
-}
-
-export interface SavedResumeExportDto {
-  savedResumeId: number
-  languageCode: string
-  adaptationLevel: string
-  htmlDownloadUrl: string
-  pdfDownloadUrl: string
-  pdfOpenUrl: string
-  publicUrlLink: string
-  pdfAvailable: boolean
-  pdfMessage: string
-  coverLetter?: string
-}
-
-export interface ExportResultDto {
-  resumes: SavedResumeExportDto[]
 }
 
 /** Fetch available AI models for the current user. */
@@ -117,31 +101,24 @@ export async function getExport(requestId: string): Promise<ExportResultDto> {
   return apiRequest<ExportResultDto>(`${BASE}/requests/${requestId}/export`, { method: 'GET' })
 }
 
-/** Download HTML (authenticated, owner-scoped). */
-export async function downloadHtml(savedResumeId: number): Promise<Blob> {
-  const response = await fetch(`${RESUME_BASE}/${savedResumeId}/html`, {
-    credentials: 'include'
-  })
+/** Download HTML (authenticated, owner-scoped). Uses backend-provided URL from export DTO. */
+export async function downloadHtmlByUrl(htmlDownloadUrl: string): Promise<Blob> {
+  if (!htmlDownloadUrl) throw new Error('No HTML download URL available')
+  const response = await fetch(htmlDownloadUrl, { credentials: 'include' })
   if (!response.ok) throw new Error('Failed to download HTML')
   return response.blob()
 }
 
-/** Download PDF (authenticated, owner-scoped). Feature 008. */
-export async function downloadPdf(savedResumeId: number): Promise<Blob> {
-  const response = await fetch(`${RESUME_BASE}/${savedResumeId}/pdf`, {
-    credentials: 'include'
-  })
+/** Download PDF (authenticated, owner-scoped). Uses backend-provided URL from export DTO. Feature 008. */
+export async function downloadPdfByUrl(pdfDownloadUrl: string): Promise<Blob> {
+  if (!pdfDownloadUrl) throw new Error('No PDF download URL available')
+  const response = await fetch(pdfDownloadUrl, { credentials: 'include' })
   if (!response.ok) throw new Error('Failed to download PDF')
   return response.blob()
 }
 
-/** Open PDF inline in new tab. Feature 008. */
-export async function openPdf(savedResumeId: number): Promise<void> {
-  const response = await fetch(`${RESUME_BASE}/${savedResumeId}/pdf?disposition=inline`, {
-    credentials: 'include'
-  })
-  if (!response.ok) throw new Error('Failed to open PDF')
-  const blob = await response.blob()
-  const url = URL.createObjectURL(blob)
-  window.open(url, '_blank')
+/** Open PDF inline in new tab. Uses backend-provided URL from export DTO. Feature 008. */
+export function openPdfByUrl(pdfOpenUrl: string): void {
+  if (!pdfOpenUrl) throw new Error('No PDF open URL available')
+  window.open(pdfOpenUrl, '_blank', 'noopener,noreferrer')
 }

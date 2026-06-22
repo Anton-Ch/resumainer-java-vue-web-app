@@ -154,3 +154,22 @@ export interface ReviewViewModel {
   isBilingual: boolean
   showLevels: boolean
 }
+
+// ── Export / saved resume DTO (Feature 008) ─────────────────────────
+
+export interface SavedResumeExportDto {
+  savedResumeId: number
+  languageCode: string
+  adaptationLevel: string
+  htmlDownloadUrl: string
+  pdfDownloadUrl: string
+  pdfOpenUrl: string
+  publicUrlLink: string
+  pdfAvailable: boolean
+  pdfMessage: string | null
+  coverLetter?: string
+}
+
+export interface ExportResultDto {
+  resumes: SavedResumeExportDto[]
+}

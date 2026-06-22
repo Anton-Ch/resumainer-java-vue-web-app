@@ -115,6 +115,7 @@ export function useGenerateResumeFlow() {
       router.push('/generate/export')
     } catch (err: any) {
       state.value.errorMessage = err.message || 'Failed to finalize resume.'
+      throw err
     } finally {
       state.value.isLoading = false
     }

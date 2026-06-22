@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
 import GenerateExportPage from '@/views/generate/GenerateExportPage.vue'
-import type { ExportResultDto } from '@/services/generateResumeService'
+import type { ExportResultDto } from '@/types/generate'
 import type { GenerateFlowState } from '@/types/generate'
 
 // ── Mocks ───────────────────────────────────────────────────────────
@@ -156,11 +156,11 @@ describe('GenerateExportPage', () => {
           languageCode: 'EN',
           adaptationLevel: 'BALANCED',
           htmlDownloadUrl: '/api/generate/resumes/1/html',
-          pdfDownloadUrl: '',
-          pdfOpenUrl: '',
-          publicUrlLink: '/candidate/ABC',
-          pdfAvailable: false,
-          pdfMessage: 'PDF not available.',
+          pdfDownloadUrl: '/api/generate/resumes/1/pdf',
+          pdfOpenUrl: '/api/generate/resumes/1/pdf?disposition=inline',
+          publicUrlLink: '/alice/ABC',
+          pdfAvailable: true,
+          pdfMessage: null,
         },
       ],
     }

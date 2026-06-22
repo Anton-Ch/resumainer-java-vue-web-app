@@ -27,7 +27,7 @@
           <label class="vue-form-label">{{ $t('generate.export.publicLink') }}</label>
           <div class="link-row">
             <InputText
-              :modelValue="item.publicUrlLink"
+              :modelValue="absolutePublicUrl(item.publicUrlLink)"
               readonly
               class="public-link-input"
             />
@@ -36,7 +36,7 @@
               icon="pi pi-copy"
               class="p-button-outlined p-button-sm"
               :aria-label="$t('generate.export.copyLink')"
-              @click="copyToClipboard(item.publicUrlLink, 'link')"
+              @click="copyToClipboard(absolutePublicUrl(item.publicUrlLink), 'link')"
             />
           </div>
           <span class="vue-form-hint" style="margin-top: 4px;">
@@ -69,17 +69,24 @@
           </div>
         </div>
 
+        <div class="export-pdf-status" v-if="!item.pdfAvailable" style="margin-bottom: 12px;">
+          <i class="pi pi-info-circle" style="margin-right: 4px;"></i>
+          <span>{{ item.pdfMessage || $t('generate.export.pdfNotAvailable') }}</span>
+        </div>
+
         <div class="export-actions">
           <Button
             :label="$t('generate.export.downloadPdf')"
             icon="pi pi-download"
             class="p-button-success"
+            :disabled="!item.pdfAvailable"
             @click="onDownloadPdf(item)"
           />
           <Button
             :label="$t('generate.export.openPdf')"
             icon="pi pi-external-link"
             class="p-button-outlined"
+            :disabled="!item.pdfAvailable"
             @click="onOpenPdf(item)"
           />
           <Button
@@ -102,7 +109,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useToast } from 'primevue/usetoast'
-import type { ExportResultDto, SavedResumeExportDto } from '@/services/generateResumeService'
+import type { ExportResultDto, SavedResumeExportDto } from '@/types/generate'
 import * as generateApi from '@/services/generateResumeService'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -121,6 +128,15 @@ const sortedResumes = computed(() => {
     return left - right
   })
 })
+
+/** Build absolute public URL from relative backend path. */
+function absolutePublicUrl(relativePath: string): string {
+  if (!relativePath) return ''
+  if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
+    return relativePath
+  }
+  return window.location.origin + relativePath
+}
 
 const isBilingual = computed(() => sortedResumes.value.length > 1)
 
@@ -169,7 +185,7 @@ async function copyToClipboard(text: string, type: 'link' | 'coverLetter') {
 
 async function onDownloadHtml(item: SavedResumeExportDto) {
   try {
-    const blob = await generateApi.downloadHtml(item.savedResumeId)
+    const blob = await generateApi.downloadHtmlByUrl(item.htmlDownloadUrl)
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -187,52 +203,38 @@ async function onDownloadHtml(item: SavedResumeExportDto) {
   }
 }
 
-function onDownloadPdf(item: SavedResumeExportDto) {
-  if (!item.pdfAvailable) {
+async function onDownloadPdf(item: SavedResumeExportDto) {
+  if (!item.pdfAvailable) return
+  try {
+    const blob = await generateApi.downloadPdfByUrl(item.pdfDownloadUrl)
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `resume_${normalizedLanguage(item.languageCode)}_${normalizedLevel(item.adaptationLevel)}.pdf`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  } catch {
     toast.add({
-      severity: 'info',
-      summary: item.pdfMessage || t('generate.export.pdfNotAvailable'),
+      severity: 'error',
+      summary: t('generate.export.pdfDownloadFailed') || 'PDF download failed',
       life: 3000
     })
-    return
   }
-  generateApi.downloadPdf(item.savedResumeId)
-    .then(blob => {
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `resume_${normalizedLanguage(item.languageCode)}_${normalizedLevel(item.adaptationLevel)}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(url)
-    })
-    .catch(() => {
-      toast.add({
-        severity: 'error',
-        summary: t('generate.export.pdfDownloadFailed') || 'PDF download failed',
-        life: 3000
-      })
-    })
 }
 
 function onOpenPdf(item: SavedResumeExportDto) {
-  if (!item.pdfAvailable) {
+  if (!item.pdfAvailable) return
+  try {
+    generateApi.openPdfByUrl(item.pdfOpenUrl)
+  } catch {
     toast.add({
-      severity: 'info',
-      summary: item.pdfMessage || t('generate.export.pdfNotAvailable'),
+      severity: 'error',
+      summary: t('generate.export.pdfOpenFailed') || 'Failed to open PDF',
       life: 3000
     })
-    return
   }
-  generateApi.openPdf(item.savedResumeId)
-    .catch(() => {
-      toast.add({
-        severity: 'error',
-        summary: t('generate.export.pdfOpenFailed') || 'Failed to open PDF',
-        life: 3000
-      })
-    })
 }
 </script>
 
