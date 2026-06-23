@@ -37,6 +37,7 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - B25 | Docker BuildKit: COPY . . cache survives --no-cache — must docker rmi --force | docker, buildkit, cache, copy, no-cache, multi-stage, devops, frontend, rebuild | [BUGS.md](BUGS.md) | active
 - B26 | Dropped spike method causes universal validation failure in ported algorithm | spike,porting,fit-engine,content-expectation,missing-texts,validation,algorithm-drift | [BUGS.md](BUGS.md) | active
 - B27 | Paths.get(first, more...) concatenates absolute paths instead of resolving them — check isAbsolute() first | java, path, nio, security, path-traversal, filesystem, bug, resolveSafePath, docker | [BUGS.md](BUGS.md) | active
+- B28 | Uniform artificial delay on public 404 responses prevents timing-based enumeration | security,timing,enumeration,404,public-route,rate-limiting,privacy | [BUGS.md](BUGS.md) | active
 
 ## Decisions
 - D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web.xml) | servlet, spring-mvc, jakarta-ee, tomcat, initialization, web.xml | [DECISIONS.md](DECISIONS.md) | active
@@ -70,6 +71,9 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - D30 | GENERATION_ALREADY_IN_PROGRESS returns HTTP 409 Conflict, not 500 | http,409,conflict,generation,concurrency,lifecycle,spring-mvc,controller,error-handling | [DECISIONS.md](DECISIONS.md) | active
 - D31 | Frontend download service must consume backend-provided DTO URLs, not reconstruct from IDs | frontend, service, dto, url, contract, download, refactor, decoupling | [DECISIONS.md](DECISIONS.md) | active
 - D32 | Budget drift from proven spike capacity causes production PDF fitting failures — restore parity via migration | pdf, budget, spike, parity, migration, fitting, ec-016, v12.1, capacity, drift | [DECISIONS.md](DECISIONS.md) | active
+- D34 | Spike audit matrix is mandatory before merging any ported code | spike,porting,audit,matrix,quality,regression,process,testing | [DECISIONS.md](DECISIONS.md) | active
+- D35 | Footer safe zone detection as distinct PDF validation dimension | pdf,validation,footer,safe-zone,overlap,detection,position-stripper,fitting | [DECISIONS.md](DECISIONS.md) | active
+- D33 | Content-Disposition header allowlist prevents CRLF injection | security,http,header,crlf,injection,download,controller,spring-mvc | [DECISIONS.md](DECISIONS.md) | active
 
 ## Workflow
 - W1 | First Feature MVP Achieved: Hello World Tomcat | milestone, mvp, hello-world, docker, spring-mvc, tomcat | [WORKLOG.md](WORKLOG.md) | active
@@ -91,3 +95,4 @@ This is a compact routing map for durable project memory (`docs/memory/`). Keep 
 - W17 | Feature 008 Phase Group 1 (Bullet Points + Review + Prompt/Parser) Completed | milestone,feature-008,phase-group-1,bullet-points,review,prompt,parser,tdd,cross-layer | [WORKLOG.md](WORKLOG.md) | active
 - W18 | Feature 008 Phase Group 3 — Spike Parity Fixes Completed (Phases 19-21) | milestone,feature-008,phase-group-3,spike-parity,export-dto,public-route,path-safety,fit-engine,page-plan,tdd | [WORKLOG.md](WORKLOG.md) | active
 - W19 | Feature 008 Phases 23-27: download security, PDF fitting, semantic render repair completed | milestone, feature-008, phase-23-27, pdf, download, security, fitting, semantic, budget, validation | [WORKLOG.md](WORKLOG.md) | active
+- W20 | Feature 008 Phase 28: footer safe zone and overlap detection completed | milestone, feature-008, phase-28, footer, safe-zone, overlap, pdf, validation, fitting | [WORKLOG.md](WORKLOG.md) | active

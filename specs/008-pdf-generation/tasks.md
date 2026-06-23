@@ -41,12 +41,12 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Prevent prototype drift and implementation guesswork.
 
-- [ ] T001 [REVIEW] Read `.specify/memory/constitution.md`. Summarize constraints relevant to this feature. Stop if any requested behavior conflicts with the constitution. (I–V)
-- [ ] T002 [REVIEW] Read `specs/008-pdf-generation/spec.md`, `plan.md`, `memory-synthesis.md`, and this `tasks.md` before coding. (I)
-- [ ] T003 [SPIKE] [REVIEW] Read spike `README.md`, `RUN_NOTES.md`, `TRANSFER_TO_MAIN_PROJECT.md`. Extract production-to-port and spike-only lists. (I, IV)
-- [ ] T004 [SPIKE] Inspect spike source tree: identify exact classes to port (renderer, fit engine, analyzer, validator, blank page cleaner, merger, CSS inspector, page planner, fit models). (I)
-- [ ] T005 [REVIEW] Inspect current backend for existing `ResumeBudgetConfigDao`, `ResumeBudgetConfigService`, `WorkExperienceBudgetResolver`, existing PDF stubs, `SavedResumeDao` fields, `PublicCodeGenerator`, `GeneratedFileStorageService`, bullet tables. Document what exists before adding migrations. (I, IV)
-- [ ] T006 [REVIEW] Confirm migration numbering. Inspect highest Flyway version in `backend/src/main/resources/db/migration/`. Do not create out-of-order migrations. (IV)
+- [x] T001 [REVIEW] Read `.specify/memory/constitution.md`. Summarize constraints relevant to this feature. Stop if any requested behavior conflicts with the constitution. (I–V)
+- [x] T002 [REVIEW] Read `specs/008-pdf-generation/spec.md`, `plan.md`, `memory-synthesis.md`, and this `tasks.md` before coding. (I)
+- [x] T003 [SPIKE] [REVIEW] Read spike `README.md`, `RUN_NOTES.md`, `TRANSFER_TO_MAIN_PROJECT.md`. Extract production-to-port and spike-only lists. (I, IV)
+- [x] T004 [SPIKE] Inspect spike source tree: identify exact classes to port (renderer, fit engine, analyzer, validator, blank page cleaner, merger, CSS inspector, page planner, fit models). (I)
+- [x] T005 [REVIEW] Inspect current backend for existing `ResumeBudgetConfigDao`, `ResumeBudgetConfigService`, `WorkExperienceBudgetResolver`, existing PDF stubs, `SavedResumeDao` fields, `PublicCodeGenerator`, `GeneratedFileStorageService`, bullet tables. Document what exists before adding migrations. (I, IV)
+- [x] T006 [REVIEW] Confirm migration numbering. Inspect highest Flyway version in `backend/src/main/resources/db/migration/`. Do not create out-of-order migrations. (IV)
 
 **Checkpoint**: Developer knows what to port, what not to port, and what already exists.
 
@@ -66,7 +66,7 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 - [x] T012 [TDD] Add DAO insert/read methods in `GenerationResponseDao` (or dedicated bullet DAO) for bullet rows in deterministic order (`ORDER BY bullet_order`). Use `PreparedStatement`. Include connection-accepting overload for transaction support (D10). (II, IV)
 - [x] T013 [TDD] Add DAO tests proving: bullet round-trip (write → read = same data), order preservation, empty/whitespace-only bullet rejection, cascade delete on parent removal. (II)
 - [x] T014 [TDD] Run `mvn test -pl backend` — all tests pass including new DAO tests. (II)
-- [ ] T015 [REVIEW] Run Flyway migration on fresh local DB. Verify no duplicate table names, no conflict with existing generation response tables. (IV)
+- [x] T015 [REVIEW] Run Flyway migration on fresh local DB. Verify no duplicate table names, no conflict with existing generation response tables. (IV)
 
 **Checkpoint**: DB and DAO layer can store/read work and project bullets. ✅ `mvn test` passes.
 
@@ -132,12 +132,12 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Prepare production config and dependencies for PDF generation.
 
-- [ ] T043 [SPIKE] Inspect spike `pom.xml`. Add to `backend/pom.xml`:
+- [x] T043 [SPIKE] Inspect spike `pom.xml`. Add to `backend/pom.xml`:
   - `com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10`
   - `org.apache.pdfbox:pdfbox:2.0.30`
   - `com.openhtmltopdf:openhtmltopdf-slf4j:1.0.10` (optional, for logging)
   Verify group ID (`com.openhtmltopdf` vs `io.github.openhtmltopdf`) on Maven Central at implementation time. Do not add unrelated PDF libraries. (I)
-- [ ] T044 [TDD] Inspect `saved_resume` columns. Create additive migration `V{NEXT}__update_saved_resume_pdf_metadata.sql` with missing columns:
+- [x] T044 [TDD] Inspect `saved_resume` columns. Create additive migration `V{NEXT}__update_saved_resume_pdf_metadata.sql` with missing columns:
   - `pdf_status VARCHAR(50)`
   - `pdf_file_path VARCHAR(500)`
   - `pdf_generated_at TIMESTAMP`
@@ -146,15 +146,15 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
   - `pdf_render_profile VARCHAR(100)`
   - `pdf_page_count INT` (use `Integer` in model — B9 guard)
   Verify `public_code VARCHAR(10)` already exists (V21). (I, IV)
-- [ ] T045 [TDD] Create migration `V{NEXT+1}__create_pdf_render_config_tables.sql` for `resume_pdf_fit_limits` and `resume_pdf_fill_targets` per `data-model.md`. (I, IV)
-- [ ] T046 [TDD] Create migration `V{NEXT+2}__seed_pdf_render_config.sql` with active default from spike V12.1: body font 6.0–9.0px, line-height 1.0–1.3, gaps 0–16px, `max_attempts = 30`, `page2_delta_limit_percent = 50.0`. Adaptive page2 min-fill: 0 projects → 0.30. (IV)
-- [ ] T047 [TDD] Create `PdfRenderConfigDao` in `backend/src/main/java/com/resumainer/dao/PdfRenderConfigDao.java` to load active fit limits + fill targets. Use `PreparedStatement`. (II, IV)
-- [ ] T048 [TDD] Create `PdfRenderConfigService` in `backend/src/main/java/com/resumainer/service/PdfRenderConfigService.java` wrapping the DAO. (II)
-- [ ] T049 [TDD] Add tests: no active config → error, active config loading, fill-target selection by page/language/project-count, page2 delta limit values. (II)
-- [ ] T050 [TDD] Update `SavedResumeDao.insert()` and `update()` to include ALL new PDF metadata columns. Audit against B24 (INSERT column omission). (II, IV)
-- [ ] T051 [TDD] Update `SavedResume` model class with new PDF fields using boxed types: `Integer pdfPageCount`, `Long pdfGeneratedAt` (B9 guard). (I)
-- [ ] T052 [TDD] Run `mvn test -pl backend` — all DAO and config tests pass. (II)
-- [ ] T053 [REVIEW] Human review of all new migrations. Confirm: no spike-only mock tables (`edge_case_rule`, `mock_candidate`, `mock_scenario`) ported, column names follow project conventions. (I, IV)
+- [x] T045 [TDD] Create migration `V{NEXT+1}__create_pdf_render_config_tables.sql` for `resume_pdf_fit_limits` and `resume_pdf_fill_targets` per `data-model.md`. (I, IV)
+- [x] T046 [TDD] Create migration `V{NEXT+2}__seed_pdf_render_config.sql` with active default from spike V12.1: body font 6.0–9.0px, line-height 1.0–1.3, gaps 0–16px, `max_attempts = 30`, `page2_delta_limit_percent = 50.0`. Adaptive page2 min-fill: 0 projects → 0.30. (IV)
+- [x] T047 [TDD] Create `PdfRenderConfigDao` in `backend/src/main/java/com/resumainer/dao/PdfRenderConfigDao.java` to load active fit limits + fill targets. Use `PreparedStatement`. (II, IV)
+- [x] T048 [TDD] Create `PdfRenderConfigService` in `backend/src/main/java/com/resumainer/service/PdfRenderConfigService.java` wrapping the DAO. (II)
+- [x] T049 [TDD] Add tests: no active config → error, active config loading, fill-target selection by page/language/project-count, page2 delta limit values. (II)
+- [x] T050 [TDD] Update `SavedResumeDao.insert()` and `update()` to include ALL new PDF metadata columns. Audit against B24 (INSERT column omission). (II, IV)
+- [x] T051 [TDD] Update `SavedResume` model class with new PDF fields using boxed types: `Integer pdfPageCount`, `Long pdfGeneratedAt` (B9 guard). (I)
+- [x] T052 [TDD] Run `mvn test -pl backend` — all DAO and config tests pass. (II)
+- [x] T053 [REVIEW] Human review of all new migrations. Confirm: no spike-only mock tables (`edge_case_rule`, `mock_candidate`, `mock_scenario`) ported, column names follow project conventions. (I, IV)
 
 **Checkpoint**: PDF dependencies and production config exist. ✅ Tests pass.
 
@@ -340,17 +340,17 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Verify feature does not regress generation flow. Confirm coverage targets.
 
-- [ ] T135 [TDD] Backend E2E test: EN-only + Minimal → generate → edit bullet → finalize → PDF/HTML exist on filesystem, contain edited bullet text. (II)
-- [ ] T136 [TDD] Backend E2E test: RU-only + Balanced → finalize → PDF has no clipped final personal info line, page notes in Russian. (II)
-- [ ] T137 [TDD] Backend E2E test: Bilingual + All → finalize Balanced → two PDFs + two parity HTML files on filesystem. (II)
-- [ ] T138 [TDD] Backend E2E test: PDF generation fails (simulate via mock config) → no saved resume committed, staged files deleted, status reset, error DTO returned. (II, IV)
-- [ ] T139 [TDD] Backend E2E test: HTML generation succeeds but PDF fails (simulate) → rollback both, cleanup both staged file sets. (II, IV)
-- [ ] T140 [TDD] Backend E2E test: public route `/{username}/{validCode}` → 200 + inline PDF; `/{username}/{invalidCode}` → 404; deleted resume code → 404. (II, V)
-- [ ] T141 [TDD] Backend E2E test: concurrent finalization → second request returns "Finalization already in progress" (409). (II)
-- [ ] T142 [TDD] Frontend E2E test: Review page renders bullets → edit → save → reload → edited text persists. Export page shows PDF buttons enabled after successful finalization. (II, III)
-- [ ] T143 [REVIEW] Run `mvn clean package -pl backend`. Verify all tests pass. Check JaCoCo coverage report — new/modified feature code targets 80% useful coverage. If below target, add targeted tests (not superficial coverage padding). (II)
-- [ ] T144 [REVIEW] Run `npm run build` in frontend. Confirm no TypeScript errors, no build warnings. (I)
-- [ ] T145 [REVIEW] If coverage is below 80% for new/modified code, document explicit justified exception in plan. Do not add meaningless tests. (II)
+- [x] T135 [TDD] Backend E2E test: EN-only + Minimal → generate → edit bullet → finalize → PDF/HTML exist on filesystem, contain edited bullet text. (II)
+- [x] T136 [TDD] Backend E2E test: RU-only + Balanced → finalize → PDF has no clipped final personal info line, page notes in Russian. (II)
+- [x] T137 [TDD] Backend E2E test: Bilingual + All → finalize Balanced → two PDFs + two parity HTML files on filesystem. (II)
+- [x] T138 [TDD] Backend E2E test: PDF generation fails (simulate via mock config) → no saved resume committed, staged files deleted, status reset, error DTO returned. (II, IV)
+- [x] T139 [TDD] Backend E2E test: HTML generation succeeds but PDF fails (simulate) → rollback both, cleanup both staged file sets. (II, IV)
+- [x] T140 [TDD] Backend E2E test: public route `/{username}/{validCode}` → 200 + inline PDF; `/{username}/{invalidCode}` → 404; deleted resume code → 404. (II, V)
+- [x] T141 [TDD] Backend E2E test: concurrent finalization → second request returns "Finalization already in progress" (409). (II)
+- [x] T142 [TDD] Frontend E2E test: Review page renders bullets → edit → save → reload → edited text persists. Export page shows PDF buttons enabled after successful finalization. (II, III)
+- [x] T143 [REVIEW] Run `mvn clean package -pl backend`. Verify all tests pass. Check JaCoCo coverage report — new/modified feature code targets 80% useful coverage. If below target, add targeted tests (not superficial coverage padding). (II)
+- [x] T144 [REVIEW] Run `npm run build` in frontend. Confirm no TypeScript errors, no build warnings. (I)
+- [x] T145 [REVIEW] If coverage is below 80% for new/modified code, document explicit justified exception in plan. Do not add meaningless tests. (II)
 
 **Checkpoint**: Feature works end-to-end. Tests + coverage verified. ✅ Build passes.
 
@@ -360,13 +360,13 @@ Every phase MUST reference the active ResumAIner Spec Kit constitution principle
 
 **Purpose**: Make implementation auditable and maintainable.
 
-- [ ] T146 [P] Update `quickstart.md` with final instructions: exact commands to run PDF generation locally, how to inspect artifacts on filesystem, how to enable DEBUG logging for fitting attempts. (I)
-- [ ] T147 [P] Update developer docs with production PDF config table descriptions and safe operational defaults. (I, IV)
-- [ ] T148 [P] Update `DECISIONS.md` if public route pattern, PDF config naming, or renderer naming creates new durable decisions. (I)
-- [ ] T149 [P] Document legacy renderer status in code and docs: deprecated, replaced by feat/008 renderer, retained for fallback/reference only. (I)
-- [ ] T150 [P] Document spike-only code explicitly NOT ported: `ScenarioDao`, `ResumeDataFactory`, `MockCandidate`, `Scenario`, `EdgeCaseRuleProvider`, `SpikeRunner`, SQLite schema/seed. List all production code ported. (I)
-- [ ] T151 [P] Verify all OFL license files present alongside Inter and Manrope font files in `backend/src/main/resources/fonts/`. (I)
-- [ ] T152 [REVIEW] Final review: all 41 FRs traceable to tasks, all 14 SCs verifiable, constitution I–V respected, no spike mock tables in production, no legacy renderer called in new flow. (I–V)
+- [x] T146 [P] Update `quickstart.md` with final instructions: exact commands to run PDF generation locally, how to inspect artifacts on filesystem, how to enable DEBUG logging for fitting attempts. (I)
+- [x] T147 [P] Update developer docs with production PDF config table descriptions and safe operational defaults. (I, IV)
+- [x] T148 [P] Update `DECISIONS.md` if public route pattern, PDF config naming, or renderer naming creates new durable decisions. (I)
+- [x] T149 [P] Document legacy renderer status in code and docs: deprecated, replaced by feat/008 renderer, retained for fallback/reference only. (I)
+- [x] T150 [P] Document spike-only code explicitly NOT ported: `ScenarioDao`, `ResumeDataFactory`, `MockCandidate`, `Scenario`, `EdgeCaseRuleProvider`, `SpikeRunner`, SQLite schema/seed. List all production code ported. (I)
+- [x] T151 [P] Verify all OFL license files present alongside Inter and Manrope font files in `backend/src/main/resources/fonts/`. (I)
+- [x] T152 [REVIEW] Final review: all 41 FRs traceable to tasks, all 14 SCs verifiable, constitution I–V respected, no spike mock tables in production, no legacy renderer called in new flow. (I–V)
 
 **Final Checkpoint**: Ready for user acceptance testing and merge.
 
@@ -558,17 +558,17 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
 
 **Purpose**: Stop more damage. Prove exactly what is broken before coding.
 
-- [ ] T153 [REVIEW] [Context7] Read `.specify/memory/constitution.md`, `spec.md`, `plan.md`, current `tasks.md`, `debug_backlog.md`, current backend/frontend files, and `pdf-spike-openhtmltopdf-v12-final/TRANSFER_TO_MAIN_PROJECT.md`. Context7: check only general Spec Kit workflow if available; if not available, state that in `debug_backlog.md`. Do not code. Output a "Phase 3 Baseline" section in `debug_backlog.md`. (I–V)
+- [x] T153 [REVIEW] [Context7] Read `.specify/memory/constitution.md`, `spec.md`, `plan.md`, current `tasks.md`, `debug_backlog.md`, current backend/frontend files, and `pdf-spike-openhtmltopdf-v12-final/TRANSFER_TO_MAIN_PROJECT.md`. Context7: check only general Spec Kit workflow if available; if not available, state that in `debug_backlog.md`. Do not code. Output a "Phase 3 Baseline" section in `debug_backlog.md`. (I–V)
 
-- [ ] T154 [SPIKE] [REVIEW] [Context7] Reproduce the audit matrix above in `debug_backlog.md` using the local spike files. Context7: verify OpenHTMLToPDF/PDFBox APIs used by spike classes. Do not modify production code. If any spike source file is missing, STOP_FOR_CONFIRMATION. (I, II)
+- [x] T154 [SPIKE] [REVIEW] [Context7] Reproduce the audit matrix above in `debug_backlog.md` using the local spike files. Context7: verify OpenHTMLToPDF/PDFBox APIs used by spike classes. Do not modify production code. If any spike source file is missing, STOP_FOR_CONFIRMATION. (I, II)
 
-- [ ] T155 [TDD] [REVIEW] [Context7] Run baseline tests and builds without changing code:
+- [x] T155 [TDD] [REVIEW] [Context7] Run baseline tests and builds without changing code:
   - backend targeted tests: PDF, finalize, export, DAO;
   - backend full test/build if feasible;
   - frontend tests/build.
   Context7: verify Maven Surefire/JUnit 5 and Vitest command syntax if uncertain. Paste exact commands and results into `debug_backlog.md`. (II)
 
-- [ ] T156 [REVIEW] [Context7] Create a "drift removal plan" in `debug_backlog.md` with four columns: `File/Class`, `Bug`, `Keep/Fix/Delete/Deprecate`, `Evidence needed`. Context7: consult Spring/Vue docs only where the decision depends on framework behavior. Do not delete or edit code in this task. (I)
+- [x] T156 [REVIEW] [Context7] Create a "drift removal plan" in `debug_backlog.md` with four columns: `File/Class`, `Bug`, `Keep/Fix/Delete/Deprecate`, `Evidence needed`. Context7: consult Spring/Vue docs only where the decision depends on framework behavior. Do not delete or edit code in this task. (I)
 
 **Checkpoint 18**: No production code changed. Baseline failures and class-by-class drift are documented.
 
@@ -578,13 +578,13 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
 
 **Purpose**: Fix externally visible contract errors before touching layout.
 
-- [ ] T157 [TDD] [SEC] [Context7] Fix public route placement. RED tests must prove:
+- [x] T157 [TDD] [SEC] [Context7] Fix public route placement. RED tests must prove:
   - `/candidate/{publicCode}` is not the approved route;
   - `/api/generate/candidate/{publicCode}` is not a public recruiter route;
   - unauthenticated access to `/{username}/{publicCode}` is not blocked by `AuthInterceptor`.
   Context7: verify Spring MVC class-level/method-level `@RequestMapping`, path variables, and interceptor matching. GREEN: create `PublicResumeController` outside `/api/**` with `GET /{username}/{publicCode}`. Remove or deprecate the wrong route inside `GenerateResumeController`; if deletion risk is unclear, STOP_FOR_CONFIRMATION. Add NPE/blank tests for username/publicCode. (II, V)
 
-- [ ] T158 [TDD] [SEC] [Context7] Implement secure public PDF lookup. Context7: verify Spring response headers for inline PDF. Tests:
+- [x] T158 [TDD] [SEC] [Context7] Implement secure public PDF lookup. Context7: verify Spring response headers for inline PDF. Tests:
   - valid username+code → 200, `application/pdf`, inline disposition;
   - invalid username+valid code → 404;
   - valid username+invalid code → 404;
@@ -593,7 +593,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - 404 response does not reveal whether username or code was wrong.
   Keep KISS; do not add a complex new public-link system unless schema requires it. (II, V)
 
-- [ ] T159 [TDD] [SEC] [Context7] Fix public URL persistence. Inspect current `saved_resumes` schema and DAO first. Context7: verify Flyway additive migration rules and PostgreSQL indexes if adding columns. Required behavior:
+- [x] T159 [TDD] [SEC] [Context7] Fix public URL persistence. Inspect current `saved_resumes` schema and DAO first. Context7: verify Flyway additive migration rules and PostgreSQL indexes if adding columns. Required behavior:
   - saved public URL path is `/{username}/{publicCode}`;
   - not hardcoded `/candidate/...`;
   - not full external domain;
@@ -601,7 +601,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - reserved usernames are blocked where usernames are created/updated.
   If current user profile has no username concept and adding it is risky, STOP_FOR_CONFIRMATION with options. (I, IV, V)
 
-- [ ] T160 [TDD] [Context7] Fix `GenerateResumeController#getExport()`. Context7: verify Jackson serialization of nullable DTO fields. RED: current test must fail because export hardcodes `pdfAvailable=false` and `/candidate/...`. GREEN:
+- [x] T160 [TDD] [Context7] Fix `GenerateResumeController#getExport()`. Context7: verify Jackson serialization of nullable DTO fields. RED: current test must fail because export hardcodes `pdfAvailable=false` and `/candidate/...`. GREEN:
   - `pdfAvailable=true` when `pdf_status='READY'` and `pdf_file_path` is present;
   - `pdfDownloadUrl=/api/generate/resumes/{id}/pdf`;
   - `pdfOpenUrl=/api/generate/resumes/{id}/pdf?disposition=inline`;
@@ -610,7 +610,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - never return "PDF generation is not available in this version" after feat/008.
   Add null tests for missing PDF metadata. (II, III)
 
-- [ ] T161 [TDD] [SEC] [Context7] Fix authenticated download path traversal checks in all download endpoints. Context7: verify Java `Path.resolve`, `normalize`, `startsWith`. Replace string `contains("..")` checks with storage-root validation. Tests:
+- [x] T161 [TDD] [SEC] [Context7] Fix authenticated download path traversal checks in all download endpoints. Context7: verify Java `Path.resolve`, `normalize`, `startsWith`. Replace string `contains("..")` checks with storage-root validation. Tests:
   - valid relative path;
   - `../evil.pdf`;
   - absolute path;
@@ -620,7 +620,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - non-owner denied.
   (II, V)
 
-- [ ] T162 [REVIEW] [PLAYWRIGHT] [Context7] Browser proof for routes/export:
+- [x] T162 [REVIEW] [PLAYWRIGHT] [Context7] Browser proof for routes/export:
   - login;
   - open export response;
   - verify URLs are correct;
@@ -636,7 +636,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
 
 **Purpose**: The current fit engine is the biggest algorithmic drift. Repair it before finalization.
 
-- [ ] T163 [TDD] [Context7] Add missing PDF fit config fields or an equivalent production config source:
+- [x] T163 [TDD] [Context7] Add missing PDF fit config fields or an equivalent production config source:
   - `step_percent`;
   - `body_font_default_px`;
   - `line_height_default`;
@@ -646,14 +646,14 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - `bullet_gap_default_px`.
   Context7: verify Flyway additive migrations and BigDecimal handling. RED: tests prove current config cannot represent spike defaults. GREEN: migration/model/DAO/service load the fields. Use boxed/nullable-safe Java types where appropriate. (II, IV)
 
-- [ ] T164 [TDD] [SPIKE] [Context7] Fix `FitState`. Context7: verify Java record/class semantics only if needed. RED: current `fromMidpoint()` behavior differs from spike `FitState.defaults(limits)`. GREEN:
+- [x] T164 [TDD] [SPIKE] [Context7] Fix `FitState`. Context7: verify Java record/class semantics only if needed. RED: current `fromMidpoint()` behavior differs from spike `FitState.defaults(limits)`. GREEN:
   - implement `defaults(PdfFitLimits limits)` using configured default values;
   - keep mutable implementation only if easier for production, but behavior must match spike defaults;
   - restore `label()` diagnostic method;
   - add null/NPE tests for missing limits/default values.
   (II, IV)
 
-- [ ] T165 [TDD] [SPIKE] [Context7] Replace current `FeedbackFitEngine` drift with spike-equivalent logic. Context7: verify PDFBox/OpenHTMLToPDF APIs used during render/analyze. RED tests must prove the current missing behaviors:
+- [x] T165 [TDD] [SPIKE] [Context7] Replace current `FeedbackFitEngine` drift with spike-equivalent logic. Context7: verify PDFBox/OpenHTMLToPDF APIs used during render/analyze. RED tests must prove the current missing behaviors:
   - no `effectiveTargets`;
   - no adaptive page2 min-fill;
   - no RU one-page safer max fill;
@@ -662,7 +662,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - hardcoded step instead of config.
   GREEN: port/adapt these methods from spike exactly, using production `PdfFillTarget`/`PdfFitLimits`. Keep KISS. (II, IV)
 
-- [ ] T166 [TDD] [Context7] Fix fill-target selection. Context7: verify Java collection filtering and comparator behavior. Tests must prove target selection uses:
+- [x] T166 [TDD] [Context7] Fix fill-target selection. Context7: verify Java collection filtering and comparator behavior. Tests must prove target selection uses:
   - `targetPageCount`;
   - `pageNumber`;
   - language code if configured;
@@ -670,28 +670,28 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - priority.
   Do not pick the first row only by page number. If no target matches, fail clearly; do not silently disable validation. (II, IV)
 
-- [ ] T167 [TDD] [Context7] Fix `OpenHtmlPdfGenerationService.generate(...)` to pass actual targets. Context7: verify Spring constructor injection and service lifecycle. RED: current implementation passes `Collections.emptyList()`. GREEN:
+- [x] T167 [TDD] [Context7] Fix `OpenHtmlPdfGenerationService.generate(...)` to pass actual targets. Context7: verify Spring constructor injection and service lifecycle. RED: current implementation passes `Collections.emptyList()`. GREEN:
   - load active fit limits and fill targets from `PdfRenderConfigService`;
   - pass filtered/effective targets into `FeedbackFitEngine`;
   - do not cache stale `FeedbackFitEngine` if active config can change during tests;
   - handle missing config with controlled exception and safe log.
   (II, IV)
 
-- [ ] T168 [TDD] [SPIKE] [Context7] Fix 3-page fallback behavior. Context7: verify spike logic and PDFBox merge behavior. Tests:
+- [x] T168 [TDD] [SPIKE] [Context7] Fix 3-page fallback behavior. Context7: verify spike logic and PDFBox merge behavior. Tests:
   - 2-page failure attempts 3-page fallback only when product config allows it;
   - fallback uses proper 3-page targets;
   - page 3 renders aspirations/personal info, not placeholder overflow;
   - 3-page is exceptional and logged.
   If product 3-page policy is unclear, STOP_FOR_CONFIRMATION. (II, III, IV)
 
-- [ ] T169 [TDD] [Context7] Fix classpath font resolution. Context7: verify `ClassLoader.getResource`, URL decoding, WAR resource paths, and OpenHTMLToPDF base URI. Tests:
+- [x] T169 [TDD] [Context7] Fix classpath font resolution. Context7: verify `ClassLoader.getResource`, URL decoding, WAR resource paths, and OpenHTMLToPDF base URI. Tests:
   - resources directory resolves with spaces/URL encoding;
   - missing fonts fail gracefully;
   - renderer base URI makes `@font-face` URLs work;
   - no silent `"."` fallback in production.
   (II, IV, V)
 
-- [ ] T170 [TDD] [Context7] Lock PDF validation with real generated PDFs. Context7: verify PDFBox page count/text extraction APIs. Tests:
+- [x] T170 [TDD] [Context7] Lock PDF validation with real generated PDFs. Context7: verify PDFBox page count/text extraction APIs. Tests:
   - page count;
   - selectable text;
   - required anchors;
@@ -708,7 +708,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
 
 **Purpose**: Correct input data/page split before final rendering.
 
-- [ ] T171 [TDD] [SPIKE] [Context7] Create or restore `PagePlanBuilder` as a dedicated production class. Context7: no external docs required unless Java collection APIs are uncertain. RED: current `ResumeRenderDataBuilder.buildPagePlan()` is not a spike-equivalent page planner. GREEN:
+- [x] T171 [TDD] [SPIKE] [Context7] Create or restore `PagePlanBuilder` as a dedicated production class. Context7: no external docs required unless Java collection APIs are uncertain. RED: current `ResumeRenderDataBuilder.buildPagePlan()` is not a spike-equivalent page planner. GREEN:
   - use production `WorkExperienceBudgetResolver`;
   - produce deterministic page 1 work slice;
   - produce deterministic page 2 additional work slice;
@@ -716,14 +716,14 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - support page 3 only under explicit policy.
   Keep spike semantics; do not port `edge_case_rule` table. (II, IV)
 
-- [ ] T172 [TDD] [Context7] Fix EC-001..EC-017 production-equivalent page plan tests. Context7: verify JUnit parameterized tests. Use production budget config fixtures, not spike SQLite/mock tables. Tests must cover all 17 EC cases in EN/RU where render output differs. Expected examples:
+- [x] T172 [TDD] [Context7] Fix EC-001..EC-017 production-equivalent page plan tests. Context7: verify JUnit parameterized tests. Use production budget config fixtures, not spike SQLite/mock tables. Tests must cover all 17 EC cases in EN/RU where render output differs. Expected examples:
   - EC-001..003 one-page no projects;
   - EC-004..009 project-driven two-page with no additional work;
   - EC-010..016 two-page work split;
   - EC-017 special one-page expansion.
   If production budget config cannot represent an EC case, STOP_FOR_CONFIRMATION. (II, IV)
 
-- [ ] T173 [TDD] [Context7] Fix `ResumeRenderDataBuilder` data mapping. Context7: verify Java null/list handling if needed. Tests:
+- [x] T173 [TDD] [Context7] Fix `ResumeRenderDataBuilder` data mapping. Context7: verify Java null/list handling if needed. Tests:
   - edited bullets included under correct work/project;
   - edited personal info used;
   - generated skills/courses/projects present;
@@ -733,7 +733,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - missing optional fields do not cause NPE.
   (II, III, V)
 
-- [ ] T174 [TDD] [SPIKE] [Context7] Verify `XhtmlTemplateRenderer` against spike output. Context7: verify OpenHTMLToPDF CSS limitations if any CSS changes are made. Tests:
+- [x] T174 [TDD] [SPIKE] [Context7] Verify `XhtmlTemplateRenderer` against spike output. Context7: verify OpenHTMLToPDF CSS limitations if any CSS changes are made. Tests:
   - page notes text and position classes;
   - explicit `height:297mm` + `min-height:297mm`;
   - PDF-safe CSS only;
@@ -743,14 +743,14 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - page 1/2/3 rendering matches page plan.
   Replace drift with spike code where tests fail. (II, III, IV)
 
-- [ ] T175 [TDD] [SEC] [Context7] Verify HTML escaping exactly once. Context7: verify HTML escaping only if using a library; otherwise use existing `HtmlEscapeUtil`. Tests:
+- [x] T175 [TDD] [SEC] [Context7] Verify HTML escaping exactly once. Context7: verify HTML escaping only if using a library; otherwise use existing `HtmlEscapeUtil`. Tests:
   - `<script>` in bullet;
   - `<b>` in personal info;
   - `&`, `"`, `'`;
   - no double escaping after reload/finalize.
   (II, V)
 
-- [ ] T176 [REVIEW] [PLAYWRIGHT] [Context7] Manual-like proof:
+- [x] T176 [REVIEW] [PLAYWRIGHT] [Context7] Manual-like proof:
   - generate with MockAiClient;
   - edit a work/project bullet;
   - save;
@@ -767,16 +767,16 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
 
 **Purpose**: Remove partial saved resumes and legacy HTML drift.
 
-- [ ] T177 [TDD] [Context7] Write RED tests proving current `ResumeFinalizeService` still uses `ResumeTemplateRenderer.renderAndSave(...)`. Context7: verify Mockito interaction verification. GREEN: new finalization flow must not call deprecated legacy renderer. Saved HTML must be the parity HTML produced by `OpenHtmlPdfGenerationService`/`XhtmlTemplateRenderer`. Keep legacy renderer file only as deprecated reference. (II, III)
+- [x] T177 [TDD] [Context7] Write RED tests proving current `ResumeFinalizeService` still uses `ResumeTemplateRenderer.renderAndSave(...)`. Context7: verify Mockito interaction verification. GREEN: new finalization flow must not call deprecated legacy renderer. Saved HTML must be the parity HTML produced by `OpenHtmlPdfGenerationService`/`XhtmlTemplateRenderer`. Keep legacy renderer file only as deprecated reference. (II, III)
 
-- [ ] T178 [TDD] [Context7] Write RED tests proving current finalization swallows PDF failures and still inserts `saved_resume`. Context7: verify JDBC transaction/rollback and file cleanup patterns. GREEN:
+- [x] T178 [TDD] [Context7] Write RED tests proving current finalization swallows PDF failures and still inserts `saved_resume`. Context7: verify JDBC transaction/rollback and file cleanup patterns. GREEN:
   - if PDF/HTML generation fails, no saved resume is committed;
   - staged files are deleted;
   - request status resets to retryable state;
   - controller returns controlled fitting/IO/validation error.
   Do not keep "HTML available but PDF failed" unless user explicitly approves a new product decision. (II, IV)
 
-- [ ] T179 [TDD] [Context7] Implement staging → validate → promote → commit flow. Context7: verify Java NIO file move/copy/delete semantics. Tests:
+- [x] T179 [TDD] [Context7] Implement staging → validate → promote → commit flow. Context7: verify Java NIO file move/copy/delete semantics. Tests:
   - success persists HTML/PDF paths and metadata;
   - DB insert failure cleans files;
   - file promotion failure rolls back/cleans;
@@ -784,21 +784,21 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - null paths do not NPE.
   (II, IV, V)
 
-- [ ] T180 [TDD] [Context7] Fix bilingual atomicity. Context7: verify transaction boundaries. Tests:
+- [x] T180 [TDD] [Context7] Fix bilingual atomicity. Context7: verify transaction boundaries. Tests:
   - EN succeeds/RU fails → neither saved;
   - RU succeeds/EN fails → neither saved;
   - both succeed → both saved;
   - cover letter stays export-only and is not public PDF.
   (II, IV, V)
 
-- [ ] T181 [TDD] [Context7] Implement or repair `FINALIZING` lock. Context7: verify concurrent request handling basics. Tests:
+- [x] T181 [TDD] [Context7] Implement or repair `FINALIZING` lock. Context7: verify concurrent request handling basics. Tests:
   - double finalize returns conflict/user-readable message;
   - no duplicate saved resumes;
   - failure resets status;
   - success completes status.
   (II, IV)
 
-- [ ] T182 [TDD] [Context7] Fix `SavedResumeDao` metadata persistence. Context7: verify PostgreSQL nullable columns and Java boxed types. Audit all insert/select/update methods for:
+- [x] T182 [TDD] [Context7] Fix `SavedResumeDao` metadata persistence. Context7: verify PostgreSQL nullable columns and Java boxed types. Audit all insert/select/update methods for:
   - PDF status;
   - PDF path;
   - generated timestamp;
@@ -809,9 +809,9 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - public URL path/username.
   Add round-trip tests and null tests. (II, IV)
 
-- [ ] T183 [TDD] [Context7] Fix finalization error DTO/logging. Context7: verify SLF4J parameterized logging. Logs must include requestId, userId, language, level, plan, config key, validation reason. Logs must not include full resume text, raw prompt, API key, raw absolute path in responses. (II, III, V)
+- [x] T183 [TDD] [Context7] Fix finalization error DTO/logging. Context7: verify SLF4J parameterized logging. Logs must include requestId, userId, language, level, plan, config key, validation reason. Logs must not include full resume text, raw prompt, API key, raw absolute path in responses. (II, III, V)
 
-- [ ] T184 [REVIEW] [PLAYWRIGHT] [Context7] Browser proof for finalization:
+- [x] T184 [REVIEW] [PLAYWRIGHT] [Context7] Browser proof for finalization:
   - success path: wait screen → export → PDF available;
   - fitting failure simulation: error + Try Again to Review;
   - double-click finalize: no duplicates.
@@ -825,13 +825,13 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
 
 **Purpose**: Serve only correct artifacts, safely.
 
-- [ ] T185 [TDD] [SEC] [Context7] Consolidate authenticated download endpoints. Context7: verify Spring MVC route matching. Canonical endpoints:
+- [x] T185 [TDD] [SEC] [Context7] Consolidate authenticated download endpoints. Context7: verify Spring MVC route matching. Canonical endpoints:
   - `GET /api/generate/resumes/{savedResumeId}/html`;
   - `GET /api/generate/resumes/{savedResumeId}/pdf`;
   - `GET /api/generate/resumes/{savedResumeId}/pdf?disposition=inline`.
   Audit `ResumeDownloadController` legacy `/api/resumes/{id}/html`. Keep only if explicit compatibility needed and tested; otherwise remove/deprecate after STOP_FOR_CONFIRMATION. (I, II, V)
 
-- [ ] T186 [TDD] [SEC] [Context7] Authenticated download tests. Context7: verify MockMvc binary/file response assertions. Tests:
+- [x] T186 [TDD] [SEC] [Context7] Authenticated download tests. Context7: verify MockMvc binary/file response assertions. Tests:
   - owner HTML;
   - owner PDF attachment;
   - owner PDF inline;
@@ -842,7 +842,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - traversal denied.
   (II, V)
 
-- [ ] T187 [TDD] [SEC] [Context7] Public download tests. Context7: verify public route does not pass through `/api/**` interceptor. Tests:
+- [x] T187 [TDD] [SEC] [Context7] Public download tests. Context7: verify public route does not pass through `/api/**` interceptor. Tests:
   - unauthenticated valid public URL works;
   - invalid/deleted/disabled returns 404;
   - 404 delay if implemented;
@@ -850,7 +850,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - safe logs.
   If no existing rate limiter exists, STOP_FOR_CONFIRMATION before adding a new one. (II, V)
 
-- [ ] T188 [REVIEW] [PLAYWRIGHT] [Context7] Browser proof for downloads:
+- [x] T188 [REVIEW] [PLAYWRIGHT] [Context7] Browser proof for downloads:
   - authenticated Download HTML;
   - authenticated Download PDF;
   - Open PDF inline;
@@ -866,7 +866,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
 
 **Purpose**: The frontend was not truly completed. Fix it against real backend contracts.
 
-- [ ] T189 [REVIEW] [Context7] Audit frontend before coding. Context7: verify Vue 3, Vue Router, Vue Test Utils, Vitest patterns. Inspect:
+- [x] T189 [REVIEW] [Context7] Audit frontend before coding. Context7: verify Vue 3, Vue Router, Vue Test Utils, Vitest patterns. Inspect:
   - `src/services/generateResumeService.ts`;
   - `src/types/generate.ts`;
   - `src/components/generate/ExportResult.vue`;
@@ -876,9 +876,9 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - i18n EN/RU files.
   Document actual vs claimed implementation in `debug_backlog.md`. (I, II, III)
 
-- [ ] T190 [TDD] [Context7] Remove duplicated export DTO types from `generateResumeService.ts` if they conflict with `src/types/generate.ts`. Context7: verify TypeScript import/export and strict optional/null typing. Tests/build must catch mismatch. No `any` to hide contract problems. (I, II)
+- [x] T190 [TDD] [Context7] Remove duplicated export DTO types from `generateResumeService.ts` if they conflict with `src/types/generate.ts`. Context7: verify TypeScript import/export and strict optional/null typing. Tests/build must catch mismatch. No `any` to hide contract problems. (I, II)
 
-- [ ] T191 [TDD] [Context7] Make service methods use backend-provided URLs where appropriate. Context7: verify Fetch Blob handling and `window.open`. Tests:
+- [x] T191 [TDD] [Context7] Make service methods use backend-provided URLs where appropriate. Context7: verify Fetch Blob handling and `window.open`. Tests:
   - download PDF uses `item.pdfDownloadUrl`;
   - open PDF uses `item.pdfOpenUrl`;
   - download HTML uses `item.htmlDownloadUrl`;
@@ -886,7 +886,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - unavailable PDF fails honestly.
   Do not hardcode stale endpoint assumptions when DTO has URLs. (II, III)
 
-- [ ] T192 [TDD] [Context7] Fix `ExportResult.vue`. Context7: verify PrimeVue button disabled/loading props. Tests:
+- [x] T192 [TDD] [Context7] Fix `ExportResult.vue`. Context7: verify PrimeVue button disabled/loading props. Tests:
   - PDF buttons visibly disabled when `pdfAvailable=false`;
   - PDF buttons enabled when true;
   - no "future update" placeholder when PDF ready;
@@ -894,7 +894,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - cover letter is UI-only and not part of public PDF.
   (II, III)
 
-- [ ] T193 [TDD] [Context7] Fix finalization loading and duplicate navigation. Context7: verify Vue Router navigation and async state. Current code finalizes and routes in both `GenerateReviewPage` and `useGenerateResumeFlow`; remove double navigation. Required:
+- [x] T193 [TDD] [Context7] Fix finalization loading and duplicate navigation. Context7: verify Vue Router navigation and async state. Current code finalizes and routes in both `GenerateReviewPage` and `useGenerateResumeFlow`; remove double navigation. Required:
   - loading screen starts immediately on Finalize;
   - finalization phrases rotate;
   - double-click blocked;
@@ -903,27 +903,27 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - saved edits preserved.
   (II, III)
 
-- [ ] T194 [TDD] [Context7] Fix frontend error handling. Context7: verify error boundary/toast patterns used in project. Tests:
+- [x] T194 [TDD] [Context7] Fix frontend error handling. Context7: verify error boundary/toast patterns used in project. Tests:
   - finalize 400/409/422/500 responses show user-readable message;
   - `FINALIZING` conflict message displayed;
   - network failure does not leave spinner stuck;
   - state resets.
   (II, III)
 
-- [ ] T195 [TDD] [Context7] Verify Review bullet save → finalize integration. Context7: verify Vue form model/update event patterns. Tests:
+- [x] T195 [TDD] [Context7] Verify Review bullet save → finalize integration. Context7: verify Vue form model/update event patterns. Tests:
   - edited bullet included in save payload;
   - save completes before finalize;
   - no backend update keys are constructed manually beyond backend-provided keys;
   - reload preserves edited bullet.
   (II, III, V)
 
-- [ ] T196 [TDD] [Context7] Frontend tests/build/coverage. Context7: verify Vitest coverage command if available. Run:
+- [x] T196 [TDD] [Context7] Frontend tests/build/coverage. Context7: verify Vitest coverage command if available. Run:
   - `npm test -- --run`;
   - `npm run build`;
   - coverage for modified frontend files ≥80% useful coverage.
   If coverage tooling is unavailable, STOP_FOR_CONFIRMATION and provide alternative evidence. (II)
 
-- [ ] T197 [REVIEW] [PLAYWRIGHT] [Context7] Full frontend browser flow:
+- [x] T197 [REVIEW] [PLAYWRIGHT] [Context7] Full frontend browser flow:
   - login;
   - generate with MockAiClient;
   - review;
@@ -948,7 +948,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
 
 **Purpose**: Prevent this failure class from coming back.
 
-- [ ] T198 [TDD] [Context7] Add backend regression tests for all known bugs:
+- [x] T198 [TDD] [Context7] Add backend regression tests for all known bugs:
   - export never hardcodes PDF unavailable when PDF ready;
   - wrong `/candidate` public link is gone;
   - public route is unauthenticated;
@@ -960,7 +960,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - saved_resume metadata round-trip works.
   Context7: verify JUnit parameterized tests where useful. (II)
 
-- [ ] T199 [TDD] [Context7] Add spike-equivalent production fixture tests. Context7: verify JUnit parameterized tests and PDFBox assertions. Use production fixtures, not spike mock DB tables. Cover at least:
+- [x] T199 [TDD] [Context7] Add spike-equivalent production fixture tests. Context7: verify JUnit parameterized tests and PDFBox assertions. Use production fixtures, not spike mock DB tables. Cover at least:
   - EC-001 EN/RU;
   - EC-004 EN/RU;
   - EC-010 EN/RU;
@@ -970,7 +970,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - bilingual partial failure.
   Assert page count, selectable text, required anchors, edited bullet, no blank trailing page. (II, III, IV)
 
-- [ ] T200 [TDD] [Context7] Add frontend regression tests:
+- [x] T200 [TDD] [Context7] Add frontend regression tests:
   - ExportResult ready PDF;
   - ExportResult unavailable PDF;
   - service uses DTO URLs;
@@ -979,7 +979,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - Try Again path.
   Context7: verify Vue Test Utils/Vitest syntax. (II, III)
 
-- [ ] T201 [REVIEW] [Context7] Remove/deprecate useless drift identified by tests:
+- [x] T201 [REVIEW] [Context7] Remove/deprecate useless drift identified by tests:
   - wrong public route;
   - duplicate endpoint if not needed;
   - hardcoded placeholder PDF messages;
@@ -987,20 +987,20 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - stale comments claiming placeholders.
   If deletion risk is unclear, STOP_FOR_CONFIRMATION. (I)
 
-- [ ] T202 [TDD] [Context7] Run backend final gate:
+- [x] T202 [TDD] [Context7] Run backend final gate:
   - `mvn clean test`;
   - `mvn clean package` if project supports it;
   - JaCoCo report;
   - modified/new feature classes ≥80% useful coverage.
   Context7: verify JaCoCo report interpretation if needed. (II)
 
-- [ ] T203 [TDD] [Context7] Run frontend final gate:
+- [x] T203 [TDD] [Context7] Run frontend final gate:
   - `npm test -- --run`;
   - `npm run build`;
   - coverage evidence for modified files.
   Context7: verify Vitest coverage docs if needed. (II)
 
-- [ ] T204 [REVIEW] [PLAYWRIGHT] [Context7] Run full E2E smoke with maximum evidence:
+- [x] T204 [REVIEW] [PLAYWRIGHT] [Context7] Run full E2E smoke with maximum evidence:
   - EN-only Minimal;
   - RU-only Balanced;
   - Bilingual Balanced or All→Balanced;
@@ -1009,7 +1009,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - non-owner private download denial.
   Save screenshots, traces, downloaded files, PDF page counts, extracted text snippets. (II, III, V)
 
-- [ ] T205 [REVIEW] Update docs:
+- [x] T205 [REVIEW] Update docs:
   - `debug_backlog.md` with exact fixed bugs/evidence;
   - `quickstart.md` with local PDF verification commands;
   - list copied/adapted spike classes;
@@ -1017,7 +1017,7 @@ Use this table as the repair map. Do not re-audit from scratch and do not ignore
   - note deprecated legacy renderer.
   (I)
 
-- [ ] T206 [REVIEW] Final STOP before commit proposal. Produce:
+- [x] T206 [REVIEW] Final STOP before commit proposal. Produce:
 
 ```text
 FIX_REPORT
