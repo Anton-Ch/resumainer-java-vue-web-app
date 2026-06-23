@@ -889,3 +889,39 @@ Any code that stores file paths in a database and later resolves them MUST handl
 
 **Tags**
 java, path, nio, security, path-traversal, filesystem, bug, resolveSafePath, docker
+
+---
+
+### 2026-06-23 — Uniform artificial delay on public 404 responses prevents timing-based enumeration
+
+**Status**
+Active
+
+**Symptoms**
+A public unauthenticated route (like `GET /{username}/{publicCode}`) has multiple 404 conditions: invalid username, invalid code, deleted resume, disabled resume. Without a uniform delay, an attacker can measure response times to distinguish "valid username but wrong code" (~10ms DB query) from "invalid username" (~1ms immediate return). This leaks information about which usernames exist in the system.
+
+**Root Cause**
+The route handler has multiple `return publicNotFound()` branches, but without a delay, each branch returns at a different speed depending on how far the code reached (validation → rate limit check → DB query → path resolution → file existence check). Even though the HTTP status is the same, the timing difference reveals information.
+
+**Mitigation**
+Add a uniform artificial delay (`Thread.sleep(200)`) in the shared `publicNotFound()` helper method. Apply it to ALL error branches on the public route. This ensures an attacker cannot distinguish between "valid username + wrong code" and "invalid username" by timing alone.
+
+```java
+private ResponseEntity<Resource> publicNotFound() {
+    try { Thread.sleep(200); }
+    catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+}
+```
+
+**Prevention**
+Every new public unauthenticated endpoint that returns 404 for multiple indistinguishable conditions MUST use a uniform delay helper. Do not inline `ResponseEntity.notFound()` directly — always go through a shared method that applies the delay. The delay duration should be longer than the slowest error path (~200ms covers slow DB queries).
+
+**Detection**
+Code review: look for `ResponseEntity.notFound()` or `ResponseEntity.status(404)` on public routes. If any error path returns 404 faster than another, the route is vulnerable to timing enumeration.
+
+**Evidence**
+`PublicResumeController.publicNotFound()` — called from 4 branches: null/blank check, DB lookup return null, file-not-found, path-safety SecurityException. `PublicResumeControllerTest` verifies 404 responses and uniform timing behavior.
+
+**Where to look next**
+backend/src/main/java/com/resumainer/controller/PublicResumeController.java — `publicNotFound()` method

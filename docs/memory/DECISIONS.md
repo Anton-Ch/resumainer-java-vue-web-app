@@ -880,3 +880,98 @@ Migration V36 restored V12.1 parity: EC-016 page2_jobs=5 (was 7), page2_max_addi
 - Gained: stable PDF generation for the proven EC-016 scenario
 - Made harder: dense profiles with 9+ source work items are capped to 8 rendered
 - Reconsider: when fitting engine is upgraded for 3-page layouts, the budgets can be expanded with matching fitting+validation updates
+
+---
+
+### 2026-06-23 — Spike audit matrix is mandatory before merging any ported code
+
+**Status**
+Active
+
+**Why this is durable**
+Porting algorithmic code from a proven spike to production introduces drift: methods get dropped, edge cases silently removed, parameter values changed. This pattern repeats across every project that ports prototype code. B26 proved that a single dropped method (`buildForPlannedPage()`) caused 100% PDF fitting failure. Phase Group 3's class-by-class audit matrix identified 10 bugs in the existing port before any code was changed — bugs that would have been caught at implementation time with a formal audit.
+
+**Decision**
+Before merging ANY ported spike code into production:
+1. Create an audit matrix mapping every spike class/method/behavior to its production equivalent (columns: `Spike File`, `Production File`, `Audit Status`, `Required Repair Direction`)
+2. Mark each row as MATCH, PARTIAL PORT, CRITICAL DRIFT, MISSING, or CORRECTLY NOT PORTED
+3. Fix all CRITICAL DRIFT and MISSING items before merge
+4. Keep the matrix as a living document for the feature (in `debug_backlog.md` or equivalent)
+
+Skip this only if the spike and production code are identical (e.g., a utility class copied verbatim). Algorithmic code (fitting engines, validators, renderers) always requires an audit.
+
+**Tradeoffs**
+- Gained: Catches method-level drift before it becomes a production bug; provides a structured repair map; force-makes the developer understand exactly what changed
+- Made harder: Adds overhead before merge; requires understanding the entire spike codebase, not just the parts you think you need
+- Reconsider: For trivial utility classes (string escaping, math helpers) where the spike code is <50 lines, an audit matrix is overkill
+
+**Evidence**
+Feature 008 Phase Group 3 — audit matrix identified `FeedbackFitEngine` (CRITICAL DRIFT: 6 missing spike methods), `PagePlanBuilder` (MISSING), `PdfFitLimits` + `FitState` (CRITICAL DRIFT: missing stepPercent, spike defaults). All 10 bugs were confirmed by failing tests before fixes began.
+
+**Where to look next**
+Feature 008 tasks.md Phase 18 (T153-T156) — freeze/baseline/audit process. `debug_backlog.md` — audit matrix columns and findings.
+
+---
+
+### 2026-06-23 — Footer safe zone detection as distinct PDF validation dimension
+
+**Status**
+Active
+
+**Why this is durable**
+CSS padding adjustments alone are insufficient to prevent visual overlap between body content and footer navigation notes in PDFs. Different languages have different text lengths (Russian is ~40% longer than English for page notes), different resumes have different content density, and OpenHTMLToPDF's CSS 2.1 rendering doesn't support modern overflow control. The fitting engine needs a measurement-based feedback signal to detect and respond to overlap.
+
+**Decision**
+Add "visual overlap" as a distinct PDF validation dimension alongside page count, text presence, and fill ratio. The pattern:
+
+1. Reserve a bottom safe zone (18mm) using CSS page-content padding
+2. After rendering, extract text row positions via `PdfAnalyzer.PositionStripper`
+3. Detect text rows inside the safe zone using locale-insensitive normalized matching for footer note text
+4. Track `bottomSafeZoneTextLineCounts` and `bottomNotePresentByPage` per page
+5. If more than 1 text line occupies the safe zone while a footer note is present → `FOOTER_OVERLAP`
+6. Feed back into fitting engine as overflow condition (shrink round-robin, configurable score penalty)
+
+**Tradeoffs**
+- Gained: Detects real visual overlap that CSS alone cannot prevent; resolves the RU/EN asymmetry where padding that works for English fails for Russian
+- Made harder: Requires running `PdfAnalyzer` text extraction on every fitting attempt (already needed for MISSING_TEXTS detection, so overhead is marginal)
+- Reconsider: If the PDF engine supports CSS `overflow: hidden` reliably in the future, static CSS overflow prevention may replace dynamic detection
+
+**Evidence**
+Phase 28 — `PdfValidationService` checks `FOOTER_OVERLAP` as distinct validation reason. `FeedbackFitEngine` treats it as overflow (+40 score penalty). 5 new tests across validator, fit engine, and renderer. Docker runtime confirms 20mm padding + safe zone detection produces no overlap.
+
+**Where to look next**
+backend/src/main/java/com/resumainer/service/pdf/PdfValidationService.java — `footerSafeZoneProblem()`
+backend/src/main/java/com/resumainer/service/pdf/PdfAnalyzer.java — `PositionStripper`
+backend/src/main/java/com/resumainer/service/pdf/FeedbackFitEngine.java — `FOOTER_OVERLAP` handling
+backend/src/main/java/com/resumainer/model/pdf/PdfMetrics.java — `bottomSafeZoneTextLineCounts`, `bottomNotePresentByPage`
+
+---
+
+### 2026-06-23 — Content-Disposition header allowlist prevents CRLF injection
+
+**Status**
+Active
+
+**Why this is durable**
+Every new download endpoint (PDF, HTML, or any file) needs to set a Content-Disposition header. Without an allowlist, a malicious or malformed `disposition` request parameter can inject CRLF sequences (`\r\n`) into the HTTP response headers, enabling response splitting or header manipulation attacks.
+
+**Decision**
+All download controllers MUST validate the Content-Disposition header value against a strict allowlist before setting it. The pattern: accept only `"inline"` and `"attachment"`. Any other value (including CRLF-injected strings like `"inline\r\nX-Hacked:true"`) silently falls back to `"attachment"`.
+
+```java
+private String validateDisposition(String disposition) {
+    if ("inline".equals(disposition)) return "inline";
+    return "attachment";
+}
+```
+
+**Tradeoffs**
+- Gained: Eliminates CRLF injection in Content-Disposition header; simple, testable, one-liner
+- Made harder: Forces frontend to use DTO-provided URLs instead of constructing open/attach URLs client-side; `?disposition=inline` is now a pre-approved toggle, not user-controllable
+- Reconsider: If the application needs to support arbitrary disposition values (unlikely), a longer allowlist can be maintained
+
+**Evidence**
+`GenerateResumeController.java` — `validateDisposition()` called in `downloadPdf()`. Test coverage verifies inline, attachment, null, empty, and CRLF-injected values all resolve correctly.
+
+**Where to look next**
+backend/src/main/java/com/resumainer/controller/GenerateResumeController.java

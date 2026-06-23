@@ -485,3 +485,33 @@ Phases 23-27 delivered the complete production PDF pipeline:
 - Docker runtime: finalization HTTP 200, PDF 2 pages, PAGE1:OK, PAGE2:OK, fill ratios {1=0.92, 2=0.73}
 - Public route: GET /{username}/{publicCode} → 200 application/pdf (both backend :8080 and frontend :80)
 - Semantic proof: RENDER_DATA_SEMANTICS log confirms fullNamePresent=true, emailPresent=true, educationLines=6, workBullets=9, projectBullets=9
+
+---
+
+### 2026-06-23 — Feature 008 Phase 28: Footer safe zone and overlap detection
+
+**Status**
+Active
+
+**Why this is durable**
+Phase 28 closed a visual quality gap: the "See the next page / См. следующую страницу" footer note was overlapping the body content on Page 1 (especially visible in RU where the text is longer). CSS padding-bottom 14mm was insufficient, and the fitting engine had no feedback mechanism to detect visual overlap.
+
+**What was delivered**
+- `PdfMetrics` gained `bottomSafeZoneTextLineCounts` and `bottomNotePresentByPage` fields
+- `PdfAnalyzer.PositionStripper` detects text rows inside the 18mm bottom footer safe zone using locale-insensitive normalized matching
+- `PdfValidationService` validates footer safe zone — rejects `FOOTER_OVERLAP` when more than 1 text line occupies the safe zone while a footer note is present
+- `FeedbackFitEngine` treats `FOOTER_OVERLAP` as overflow condition (shrink round-robin, +40 score penalty vs +50 for MISSING_TEXTS)
+- `XhtmlTemplateRenderer` `.has-next .page-content` padding-bottom increased from 14mm → 20mm
+- 5 new tests across validator, fit engine, and renderer
+
+**Evidence**
+- Backend: 895 tests, 0 failures, BUILD SUCCESS
+- PdfValidationServiceTest: 10 tests PASS
+- FeedbackFitEngineTest: 12 tests PASS
+- XhtmlTemplateRendererFooterSafeZoneTest: 1 test PASS (new test class)
+- Docker runtime: landing page HTTP 200, container healthy
+- Manual check confirms no visual overlap with 20mm safe zone
+
+**Key patterns established**
+- Footer safe zone detection (18mm reserved area) closes the detect→validate→shrink→re-render loop
+- FOOTER_OVERLAP is a distinct validation reason (not same as MISSING_TEXTS) with its own scoring penalty
