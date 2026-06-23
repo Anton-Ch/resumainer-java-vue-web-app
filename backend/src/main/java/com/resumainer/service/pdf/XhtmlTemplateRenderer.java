@@ -61,7 +61,7 @@ public final class XhtmlTemplateRenderer {
                 + "main.resume-page{width:210mm;height:297mm;min-height:297mm;box-sizing:border-box;background:#fff;page-break-after:always;position:relative;}"
                 + "main.resume-page:last-child{page-break-after:auto;}"
                 + ".page-content{box-sizing:border-box;padding:10.5mm;font-size:" + px(f.getBodyFontPx()) + ";}"
-                + ".has-next .page-content{padding-bottom:14mm;}.has-prev .page-content{padding-top:14mm;}"
+                + ".has-next .page-content{padding-bottom:20mm;}.has-prev .page-content{padding-top:14mm;}"
                 + ".page-1 .page-content{line-height:" + n(f.getPage1LineHeight()) + ";}"
                 + ".page-2 .page-content{line-height:" + n(f.getPage2LineHeight()) + ";}"
                 + ".page-3 .page-content{line-height:" + n(f.getPage3LineHeight()) + ";}"
