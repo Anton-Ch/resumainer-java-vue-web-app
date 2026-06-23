@@ -29,6 +29,10 @@ public final class PdfValidationService {
         }
         List<String> missingTexts = missingTexts(metrics.extractedText(), expectedTexts);
         if (!missingTexts.isEmpty()) return "MISSING_TEXTS " + missingTexts;
+
+        String footerProblem = footerSafeZoneProblem(metrics);
+        if (footerProblem != null) return footerProblem;
+
         if (targets != null) {
             for (PdfFillTarget t : targets) {
             double fill = metrics.fillRatios().getOrDefault(t.getPageNumber(), 0.0);
@@ -40,6 +44,29 @@ public final class PdfValidationService {
             }
         }
         return "OK";
+    }
+
+    private String footerSafeZoneProblem(PdfMetrics metrics) {
+        if (metrics.bottomNotePresentByPage() == null || metrics.bottomNotePresentByPage().isEmpty()) {
+            return null;
+        }
+
+        for (Map.Entry<Integer, Boolean> entry : metrics.bottomNotePresentByPage().entrySet()) {
+            int page = entry.getKey();
+            boolean bottomNotePresent = Boolean.TRUE.equals(entry.getValue());
+            if (!bottomNotePresent) continue;
+
+            int bottomSafeZoneLines = metrics.bottomSafeZoneTextLineCounts() != null
+                    ? metrics.bottomSafeZoneTextLineCounts().getOrDefault(page, 0)
+                    : 0;
+
+            // One line is expected: the footer note itself.
+            // More than one line means normal content has entered the footer safe zone.
+            if (bottomSafeZoneLines > 1) {
+                return "FOOTER_OVERLAP page=" + page + " bottomSafeZoneLines=" + bottomSafeZoneLines;
+            }
+        }
+        return null;
     }
 
     private List<String> missingTexts(String extractedText, List<String> expectedTexts) {

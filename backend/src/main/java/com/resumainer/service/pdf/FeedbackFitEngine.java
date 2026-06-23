@@ -171,14 +171,20 @@ public final class FeedbackFitEngine {
         }
     }
 
-    private FitState nextStateForPage(FitState s, FitAttempt attempt, PdfFillTarget target, int page, int attemptIndex) {
+    FitState nextStateForPage(FitState s, FitAttempt attempt, PdfFillTarget target, int page, int attemptIndex) {
         PdfMetrics metrics = attempt.metrics();
-        boolean missingOrClipped = attempt.reason().contains("MISSING_TEXTS") || attempt.reason().contains("TRAILING_BLANK_PAGE");
+        String reason = attempt.reason() != null ? attempt.reason() : "";
+        boolean missingOrClipped = reason.contains("MISSING_TEXTS") || reason.contains("TRAILING_BLANK_PAGE");
+        boolean footerOverlap = reason.contains("FOOTER_OVERLAP");
+
         double maxFill = target != null && target.getMaxFill() != null ? target.getMaxFill().doubleValue() : 0.96;
-        boolean overflow = missingOrClipped || metrics.actualPageCount() > 1
+        boolean overflow = missingOrClipped || footerOverlap || metrics.actualPageCount() > 1
                 || metrics.fillRatios().getOrDefault(1, 0.0) > maxFill;
+
         double minFill = target != null ? target.getMinFill().doubleValue() : 0.80;
-        boolean underfill = !missingOrClipped && metrics.fillRatios().getOrDefault(1, 0.0) < minFill;
+        boolean underfill = !missingOrClipped && !footerOverlap
+                && metrics.fillRatios().getOrDefault(1, 0.0) < minFill;
+
         if (overflow) return shrinkRoundRobin(s, page, attemptIndex, page == 1);
         if (underfill) return growRoundRobin(s, page, attemptIndex, page == 1);
         return s;
@@ -406,7 +412,9 @@ public final class FeedbackFitEngine {
         double maxFill = target != null && target.getMaxFill() != null ? target.getMaxFill().doubleValue() : 0.96;
         if (fill < minFill) sc += minFill - fill;
         if (fill > maxFill) sc += fill - maxFill;
-        if (a.reason().contains("MISSING_TEXTS")) sc += 50.0;
+        String reason = a.reason() != null ? a.reason() : "";
+        if (reason.contains("MISSING_TEXTS")) sc += 50.0;
+        if (reason.contains("FOOTER_OVERLAP")) sc += 40.0;
         return sc;
     }
 

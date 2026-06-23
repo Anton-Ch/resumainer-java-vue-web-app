@@ -2,9 +2,7 @@ package com.resumainer.service.pdf;
 
 import com.resumainer.model.PdfFillTarget;
 import com.resumainer.model.PdfFitLimits;
-import com.resumainer.model.pdf.FitState;
-import com.resumainer.model.pdf.PagePlan;
-import com.resumainer.model.pdf.ResumeRenderData;
+import com.resumainer.model.pdf.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -130,6 +128,38 @@ class FeedbackFitEngineTest {
         assertEquals(9.0, state.getItemGapPx(), 0.01);
         assertEquals(5.0, state.getParagraphGapPx(), 0.01);
         assertEquals(3.0, state.getBulletGapPx(), 0.01);
+    }
+
+    @Test
+    void nextStateForPage_shrinksWhenFooterOverlapDetected() {
+        FitState initial = FitState.defaults(limits);
+
+        PdfMetrics metrics = new PdfMetrics(
+                1,
+                true,
+                java.util.Map.of(1, 0.90),
+                "Course line SEE THE NEXT PAGE",
+                java.util.Map.of(1, 2),
+                java.util.Map.of(1, true)
+        );
+
+        FitAttempt attempt = new FitAttempt(
+                1,
+                1,
+                initial,
+                metrics,
+                false,
+                "PAGE1:FOOTER_OVERLAP page=1 bottomSafeZoneLines=2",
+                "attempt.html",
+                "attempt.pdf"
+        );
+
+        PdfFillTarget target = makeTarget(1, 1, "0.50");
+
+        FitState next = engine.nextStateForPage(initial, attempt, target, 1, 1);
+
+        assertTrue(next.getPage1SectionGapPx() < initial.getPage1SectionGapPx(),
+                "First shrink phase should reduce page 1 section gap when footer overlap is detected");
     }
 
     // ─── helpers ────────────────────────────────────────────────────

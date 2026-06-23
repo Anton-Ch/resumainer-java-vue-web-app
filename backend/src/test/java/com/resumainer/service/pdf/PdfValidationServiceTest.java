@@ -82,4 +82,68 @@ class PdfValidationServiceTest {
 
         assertEquals("VASYA EXAMPLE COM HTTPS PORTFOLIO EXAMPLE VASYA", result);
     }
+
+    @Test
+    void validate_rejectsFooterOverlapWhenContentSharesBottomSafeZoneWithFooterNote() {
+        PdfMetrics metrics = new PdfMetrics(
+                1,
+                true,
+                Map.of(1, 0.90),
+                "Course line SEE THE NEXT PAGE",
+                Map.of(1, 2),
+                Map.of(1, true)
+        );
+
+        PdfFillTarget target = new PdfFillTarget();
+        target.setPageNumber(1);
+        target.setMinFill(new java.math.BigDecimal("0.50"));
+        target.setMaxFill(new java.math.BigDecimal("0.96"));
+
+        String result = validator.validate(metrics, 1, List.of(target), List.of("Course line"));
+
+        assertTrue(result.contains("FOOTER_OVERLAP"));
+        assertTrue(result.contains("bottomSafeZoneLines=2"));
+    }
+
+    @Test
+    void validate_allowsFooterNoteAloneInBottomSafeZone() {
+        PdfMetrics metrics = new PdfMetrics(
+                1,
+                true,
+                Map.of(1, 0.82),
+                "Main content SEE THE NEXT PAGE",
+                Map.of(1, 1),
+                Map.of(1, true)
+        );
+
+        PdfFillTarget target = new PdfFillTarget();
+        target.setPageNumber(1);
+        target.setMinFill(new java.math.BigDecimal("0.50"));
+        target.setMaxFill(new java.math.BigDecimal("0.96"));
+
+        String result = validator.validate(metrics, 1, List.of(target), List.of("Main content"));
+
+        assertEquals("OK", result);
+    }
+
+    @Test
+    void validate_ignoresBottomSafeZoneLinesWhenBottomNoteIsAbsent() {
+        PdfMetrics metrics = new PdfMetrics(
+                1,
+                true,
+                Map.of(1, 0.82),
+                "Main content near bottom but no footer note",
+                Map.of(1, 3),
+                Map.of(1, false)
+        );
+
+        PdfFillTarget target = new PdfFillTarget();
+        target.setPageNumber(1);
+        target.setMinFill(new java.math.BigDecimal("0.50"));
+        target.setMaxFill(new java.math.BigDecimal("0.96"));
+
+        String result = validator.validate(metrics, 1, List.of(target), List.of("Main content"));
+
+        assertEquals("OK", result);
+    }
 }
