@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class ResumeDaoTest {
@@ -112,7 +112,7 @@ class ResumeDaoTest {
     }
 
     @Test
-    void softDelete_ownedByUser_returnsTrue() throws Exception {
+    void softDelete_ownedByUser_setsIsDeletedAndDeletedAt() throws Exception {
         when(statement.executeUpdate()).thenReturn(1);
 
         boolean deleted = resumeDao.softDelete(1L, userId);
@@ -120,6 +120,9 @@ class ResumeDaoTest {
         assertTrue(deleted);
         verify(statement).setLong(1, 1L);
         verify(statement).setObject(2, userId);
+        // Verify SQL sets both is_deleted = TRUE and deleted_at = NOW()
+        verify(connection).prepareStatement(contains("is_deleted = TRUE"));
+        verify(connection).prepareStatement(contains("deleted_at = NOW()"));
     }
 
     @Test
@@ -135,5 +138,36 @@ class ResumeDaoTest {
     void findByUserId_withInvalidSortField_throwsException() {
         assertThrows(IllegalArgumentException.class, () ->
                 resumeDao.findByUserId(userId, null, null, null, null, null, null, "invalid", "desc", 0, 10));
+    }
+
+    @Test
+    void findByUserId_withValidSortField_generatesOrderByWithAlias() throws Exception {
+        when(statement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(true, false);
+        when(resultSet.getLong("id")).thenReturn(1L);
+        when(resultSet.getString("resume_title")).thenReturn("Test");
+
+        resumeDao.findByUserId(userId, null, null, null, null, null, null, "created_at", "desc", 0, 10);
+
+        verify(connection).prepareStatement(contains("ORDER BY sr.created_at desc"));
+    }
+
+    @Test
+    void findByUserId_withAliasPrefixedSortField_isRejected() {
+        assertThrows(IllegalArgumentException.class, () ->
+                resumeDao.findByUserId(userId, null, null, null, null, null, null, "sr.created_at", "desc", 0, 10));
+    }
+
+    @Test
+    void findByUserId_defaultSort_generatesOrderBySrCreatedAtDesc() throws Exception {
+        when(statement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(true, false);
+        when(resultSet.getLong("id")).thenReturn(1L);
+        when(resultSet.getString("resume_title")).thenReturn("Test");
+
+        resumeDao.findByUserId(userId, null, null, null, null, null, null, "created_at", "desc", 0, 10);
+
+        // Verify the SQL passed to prepareStatement contains the alias-prefixed ORDER BY
+        verify(connection).prepareStatement(contains("ORDER BY sr.created_at desc"));
     }
 }

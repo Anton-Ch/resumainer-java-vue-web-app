@@ -1,22 +1,25 @@
 package com.resumainer.service;
 
 import com.resumainer.dao.ResumeDao;
+import com.resumainer.dto.home.HomeSavedResumeDto;
 import com.resumainer.model.PagedResponse;
-import com.resumainer.model.SavedResume;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Service for saved resume operations.
  * <p>
  * Validates input parameters before delegating to {@link ResumeDao}.
  * Enforces sort field whitelist (SEC-001) and delegates owner checks to DAO (SEC-002).
+ * Maps results to {@link HomeSavedResumeDto} via {@link HomeSavedResumeMapper}.
  */
 @Service
 public class ResumeService {
@@ -35,19 +38,22 @@ public class ResumeService {
     );
 
     private final ResumeDao resumeDao;
+    private final HomeSavedResumeMapper homeMapper;
 
-    public ResumeService(ResumeDao resumeDao) {
+    public ResumeService(ResumeDao resumeDao, HomeSavedResumeMapper homeMapper) {
         this.resumeDao = resumeDao;
+        this.homeMapper = homeMapper;
     }
 
     /**
-     * Paginated resume listing with validation.
+     * Paginated resume listing with validation. Returns canonical Home DTOs.
      */
-    public PagedResponse<SavedResume> listResumes(UUID userId, String search,
-                                                   String language, String adaptationLevel,
-                                                   String createdDate, String dateFrom,
-                                                   String dateTo, String sort,
-                                                   int page, int size) {
+    public PagedResponse<HomeSavedResumeDto> listResumes(UUID userId, HttpServletRequest request,
+                                                          String search, String language,
+                                                          String adaptationLevel,
+                                                          String createdDate, String dateFrom,
+                                                          String dateTo, String sort,
+                                                          int page, int size) {
         if (page < 0) {
             throw new IllegalArgumentException("Page must be >= 0");
         }
@@ -72,12 +78,16 @@ public class ResumeService {
         log.debug("listResumes: userId={}, page={}, size={}, sort={}, dir={}",
                 userId, page, size, sortField, sortDir);
 
-        List<SavedResume> items = resumeDao.findByUserId(userId, search, language,
+        List<com.resumainer.model.SavedResume> items = resumeDao.findByUserId(userId, search, language,
                 adaptationLevel, createdDate, dateFrom, dateTo, sortField, sortDir, page, size);
         long total = resumeDao.countByUserId(userId, search, language,
                 adaptationLevel, createdDate, dateFrom, dateTo);
 
-        return new PagedResponse<>(items, page, size, total);
+        List<HomeSavedResumeDto> dtos = items.stream()
+                .map(r -> homeMapper.toDto(r, request))
+                .collect(Collectors.toList());
+
+        return new PagedResponse<>(dtos, page, size, total);
     }
 
     /**

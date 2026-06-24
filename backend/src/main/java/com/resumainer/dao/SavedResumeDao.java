@@ -1,10 +1,13 @@
 package com.resumainer.dao;
 
+import com.resumainer.model.PublicResumeLookupResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+
+import static com.resumainer.model.PublicResumeLookupResult.Status;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -150,6 +153,51 @@ public class SavedResumeDao {
         } catch (SQLException e) {
             log.error("Error looking up public code: {}", publicCode, e);
             throw new RuntimeException("Database error looking up public code", e);
+        }
+    }
+
+    /**
+     * Feature 009: Look up public resume status by username and public code.
+     * Returns a {@link PublicResumeLookupResult} with status and PDF path.
+     * The caller can distinguish deleted, not-found, and active states.
+     */
+    public PublicResumeLookupResult findPublicResumeStatus(String username, String publicCode) {
+        if (username == null || username.isBlank() || publicCode == null || publicCode.isBlank()) {
+            return new PublicResumeLookupResult(Status.NOT_FOUND, null);
+        }
+        String sql = "SELECT sr.is_deleted, sr.deleted_at, sr.pdf_file_path, sr.pdf_status "
+                   + "FROM saved_resumes sr JOIN users u ON sr.user_id = u.id "
+                   + "WHERE u.username = ? AND sr.public_code = ?";
+        log.debug("findPublicResumeStatus: user={}, code={}", username, publicCode);
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.setString(2, publicCode);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    log.debug("findPublicResumeStatus: no row found");
+                    return new PublicResumeLookupResult(Status.NOT_FOUND, null);
+                }
+                boolean isDeleted = rs.getBoolean("is_deleted");
+                java.sql.Timestamp deletedAt = rs.getTimestamp("deleted_at");
+
+                if (isDeleted || deletedAt != null) {
+                    log.debug("findPublicResumeStatus: resume is deleted (isDeleted={}, deletedAt={})",
+                            isDeleted, deletedAt);
+                    return new PublicResumeLookupResult(Status.DELETED, null);
+                }
+                String pdfPath = rs.getString("pdf_file_path");
+                String pdfStatus = rs.getString("pdf_status");
+                if (pdfPath == null || !"READY".equals(pdfStatus)) {
+                    log.debug("findPublicResumeStatus: PDF not ready (path={}, status={})", pdfPath, pdfStatus);
+                    return new PublicResumeLookupResult(Status.MISSING_FILE, null);
+                }
+                log.debug("findPublicResumeStatus: ACTIVE — path={}", pdfPath);
+                return new PublicResumeLookupResult(Status.ACTIVE, pdfPath);
+            }
+        } catch (SQLException e) {
+            log.error("Error looking up public resume for user={} code={}", username, publicCode, e);
+            throw new RuntimeException("Database error looking up public resume", e);
         }
     }
 

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="#{error.410.title}">Resume no longer available — ResumAIner</title>
+  <link rel="stylesheet" th:href="@{/static/css/landing.css}">
+</head>
+<body>
+  <!-- Header -->
+  <header class="topnav" id="topnav">
+    <div class="container topnav-inner">
+      <a th:href="@{/}" class="logo" aria-label="ResumAIner">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260" role="img" aria-label="ResumAIner" style="height: 40px; width: auto;"><g transform="translate(42 38) scale(1.16)" vector-effect="non-scaling-stroke"><rect x="6" y="6" width="116" height="148" rx="18" fill="#FFFDF8" stroke="#17211D" stroke-width="8"/><line x1="6" y1="112" x2="122" y2="112" stroke="#17211D" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="62" r="30" fill="none" stroke="#17211D" stroke-width="6"/><line x1="64" y1="20" x2="64" y2="34" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="64" y1="90" x2="64" y2="104" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="22" y1="62" x2="36" y2="62" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="92" y1="62" x2="106" y2="62" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><circle cx="64" cy="62" r="13" fill="#0F8A6A"/><rect x="24" y="127" width="80" height="19" rx="5" fill="#0F8A6A"/></g><text x="250" y="158" font-family="Manrope, Inter, Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="86" font-weight="700" letter-spacing="-3" fill="#17211D">ResumAIner</text></svg>
+      </a>
+      <nav>
+        <a th:href="@{/}" th:text="#{nav.link.how}">How it works</a>
+        <a th:href="@{/}" th:text="#{nav.link.features}">Features</a>
+        <a th:href="@{/}" th:text="#{nav.link.faq}">FAQ</a>
+      </nav>
+      <div class="topnav-actions">
+        <div class="lang-switch">
+          <button th:classappend="${#locale.language == 'en'} ? 'active' : ''" th:onclick="|window.location='?lang=en'|" th:text="#{nav.lang.en}">EN</button>
+          <button th:classappend="${#locale.language == 'ru'} ? 'active' : ''" th:onclick="|window.location='?lang=ru'|" th:text="#{nav.lang.ru}">RU</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="error-page">
+      <div class="error-card">
+        <div class="error-code">410</div>
+        <h1 th:text="#{error.410.title}">Resume no longer available</h1>
+        <p class="error-message" th:text="#{error.410.message}">The user has removed this resume. It is no longer available.</p>
+        <p class="error-hint" th:text="#{error.410.hint}">This public resume link is no longer available.</p>
+        <a th:href="@{/}" class="btn btn-primary" th:text="#{error.410.cta}">Go to homepage</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="pagefoot">
+    <div class="container" style="display: flex; align-items: center; justify-content: space-between; gap: var(--gap-md); flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260" role="img" th:attr="aria-label=#{footer.logo.alt}" style="height: 22px; width: auto; display: block;"><g transform="translate(42 38) scale(1.16)" vector-effect="non-scaling-stroke"><rect x="6" y="6" width="116" height="148" rx="18" fill="#FFFDF8" stroke="#17211D" stroke-width="8"/><line x1="6" y1="112" x2="122" y2="112" stroke="#17211D" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="62" r="30" fill="none" stroke="#17211D" stroke-width="6"/><line x1="64" y1="20" x2="64" y2="34" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="64" y1="90" x2="64" y2="104" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="22" y1="62" x2="36" y2="62" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><line x1="92" y1="62" x2="106" y2="62" stroke="#17211D" stroke-width="7" stroke-linecap="round"/><circle cx="64" cy="62" r="13" fill="#0F8A6A"/><rect x="24" y="127" width="80" height="19" rx="5" fill="#0F8A6A"/></g><text x="250" y="158" font-family="Manrope, Inter, Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="86" font-weight="700" letter-spacing="-3" fill="#17211D">ResumAIner</text></svg>
+        <span>© <span id="copyright-year"></span></span>
+      </div>
+      <span class="meta" th:text="#{footer.caption}">One profile. Tailored resumes for any role.</span>
+    </div>
+  </footer>
+
+  <script>document.getElementById('copyright-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

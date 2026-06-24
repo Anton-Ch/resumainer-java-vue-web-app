@@ -1,5 +1,6 @@
 package com.resumainer.dao;
 
+import com.resumainer.model.PublicResumeLookupResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -212,6 +213,99 @@ class SavedResumeDaoTest {
 
         assertThrows(RuntimeException.class,
                 () -> dao.findByGenerationRequestId(requestId, userId));
+    }
+
+    // ─── findPublicResumeStatus ──────────────────────────────────
+
+    @Test
+    void findPublicResumeStatus_activePdf_returnsActive() throws Exception {
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getBoolean("is_deleted")).thenReturn(false);
+        when(resultSet.getTimestamp("deleted_at")).thenReturn(null);
+        when(resultSet.getString("pdf_file_path")).thenReturn("/path/file.pdf");
+        when(resultSet.getString("pdf_status")).thenReturn("READY");
+
+        PublicResumeLookupResult result = dao.findPublicResumeStatus("alice", "ABC12");
+
+        assertEquals(PublicResumeLookupResult.Status.ACTIVE, result.getStatus());
+        assertEquals("/path/file.pdf", result.getPdfFilePath());
+        verify(statement).setString(1, "alice");
+        verify(statement).setString(2, "ABC12");
+    }
+
+    @Test
+    void findPublicResumeStatus_deletedByFlag_returnsDeleted() throws Exception {
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getBoolean("is_deleted")).thenReturn(true);
+        when(resultSet.getTimestamp("deleted_at")).thenReturn(null);
+
+        PublicResumeLookupResult result = dao.findPublicResumeStatus("alice", "DELETED");
+
+        assertEquals(PublicResumeLookupResult.Status.DELETED, result.getStatus());
+        assertNull(result.getPdfFilePath());
+    }
+
+    @Test
+    void findPublicResumeStatus_deletedByTimestampOnly_returnsDeleted() throws Exception {
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getBoolean("is_deleted")).thenReturn(false);
+        when(resultSet.getTimestamp("deleted_at")).thenReturn(java.sql.Timestamp.valueOf("2026-06-24 12:00:00"));
+
+        PublicResumeLookupResult result = dao.findPublicResumeStatus("alice", "LEGACY");
+
+        assertEquals(PublicResumeLookupResult.Status.DELETED, result.getStatus(),
+                "Legacy record with deleted_at set but is_deleted=false must be classified as DELETED");
+        assertNull(result.getPdfFilePath());
+    }
+
+    @Test
+    void findPublicResumeStatus_noRow_returnsNotFound() throws Exception {
+        when(resultSet.next()).thenReturn(false);
+
+        PublicResumeLookupResult result = dao.findPublicResumeStatus("unknown", "XXXXX");
+
+        assertEquals(PublicResumeLookupResult.Status.NOT_FOUND, result.getStatus());
+    }
+
+    @Test
+    void findPublicResumeStatus_missingPdf_returnsMissingFile() throws Exception {
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getBoolean("is_deleted")).thenReturn(false);
+        when(resultSet.getTimestamp("deleted_at")).thenReturn(null);
+        when(resultSet.getString("pdf_file_path")).thenReturn(null);
+        when(resultSet.getString("pdf_status")).thenReturn("READY");
+
+        PublicResumeLookupResult result = dao.findPublicResumeStatus("alice", "NOPDF");
+
+        assertEquals(PublicResumeLookupResult.Status.MISSING_FILE, result.getStatus());
+    }
+
+    @Test
+    void findPublicResumeStatus_pdfNotReady_returnsMissingFile() throws Exception {
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getBoolean("is_deleted")).thenReturn(false);
+        when(resultSet.getTimestamp("deleted_at")).thenReturn(null);
+        when(resultSet.getString("pdf_file_path")).thenReturn("/path/file.pdf");
+        when(resultSet.getString("pdf_status")).thenReturn("PENDING");
+
+        PublicResumeLookupResult result = dao.findPublicResumeStatus("alice", "PENDING");
+
+        assertEquals(PublicResumeLookupResult.Status.MISSING_FILE, result.getStatus());
+    }
+
+    @Test
+    void findPublicResumeStatus_blankParams_returnsNotFound() {
+        PublicResumeLookupResult result = dao.findPublicResumeStatus("", null);
+
+        assertEquals(PublicResumeLookupResult.Status.NOT_FOUND, result.getStatus());
+    }
+
+    @Test
+    void findPublicResumeStatus_throwsException_onSqlError() throws Exception {
+        when(statement.executeQuery()).thenThrow(new SQLException("DB error"));
+
+        assertThrows(RuntimeException.class,
+                () -> dao.findPublicResumeStatus("alice", "ABC12"));
     }
 
     // ─── findPublicCodeByCode ─────────────────────────────────────

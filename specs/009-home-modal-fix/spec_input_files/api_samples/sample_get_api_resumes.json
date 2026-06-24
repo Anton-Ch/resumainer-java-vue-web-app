@@ -1,0 +1,26 @@
+{
+  "items": [
+    {
+      "id": 42,
+      "resumeTitle": "Senior Software Engineer - Acme Corp",
+      "vacancyTitle": "Senior Software Engineer",
+      "companyName": "Acme Corp",
+      "languageCode": "EN",
+      "languageName": null,
+      "adaptationLevel": "BALANCED",
+      "createdAt": "2026-06-20",
+      "publicUrlLink": "http://localhost:8080/johndoe/GTFQ",
+      "pdfOpenUrl": "/api/generate/resumes/42/pdf?disposition=inline",
+      "pdfDownloadUrl": "/api/generate/resumes/42/pdf",
+      "htmlDownloadUrl": "/api/generate/resumes/42/html",
+      "pdfAvailable": true,
+      "pdfStatus": "READY",
+      "pdfMessage": null,
+      "coverLetter": "Dear Hiring Manager..."
+    }
+  ],
+  "page": 0,
+  "size": 10,
+  "totalElements": 1,
+  "totalPages": 1
+}
