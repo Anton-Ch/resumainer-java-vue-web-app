@@ -106,7 +106,7 @@ Agents provide specialization.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the implementation
-plan at `specs/008-pdf-generation/plan.md`.
+plan at `specs/009-home-modal-fix/plan.md`.
 <!-- SPECKIT END -->
 
 ### Spec Kit
