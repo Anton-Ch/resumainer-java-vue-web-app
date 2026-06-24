@@ -5,6 +5,7 @@ import com.resumainer.dao.ContactDetailDao;
 import com.resumainer.dao.EducationDao;
 import com.resumainer.dao.ResumeDao;
 import com.resumainer.dao.WorkExperienceDao;
+import com.resumainer.dto.home.HomeSavedResumeDto;
 import com.resumainer.model.AdditionalProfileInfo;
 import com.resumainer.model.SavedResume;
 import com.resumainer.model.UserHomeSummary;
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,21 +36,27 @@ public class UserHomeService {
     private final WorkExperienceDao workExperienceDao;
     private final EducationDao educationDao;
     private final AdditionalProfileInfoDao additionalProfileInfoDao;
+    private final HomeSavedResumeMapper homeMapper;
 
     public UserHomeService(ContactDetailDao contactDetailDao, ResumeDao resumeDao,
                            WorkExperienceDao workExperienceDao, EducationDao educationDao,
-                           AdditionalProfileInfoDao additionalProfileInfoDao) {
+                           AdditionalProfileInfoDao additionalProfileInfoDao,
+                           HomeSavedResumeMapper homeMapper) {
         this.contactDetailDao = contactDetailDao;
         this.resumeDao = resumeDao;
         this.workExperienceDao = workExperienceDao;
         this.educationDao = educationDao;
         this.additionalProfileInfoDao = additionalProfileInfoDao;
+        this.homeMapper = homeMapper;
     }
 
     /**
      * Build the home summary for a given user.
+     *
+     * @param userId  the authenticated user ID
+     * @param request the HTTP request (for public URL resolution in mapped DTO)
      */
-    public UserHomeSummary getHomeSummary(UUID userId) {
+    public UserHomeSummary getHomeSummary(UUID userId, HttpServletRequest request) {
         log.debug("getHomeSummary: userId={}", userId);
 
         boolean contactComplete = isContactComplete(userId);
@@ -64,18 +72,23 @@ public class UserHomeService {
                 null, null, null, "created_at", "desc", 0, 1);
         long totalResumes = resumeDao.countByUserId(userId, null, null, null, null, null, null);
 
-        SavedResume lastResume = firstPage.isEmpty() ? null : firstPage.get(0);
-        Long lastResumeId = lastResume != null ? lastResume.getId() : null;
+        SavedResume lastResumeEntity = firstPage.isEmpty() ? null : firstPage.get(0);
+        Long lastResumeId = lastResumeEntity != null ? lastResumeEntity.getId() : null;
+
+        HomeSavedResumeDto lastResumeDto = lastResumeEntity != null
+                ? homeMapper.toDto(lastResumeEntity, request)
+                : null;
 
         Summary summary = new Summary(totalResumes,
                 profileReady ? "READY" : "INCOMPLETE",
                 lastResumeId);
+        summary.setLastResume(lastResumeDto);
 
         UserHomeSummary result = new UserHomeSummary();
         result.setProfileReady(profileReady);
         result.setProfileChecklist(checklist);
         result.setSummary(summary);
-        result.setLastResume(lastResume);
+        result.setLastResume(lastResumeDto);
 
         return result;
     }
@@ -116,7 +129,6 @@ public class UserHomeService {
         try {
             AdditionalProfileInfo info = additionalProfileInfoDao.findByUserId(userId);
             if (info == null) return false;
-            // Additional info is complete when both required fields are filled
             return info.getDateOfBirth() != null && isNotBlank(info.getCitizenship());
         } catch (Exception e) {
             log.warn("Failed to check additional info for user: {}", userId, e);

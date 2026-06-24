@@ -9,6 +9,7 @@ import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -30,6 +31,15 @@ public class ResumeDao {
             "resume_title", "vacancy", "company", "language", "adaptation_level", "created_at"
     );
 
+    private static final Map<String, String> SORT_FIELD_ALIAS = Map.of(
+            "resume_title", "sr.resume_title",
+            "vacancy", "sr.vacancy",
+            "company", "sr.company",
+            "language", "sr.language",
+            "adaptation_level", "sr.adaptation_level",
+            "created_at", "sr.created_at"
+    );
+
     private final DataSource dataSource;
 
     public ResumeDao(DataSource dataSource) {
@@ -47,41 +57,46 @@ public class ResumeDao {
         String sortColumn = validateSortField(sortField);
         String direction = validateSortDir(sortDir);
 
-        SqlBuilder sql = new SqlBuilder("WHERE user_id = ? AND deleted_at IS NULL");
+        SqlBuilder sql = new SqlBuilder("WHERE sr.user_id = ? AND sr.deleted_at IS NULL");
         sql.addParam(userId);
 
         if (isNotBlank(search)) {
-            sql.append(" AND (LOWER(resume_title) LIKE ? OR LOWER(vacancy) LIKE ? OR LOWER(company) LIKE ?)");
+            sql.append(" AND (LOWER(sr.resume_title) LIKE ? OR LOWER(sr.vacancy) LIKE ? OR LOWER(sr.company) LIKE ?)");
             String p = "%" + search.toLowerCase().trim() + "%";
             sql.addParam(p).addParam(p).addParam(p);
         }
 
         if (isNotBlank(language)) {
-            sql.appendInClause("AND language IN", language.split(","));
+            sql.appendInClause("AND sr.language IN", language.split(","));
         }
 
         if (isNotBlank(adaptationLevel)) {
-            sql.appendInClause("AND adaptation_level IN", adaptationLevel.split(","));
+            sql.appendInClause("AND sr.adaptation_level IN", adaptationLevel.split(","));
         }
 
         if (isNotBlank(createdDate)) {
-            sql.append(" AND created_at = ?");
+            sql.append(" AND sr.created_at = ?");
             sql.addParam(Date.valueOf(createdDate.trim()));
         } else {
             if (isNotBlank(dateFrom)) {
-                sql.append(" AND created_at >= ?");
+                sql.append(" AND sr.created_at >= ?");
                 sql.addParam(Date.valueOf(dateFrom.trim()));
             }
             if (isNotBlank(dateTo)) {
-                sql.append(" AND created_at <= ?");
+                sql.append(" AND sr.created_at <= ?");
                 sql.addParam(Date.valueOf(dateTo.trim()));
             }
         }
 
         int offset = page * size;
-        String query = "SELECT id, resume_title, vacancy, company, language, adaptation_level, "
-                + "created_at, public_url, pdf_url, cover_letter "
-                + "FROM saved_resumes " + sql.getWhere()
+        String query = "SELECT sr.id, sr.resume_title, sr.vacancy, sr.company, sr.language, "
+                + "sr.adaptation_level, sr.created_at, sr.public_url, sr.pdf_url, "
+                + "sr.cover_letter, sr.pdf_status, sr.public_code, u.username, "
+                + "sr.pdf_file_path IS NOT NULL AS pdf_file_present, "
+                + "sr.html_file_path IS NOT NULL AS html_file_present "
+                + "FROM saved_resumes sr "
+                + "JOIN users u ON sr.user_id = u.id "
+                + sql.getWhere()
                 + " ORDER BY " + sortColumn + " " + direction
                 + " LIMIT ? OFFSET ?";
 
@@ -145,7 +160,7 @@ public class ResumeDao {
             }
         }
 
-        String query = "SELECT COUNT(*) FROM saved_resumes " + sql.getWhere();
+        String query = "SELECT COUNT(*) FROM saved_resumes sr " + sql.getWhere();
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -166,9 +181,14 @@ public class ResumeDao {
      * Find single resume by ID with owner check.
      */
     public SavedResume findById(long id, UUID userId) {
-        String sql = "SELECT id, resume_title, vacancy, company, language, adaptation_level, "
-                + "created_at, public_url, pdf_url, cover_letter "
-                + "FROM saved_resumes WHERE id = ? AND user_id = ? AND deleted_at IS NULL";
+        String sql = "SELECT sr.id, sr.resume_title, sr.vacancy, sr.company, sr.language, "
+                + "sr.adaptation_level, sr.created_at, sr.public_url, sr.pdf_url, "
+                + "sr.cover_letter, sr.pdf_status, sr.public_code, u.username, "
+                + "sr.pdf_file_path IS NOT NULL AS pdf_file_present, "
+                + "sr.html_file_path IS NOT NULL AS html_file_present "
+                + "FROM saved_resumes sr "
+                + "JOIN users u ON sr.user_id = u.id "
+                + "WHERE sr.id = ? AND sr.user_id = ? AND sr.deleted_at IS NULL";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -187,10 +207,13 @@ public class ResumeDao {
     }
 
     /**
-     * Soft-delete a resume by setting deleted_at (owner-protected).
+     * Soft-delete a resume by setting is_deleted and deleted_at (owner-protected).
+     * Both flags must be set so that list queries (deleted_at IS NULL) and
+     * public route queries (is_deleted = FALSE) consistently exclude deleted records.
      */
     public boolean softDelete(long id, UUID userId) {
-        String sql = "UPDATE saved_resumes SET deleted_at = NOW() WHERE id = ? AND user_id = ? AND deleted_at IS NULL";
+        String sql = "UPDATE saved_resumes SET is_deleted = TRUE, deleted_at = NOW() "
+                + "WHERE id = ? AND user_id = ? AND deleted_at IS NULL";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -218,17 +241,24 @@ public class ResumeDao {
         r.setPublicUrl(rs.getString("public_url"));
         r.setPdfUrl(rs.getString("pdf_url"));
         r.setCoverLetter(rs.getString("cover_letter"));
+        // Feature 009: fields for HomeSavedResumeDto
+        r.setPdfStatus(rs.getString("pdf_status"));
+        r.setUsername(rs.getString("username"));
+        r.setPublicCode(rs.getString("public_code"));
+        r.setPdfFilePresent(rs.getBoolean("pdf_file_present"));
+        r.setHtmlFilePresent(rs.getBoolean("html_file_present"));
         return r;
     }
 
     private String validateSortField(String field) {
-        if (field == null || field.isBlank()) return "created_at";
+        if (field == null || field.isBlank()) return "sr.created_at";
         String f = field.trim().toLowerCase();
         if (!ALLOWED_SORT_FIELDS.contains(f)) {
             throw new IllegalArgumentException("Invalid sort field: " + field
                     + ". Allowed: " + ALLOWED_SORT_FIELDS);
         }
-        return f;
+        // Map to alias-prefixed column for JOIN queries
+        return SORT_FIELD_ALIAS.getOrDefault(f, "sr.created_at");
     }
 
     private String validateSortDir(String dir) {

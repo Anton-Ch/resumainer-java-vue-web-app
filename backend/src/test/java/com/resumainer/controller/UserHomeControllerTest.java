@@ -1,11 +1,12 @@
 package com.resumainer.controller;
 
 import com.resumainer.dto.UserSession;
-import com.resumainer.model.SavedResume;
+import com.resumainer.dto.home.HomeSavedResumeDto;
 import com.resumainer.model.UserHomeSummary;
 import com.resumainer.model.UserHomeSummary.ProfileChecklist;
 import com.resumainer.model.UserHomeSummary.Summary;
 import com.resumainer.service.UserHomeService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,12 +22,14 @@ class UserHomeControllerTest {
 
     private MockMvc mockMvc;
     private UserHomeService userHomeService;
+    private HttpServletRequest request;
     private UUID userId;
     private UserSession userSession;
 
     @BeforeEach
     void setUp() {
         userHomeService = mock(UserHomeService.class);
+        request = mock(HttpServletRequest.class);
         UserHomeController controller = new UserHomeController(userHomeService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
         userId = UUID.randomUUID();
@@ -35,7 +38,7 @@ class UserHomeControllerTest {
 
     @Test
     void getHomeSummary_withValidSession_returns200() throws Exception {
-        SavedResume lastResume = new SavedResume();
+        HomeSavedResumeDto lastResume = new HomeSavedResumeDto();
         lastResume.setId(1L);
         lastResume.setResumeTitle("Test Resume");
 
@@ -43,7 +46,7 @@ class UserHomeControllerTest {
         summary.setProfileReady(false);
         summary.setProfileChecklist(new ProfileChecklist(false, false, false, false));
         summary.setSummary(new Summary(0, "INCOMPLETE", null));
-        when(userHomeService.getHomeSummary(userId)).thenReturn(summary);
+        when(userHomeService.getHomeSummary(eq(userId), any())).thenReturn(summary);
 
         mockMvc.perform(get("/api/user/home")
                         .sessionAttr("user", userSession))
@@ -52,7 +55,7 @@ class UserHomeControllerTest {
                 .andExpect(jsonPath("$.summary.savedResumesCount").value(0))
                 .andExpect(jsonPath("$.summary.profileStatus").value("INCOMPLETE"));
 
-        verify(userHomeService).getHomeSummary(userId);
+        verify(userHomeService).getHomeSummary(eq(userId), any());
     }
 
     @Test
@@ -63,7 +66,7 @@ class UserHomeControllerTest {
 
     @Test
     void getHomeSummary_serviceError_returns500() throws Exception {
-        when(userHomeService.getHomeSummary(userId)).thenThrow(new RuntimeException("DB error"));
+        when(userHomeService.getHomeSummary(eq(userId), any())).thenThrow(new RuntimeException("DB error"));
 
         mockMvc.perform(get("/api/user/home")
                         .sessionAttr("user", userSession))
@@ -72,7 +75,7 @@ class UserHomeControllerTest {
 
     @Test
     void getHomeSummary_readyProfile_returnsCorrectData() throws Exception {
-        SavedResume lastResume = new SavedResume();
+        HomeSavedResumeDto lastResume = new HomeSavedResumeDto();
         lastResume.setId(5L);
         lastResume.setResumeTitle("Senior Dev Resume");
 
@@ -81,7 +84,7 @@ class UserHomeControllerTest {
         summary.setProfileChecklist(new ProfileChecklist(true, true, true, true));
         summary.setSummary(new Summary(3, "READY", 5L));
         summary.setLastResume(lastResume);
-        when(userHomeService.getHomeSummary(userId)).thenReturn(summary);
+        when(userHomeService.getHomeSummary(eq(userId), any())).thenReturn(summary);
 
         mockMvc.perform(get("/api/user/home")
                         .sessionAttr("user", userSession))

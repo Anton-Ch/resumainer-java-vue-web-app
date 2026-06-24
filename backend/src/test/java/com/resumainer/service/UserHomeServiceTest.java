@@ -9,8 +9,10 @@ import com.resumainer.model.AdditionalProfileInfo;
 import com.resumainer.model.ContactDetail;
 import com.resumainer.model.SavedResume;
 import com.resumainer.model.UserHomeSummary;
+import com.resumainer.dto.home.HomeSavedResumeDto;
 import com.resumainer.model.WorkExperience;
 import com.resumainer.model.Education;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -46,6 +48,12 @@ class UserHomeServiceTest {
     @Mock
     private AdditionalProfileInfoDao additionalProfileInfoDao;
 
+    @Mock
+    private HomeSavedResumeMapper homeMapper;
+
+    @Mock
+    private HttpServletRequest request;
+
     private UserHomeService service;
 
     private final UUID userId = UUID.randomUUID();
@@ -53,7 +61,7 @@ class UserHomeServiceTest {
     @BeforeEach
     void setUp() {
         service = new UserHomeService(contactDetailDao, resumeDao,
-                workExperienceDao, educationDao, additionalProfileInfoDao);
+                workExperienceDao, educationDao, additionalProfileInfoDao, homeMapper);
 
         // Default: complete profile
         ContactDetail contact = new ContactDetail();
@@ -78,11 +86,16 @@ class UserHomeServiceTest {
                 .thenReturn(List.of(resume));
         when(resumeDao.countByUserId(eq(userId), isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(3L);
+
+        // Stub homeMapper.toDto for the resume used in getHomeSummary
+        HomeSavedResumeDto dto = new HomeSavedResumeDto();
+        dto.setId(1L);
+        when(homeMapper.toDto(resume, request)).thenReturn(dto);
     }
 
     @Test
     void getHomeSummary_withCompleteProfile_returnsReady() {
-        UserHomeSummary result = service.getHomeSummary(userId);
+        UserHomeSummary result = service.getHomeSummary(userId, request);
 
         assertTrue(result.isProfileReady());
         assertNotNull(result.getProfileChecklist());
@@ -109,7 +122,7 @@ class UserHomeServiceTest {
         incomplete.setLocation("New York");
         when(contactDetailDao.findByUserId(userId)).thenReturn(incomplete);
 
-        UserHomeSummary result = service.getHomeSummary(userId);
+        UserHomeSummary result = service.getHomeSummary(userId, request);
 
         assertFalse(result.isProfileReady());
         assertFalse(result.getProfileChecklist().isContactDetails());
@@ -120,7 +133,7 @@ class UserHomeServiceTest {
     void getHomeSummary_withNullContact_returnsIncomplete() {
         when(contactDetailDao.findByUserId(userId)).thenReturn(null);
 
-        UserHomeSummary result = service.getHomeSummary(userId);
+        UserHomeSummary result = service.getHomeSummary(userId, request);
 
         assertFalse(result.isProfileReady());
         assertFalse(result.getProfileChecklist().isContactDetails());
@@ -130,7 +143,7 @@ class UserHomeServiceTest {
     void getHomeSummary_withoutWorkExperience_returnsIncomplete() {
         when(workExperienceDao.findByUserId(userId)).thenReturn(List.of());
 
-        UserHomeSummary result = service.getHomeSummary(userId);
+        UserHomeSummary result = service.getHomeSummary(userId, request);
 
         assertFalse(result.isProfileReady());
         assertFalse(result.getProfileChecklist().isWorkExperience());
@@ -140,7 +153,7 @@ class UserHomeServiceTest {
     void getHomeSummary_withoutEducation_returnsIncomplete() {
         when(educationDao.findByUserId(userId)).thenReturn(List.of());
 
-        UserHomeSummary result = service.getHomeSummary(userId);
+        UserHomeSummary result = service.getHomeSummary(userId, request);
 
         assertFalse(result.isProfileReady());
         assertFalse(result.getProfileChecklist().isEducation());
@@ -153,7 +166,7 @@ class UserHomeServiceTest {
         empty.setCitizenship(null);
         when(additionalProfileInfoDao.findByUserId(userId)).thenReturn(empty);
 
-        UserHomeSummary result = service.getHomeSummary(userId);
+        UserHomeSummary result = service.getHomeSummary(userId, request);
 
         assertFalse(result.isProfileReady());
         assertFalse(result.getProfileChecklist().isAdditionalInfo());
@@ -163,7 +176,7 @@ class UserHomeServiceTest {
     void getHomeSummary_withNullAdditionalInfo_returnsIncomplete() {
         when(additionalProfileInfoDao.findByUserId(userId)).thenReturn(null);
 
-        UserHomeSummary result = service.getHomeSummary(userId);
+        UserHomeSummary result = service.getHomeSummary(userId, request);
 
         assertFalse(result.isProfileReady());
         assertFalse(result.getProfileChecklist().isAdditionalInfo());
@@ -175,7 +188,7 @@ class UserHomeServiceTest {
                 any(), any(), anyInt(), anyInt())).thenReturn(List.of());
         when(resumeDao.countByUserId(any(), any(), any(), any(), any(), any(), any())).thenReturn(0L);
 
-        UserHomeSummary result = service.getHomeSummary(userId);
+        UserHomeSummary result = service.getHomeSummary(userId, request);
 
         assertEquals(0L, result.getSummary().getSavedResumesCount());
         assertNull(result.getSummary().getLastResumeId());
@@ -186,7 +199,7 @@ class UserHomeServiceTest {
     void getHomeSummary_whenContactDaoThrows_returnsIncomplete() {
         when(contactDetailDao.findByUserId(userId)).thenThrow(new RuntimeException("DB error"));
 
-        UserHomeSummary result = service.getHomeSummary(userId);
+        UserHomeSummary result = service.getHomeSummary(userId, request);
 
         assertFalse(result.isProfileReady());
         assertFalse(result.getProfileChecklist().isContactDetails());
@@ -196,7 +209,7 @@ class UserHomeServiceTest {
     void getHomeSummary_whenWorkExpDaoThrows_returnsIncomplete() {
         when(workExperienceDao.findByUserId(userId)).thenThrow(new RuntimeException("DB error"));
 
-        UserHomeSummary result = service.getHomeSummary(userId);
+        UserHomeSummary result = service.getHomeSummary(userId, request);
 
         assertFalse(result.isProfileReady());
         assertFalse(result.getProfileChecklist().isWorkExperience());
@@ -206,7 +219,7 @@ class UserHomeServiceTest {
     void getHomeSummary_whenEducationDaoThrows_returnsIncomplete() {
         when(educationDao.findByUserId(userId)).thenThrow(new RuntimeException("DB error"));
 
-        UserHomeSummary result = service.getHomeSummary(userId);
+        UserHomeSummary result = service.getHomeSummary(userId, request);
 
         assertFalse(result.isProfileReady());
         assertFalse(result.getProfileChecklist().isEducation());
@@ -216,7 +229,7 @@ class UserHomeServiceTest {
     void getHomeSummary_whenAdditionalInfoDaoThrows_returnsIncomplete() {
         when(additionalProfileInfoDao.findByUserId(userId)).thenThrow(new RuntimeException("DB error"));
 
-        UserHomeSummary result = service.getHomeSummary(userId);
+        UserHomeSummary result = service.getHomeSummary(userId, request);
 
         assertFalse(result.isProfileReady());
         assertFalse(result.getProfileChecklist().isAdditionalInfo());

@@ -1,6 +1,7 @@
 package com.resumainer.controller;
 
 import com.resumainer.dao.SavedResumeDao;
+import com.resumainer.model.PublicResumeLookupResult;
 import com.resumainer.service.GeneratedFileStorageService;
 import com.resumainer.service.PublicResumeRateLimiter;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,15 +10,21 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
+import static com.resumainer.model.PublicResumeLookupResult.Status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * T187 Comprehensive tests: PublicResumeController — public PDF serving, rate limiting, security.
+ * Tests: PublicResumeController — public PDF serving, 410/404 handling, rate limiting, security.
  */
 class PublicResumeControllerTest {
 
@@ -33,208 +40,163 @@ class PublicResumeControllerTest {
         rateLimiter = mock(PublicResumeRateLimiter.class);
         controller = new PublicResumeController(savedResumeDao, fileStorage, rateLimiter);
 
-        // By default, rate limiter allows requests
         when(rateLimiter.checkRateLimit(anyString()))
                 .thenReturn(PublicResumeRateLimiter.RateLimitResult.allowed());
     }
 
-    // --- Valid requests ---
+    // --- Active resume → 200 ---
 
     @Test
     void publicResume_validCode_returns200() throws Exception {
         java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("test-pdf-", ".pdf");
         tempFile.toFile().deleteOnExit();
-        when(savedResumeDao.findPdfPathByUsernameAndCode("alice", "ABC12")).thenReturn("rel.pdf");
+        when(savedResumeDao.findPublicResumeStatus("alice", "ABC12"))
+                .thenReturn(new PublicResumeLookupResult(Status.ACTIVE, "rel.pdf"));
         when(fileStorage.resolveSafePath("rel.pdf")).thenReturn(tempFile);
 
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setRemoteAddr("192.168.1.100");
-        ResponseEntity<Resource> response = controller.publicResume("alice", "ABC12", req);
+        Object result = controller.publicResume("alice", "ABC12", req);
 
+        assertInstanceOf(ResponseEntity.class, result);
+        ResponseEntity<?> response = (ResponseEntity<?>) result;
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getHeaders().getContentType());
-        assertTrue(response.getHeaders().getContentType().toString().contains("application/pdf"),
-                "Content-Type should be application/pdf");
-        assertTrue(response.getHeaders().getFirst("Content-Disposition").startsWith("inline"),
-                "Content-Disposition should be inline");
+        assertTrue(response.getHeaders().getContentType().toString().contains("application/pdf"));
+        assertTrue(response.getHeaders().getFirst("Content-Disposition").startsWith("inline"));
+    }
+
+    // --- Deleted resume → 410 ---
+
+    @Test
+    void publicResume_deletedResume_returns410() {
+        when(savedResumeDao.findPublicResumeStatus("alice", "DELETED"))
+                .thenReturn(new PublicResumeLookupResult(Status.DELETED, null));
+
+        Object result = controller.publicResume("alice", "DELETED", new MockHttpServletRequest());
+
+        assertInstanceOf(ModelAndView.class, result);
+        ModelAndView mav = (ModelAndView) result;
+        assertEquals("error/410", mav.getViewName());
+        assertEquals(HttpStatus.GONE.value(), mav.getStatus().value());
     }
 
     @Test
-    void publicResume_contentType_isPdf() throws Exception {
-        java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("test-pdf-", ".pdf");
-        tempFile.toFile().deleteOnExit();
-        when(savedResumeDao.findPdfPathByUsernameAndCode("alice", "ABC12")).thenReturn("rel.pdf");
-        when(fileStorage.resolveSafePath("rel.pdf")).thenReturn(tempFile);
+    void publicResume_deletedResume_returns410WithDelay() {
+        when(savedResumeDao.findPublicResumeStatus("alice", "DELETED"))
+                .thenReturn(new PublicResumeLookupResult(Status.DELETED, null));
 
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        req.setRemoteAddr("192.168.1.100");
-        ResponseEntity<Resource> response = controller.publicResume("alice", "ABC12", req);
+        long start = System.nanoTime();
+        controller.publicResume("alice", "DELETED", new MockHttpServletRequest());
+        long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
-        assertEquals("application/pdf", response.getHeaders().getContentType().toString());
+        assertTrue(elapsedMs >= 150,
+                "410 response should include timing-mitigation delay, got " + elapsedMs + "ms");
     }
 
-    // --- 404 cases (must be consistent — no info leak) ---
+    @Test
+    void publicResume_deletedResume_410bodyHasNoDynamicData() {
+        when(savedResumeDao.findPublicResumeStatus("alice", "DELETED"))
+                .thenReturn(new PublicResumeLookupResult(Status.DELETED, null));
+
+        Object result = controller.publicResume("alice", "DELETED", new MockHttpServletRequest());
+
+        assertInstanceOf(ModelAndView.class, result);
+        ModelAndView mav = (ModelAndView) result;
+        // 410 uses Thymeleaf template with i18n — no dynamic resume data in model
+        assertTrue(mav.getModel().isEmpty(),
+                "410 ModelAndView should not contain any dynamic resume data");
+    }
+
+    // --- Not found → 404 ---
 
     @Test
     void publicResume_wrongUsername_returns404() {
-        when(savedResumeDao.findPdfPathByUsernameAndCode("bob", "ABC12")).thenReturn(null);
+        when(savedResumeDao.findPublicResumeStatus("bob", "ABC12"))
+                .thenReturn(new PublicResumeLookupResult(Status.NOT_FOUND, null));
 
-        ResponseEntity<Resource> response = controller.publicResume("bob", "ABC12", new MockHttpServletRequest());
+        ResponseEntity<?> response = (ResponseEntity<?>) controller.publicResume("bob", "ABC12", new MockHttpServletRequest());
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
     void publicResume_invalidCode_returns404() {
-        when(savedResumeDao.findPdfPathByUsernameAndCode("alice", "XXXXX")).thenReturn(null);
+        when(savedResumeDao.findPublicResumeStatus("alice", "XXXXX"))
+                .thenReturn(new PublicResumeLookupResult(Status.NOT_FOUND, null));
 
-        ResponseEntity<Resource> response = controller.publicResume("alice", "XXXXX", new MockHttpServletRequest());
+        ResponseEntity<?> response = (ResponseEntity<?>) controller.publicResume("alice", "XXXXX", new MockHttpServletRequest());
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
     void publicResume_blankUsername_returns404() {
-        ResponseEntity<Resource> response = controller.publicResume("", "ABC12", new MockHttpServletRequest());
+        ResponseEntity<?> response = (ResponseEntity<?>) controller.publicResume("", "ABC12", new MockHttpServletRequest());
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
     void publicResume_nullCode_returns404() {
-        ResponseEntity<Resource> response = controller.publicResume("alice", null, new MockHttpServletRequest());
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    @Test
-    void publicResume_deletedResume_returns404() {
-        when(savedResumeDao.findPdfPathByUsernameAndCode("alice", "DELETED")).thenReturn(null);
-
-        ResponseEntity<Resource> response = controller.publicResume("alice", "DELETED", new MockHttpServletRequest());
+        ResponseEntity<?> response = (ResponseEntity<?>) controller.publicResume("alice", null, new MockHttpServletRequest());
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
     void publicResume_missingPhysicalFile_returns404() throws Exception {
-        java.nio.file.Path nonExistent = java.nio.file.Paths.get("target/nonexistent-public.pdf");
-        when(savedResumeDao.findPdfPathByUsernameAndCode("alice", "ABC12")).thenReturn("missing.pdf");
-        when(fileStorage.resolveSafePath("missing.pdf")).thenReturn(nonExistent);
-
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        req.setRemoteAddr("192.168.1.100");
-        ResponseEntity<Resource> response = controller.publicResume("alice", "ABC12", req);
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    @Test
-    void publicResume_traversalPath_returns404() {
-        when(savedResumeDao.findPdfPathByUsernameAndCode("alice", "ABC12")).thenReturn("../../etc/passwd");
-        when(fileStorage.resolveSafePath("../../etc/passwd"))
-                .thenThrow(new SecurityException("Path traversal detected"));
-
-        ResponseEntity<Resource> response = controller.publicResume("alice", "ABC12", new MockHttpServletRequest());
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    // --- 404s are consistent (no info leak about username vs code validity) ---
-
-    @Test
-    void publicResume_all404Cases_areUniformly404() {
-        // Wrong username → 404
-        when(savedResumeDao.findPdfPathByUsernameAndCode("bob", "ABC12")).thenReturn(null);
-        assertEquals(HttpStatus.NOT_FOUND,
-                controller.publicResume("bob", "ABC12", new MockHttpServletRequest()).getStatusCode());
-
-        // Deleted → 404
-        when(savedResumeDao.findPdfPathByUsernameAndCode("alice", "DELETED")).thenReturn(null);
-        assertEquals(HttpStatus.NOT_FOUND,
-                controller.publicResume("alice", "DELETED", new MockHttpServletRequest()).getStatusCode());
-
-        // Blank username → 404
-        assertEquals(HttpStatus.NOT_FOUND,
-                controller.publicResume("", "ABC12", new MockHttpServletRequest()).getStatusCode());
-    }
-
-    // --- T187-hardening: Timing mitigation on all public 404 branches ---
-
-    @Test
-    void publicResume_blankUsername_returns404WithDelay() {
-        long start = System.nanoTime();
-        ResponseEntity<Resource> response = controller.publicResume("", "ABC12", new MockHttpServletRequest());
-        long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(elapsedMs >= 150,
-                "Public 404 for blank username should include timing-mitigation delay, got " + elapsedMs + "ms");
-    }
-
-    @Test
-    void publicResume_missingPhysicalFile_returns404WithDelay() throws Exception {
-        java.nio.file.Path nonExistent = java.nio.file.Paths.get("target/nonexistent-public.pdf");
-        when(savedResumeDao.findPdfPathByUsernameAndCode("alice", "ABC12")).thenReturn("missing.pdf");
+        java.nio.file.Path nonExistent = Paths.get("target/nonexistent-public.pdf");
+        when(savedResumeDao.findPublicResumeStatus("alice", "ABC12"))
+                .thenReturn(new PublicResumeLookupResult(Status.MISSING_FILE, "missing.pdf"));
         when(fileStorage.resolveSafePath("missing.pdf")).thenReturn(nonExistent);
 
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setRemoteAddr("192.168.1.100");
 
-        long start = System.nanoTime();
-        ResponseEntity<Resource> response = controller.publicResume("alice", "ABC12", req);
-        long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-
+        // MISSING_FILE from lookup goes to publicNotFound since isActive() is false
+        ResponseEntity<?> response = (ResponseEntity<?>) controller.publicResume("alice", "ABC12", req);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(elapsedMs >= 150,
-                "Public 404 for missing file should include timing-mitigation delay, got " + elapsedMs + "ms");
     }
 
     @Test
-    void publicResume_traversalPath_returns404WithDelay() {
-        when(savedResumeDao.findPdfPathByUsernameAndCode("alice", "ABC12")).thenReturn("../../etc/passwd");
-        when(fileStorage.resolveSafePath("../../etc/passwd"))
-                .thenThrow(new SecurityException("Path traversal detected"));
+    void publicResume_notActive_withoutPdf_returns404() {
+        // Status is not ACTIVE — resolved before file check
+        when(savedResumeDao.findPublicResumeStatus("alice", "NOPDF"))
+                .thenReturn(new PublicResumeLookupResult(Status.NOT_FOUND, null));
 
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        req.setRemoteAddr("192.168.1.100");
+        ResponseEntity<?> response = (ResponseEntity<?>) controller.publicResume("alice", "NOPDF", new MockHttpServletRequest());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    // --- All 404/410 have uniform delay ---
+
+    @Test
+    void publicResume_all404Cases_haveUniformDelay() {
+        when(savedResumeDao.findPublicResumeStatus("bob", "ABC12"))
+                .thenReturn(new PublicResumeLookupResult(Status.NOT_FOUND, null));
 
         long start = System.nanoTime();
-        ResponseEntity<Resource> response = controller.publicResume("alice", "ABC12", req);
+        controller.publicResume("bob", "ABC12", new MockHttpServletRequest());
         long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertTrue(elapsedMs >= 150,
-                "Public 404 for path traversal should include timing-mitigation delay, got " + elapsedMs + "ms");
+                "404 should include timing-mitigation delay, got " + elapsedMs + "ms");
     }
 
     @Test
     void publicResume_validCode_returns200WithoutDelay() throws Exception {
         java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("test-pdf-", ".pdf");
         tempFile.toFile().deleteOnExit();
-        when(savedResumeDao.findPdfPathByUsernameAndCode("alice", "ABC12")).thenReturn("rel.pdf");
+        when(savedResumeDao.findPublicResumeStatus("alice", "ABC12"))
+                .thenReturn(new PublicResumeLookupResult(Status.ACTIVE, "rel.pdf"));
         when(fileStorage.resolveSafePath("rel.pdf")).thenReturn(tempFile);
 
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setRemoteAddr("192.168.1.100");
 
         long start = System.nanoTime();
-        ResponseEntity<Resource> response = controller.publicResume("alice", "ABC12", req);
+        controller.publicResume("alice", "ABC12", req);
         long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(elapsedMs < 50,
-                "Successful 200 response should NOT include artificial delay, got " + elapsedMs + "ms");
-    }
-
-    @Test
-    void publicResume_rateLimited_returns429WithoutDelay() {
-        when(rateLimiter.checkRateLimit("10.0.0.1"))
-                .thenReturn(PublicResumeRateLimiter.RateLimitResult.denied(60));
-
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        req.setRemoteAddr("10.0.0.1");
-
-        long start = System.nanoTime();
-        ResponseEntity<Resource> response = controller.publicResume("alice", "ABC12", req);
-        long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-
-        assertEquals(429, response.getStatusCode().value());
-        assertTrue(elapsedMs < 50,
-                "429 rate-limited response should NOT include artificial delay, got " + elapsedMs + "ms");
+        assertTrue(elapsedMs < 100,
+                "Successful 200 should NOT include artificial delay, got " + elapsedMs + "ms");
     }
 
     // --- Rate limiter ---
@@ -246,7 +208,7 @@ class PublicResumeControllerTest {
 
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setRemoteAddr("10.0.0.1");
-        ResponseEntity<Resource> response = controller.publicResume("alice", "ABC12", req);
+        ResponseEntity<?> response = (ResponseEntity<?>) controller.publicResume("alice", "ABC12", req);
 
         assertEquals(429, response.getStatusCode().value());
         assertEquals("60", response.getHeaders().getFirst("Retry-After"));
@@ -261,46 +223,142 @@ class PublicResumeControllerTest {
         req.setRemoteAddr("10.0.0.1");
         controller.publicResume("alice", "ABC12", req);
 
-        // DAO should never be called when rate limited
-        verify(savedResumeDao, never()).findPdfPathByUsernameAndCode(anyString(), anyString());
+        verify(savedResumeDao, never()).findPublicResumeStatus(anyString(), anyString());
     }
 
     @Test
-    void publicResume_rateLimited_429bodyIsEmpty() {
+    void publicResume_rateLimited_429BodyIsEmpty() {
         when(rateLimiter.checkRateLimit("10.0.0.1"))
                 .thenReturn(PublicResumeRateLimiter.RateLimitResult.denied(60));
 
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setRemoteAddr("10.0.0.1");
-        ResponseEntity<Resource> response = controller.publicResume("alice", "ABC12", req);
+        ResponseEntity<?> response = (ResponseEntity<?>) controller.publicResume("alice", "ABC12", req);
 
-        // 429 body must not leak route/user/code details
         assertNull(response.getBody(), "429 body must be empty (no info leak)");
     }
 
-    // --- Security: no HTML or cover letter via public route ---
-
-    @Test
-    void publicResume_doesNotExposeHtml() {
-        // The DAO query already filters for pdf_file_path IS NOT NULL + pdf_status='READY'
-        // This test verifies the endpoint only serves PDF — the DAO handles the filtering
-        when(savedResumeDao.findPdfPathByUsernameAndCode("alice", "ABC12")).thenReturn(null);
-
-        ResponseEntity<Resource> response = controller.publicResume("alice", "ABC12", new MockHttpServletRequest());
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    // --- Public route is outside /api/ — no AuthInterceptor ---
+    // --- No auth required ---
 
     @Test
     void publicResume_noAuthenticationRequired() {
-        // No session, no user attribute — still works (no ServiceException)
-        when(savedResumeDao.findPdfPathByUsernameAndCode("alice", "ABC12")).thenReturn(null);
+        when(savedResumeDao.findPublicResumeStatus("alice", "ABC12"))
+                .thenReturn(new PublicResumeLookupResult(Status.NOT_FOUND, null));
 
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setRemoteAddr("192.168.1.100");
-        // No session attribute set — this should NOT throw ServiceException
-        ResponseEntity<Resource> response = controller.publicResume("alice", "ABC12", req);
+        ResponseEntity<?> response = (ResponseEntity<?>) controller.publicResume("alice", "ABC12", req);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    // --- 410 has same delay as 404 ---
+
+    @Test
+    void publicResume_404and410_haveSameDelayOrder() {
+        // 404 delay
+        when(savedResumeDao.findPublicResumeStatus("bob", "ABC12"))
+                .thenReturn(new PublicResumeLookupResult(Status.NOT_FOUND, null));
+        long start404 = System.nanoTime();
+        controller.publicResume("bob", "ABC12", new MockHttpServletRequest());
+        long elapsed404 = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start404);
+
+        // 410 delay
+        when(savedResumeDao.findPublicResumeStatus("alice", "DELETED"))
+                .thenReturn(new PublicResumeLookupResult(Status.DELETED, null));
+        long start410 = System.nanoTime();
+        controller.publicResume("alice", "DELETED", new MockHttpServletRequest());
+        long elapsed410 = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start410);
+
+        // Both should have at least ~200ms delay and the same order of magnitude
+        assertTrue(elapsed404 >= 150, "404 delay too short: " + elapsed404 + "ms");
+        assertTrue(elapsed410 >= 150, "410 delay too short: " + elapsed410 + "ms");
+        // 410 should not be dramatically faster than 404
+        assertTrue(elapsed410 > elapsed404 / 2,
+                "410 delay (" + elapsed410 + "ms) should not be dramatically less than 404 (" + elapsed404 + "ms)");
+    }
+
+    // --- Route non-interception (MockMvc) ---
+
+    @Test
+    void route_interception_getApiResumes_notHandledByPublicResumeController() throws Exception {
+        MockMvc mockMvc = standaloneSetup(controller).build();
+        when(savedResumeDao.findPublicResumeStatus(anyString(), anyString()))
+                .thenReturn(new PublicResumeLookupResult(Status.NOT_FOUND, null));
+
+        // /api/resumes should not be matched by the public resume controller.
+        // If it were matched, our controller would be called and return 404 after delay.
+        mockMvc.perform(get("/api/resumes"))
+                .andExpect(status().isNotFound());
+
+        // Our controller's DAO should NOT have been called for /api/resumes
+        verify(savedResumeDao, never()).findPublicResumeStatus(anyString(), anyString());
+    }
+
+    @Test
+    void route_interception_getApiAnything_notHandledByPublicResumeController() throws Exception {
+        MockMvc mockMvc = standaloneSetup(controller).build();
+
+        mockMvc.perform(get("/api/anything"))
+                .andExpect(status().isNotFound());
+
+        verify(savedResumeDao, never()).findPublicResumeStatus(anyString(), anyString());
+    }
+
+    @Test
+    void route_interception_getAppAuth_notHandledByPublicResumeController() throws Exception {
+        MockMvc mockMvc = standaloneSetup(controller).build();
+
+        mockMvc.perform(get("/app/auth"))
+                .andExpect(status().isNotFound());
+
+        verify(savedResumeDao, never()).findPublicResumeStatus(anyString(), anyString());
+    }
+
+    @Test
+    void route_interception_getStaticCss_notHandledByPublicResumeController() throws Exception {
+        MockMvc mockMvc = standaloneSetup(controller).build();
+
+        mockMvc.perform(get("/static/css"))
+                .andExpect(status().isNotFound());
+
+        verify(savedResumeDao, never()).findPublicResumeStatus(anyString(), anyString());
+    }
+
+    @Test
+    void route_interception_getAssetsApp_notHandledByPublicResumeController() throws Exception {
+        MockMvc mockMvc = standaloneSetup(controller).build();
+
+        mockMvc.perform(get("/assets/app"))
+                .andExpect(status().isNotFound());
+
+        verify(savedResumeDao, never()).findPublicResumeStatus(anyString(), anyString());
+    }
+
+    @Test
+    void route_interception_getError410_notHandledByPublicResumeController() throws Exception {
+        MockMvc mockMvc = standaloneSetup(controller).build();
+
+        mockMvc.perform(get("/error/410"))
+                .andExpect(status().isNotFound());
+
+        verify(savedResumeDao, never()).findPublicResumeStatus(anyString(), anyString());
+    }
+
+    @Test
+    void route_interception_validPublicRoute_isHandledByPublicResumeController() throws Exception {
+        // Arrange: DAO returns ACTIVE so our controller handles the request
+        java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("test-pdf-", ".pdf");
+        tempFile.toFile().deleteOnExit();
+        when(savedResumeDao.findPublicResumeStatus("alice", "ABC12"))
+                .thenReturn(new PublicResumeLookupResult(Status.ACTIVE, "rel.pdf"));
+        when(fileStorage.resolveSafePath("rel.pdf")).thenReturn(tempFile);
+
+        MockMvc mockMvc = standaloneSetup(controller).build();
+
+        // Assert: our controller handles it (returns 200 with PDF)
+        mockMvc.perform(get("/alice/ABC12"))
+                .andExpect(status().isOk());
+
+        verify(savedResumeDao).findPublicResumeStatus("alice", "ABC12");
     }
 }

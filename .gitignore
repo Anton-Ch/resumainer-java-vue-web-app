@@ -29,6 +29,7 @@ Desktop.ini
 .env
 .env.*
 !.env.example
+!docker/.env.example
 docker/.env
 
 # Python (from GitHub Python.gitignore template)

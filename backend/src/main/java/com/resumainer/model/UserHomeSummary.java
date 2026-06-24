@@ -1,5 +1,7 @@
 package com.resumainer.model;
 
+import com.resumainer.dto.home.HomeSavedResumeDto;
+
 /**
  * Response DTO for GET /api/user/home endpoint.
  * Aggregates profile readiness status, checklist state,
@@ -10,7 +12,9 @@ public class UserHomeSummary {
     private boolean profileReady;
     private ProfileChecklist profileChecklist;
     private Summary summary;
-    private SavedResume lastResume;
+    // Root-level lastResume — temporary backward compatibility for existing frontend.
+    // New frontend MUST use summary.lastResume instead. Remove root-level after frontend migration.
+    private HomeSavedResumeDto lastResume;
 
     public UserHomeSummary() {
     }
@@ -39,11 +43,11 @@ public class UserHomeSummary {
         this.summary = summary;
     }
 
-    public SavedResume getLastResume() {
+    public HomeSavedResumeDto getLastResume() {
         return lastResume;
     }
 
-    public void setLastResume(SavedResume lastResume) {
+    public void setLastResume(HomeSavedResumeDto lastResume) {
         this.lastResume = lastResume;
     }
 
@@ -83,6 +87,7 @@ public class UserHomeSummary {
         private long savedResumesCount;
         private String profileStatus;
         private Long lastResumeId;
+        private HomeSavedResumeDto lastResume;  // Feature 009: canonical DTO under summary
 
         public Summary() {
         }
@@ -99,5 +104,7 @@ public class UserHomeSummary {
         public void setProfileStatus(String profileStatus) { this.profileStatus = profileStatus; }
         public Long getLastResumeId() { return lastResumeId; }
         public void setLastResumeId(Long lastResumeId) { this.lastResumeId = lastResumeId; }
+        public HomeSavedResumeDto getLastResume() { return lastResume; }
+        public void setLastResume(HomeSavedResumeDto lastResume) { this.lastResume = lastResume; }
     }
 }

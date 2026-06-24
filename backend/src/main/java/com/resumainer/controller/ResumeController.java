@@ -1,8 +1,8 @@
 package com.resumainer.controller;
 
 import com.resumainer.dto.UserSession;
+import com.resumainer.dto.home.HomeSavedResumeDto;
 import com.resumainer.model.PagedResponse;
-import com.resumainer.model.SavedResume;
 import com.resumainer.service.ResumeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
@@ -44,8 +45,9 @@ public class ResumeController {
      * @return paginated response with resume items
      */
     @GetMapping
-    public ResponseEntity<PagedResponse<SavedResume>> listResumes(
+    public ResponseEntity<PagedResponse<HomeSavedResumeDto>> listResumes(
             @SessionAttribute(value = "user", required = false) UserSession userSession,
+            HttpServletRequest request,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String language,
             @RequestParam(required = false) String adaptationLevel,
@@ -63,8 +65,8 @@ public class ResumeController {
         log.debug("listResumes: userId={}, search={}, page={}, size={}", userSession.getUserId(), search, page, size);
 
         try {
-            PagedResponse<SavedResume> result = resumeService.listResumes(
-                    userSession.getUserId(), search, language, adaptationLevel,
+            PagedResponse<HomeSavedResumeDto> result = resumeService.listResumes(
+                    userSession.getUserId(), request, search, language, adaptationLevel,
                     createdDate, dateFrom, dateTo, sort, page, size);
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
@@ -98,12 +100,14 @@ public class ResumeController {
             boolean deleted = resumeService.deleteResume(userSession.getUserId(), id);
             if (deleted) {
                 return ResponseEntity.ok(Map.of("message", "Resume deleted"));
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
+            // Non-owned and non-existent: same generic response (SEC-003)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "Failed to delete resume."));
         } catch (Exception e) {
             log.error("Error deleting resume {} for user {}: {}", id, userSession.getUserId(), e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to delete resume."));
         }
     }
 }

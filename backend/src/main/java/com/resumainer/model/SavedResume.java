@@ -21,6 +21,10 @@ public class SavedResume {
     private String coverLetter;
     private String pdfStatus;        // Feature 008: PENDING, GENERATING, READY, FAILED
     private Integer pdfPageCount;   // Feature 008: boxed Integer per B9 guard
+    private String username;         // Feature 009: for building publicUrlLink
+    private String publicCode;       // Feature 009: for building publicUrlLink
+    private boolean pdfFilePresent;  // Feature 009: pdf_file_path IS NOT NULL
+    private boolean htmlFilePresent; // Feature 009: html_file_path IS NOT NULL
 
     public SavedResume() {
     }
@@ -109,4 +113,12 @@ public class SavedResume {
     public void setPdfStatus(String pdfStatus) { this.pdfStatus = pdfStatus; }
     public Integer getPdfPageCount() { return pdfPageCount; }
     public void setPdfPageCount(Integer pdfPageCount) { this.pdfPageCount = pdfPageCount; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public String getPublicCode() { return publicCode; }
+    public void setPublicCode(String publicCode) { this.publicCode = publicCode; }
+    public boolean isPdfFilePresent() { return pdfFilePresent; }
+    public void setPdfFilePresent(boolean pdfFilePresent) { this.pdfFilePresent = pdfFilePresent; }
+    public boolean isHtmlFilePresent() { return htmlFilePresent; }
+    public void setHtmlFilePresent(boolean htmlFilePresent) { this.htmlFilePresent = htmlFilePresent; }
 }

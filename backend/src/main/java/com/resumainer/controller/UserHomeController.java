@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 /**
  * REST controller for the User Home summary endpoint.
  * <p>
@@ -31,11 +33,13 @@ public class UserHomeController {
      * Get the home summary for the authenticated user.
      *
      * @param userSession the authenticated user session
+     * @param request     the HTTP request (for public URL resolution)
      * @return 200 with UserHomeSummary, or 401 if not authenticated
      */
     @GetMapping("/home")
     public ResponseEntity<UserHomeSummary> getHomeSummary(
-            @SessionAttribute(value = "user", required = false) UserSession userSession) {
+            @SessionAttribute(value = "user", required = false) UserSession userSession,
+            HttpServletRequest request) {
 
         if (userSession == null) {
             log.warn("getHomeSummary called without valid session");
@@ -45,7 +49,7 @@ public class UserHomeController {
         log.debug("getHomeSummary: userId={}", userSession.getUserId());
 
         try {
-            UserHomeSummary summary = userHomeService.getHomeSummary(userSession.getUserId());
+            UserHomeSummary summary = userHomeService.getHomeSummary(userSession.getUserId(), request);
             return ResponseEntity.ok(summary);
         } catch (Exception e) {
             log.error("Error getting home summary for user {}: {}", userSession.getUserId(), e.getMessage());

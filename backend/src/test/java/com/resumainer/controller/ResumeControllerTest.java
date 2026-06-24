@@ -2,9 +2,10 @@ package com.resumainer.controller;
 
 import com.resumainer.dto.UserSession;
 import com.resumainer.exception.GlobalExceptionHandler;
+import com.resumainer.dto.home.HomeSavedResumeDto;
 import com.resumainer.model.PagedResponse;
-import com.resumainer.model.SavedResume;
 import com.resumainer.service.ResumeService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,12 +22,14 @@ class ResumeControllerTest {
 
     private MockMvc mockMvc;
     private ResumeService resumeService;
+    private HttpServletRequest request;
     private UUID userId;
     private UserSession userSession;
 
     @BeforeEach
     void setUp() {
         resumeService = mock(ResumeService.class);
+        request = mock(HttpServletRequest.class);
         ResumeController controller = new ResumeController(resumeService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -37,9 +40,9 @@ class ResumeControllerTest {
 
     @Test
     void listResumes_returnsPagedResponse() throws Exception {
-        List<SavedResume> items = List.of(new SavedResume(), new SavedResume());
-        PagedResponse<SavedResume> response = new PagedResponse<>(items, 0, 10, 2);
-        when(resumeService.listResumes(eq(userId), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq("createdAt,desc"), eq(0), eq(10)))
+        List<HomeSavedResumeDto> items = List.of(new HomeSavedResumeDto(), new HomeSavedResumeDto());
+        PagedResponse<HomeSavedResumeDto> response = new PagedResponse<>(items, 0, 10, 2);
+        when(resumeService.listResumes(eq(userId), any(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq("createdAt,desc"), eq(0), eq(10)))
                 .thenReturn(response);
 
         mockMvc.perform(get("/api/resumes")
@@ -55,7 +58,7 @@ class ResumeControllerTest {
 
     @Test
     void listResumes_withSearch_returnsFiltered() throws Exception {
-        when(resumeService.listResumes(eq(userId), eq("analyst"), isNull(), isNull(), isNull(), isNull(), isNull(), anyString(), anyInt(), anyInt()))
+        when(resumeService.listResumes(eq(userId), any(), eq("analyst"), isNull(), isNull(), isNull(), isNull(), isNull(), anyString(), anyInt(), anyInt()))
                 .thenReturn(new PagedResponse<>(List.of(), 0, 10, 0));
 
         mockMvc.perform(get("/api/resumes")
@@ -66,7 +69,7 @@ class ResumeControllerTest {
 
     @Test
     void listResumes_withLanguageFilter() throws Exception {
-        when(resumeService.listResumes(eq(userId), isNull(), eq("EN,RU"), isNull(), isNull(), isNull(), isNull(), anyString(), anyInt(), anyInt()))
+        when(resumeService.listResumes(eq(userId), any(), isNull(), eq("EN,RU"), isNull(), isNull(), isNull(), isNull(), anyString(), anyInt(), anyInt()))
                 .thenReturn(new PagedResponse<>(List.of(), 0, 10, 0));
 
         mockMvc.perform(get("/api/resumes")
@@ -77,7 +80,7 @@ class ResumeControllerTest {
 
     @Test
     void listResumes_withInvalidSize_returns400() throws Exception {
-        when(resumeService.listResumes(eq(userId), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), anyString(), eq(0), eq(7)))
+        when(resumeService.listResumes(eq(userId), any(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), anyString(), eq(0), eq(7)))
                   .thenThrow(new IllegalArgumentException("Invalid size"));
 
         mockMvc.perform(get("/api/resumes")
@@ -114,12 +117,23 @@ class ResumeControllerTest {
 
         mockMvc.perform(delete("/api/resumes/999")
                         .sessionAttr("user", userSession))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Failed to delete resume."));
+    }
+
+    @Test
+    void deleteResume_notOwned_returnsSameAsNotFound() throws Exception {
+        when(resumeService.deleteResume(userId, 1L)).thenReturn(false);
+
+        mockMvc.perform(delete("/api/resumes/1")
+                        .sessionAttr("user", userSession))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Failed to delete resume."));
     }
 
     @Test
     void listResumes_internalError_returns500() throws Exception {
-        when(resumeService.listResumes(any(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), anyString(), anyInt(), anyInt()))
+        when(resumeService.listResumes(any(), any(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), anyString(), anyInt(), anyInt()))
                 .thenThrow(new RuntimeException("Unexpected error"));
 
         mockMvc.perform(get("/api/resumes")
@@ -133,6 +147,7 @@ class ResumeControllerTest {
 
         mockMvc.perform(delete("/api/resumes/1")
                         .sessionAttr("user", userSession))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("Failed to delete resume."));
     }
 }
