@@ -3,8 +3,10 @@
  *
  * Fetches paginated saved resumes from GET /api/resumes
  * and soft-deletes via DELETE /api/resumes/{id}.
+ * Uses httpClient for automatic CSRF token handling.
  */
 import type { SavedResumeData } from './userHomeService'
+import { apiRequest } from './httpClient'
 
 export interface PagedResponse {
   items: SavedResumeData[]
@@ -41,15 +43,9 @@ export async function fetchResumes(params: ResumeQueryParams = {}): Promise<Page
   const qs = query.toString()
   const url = `/api/resumes${qs ? '?' + qs : ''}`
 
-  const res = await fetch(url, { credentials: 'include' })
-  if (!res.ok) throw new Error('Failed to fetch resumes')
-  return res.json()
+  return apiRequest<PagedResponse>(url)
 }
 
 export async function deleteResume(id: number): Promise<void> {
-  const res = await fetch(`/api/resumes/${id}`, {
-    method: 'DELETE',
-    credentials: 'include'
-  })
-  if (!res.ok) throw new Error('Failed to delete resume')
+  await apiRequest<void>(`/api/resumes/${id}`, { method: 'DELETE' })
 }
