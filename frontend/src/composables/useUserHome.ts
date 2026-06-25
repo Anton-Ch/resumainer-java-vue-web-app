@@ -31,6 +31,7 @@ export function useUserHome() {
   // --- Selected resume for modal ---
   const selectedResume = ref<SavedResumeData | null>(null)
   const modalVisible = ref(false)
+  const deleteLoading = ref(false)
 
   /**
    * Fetch both summary and resumes independently (FR-046).
@@ -128,15 +129,21 @@ export function useUserHome() {
 
   /**
    * Delete a resume, refresh both blocks, show toast.
+   * Manages deleteLoading so dialog can retry on failure.
    */
   async function handleDelete(resumeId: number) {
+    if (deleteLoading.value) return
+
+    deleteLoading.value = true
     try {
       await apiDeleteResume(resumeId)
       toast.add({ severity: 'success', summary: '', detail: t('deleteResume.success'), life: 3000 })
       closeModal()
       await refresh()
     } catch (e: any) {
-      toast.add({ severity: 'error', summary: '', detail: e.message || 'Delete failed', life: 3000 })
+      toast.add({ severity: 'error', summary: '', detail: t('deleteResume.failed'), life: 3000 })
+    } finally {
+      deleteLoading.value = false
     }
   }
 
@@ -151,6 +158,7 @@ export function useUserHome() {
     queryParams,
     selectedResume,
     modalVisible,
+    deleteLoading,
     fetchAll,
     loadSummary,
     loadResumes,
