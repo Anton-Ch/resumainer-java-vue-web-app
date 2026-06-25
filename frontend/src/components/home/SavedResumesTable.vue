@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="saved-resumes-table">
     <div class="table-toolbar">
       <div class="search-field">
         <i class="pi pi-search"></i>
@@ -401,6 +401,13 @@ function sortTooltip(field: string): string {
   margin: 0;
   color: #5D718B;
   font-size: 0.9rem;
+}
+/* Selectable rows: pointer cursor + hover highlight (FR-003) */
+.saved-resumes-table :deep(tr[data-p-selectable-row="true"]) {
+  cursor: pointer;
+}
+.saved-resumes-table :deep(tr[data-p-selectable-row="true"]:hover) {
+  background-color: #F3F4F6;
 }
 @media (max-width: 640px) {
   .table-toolbar {

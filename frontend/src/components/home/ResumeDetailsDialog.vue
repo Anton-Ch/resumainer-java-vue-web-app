@@ -8,6 +8,7 @@
     :closable="true"
   >
     <template v-if="resume">
+      <!-- Metadata grid -->
       <div class="detail-grid">
         <div class="detail-field">
           <div class="detail-label">{{ $t('home.table.resumeTitle') }}</div>
@@ -35,33 +36,90 @@
         </div>
       </div>
 
+      <!-- Public link row -->
       <div v-if="resume.publicUrlLink" class="public-link-row">
         <i class="pi pi-link" style="color: #8091A7; font-size: 0.9rem;"></i>
         <span class="link-text">{{ resume.publicUrlLink }}</span>
         <Button :label="$t('resumeDetails.copyLink')" icon="pi pi-copy" class="p-button-text p-button-sm" @click="onCopyLink" />
       </div>
 
+      <!-- PDF unavailable message (with i18n fallback if pdfMessage is null) -->
+      <div v-if="resume.pdfAvailable === false" class="pdf-unavailable-msg">
+        <i class="pi pi-exclamation-triangle" style="color: #D97706;"></i>
+        <span>{{ resume.pdfMessage || $t('resumeDetails.pdfNotAvailable') }}</span>
+      </div>
+
+      <!-- Cover letter -->
       <Accordion :activeIndex="coverLetterOpen ? 0 : undefined">
         <AccordionTab :header="$t('resumeDetails.coverLetter')">
           <template v-if="resume.coverLetter">
-            <p class="cover-letter-text">{{ resume.coverLetter }}</p>
-            <Button :label="$t('resumeDetails.copyCoverLetter')" icon="pi pi-copy" class="p-button-text p-button-sm" @click="onCopyCoverLetter" />
+            <div class="cover-letter-content">
+              <p v-if="!coverLetterExpanded && resume.coverLetter.length > 150" class="cover-letter-text">
+                {{ resume.coverLetter.substring(0, 150) }}...
+              </p>
+              <p v-else class="cover-letter-text">{{ resume.coverLetter }}</p>
+              <div class="cover-letter-actions">
+                <Button
+                  v-if="resume.coverLetter.length > 150"
+                  :label="coverLetterExpanded ? $t('resumeDetails.hideFullCoverLetter') : $t('resumeDetails.showFullCoverLetter')"
+                  icon="pi pi-chevron-down"
+                  :icon-rotation="coverLetterExpanded ? 180 : 0"
+                  class="p-button-text p-button-sm"
+                  @click="coverLetterExpanded = !coverLetterExpanded"
+                />
+                <Button
+                  :label="$t('resumeDetails.copyCoverLetter')"
+                  icon="pi pi-copy"
+                  class="p-button-text p-button-sm"
+                  @click="onCopyCoverLetter"
+                />
+              </div>
+            </div>
           </template>
-          <p v-else style="color: #5D718B; font-size: 0.9rem;">{{ $t('resumeDetails.noCoverLetter') }}</p>
+          <p v-else class="empty-state-text">{{ $t('resumeDetails.noCoverLetter') }}</p>
         </AccordionTab>
       </Accordion>
 
-      <div v-if="resume.pdfAvailable !== false" class="modal-actions">
-        <Button :label="$t('resumeDetails.view')" icon="pi pi-external-link" class="p-button-success" @click="viewResume" :disabled="!resume.pdfAvailable" />
-        <Button :label="$t('resumeDetails.downloadPdf')" icon="pi pi-download" class="p-button-success p-button-outlined" @click="downloadPdf" :disabled="!resume.pdfAvailable" />
-        <Button :label="$t('resumeDetails.delete')" icon="pi pi-trash" class="p-button-danger p-button-outlined" style="margin-left: auto;" @click="confirmDelete" />
+      <!-- Action buttons (always visible) -->
+      <div class="modal-actions">
+        <div class="pdf-actions">
+          <Button
+            :label="$t('resumeDetails.view')"
+            icon="pi pi-external-link"
+            class="p-button-success"
+            @click="viewResume"
+            :disabled="!resume.pdfAvailable"
+          />
+          <Button
+            :label="$t('resumeDetails.downloadPdf')"
+            icon="pi pi-download"
+            class="p-button-success p-button-outlined"
+            @click="downloadPdf"
+            :disabled="!resume.pdfAvailable"
+          />
+          <Button
+            v-if="resume.htmlDownloadUrl"
+            :label="$t('resumeDetails.downloadHtml')"
+            icon="pi pi-code"
+            class="p-button-success p-button-outlined"
+            @click="downloadHtml"
+          />
+        </div>
+        <Button
+          :label="$t('resumeDetails.delete')"
+          icon="pi pi-trash"
+          class="p-button-danger p-button-outlined"
+          :loading="deleteLoading"
+          :disabled="deleteLoading"
+          @click="confirmDelete"
+        />
       </div>
     </template>
   </Dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
@@ -74,6 +132,7 @@ import type { SavedResumeData } from '@/services/userHomeService'
 const props = defineProps<{
   visible: boolean
   resume: SavedResumeData | null
+  deleteLoading?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -86,6 +145,14 @@ const confirm = useConfirm()
 const toast = useToast()
 
 const coverLetterOpen = ref(false)
+const coverLetterExpanded = ref(false)
+
+// Reset cover letter preview when modal opens
+watch(() => props.visible, (newVal) => {
+  if (newVal) {
+    coverLetterExpanded.value = false
+  }
+})
 
 // Computed get/set bridge for v-model:visible (FR-001)
 const visible = computed({
@@ -128,7 +195,17 @@ function downloadPdf() {
   }
 }
 
+function downloadHtml() {
+  if (props.resume?.htmlDownloadUrl) {
+    const a = document.createElement('a')
+    a.href = props.resume.htmlDownloadUrl
+    a.download = `${props.resume.resumeTitle || 'resume'}.html`
+    a.click()
+  }
+}
+
 function confirmDelete() {
+  if (props.deleteLoading) return
   confirm.require({
     header: t('deleteResume.title'),
     message: t('deleteResume.text'),
@@ -138,6 +215,9 @@ function confirmDelete() {
       if (props.resume) {
         emit('delete', props.resume.id)
       }
+    },
+    reject: () => {
+      // Modal remains usable, no action
     }
   })
 }
@@ -179,25 +259,65 @@ function confirmDelete() {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.pdf-unavailable-msg {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #92400E;
+  margin-bottom: 1rem;
+}
+.cover-letter-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 .cover-letter-text {
   font-size: 0.85rem;
   color: #374151;
   line-height: 1.5;
   white-space: pre-wrap;
-  max-height: 200px;
+  max-height: 300px;
   overflow-y: auto;
+}
+.cover-letter-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+.empty-state-text {
+  color: #5D718B;
+  font-size: 0.9rem;
 }
 .modal-actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
   margin-top: 1.25rem;
   padding-top: 1rem;
   border-top: 1px solid #E5E7EB;
 }
+.pdf-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
 @media (max-width: 480px) {
   .detail-grid {
     grid-template-columns: 1fr;
+  }
+  .modal-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .pdf-actions {
+    width: 100%;
+  }
+  .pdf-actions .p-button {
+    flex: 1;
   }
 }
 </style>

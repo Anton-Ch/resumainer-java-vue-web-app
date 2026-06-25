@@ -77,6 +77,7 @@
       <ResumeDetailsDialog
         v-model:visible="modalVisible"
         :resume="selectedResume"
+        :delete-loading="deleteLoading"
         @delete="handleDelete"
       />
     </main>
@@ -108,6 +109,7 @@ const {
   queryParams,
   selectedResume,
   modalVisible,
+  deleteLoading,
   fetchAll,
   loadSummary,
   loadResumes,

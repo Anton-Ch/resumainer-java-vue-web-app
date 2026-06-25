@@ -109,13 +109,17 @@
   "resumeDetails": {
     "title": "Resume details",
     "publicLink": "Public link",
-    "view": "View",
+    "view": "Open PDF",
     "downloadPdf": "Download PDF",
+    "downloadHtml": "Download HTML",
     "copyLink": "Copy link",
     "delete": "Delete",
     "coverLetter": "Cover letter",
     "copyCoverLetter": "Copy cover letter",
-    "noCoverLetter": "No cover letter for this resume.",
+    "noCoverLetter": "Cover letter was not selected in generation settings.",
+    "showFullCoverLetter": "Show full cover letter",
+    "hideFullCoverLetter": "Show less",
+    "pdfNotAvailable": "PDF is being generated. Please try again later.",
     "copied": "Copied.",
     "linkCopied": "Link copied.",
     "coverLetterCopied": "Cover letter copied.",
@@ -126,7 +130,8 @@
     "text": "This resume will no longer be available from your workspace or public link.",
     "cancel": "Cancel",
     "confirm": "Delete",
-    "success": "Resume deleted."
+    "success": "Resume deleted.",
+    "failed": "Failed to delete resume."
   },
   "generate": {
     "title": "Generate Resume",
