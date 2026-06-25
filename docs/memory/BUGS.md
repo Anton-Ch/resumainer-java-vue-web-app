@@ -925,3 +925,29 @@ Code review: look for `ResponseEntity.notFound()` or `ResponseEntity.status(404)
 
 **Where to look next**
 backend/src/main/java/com/resumainer/controller/PublicResumeController.java — `publicNotFound()` method
+
+---
+
+### 2026-06-24 - Dual-flag soft delete must update both is_deleted and deleted_at
+
+**Status**
+Active
+
+**Symptoms**
+A saved resume can be soft-deleted via the Home page (DELETE /api/resumes/{id}) but still be accessible via the public route GET /{username}/{publicCode}. The ResumeDao.softDelete() sets deleted_at = NOW() but does not set is_deleted = TRUE. ResumeDao list queries filter by deleted_at IS NULL (so the list correctly excludes deleted records), but SavedResumeDao public route queries filter by is_deleted = FALSE (so deleted records remain accessible via public URL).
+
+**Root Cause**
+The saved_resumes table has two independent soft-delete flags: is_deleted (boolean) and deleted_at (timestamp). The original softDelete() implementation only updated deleted_at, assuming that was sufficient. However, different query paths use different flags: list queries use deleted_at IS NULL, public route queries use is_deleted = FALSE. Any soft-delete operation must update both flags to ensure consistent exclusion across all query paths.
+
+**Mitigation**
+UPDATE saved_resumes SET is_deleted = TRUE, deleted_at = NOW() WHERE ... — both flags in a single statement.
+
+**Detection**
+- Verify all soft-delete DAO methods set both flags
+- For each query path, verify which flag it filters by
+- Regression test: verify SQL contains both is_deleted = TRUE and deleted_at = NOW()
+- Regression test: verify legacy records with only deleted_at set are also classified as deleted
+
+**Where to look**
+backend/src/main/java/com/resumainer/dao/ResumeDao.java — softDelete() method
+backend/src/main/java/com/resumainer/dao/SavedResumeDao.java — findPublicResumeStatus() for legacy deleted_at check

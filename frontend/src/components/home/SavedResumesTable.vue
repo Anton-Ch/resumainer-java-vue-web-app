@@ -108,7 +108,7 @@
           <span class="p-column-title" v-tooltip.top="sortTooltip('vacancy')">{{ $t('home.table.vacancy') }}</span>
         </template>
         <template #body="{ data }">
-          <span v-tooltip.top="data.vacancy" class="truncate-cell" style="max-width:220px">{{ data.vacancy }}</span>
+          <span v-tooltip.top="data.vacancyTitle" class="truncate-cell" style="max-width:220px">{{ data.vacancyTitle }}</span>
         </template>
       </Column>
       <Column field="company" :sortable="true">
@@ -116,7 +116,7 @@
           <span class="p-column-title" v-tooltip.top="sortTooltip('company')">{{ $t('home.table.company') }}</span>
         </template>
         <template #body="{ data }">
-          <span v-tooltip.top="data.company" class="truncate-cell" style="max-width:200px">{{ data.company }}</span>
+          <span v-tooltip.top="data.companyName" class="truncate-cell" style="max-width:200px">{{ data.companyName }}</span>
         </template>
       </Column>
       <Column field="language" :sortable="true">
@@ -124,7 +124,7 @@
           <span class="p-column-title" v-tooltip.top="sortTooltip('language')">{{ $t('home.table.language') }}</span>
         </template>
         <template #body="{ data }">
-          <Tag :value="data.language === 'EN' ? 'EN' : 'RU'" :severity="data.language === 'EN' ? 'info' : 'success'" />
+          <Tag :value="data.languageCode === 'EN' ? 'EN' : 'RU'" :severity="data.languageCode === 'EN' ? 'info' : 'success'" />
         </template>
       </Column>
       <Column field="adaptationLevel" :sortable="true">
