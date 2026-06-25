@@ -975,3 +975,130 @@ private String validateDisposition(String disposition) {
 
 **Where to look next**
 backend/src/main/java/com/resumainer/controller/GenerateResumeController.java
+
+---
+
+### 2026-06-24 - Delete endpoint must return same generic response for non-owned and non-existent IDs (SEC-003)
+
+**Status**
+Active
+
+**Why this is durable**
+A delete endpoint that distinguishes not found from not owned via different HTTP status codes, response bodies, headers, or timing leaks information about which resource IDs exist in the system. An attacker can enumerate valid resource IDs even when they do not own them.
+
+**Decision**
+All delete failures must return the same HTTP status and the same generic response body. On the backend, the reasons (owner mismatch vs not found vs DB error) are logged server-side, but the client always sees one generic message. This applies to all future endpoints that accept a resource ID and attempt owner-scoped operations.
+
+**Tradeoffs**
+- Gained: No information leakage about which resource IDs exist in the system
+- Made harder: Debugging client-side delete failures requires checking server logs
+- Reconsider: If the endpoint requires different client-side handling for different error types, use a generic error status and include a non-revealing error code that maps to server logs
+
+**Where to look**
+backend/src/main/java/com/resumainer/controller/ResumeController.java — deleteResume() catch blocks return same body
+backend/src/main/java/com/resumainer/service/ResumeService.java — deleteResume() delegation
+
+---
+
+### 2026-06-24 - Checkpoint evidence standard: changed files + assertions + sample + audit
+
+**Status**
+Active
+
+**Why this is durable**
+Claiming completion based on tests green alone is insufficient. Tests can pass for the wrong reasons: they may mock the unit under test, test the wrong behavior, or not cover the production path at all. A checkpoint is only proven when four kinds of evidence are shown together.
+
+**Decision**
+Every checkpoint must produce four kinds of evidence:
+
+1. Changed files list — which files were created, modified, deleted
+2. Exact assertions or test names — not just X tests passed, but the test names that prove each requirement
+3. Sample API response or rendered behavior — a concrete example showing the contract is fulfilled (for UI: screenshot or DOM snapshot; for API: JSON response body)
+4. Negative grep/audit — proof that forbidden legacy fields, routes, or usage patterns are absent
+
+A checkpoint that lacks any of these four is incomplete. Tests green is a prerequisite, not evidence.
+
+**Where to look**
+specs/009-home-modal-fix/tasks.md — checkpoint task definitions
+specs/009-home-modal-fix/plan.md — evidence-first model
+
+---
+
+### 2026-06-24 - Do not mock the unit whose behavior is under test
+
+**Status**
+Active
+
+**Why this is durable**
+Mocking the unit under test makes the test pass trivially without actually verifying real behavior. Common manifestations:
+- If the task is to verify mapper logic, the mapper must not be mocked — use real mapper with mocked dependencies
+- If the task is to verify route mapping, the controller must not be called directly — use MockMvc or equivalent to exercise the full handler mapping
+- If the task is to verify an API contract, checking only the TypeScript interface is insufficient — verify the actual HTTP response shape
+
+**Decision**
+When writing a test, the component whose behavior is under test must be the real implementation, not a mock. Its dependencies may be mocked (e.g., DAO for service test, service for controller test), but the component itself must be instantiated with real code. Mocking the subject under test produces false confidence and should be treated as a test smell.
+
+**Consequences**
+- Violation: testing a mapper by mocking the mapper.tdoDto() call — the test passes regardless of whether toDto() works
+- Correct: testing a mapper by instantiating the real mapper with mocked PublicUrlService, calling toDto(), and asserting field values
+- Violation: testing route non-interception by asserting HTTP 404 without verifying which controller (if any) handled the request
+- Correct: testing route non-interception via MockMvc and verifying the expected controller was NOT called (verify(dao, never()))
+
+**Where to look**
+backend/src/test/java/com/resumainer/service/HomeSavedResumeMapperTest.java — example of correct real-mapper usage
+backend/src/test/java/com/resumainer/controller/PublicResumeControllerTest.java — route interception tests verify DAO never called
+
+---
+
+### 2026-06-24 - Every bug fix must include a regression test that would fail on the previous implementation
+
+**Status**
+Active
+
+**Why this is durable**
+Fixing a bug without a regression test means the same bug can be reintroduced by a future change and go undetected. A regression test that would have passed before the fix (because it tested the wrong thing or was absent) provides no safety. The test must specifically fail on the old code and pass on the new code.
+
+**Decision**
+Every bug fix requires a regression test that satisfies both conditions:
+1. The test would FAIL on the previous (buggy) implementation
+2. The test PASSES on the fixed implementation
+
+This applies to all bug categories: logic errors, security holes, data consistency issues, and contract violations. If a test cannot be written because the code is not testable, restructure the code first to make it testable, then fix the bug with a regression test.
+
+**Examples from Feature 009**
+- B29 fix (dual-flag soft delete): test `ResumeDaoTest.softDelete_ownedByUser_setsIsDeletedAndDeletedAt` verifies SQL contains `is_deleted = TRUE`. This test would FAIL on the old code that only set `deleted_at`.
+- Route non-interception: test `route_interception_getApiResumes_notHandledByPublicResumeController` verifies DAO never called. This test would FAIL if the route were matched by PublicResumeController.
+
+**Where to look**
+backend/src/test/java/com/resumainer/dao/ResumeDaoTest.java — softDelete regression test
+backend/src/test/java/com/resumainer/controller/PublicResumeControllerTest.java — route interception tests
+
+---
+
+### 2026-06-24 - Separate implementation complete from contract proven
+
+**Status**
+Active
+
+**Why this is durable**
+Code written does not mean the contract is fulfilled. A component may be implemented but not reachable via the production path, may use legacy fields instead of canonical ones, or may behave differently in production than in isolation. Declaring a task complete without proving the contract creates technical debt and undetected regressions.
+
+**Decision**
+A task is not complete until all five conditions are met:
+1. Production path uses the new code — the new code is actually wired into the request/response flow, not just sitting in a file
+2. Old behavior has a regression test — existing functionality that should not change has a test that would catch unintended changes
+3. The test would fail on the previous implementation — regression tests must be validated against both old and new code
+4. Sample response or UI evidence matches the contract — for API work: actual JSON response body; for UI work: screenshot or rendered DOM evidence
+5. Forbidden legacy fields, routes, or usages are audited — grep/audit confirms no old fields remain, no deprecated routes are used, no raw paths leak
+
+Implementation complete without contract proven = incomplete. Claiming completion requires both.
+
+**Consequences**
+- Claiming middleware is implemented without proving it intercepts the right routes: incomplete
+- Claiming a DTO is complete without verifying the production endpoint returns it: incomplete
+- Claiming old fields are removed without a grep audit: incomplete
+- Claiming a modal opens on row click without a Playwright or component test proving it: incomplete
+
+**Where to look**
+specs/009-home-modal-fix/tasks.md — Definition of Done checklist
+specs/009-home-modal-fix/checklists/requirements.md — guardrail exceptions

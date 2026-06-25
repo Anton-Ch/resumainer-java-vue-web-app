@@ -118,7 +118,8 @@
     "noCoverLetter": "No cover letter for this resume.",
     "copied": "Copied.",
     "linkCopied": "Link copied.",
-    "coverLetterCopied": "Cover letter copied."
+    "coverLetterCopied": "Cover letter copied.",
+    "copyFailed": "Failed to copy"
   },
   "deleteResume": {
     "title": "Delete resume?",

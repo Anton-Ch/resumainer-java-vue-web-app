@@ -29,7 +29,7 @@
     </div>
 
     <!-- Card 3: Last resume -->
-    <div class="summary-card clickable" @click="onLastResumeClick">
+    <div class="summary-card" :class="{ clickable: !!lastResume }" @click="onLastResumeClick">
       <div class="card-label">{{ $t('home.summary.lastResume') }}</div>
       <template v-if="lastResume">
         <div class="card-value last-resume-title">{{ lastResume.resumeTitle }}</div>

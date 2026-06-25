@@ -515,3 +515,31 @@ Phase 28 closed a visual quality gap: the "See the next page / См. следу�
 **Key patterns established**
 - Footer safe zone detection (18mm reserved area) closes the detect→validate→shrink→re-render loop
 - FOOTER_OVERLAP is a distinct validation reason (not same as MISSING_TEXTS) with its own scoring penalty
+
+---
+
+### 2026-06-24 — Feature 009 Phase 1 Backend Foundation Completed
+
+**Status**
+Active
+
+**Milestone**
+Phase 1 backend implementation for Feature 009 (Home Page Saved Resume Details Modal Fix) completed.
+
+**What was delivered**
+- PublicUrlService: @Service bean reading APP_PUBLIC_BASE_URL from System.getenv() with forwarded-header and request-origin fallback. WARN log when fallback origin is used.
+- HomeSavedResumeDto: Canonical 16-field DTO replacing old publicUrl/pdfUrl with publicUrlLink/pdfOpenUrl/pdfDownloadUrl/htmlDownloadUrl/pdfAvailable/coverLetter
+- HomeSavedResumeMapper: Shared @Component with PublicUrlService DI, request-aware toDto(resume, request) method
+- PublicResumeLookupResult: Status model (ACTIVE/DELETED/NOT_FOUND/MISSING_FILE/UNSAFE_PATH) enabling correct HTTP status routing on public route
+- PublicResumeController: Rewritten with 410 support for deleted resumes, route guard regex excluding reserved paths, unified 200ms artificial delay for 404 and 410
+- ResumeDao: softDelete() now sets is_deleted=TRUE + deleted_at=NOW(); JOIN users with alias fix; sort field whitelist without alias, alias added by DAO
+- UserHomeSummary: lastResume type changed to HomeSavedResumeDto; summary.lastResume added alongside root-level backward compat
+- B29 fix: Dual-flag soft delete consistency (is_deleted + deleted_at)
+- D36/SEC-003: Generic delete error message for all failure cases
+- 410.html Thymeleaf page with i18n EN/RU
+- 944 backend tests passing, 0 failures
+
+**Key patterns established**
+- Request-aware mapper pattern: HttpServletRequest flows through controller → service → mapper for public URL resolution
+- Public route status model: status-aware result object replaces null-only return
+- Evidence requirement: every checkpoint requires changed files + assertions + sample response + negative grep

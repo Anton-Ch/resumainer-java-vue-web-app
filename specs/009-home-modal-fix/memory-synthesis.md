@@ -1,31 +1,33 @@
 # Memory Synthesis
 
 ## Current Scope
-- Feature: 005-user-home-page
-- Spec: Feature Specification: User Home Page & Resume Workspace
-- Feature folder: specs\005-user-home-page
-- Spec context: # Feature Specification : User Home Page & Resume Workspace **Feature Branch **: `feat/005-user-home-page` **Created**: 2026-06-06 **Status**: Approved **Input**: User description : "Let's create the User Home Page the resume workspace ....
+- Feature: 009-home-modal-fix
+- Spec: Feature Specification: Home Page Saved Resume Details Modal Fix
+- Feature folder: specs\009-home-modal-fix
+- Spec context: # Feature Specification : Home Page Saved Resume Details Modal Fix **Feature Branch **: `feat009/home-page-modal-fix` **Created**: 2026-06-24 **Status**: Draft — corrected after specification review **Input**: Fix the Home page saved resume details...
 
 ## Relevant Project Context
 - [none]
 
 ## Relevant Decisions
-- [D1] Status Active Why this is durable HTML-to-PDF conversion requires independent library evaluation (Flying Saucer, OpenPDF, wkhtmltopdf), A4 layout validation, Cyrillic font support, and selectable text verification. Bundling it with AI generation would make the feature too large and risky. This split pattern may apply to other composite features. (Source: `docs/memory/DECISIONS.md`)
+- [D1] Status Active Why this is durable Unit tests caught 0 of the 6 bugs found during manual testing of Feature 003. Bugs like missing Flyway bean, unresolved DataSource URL, unresponsive i18n validation messages, and duplicate toggle text were invisible to unit tests. They only appeared in the full Docker environment with actual PostgreSQL, Nginx, and browser interaction. (Source: `docs/memory/DECISIONS.md`)
+- [D2] Status Active Why this is durable Mocking the unit under test makes the test pass trivially without actually verifying real behavior. (Source: `docs/memory/DECISIONS.md`)
+- [D3] Status Active Why this is durable During manual testing, hardcoded English strings were found in AuthPage.vue (info panel text, subtitles) and in LoginForm/RegisterForm (Zod validation messages). These were not caught during implementation because they were &quot;invisible&quot; — the page looked correct in English, but switching to Russian revealed untranslated text. Every future feature with UI will have the same risk. (Source: `docs/memory/DECISIONS.md`)
+- [D4] Status Active Why this is durable When a user starts generation while another request is already processing, the backend must reject the new request. Returning HTTP 500 (Internal Server Error) is semantically wrong — it suggests a server fault when the real issue is a client-side conflict. (Source: `docs/memory/DECISIONS.md`)
 
 ## Active Architecture Constraints
 - [none]
 
 ## Accepted Deviations
 - [V1] Status Active Why this is durable The frontend service generateResumeService.ts had methods downloadPdf(savedResumeId) , openPdf(savedResumeId) , downloadHtml(savedResumeId) that constructed URLs from a RESUME_BASE constant and the saved resume ID. Meanwhile the backend DTO SavedResumeExportDto already carried pdfDownloadUrl , pdfOpenUrl , htmlDownloadUrl , and publicUrlLink — fully resolved canonical URLs. The ID-based construction bypassed backend route changes, ignored the ?disposition=inline parameter, and created fragile coupling where any backend route rename would break the frontend. (Source: `docs/memory/DECISIONS.md`)
-- [V2] Status Active Why this is durable Every new download endpoint (PDF, HTML, or any file) needs to set a Content-Disposition header. Without an allowlist, a malicious or malformed disposition request parameter can inject CRLF sequences ( \r\n ) into the HTTP response headers, enabling response splitting or header manipulation attacks. Decision All download controllers MUST validate the Content-Disposition header value against a strict allowlist before setting it. (Source: `docs/memory/DECISIONS.md`)
 
 ## Relevant Security Constraints
-- [S1] W1 | First Feature MVP Achieved : Hello World Tomcat | milestone , mvp , hello-world , docker , spring-mvc , tomcat | WORKLOG .md | active W2 | Second Feature MVP Achieved : Thymeleaf Landing Page | milestone , mvp , landing-page , thymeleaf , i18n , feature-002 , bilingual | WORKLOG .md | active W3 | Feature 003 Planning and Security Review Completed | milestone , feature-003 , vue-auth , planning , security-review , specification | WORKLOG .md... (Source: `docs/memory/INDEX.md`)
-- [S2] Status Active Why this is durable Phases 23-27 delivered the complete production PDF pipeline : Phase 23 : Download controller security fixes (Content-Disposition header injection fix , missing exists () check , SecurityException →500 bug ), public route rate limiter , timing hardening Phase 24 : Frontend export /finalize flow repair — DTO URL contract , disabled PDF buttons , absolute public link , duplicate navigation fix , error handling , double-click prevention Phase 25 : V12 .1 budget parity... (Source: `docs/memory/WORKLOG.md`)
-- [S3] D1 | Java Servlet Initialization via AbstractAnnotationConfigDispatcherServletInitializer (no web .xml) | servlet , spring-mvc , jakarta-ee , tomcat , initialization , web .xml | DECISIONS .md | active D2 | Maven Wrapper Must Be at Same Directory Level as pom .xml | maven , wrapper , build , project-structure , best-practice | DECISIONS .md | active D3 | Docker Tomcat : Use bash /dev/tcp Instead of nc for TCP Health Checks | docker , tomcat , wait-for-it , networking ,... (Source: `docs/memory/INDEX.md`)
+- [S1] Status Active Symptoms A public unauthenticated route (like GET /{username}/{publicCode} ) has multiple 404 conditions: invalid username, invalid code, deleted resume, disabled resume. Without a uniform delay, an attacker can measure response times to distinguish &quot;valid username but wrong code&quot; (~10ms DB query) from &quot;invalid username&quot; (~1ms immediate return). This leaks information about which usernames exist in the system. (Source: `docs/memory/BUGS.md`)
+- [S2] Status Active Why this is durable Fixing a bug without a regression test means the same bug can be reintroduced by a future change and go undetected. A regression test that would have passed before the fix (because it tested the wrong thing or was absent) provides no safety. The test must specifically fail on the old code and pass on the new code. (Source: `docs/memory/DECISIONS.md`)
+- [S3] Security MUST be integrated into every feature from design through implementation. Security is not an afterthought. Password Storage : All passwords MUST be hashed using BCrypt. (Source: `.specify/memory/constitution.md`)
 
 ## Related Historical Lessons
-- [B1] Status Active Symptoms Cover letter is visible on Review page, generate.cover_letter is included in the prompt, ResumeGenerationResponse.getCoverLetter() returns the generated text, but the Export page never shows the cover letter block. DB query shows cover_letter IS NULL for all saved_resumes rows. Root Cause The saved_resumes.cover_letter column was created in V8 migration and read correctly in SELECT queries ( SavedResumeDao.findByGenerationRequestId , findById ), but the INSERT statement in SavedResumeDao.insert() did not include the cover_letter column. (Source: `docs/memory/BUGS.md`)
+- [none]
 
 ## Conflict Warnings
 - [none]

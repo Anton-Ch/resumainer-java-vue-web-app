@@ -31,7 +31,7 @@
         v-else-if="summary"
         :savedResumesCount="summary.summary.savedResumesCount"
         :profileReady="summary.profileReady"
-        :lastResume="summary.lastResume"
+        :lastResume="summary.summary.lastResume"
         @openLastResume="openLastResume"
       />
 
@@ -133,8 +133,9 @@ const currentSortOrder = computed(() => {
 })
 
 function openLastResume() {
-  if (summary.value?.lastResume) {
-    openResumeModal(summary.value.lastResume)
+  const lastResume = summary.value?.summary?.lastResume
+  if (lastResume) {
+    openResumeModal(lastResume)
   }
 }
 

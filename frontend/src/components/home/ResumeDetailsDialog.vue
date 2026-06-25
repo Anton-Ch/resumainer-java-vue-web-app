@@ -15,19 +15,19 @@
         </div>
         <div class="detail-field">
           <div class="detail-label">{{ $t('home.table.vacancy') }}</div>
-          <div class="detail-value">{{ resume.vacancy }}</div>
+          <div class="detail-value">{{ resume.vacancyTitle }}</div>
         </div>
-        <div class="detail-field">
+        <div class="detail-field" v-if="resume.companyName">
           <div class="detail-label">{{ $t('home.table.company') }}</div>
-          <div class="detail-value">{{ resume.company }}</div>
+          <div class="detail-value">{{ resume.companyName }}</div>
         </div>
         <div class="detail-field">
           <div class="detail-label">{{ $t('home.table.language') }}</div>
-          <div class="detail-value">{{ resume.language === 'EN' ? $t('language.en') : $t('language.ru') }}</div>
+          <div class="detail-value">{{ resume.languageCode === 'EN' ? $t('language.en') : $t('language.ru') }}</div>
         </div>
         <div class="detail-field">
           <div class="detail-label">{{ $t('home.table.adaptationLevel') }}</div>
-          <div class="detail-value">{{ $t('adaptation.' + resume.adaptationLevel.toLowerCase()) }}</div>
+          <div class="detail-value">{{ $t('adaptation.' + resume.adaptationLevel?.toLowerCase()) }}</div>
         </div>
         <div class="detail-field">
           <div class="detail-label">{{ $t('home.table.created') }}</div>
@@ -35,9 +35,9 @@
         </div>
       </div>
 
-      <div class="public-link-row">
+      <div v-if="resume.publicUrlLink" class="public-link-row">
         <i class="pi pi-link" style="color: #8091A7; font-size: 0.9rem;"></i>
-        <span class="link-text">{{ resume.publicUrl }}</span>
+        <span class="link-text">{{ resume.publicUrlLink }}</span>
         <Button :label="$t('resumeDetails.copyLink')" icon="pi pi-copy" class="p-button-text p-button-sm" @click="onCopyLink" />
       </div>
 
@@ -51,9 +51,9 @@
         </AccordionTab>
       </Accordion>
 
-      <div class="modal-actions">
-        <Button :label="$t('resumeDetails.view')" icon="pi pi-external-link" class="p-button-success" @click="viewResume" />
-        <Button :label="$t('resumeDetails.downloadPdf')" icon="pi pi-download" class="p-button-success p-button-outlined" @click="downloadPdf" />
+      <div v-if="resume.pdfAvailable !== false" class="modal-actions">
+        <Button :label="$t('resumeDetails.view')" icon="pi pi-external-link" class="p-button-success" @click="viewResume" :disabled="!resume.pdfAvailable" />
+        <Button :label="$t('resumeDetails.downloadPdf')" icon="pi pi-download" class="p-button-success p-button-outlined" @click="downloadPdf" :disabled="!resume.pdfAvailable" />
         <Button :label="$t('resumeDetails.delete')" icon="pi pi-trash" class="p-button-danger p-button-outlined" style="margin-left: auto;" @click="confirmDelete" />
       </div>
     </template>
@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
@@ -86,15 +86,20 @@ const confirm = useConfirm()
 const toast = useToast()
 
 const coverLetterOpen = ref(false)
-const visible = ref(props.visible)
+
+// Computed get/set bridge for v-model:visible (FR-001)
+const visible = computed({
+  get: () => props.visible,
+  set: (value) => emit('update:visible', value),
+})
 
 async function onCopyLink() {
-  if (!props.resume?.publicUrl) return
+  if (!props.resume?.publicUrlLink) return
   try {
-    await navigator.clipboard.writeText(props.resume.publicUrl)
+    await navigator.clipboard.writeText(props.resume.publicUrlLink)
     toast.add({ severity: 'success', summary: '', detail: t('resumeDetails.linkCopied'), life: 3000 })
   } catch {
-    toast.add({ severity: 'error', summary: '', detail: 'Failed to copy', life: 3000 })
+    toast.add({ severity: 'error', summary: '', detail: t('resumeDetails.copyFailed'), life: 3000 })
   }
 }
 
@@ -104,20 +109,20 @@ async function onCopyCoverLetter() {
     await navigator.clipboard.writeText(props.resume.coverLetter)
     toast.add({ severity: 'success', summary: '', detail: t('resumeDetails.coverLetterCopied'), life: 3000 })
   } catch {
-    toast.add({ severity: 'error', summary: '', detail: 'Failed to copy', life: 3000 })
+    toast.add({ severity: 'error', summary: '', detail: t('resumeDetails.copyFailed'), life: 3000 })
   }
 }
 
 function viewResume() {
-  if (props.resume?.pdfUrl) {
-    window.open(props.resume.pdfUrl, '_blank')
+  if (props.resume?.pdfOpenUrl) {
+    window.open(props.resume.pdfOpenUrl, '_blank')
   }
 }
 
 function downloadPdf() {
-  if (props.resume?.pdfUrl) {
+  if (props.resume?.pdfDownloadUrl) {
     const a = document.createElement('a')
-    a.href = props.resume.pdfUrl
+    a.href = props.resume.pdfDownloadUrl
     a.download = `${props.resume.resumeTitle || 'resume'}.pdf`
     a.click()
   }
