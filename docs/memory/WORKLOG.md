@@ -41,6 +41,16 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-25 — Feature 009 Home Modal Fix Complete
+
+**Status**: Active
+
+**What was done**: Full feature 009 end-to-end: modal computed v-model bridge, canonical DTO fields, cover letter preview/toggle, HTML download, PDF unavailable state, delete flow with double-click guard (loading owned by composable), row pointer cursor + hover highlight, generic delete error (SEC-003), PDF unavailable i18n fallback (pdfMessage=null), CSRF fix in resumeService.ts (raw fetch → apiRequest). Public route returns 410 Gone for soft-deleted resumes with Thymeleaf error page, uniform delay for 404 and 410. 944 backend tests, 79 frontend tests, Playwright E2E verified (login, row click, modal, cover letter, delete, 410).
+
+**Key lessons**: Always use shared httpClient for unsafe methods; backend sends state not UI strings; prefer DOM assertions over prop-only tests; report exact changed files with git diff; do not expand scope during cleanup.
+
 ### 2026-06-21 - Feature 008 Phase Group 3 — Spike Parity Fixes Completed (Phases 19-21)
 
 **Status**

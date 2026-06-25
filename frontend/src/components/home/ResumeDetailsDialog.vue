@@ -50,7 +50,7 @@
       </div>
 
       <!-- Cover letter -->
-      <Accordion :activeIndex="coverLetterOpen ? 0 : undefined">
+      <Accordion>
         <AccordionTab :header="$t('resumeDetails.coverLetter')">
           <template v-if="resume.coverLetter">
             <div class="cover-letter-content">
@@ -144,7 +144,6 @@ const { t } = useI18n()
 const confirm = useConfirm()
 const toast = useToast()
 
-const coverLetterOpen = ref(false)
 const coverLetterExpanded = ref(false)
 
 // Reset cover letter preview when modal opens
@@ -253,11 +252,12 @@ function confirmDelete() {
 }
 .link-text {
   flex: 1;
+  min-width: 0;
   font-size: 0.85rem;
   color: #5D718B;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .pdf-unavailable-msg {
   display: flex;

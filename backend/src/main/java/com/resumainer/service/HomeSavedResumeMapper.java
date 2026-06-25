@@ -69,7 +69,7 @@ public class HomeSavedResumeMapper {
         boolean pdfReady = "READY".equals(resume.getPdfStatus()) && resume.isPdfFilePresent();
         dto.setPdfAvailable(pdfReady);
         dto.setPdfStatus(resume.getPdfStatus());
-        dto.setPdfMessage(pdfReady ? null : "PDF is being generated. Please try again later.");
+        dto.setPdfMessage(null);
 
         // HTML download URL: only set when HTML file is present
         if (!resume.isHtmlFilePresent()) {

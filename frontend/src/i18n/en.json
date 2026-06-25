@@ -120,7 +120,6 @@
     "showFullCoverLetter": "Show full cover letter",
     "hideFullCoverLetter": "Show less",
     "pdfNotAvailable": "PDF is being generated. Please try again later.",
-    "copied": "Copied.",
     "linkCopied": "Link copied.",
     "coverLetterCopied": "Cover letter copied.",
     "copyFailed": "Failed to copy"

@@ -951,3 +951,17 @@ UPDATE saved_resumes SET is_deleted = TRUE, deleted_at = NOW() WHERE ... — bot
 **Where to look**
 backend/src/main/java/com/resumainer/dao/ResumeDao.java — softDelete() method
 backend/src/main/java/com/resumainer/dao/SavedResumeDao.java — findPublicResumeStatus() for legacy deleted_at check
+
+---
+
+### 2026-06-25 — Public URLs must not be visually truncated
+
+**Status**: Active
+
+**Why this is durable**: The public URL in ResumeDetailsDialog.vue used text-overflow: ellipsis with white-space: nowrap, hiding part of the URL from users trying to copy it. This conflicts with the requirement that public URLs be fully readable and copyable. URLs that users need to copy must never be truncated.
+
+**Symptoms**: Public URL link was truncated with ellipsis in the modal. Users could not see or copy the full URL without clicking Copy link.
+
+**Root cause**: CSS used overflow: hidden + text-overflow: ellipsis + white-space: nowrap on the link text container, which hid the overflowing portion of the URL.
+
+**Prevention**: For user-copyable text, prefer white-space: normal, overflow-wrap: anywhere, word-break: break-word. Never use text-overflow: ellipsis on copyable values. If truncation is required by design constraints, provide a full-text copy button that always copies the complete value.
