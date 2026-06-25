@@ -118,7 +118,8 @@ class HomeSavedResumeMapperTest {
 
         assertFalse(dto.isPdfAvailable());
         assertEquals("PENDING", dto.getPdfStatus());
-        assertNotNull(dto.getPdfMessage());
+        // pdfMessage is null because frontend owns i18n of UI text (FR-023)
+        assertNull(dto.getPdfMessage());
     }
 
     @Test

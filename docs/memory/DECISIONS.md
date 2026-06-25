@@ -1102,3 +1102,35 @@ Implementation complete without contract proven = incomplete. Claiming completio
 **Where to look**
 specs/009-home-modal-fix/tasks.md — Definition of Done checklist
 specs/009-home-modal-fix/checklists/requirements.md — guardrail exceptions
+
+---
+
+### 2026-06-25 — Backend sends state, not localized UI copy, when frontend owns i18n
+
+**Status**: Active
+
+**Why this is durable**: HomeSavedResumeMapper set English pdfMessage text, which prevented frontend i18n fallback from triggering. RU users saw English because the frontend fallback key was never reached. Backend DTOs should send state flags (pdfAvailable, pdfStatus) rather than localized UI strings when the frontend owns the presentation layer.
+
+**Decision**: Backend DTOs carry data/state fields. Frontend renders UI copy via i18n keys. Only send backend messages when they are true API errors or explicitly part of backend contract.
+
+**Tradeoffs**:
+- Gained: Consistent i18n; backend does not need to know about UI languages
+- Made harder: Backend cannot customize UI text per language
+- Reconsider: If the backend generates text that requires server-side context (e.g., error codes with dynamic parameters), send structured data (error code + params) rather than pre-localized strings
+ions are appropriate. The component boundary IS the contract.
+ves to a stateless JWT-based auth, CSRF protection becomes unnecessary and this pattern can be simplified
+
+---
+
+### 2026-06-25 — Do not expand scope during cleanup/review
+
+**Status**: Active
+
+**Why this is durable**: During Feature 009 post-review cleanup, I proposed extra changes (language fallback, routing additions) beyond the approved scope. Scope creep during final review risks breaking working features and delays handoff. Valid-but-out-of-scope findings should be documented as future tasks, not fixed as part of the current feature.
+
+**Decision**: During cleanup and final review phases, fix only explicitly approved items. Do not improve adjacent behavior, normalize edge cases, or add polish to unrelated areas. If a valid finding is out of scope, document it for future work and move on.
+
+**Tradeoffs**:
+- Gained: Clean, predictable handoffs; no last-minute breakage
+- Made harder: Requires discipline to defer valid improvements
+- Reconsider: For trivial fixes (typos, naming, 1-line safety checks) that are clearly safe and directly related to the changed code, include them with explicit mention. When in doubt, ask.
