@@ -848,4 +848,197 @@ class AdminDaoTest {
                 adminDao.findUserDetails(java.util.UUID.randomUUID())
         );
     }
+
+    // --- Phase 6: Access update and user soft-delete tests ---
+
+    @Test
+    void existsAndNotDeleted_returnsTrue_whenUserExists() throws Exception {
+        when(resultSet.next()).thenReturn(true);
+
+        boolean exists = adminDao.existsAndNotDeleted(java.util.UUID.randomUUID());
+
+        assertTrue(exists);
+    }
+
+    @Test
+    void existsAndNotDeleted_returnsFalse_whenUserNotFound() throws Exception {
+        when(resultSet.next()).thenReturn(false);
+
+        boolean exists = adminDao.existsAndNotDeleted(java.util.UUID.randomUUID());
+
+        assertFalse(exists);
+    }
+
+    @Test
+    void updateUserAccess_returnsTrue_whenUpdated() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(1);
+        java.util.UUID userId = java.util.UUID.randomUUID();
+
+        boolean result = adminDao.updateUserAccess(userId, 1L, 1L, 1L, false);
+
+        assertTrue(result);
+        verify(preparedStatement).setLong(1, 1L); // role_id
+        verify(preparedStatement).setObject(5, userId); // WHERE id
+    }
+
+    @Test
+    void updateUserAccess_returnsFalse_whenUserNotFound() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(0);
+
+        boolean result = adminDao.updateUserAccess(java.util.UUID.randomUUID(), 1L, 1L, 1L, false);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void updateUserAccess_setsUpdatedAtToNow() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(1);
+
+        adminDao.updateUserAccess(java.util.UUID.randomUUID(), 1L, 1L, 1L, false);
+
+        verify(connection).prepareStatement(
+                argThat(sql -> sql.toString().contains("updated_at = NOW()"))
+        );
+    }
+
+    @Test
+    void findRoleIdByCode_returnsId_whenFound() throws Exception {
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getLong("id")).thenReturn(1L);
+
+        Long id = adminDao.findRoleIdByCode("USER");
+
+        assertEquals(1L, id);
+        verify(preparedStatement).setString(1, "USER");
+    }
+
+    @Test
+    void findRoleIdByCode_returnsNull_whenNotFound() throws Exception {
+        when(resultSet.next()).thenReturn(false);
+
+        Long id = adminDao.findRoleIdByCode("UNKNOWN");
+
+        assertNull(id);
+    }
+
+    @Test
+    void findStatusIdByCode_returnsId_whenFound() throws Exception {
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getLong("id")).thenReturn(2L);
+
+        Long id = adminDao.findStatusIdByCode("BLOCKED");
+
+        assertEquals(2L, id);
+    }
+
+    @Test
+    void findPermissionIdByCode_returnsId_whenFound() throws Exception {
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getLong("id")).thenReturn(2L);
+
+        Long id = adminDao.findPermissionIdByCode("FORBIDDEN");
+
+        assertEquals(2L, id);
+    }
+
+    @Test
+    void findUserAccessState_returnsState() throws Exception {
+        java.util.UUID userId = java.util.UUID.randomUUID();
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getString("role_code")).thenReturn("ADMIN");
+        when(resultSet.getString("status_code")).thenReturn("ACTIVE");
+
+        AdminDao.UserAccessState state = adminDao.findUserAccessState(userId);
+
+        assertNotNull(state);
+        assertEquals("ADMIN", state.roleCode);
+        assertEquals("ACTIVE", state.statusCode);
+        verify(preparedStatement).setObject(1, userId);
+    }
+
+    @Test
+    void findUserAccessState_returnsNull_whenUserNotFound() throws Exception {
+        when(resultSet.next()).thenReturn(false);
+
+        AdminDao.UserAccessState state = adminDao.findUserAccessState(java.util.UUID.randomUUID());
+
+        assertNull(state);
+    }
+
+    @Test
+    void adminSoftDeleteUser_marksUserDeleted() throws Exception {
+        // Mock all 6 executeUpdate calls to return 1 (success)
+        when(preparedStatement.executeUpdate()).thenReturn(1, 1, 1, 1, 1, 1);
+        java.util.UUID userId = java.util.UUID.randomUUID();
+
+        adminDao.adminSoftDeleteUser(userId);
+
+        verify(preparedStatement, atLeast(1)).setObject(1, userId);
+        verify(connection).setAutoCommit(false);
+        verify(connection).commit();
+    }
+
+    @Test
+    void adminSoftDeleteUser_skipsWhenAlreadyDeleted() throws Exception {
+        // First executeUpdate (user update) returns 0 → user not found/already deleted
+        when(preparedStatement.executeUpdate()).thenReturn(0);
+        java.util.UUID userId = java.util.UUID.randomUUID();
+
+        adminDao.adminSoftDeleteUser(userId);
+
+        verify(connection).rollback();
+        // commit should NOT be called when user not found
+        verify(connection, never()).commit();
+    }
+
+    @Test
+    void adminSoftDeleteUser_updatesAllCascadeTables() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(1, 1, 1, 1, 1, 1);
+        java.util.UUID userId = java.util.UUID.randomUUID();
+
+        adminDao.adminSoftDeleteUser(userId);
+
+        // Verify SQL patterns for each cascade
+        verify(connection).prepareStatement(
+                argThat(sql -> sql.toString().contains("UPDATE users") && sql.toString().contains("is_deleted = TRUE"))
+        );
+        verify(connection).prepareStatement(
+                argThat(sql -> sql.toString().contains("UPDATE saved_resumes"))
+        );
+        verify(connection).prepareStatement(
+                argThat(sql -> sql.toString().contains("UPDATE work_experience"))
+        );
+        verify(connection).prepareStatement(
+                argThat(sql -> sql.toString().contains("UPDATE education"))
+        );
+        verify(connection).prepareStatement(
+                argThat(sql -> sql.toString().contains("UPDATE project"))
+        );
+        verify(connection).prepareStatement(
+                argThat(sql -> sql.toString().contains("UPDATE course_certificate"))
+        );
+    }
+
+    @Test
+    void adminSoftDeleteUser_doesNotHardDelete() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(1, 1, 1, 1, 1, 1);
+
+        adminDao.adminSoftDeleteUser(java.util.UUID.randomUUID());
+
+        // Verify NO hard-delete (DELETE FROM) statements are used
+        verify(connection, never()).prepareStatement(
+                argThat(sql -> sql.toString().toUpperCase().startsWith("DELETE "))
+        );
+    }
+
+    @Test
+    void adminSoftDeleteUser_setsStatusToBlocked() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(1, 1, 1, 1, 1, 1);
+
+        adminDao.adminSoftDeleteUser(java.util.UUID.randomUUID());
+
+        verify(connection).prepareStatement(
+                argThat(sql -> sql.toString().contains("code = " + "'BLOCKED'"))
+        );
+    }
 }

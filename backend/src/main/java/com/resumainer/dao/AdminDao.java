@@ -770,6 +770,217 @@ public class AdminDao {
         return row;
     }
 
+    // --- Phase 6: Access update and user soft-delete ---
+
+    /**
+     * Checks if a user exists and is not deleted (for access update / soft-delete validation).
+     */
+    public boolean existsAndNotDeleted(UUID userId) {
+        String sql = "SELECT 1 FROM users WHERE id = ? AND is_deleted = FALSE";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            log.error("Error checking user existence: {}", userId, e);
+            throw new RuntimeException("Database error checking user", e);
+        }
+    }
+
+    /**
+     * Updates user access account fields: role, status, permission, is_privileged, updated_at.
+     * Uses resolved lookup IDs, not hardcoded IDs.
+     */
+    public boolean updateUserAccess(UUID userId, Long roleId, Long statusId,
+                                     Long permissionId, boolean isPrivileged) {
+        String sql = "UPDATE users SET role_id = ?, status_id = ?, permission_id = ?, "
+                + "is_privileged = ?, updated_at = NOW() WHERE id = ? AND is_deleted = FALSE";
+
+        log.debug("updateUserAccess: userId={}, roleId={}, statusId={}, permissionId={}, isPrivileged={}",
+                userId, roleId, statusId, permissionId, isPrivileged);
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, roleId);
+            stmt.setLong(2, statusId);
+            stmt.setLong(3, permissionId);
+            stmt.setBoolean(4, isPrivileged);
+            stmt.setObject(5, userId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            log.error("Error updating user access: {}", userId, e);
+            throw new RuntimeException("Database error updating user access", e);
+        }
+    }
+
+    /**
+     * Finds a role ID by its code.
+     */
+    public Long findRoleIdByCode(String code) {
+        String sql = "SELECT id FROM role WHERE code = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, code.trim().toUpperCase());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getLong("id") : null;
+            }
+        } catch (SQLException e) {
+            log.error("Error finding role by code: {}", code, e);
+            throw new RuntimeException("Database error finding role", e);
+        }
+    }
+
+    /**
+     * Finds a user status ID by its code.
+     */
+    public Long findStatusIdByCode(String code) {
+        String sql = "SELECT id FROM user_status WHERE code = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, code.trim().toUpperCase());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getLong("id") : null;
+            }
+        } catch (SQLException e) {
+            log.error("Error finding status by code: {}", code, e);
+            throw new RuntimeException("Database error finding status", e);
+        }
+    }
+
+    /**
+     * Finds a user permission ID by its code.
+     */
+    public Long findPermissionIdByCode(String code) {
+        String sql = "SELECT id FROM user_permission WHERE code = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, code.trim().toUpperCase());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getLong("id") : null;
+            }
+        } catch (SQLException e) {
+            log.error("Error finding permission by code: {}", code, e);
+            throw new RuntimeException("Database error finding permission", e);
+        }
+    }
+
+    /**
+     * Returns current role code and status code for a user (for self-protection checks).
+     */
+    public UserAccessState findUserAccessState(UUID userId) {
+        String sql = "SELECT r.code AS role_code, us.code AS status_code "
+                + "FROM users u JOIN role r ON r.id = u.role_id "
+                + "JOIN user_status us ON us.id = u.status_id "
+                + "WHERE u.id = ? AND u.is_deleted = FALSE";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) return null;
+                UserAccessState state = new UserAccessState();
+                state.roleCode = rs.getString("role_code");
+                state.statusCode = rs.getString("status_code");
+                return state;
+            }
+        } catch (SQLException e) {
+            log.error("Error finding user access state: {}", userId, e);
+            throw new RuntimeException("Database error finding user access state", e);
+        }
+    }
+
+    public static class UserAccessState {
+        public String roleCode;
+        public String statusCode;
+    }
+
+    /**
+     * Transactional user soft-delete cascade.
+     * Handles its own connection and transaction lifecycle.
+     */
+    public void adminSoftDeleteUser(UUID targetUserId) {
+        Connection conn = null;
+        try {
+            conn = dataSource.getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Mark user deleted, set status to BLOCKED, update updated_at
+            String updateUser = "UPDATE users SET is_deleted = TRUE, deleted_at = NOW(), "
+                    + "status_id = (SELECT id FROM user_status WHERE code = 'BLOCKED'), "
+                    + "updated_at = NOW() WHERE id = ? AND is_deleted = FALSE";
+            try (PreparedStatement stmt = conn.prepareStatement(updateUser)) {
+                stmt.setObject(1, targetUserId);
+                int affected = stmt.executeUpdate();
+                if (affected == 0) {
+                    conn.rollback();
+                    return; // user not found or already deleted
+                }
+            }
+
+            // 2. Soft-delete saved resumes
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "UPDATE saved_resumes SET is_deleted = TRUE, deleted_at = NOW() "
+                    + "WHERE user_id = ? AND is_deleted = FALSE")) {
+                stmt.setObject(1, targetUserId);
+                stmt.executeUpdate();
+            }
+
+            // 3. Soft-delete work_experience
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "UPDATE work_experience SET is_deleted = TRUE, deleted_at = NOW() "
+                    + "WHERE user_id = ? AND is_deleted = FALSE")) {
+                stmt.setObject(1, targetUserId);
+                stmt.executeUpdate();
+            }
+
+            // 4. Soft-delete education
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "UPDATE education SET is_deleted = TRUE, deleted_at = NOW() "
+                    + "WHERE user_id = ? AND is_deleted = FALSE")) {
+                stmt.setObject(1, targetUserId);
+                stmt.executeUpdate();
+            }
+
+            // 5. Soft-delete project
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "UPDATE project SET is_deleted = TRUE, deleted_at = NOW() "
+                    + "WHERE user_id = ? AND is_deleted = FALSE")) {
+                stmt.setObject(1, targetUserId);
+                stmt.executeUpdate();
+            }
+
+            // 6. Soft-delete course_certificate
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "UPDATE course_certificate SET is_deleted = TRUE, deleted_at = NOW() "
+                    + "WHERE user_id = ? AND is_deleted = FALSE")) {
+                stmt.setObject(1, targetUserId);
+                stmt.executeUpdate();
+            }
+
+            // contact_detail and additional_profile_info intentionally skipped:
+            // they do not have is_deleted/deleted_at columns
+
+            conn.commit();
+            log.debug("Admin soft-deleted user with cascade: userId={}", targetUserId);
+
+        } catch (SQLException e) {
+            log.error("Error in user soft-delete transaction for user: {}", targetUserId, e);
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException re) {
+                    log.error("Rollback failed for user soft-delete: {}", targetUserId, re);
+                }
+            }
+            throw new RuntimeException("Database error deleting user", e);
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException e) {
+                    log.error("Error closing connection after user soft-delete", e);
+                }
+            }
+        }
+    }
+
     /**
      * Lightweight row representation for admin user details.
      * Contains all fields for account, contacts, and additional info sections.

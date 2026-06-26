@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.resumainer.dto.UserSession;
 import com.resumainer.dto.admin.AdminDashboardDto;
 import com.resumainer.dto.admin.AdminSavedResumeDto;
+import com.resumainer.dto.admin.AdminUserAccessUpdateRequest;
 import com.resumainer.dto.admin.AdminUserAccountDto;
 import com.resumainer.dto.admin.AdminUserAdditionalInfoDto;
 import com.resumainer.dto.admin.AdminUserContactDto;
@@ -21,9 +22,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
@@ -500,6 +504,174 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.account.passwordHash").doesNotExist())
                 .andExpect(jsonPath("$.account.password_hash").doesNotExist())
                 .andExpect(jsonPath("$.additionalInfo.photoFilePath").doesNotExist());
+    }
+
+    // --- Phase 6: Access update tests ---
+
+    @Test
+    void updateUserAccess_returnsUpdatedDetails_whenSuccess() throws Exception {
+        AdminUserDetailsDto details = createTestUserDetails(false);
+        AdminUserAccessUpdateRequest req = new AdminUserAccessUpdateRequest();
+        req.setRoleCode("ADMIN");
+        req.setStatusCode("ACTIVE");
+        req.setPermissionCode("ALLOWED");
+        req.setPrivileged(true);
+
+        when(adminService.updateUserAccess(eq(otherUserId), eq(adminUserId), any()))
+                .thenReturn(details);
+
+        mockMvc.perform(patch("/api/admin/users/{userId}/access", otherUserId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(otherUserId.toString()))
+                .andExpect(jsonPath("$.account.accountEmail").value("john@example.com"));
+    }
+
+    @Test
+    void updateUserAccess_deserializesIsPrivilegedFromJson() throws Exception {
+        when(adminService.updateUserAccess(eq(otherUserId), eq(adminUserId), any()))
+                .thenReturn(createTestUserDetails(false));
+
+        // Send raw JSON with isPrivileged: true and verify it is deserialized correctly
+        String rawJson = "{\"roleCode\":\"ADMIN\",\"statusCode\":\"ACTIVE\",\"permissionCode\":\"ALLOWED\",\"isPrivileged\":true}";
+
+        mockMvc.perform(patch("/api/admin/users/{userId}/access", otherUserId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(rawJson)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        org.mockito.ArgumentCaptor<AdminUserAccessUpdateRequest> captor =
+                org.mockito.ArgumentCaptor.forClass(AdminUserAccessUpdateRequest.class);
+        verify(adminService).updateUserAccess(eq(otherUserId), eq(adminUserId), captor.capture());
+
+        AdminUserAccessUpdateRequest captured = captor.getValue();
+        assertNotNull(captured);
+        assertEquals("ADMIN", captured.getRoleCode());
+        assertTrue(captured.isPrivileged(), "isPrivileged must be true from JSON isPrivileged: true");
+    }
+
+    @Test
+    void updateUserAccess_deserializesIsPrivilegedFalse() throws Exception {
+        when(adminService.updateUserAccess(eq(otherUserId), eq(adminUserId), any()))
+                .thenReturn(createTestUserDetails(false));
+
+        String rawJson = "{\"roleCode\":\"USER\",\"statusCode\":\"ACTIVE\",\"permissionCode\":\"ALLOWED\",\"isPrivileged\":false}";
+
+        mockMvc.perform(patch("/api/admin/users/{userId}/access", otherUserId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(rawJson)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        org.mockito.ArgumentCaptor<AdminUserAccessUpdateRequest> captor =
+                org.mockito.ArgumentCaptor.forClass(AdminUserAccessUpdateRequest.class);
+        verify(adminService).updateUserAccess(eq(otherUserId), eq(adminUserId), captor.capture());
+
+        AdminUserAccessUpdateRequest captured = captor.getValue();
+        assertNotNull(captured);
+        assertFalse(captured.isPrivileged(), "isPrivileged must be false from JSON isPrivileged: false");
+    }
+
+    @Test
+    void updateUserAccess_invalidCode_returnsBadRequest() throws Exception {
+        when(adminService.updateUserAccess(any(), any(), any()))
+                .thenThrow(new com.resumainer.exception.ServiceException("INVALID_ROLE", "Invalid role code"));
+
+        AdminUserAccessUpdateRequest req = new AdminUserAccessUpdateRequest();
+        req.setRoleCode("INVALID");
+
+        mockMvc.perform(patch("/api/admin/users/{userId}/access", otherUserId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void updateUserAccess_selfDemotion_returnsBadRequest() throws Exception {
+        when(adminService.updateUserAccess(eq(adminUserId), eq(adminUserId), any()))
+                .thenThrow(new IllegalArgumentException("You cannot demote your own admin account."));
+
+        AdminUserAccessUpdateRequest req = new AdminUserAccessUpdateRequest();
+        req.setRoleCode("USER");
+
+        mockMvc.perform(patch("/api/admin/users/{userId}/access", adminUserId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void updateUserAccess_notFound_returnsNotFound() throws Exception {
+        UUID missingId = UUID.randomUUID();
+        when(adminService.updateUserAccess(eq(missingId), eq(adminUserId), any())).thenReturn(null);
+
+        AdminUserAccessUpdateRequest req = new AdminUserAccessUpdateRequest();
+
+        mockMvc.perform(patch("/api/admin/users/{userId}/access", missingId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    // --- Phase 6: User soft-delete tests ---
+
+    @Test
+    void deleteUser_returnsOk_whenSuccess() throws Exception {
+        when(adminService.deleteUser(otherUserId, adminUserId)).thenReturn(true);
+
+        mockMvc.perform(delete("/api/admin/users/{userId}", otherUserId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("User deleted"));
+
+        verify(adminService).deleteUser(otherUserId, adminUserId);
+    }
+
+    @Test
+    void deleteUser_selfDelete_returnsBadRequest() throws Exception {
+        when(adminService.deleteUser(adminUserId, adminUserId))
+                .thenThrow(new IllegalArgumentException("You cannot delete your own admin account."));
+
+        mockMvc.perform(delete("/api/admin/users/{userId}", adminUserId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void deleteUser_notFound_returnsNotFound() throws Exception {
+        UUID missingId = UUID.randomUUID();
+        when(adminService.deleteUser(missingId, adminUserId)).thenReturn(false);
+
+        mockMvc.perform(delete("/api/admin/users/{userId}", missingId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void deleteUser_noSession_returnsUnauthorized() throws Exception {
+        mockMvc.perform(delete("/api/admin/users/{userId}", otherUserId)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
     }
 
     // --- Phase 3: Admin resume delete tests ---
