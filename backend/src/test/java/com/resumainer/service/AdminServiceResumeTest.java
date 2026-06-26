@@ -5,6 +5,7 @@ import com.resumainer.dao.AdminDao.AdminSavedResumeRow;
 import com.resumainer.dao.AdminDao.AdminUserDetailsRow;
 import com.resumainer.dao.AdminDao.AdminUserRow;
 import com.resumainer.dto.admin.AdminSavedResumeDto;
+import com.resumainer.dto.admin.AdminUserAccessUpdateRequest;
 import com.resumainer.dto.admin.AdminUserDetailsDto;
 import com.resumainer.dto.admin.AdminUserListItemDto;
 import com.resumainer.exception.ServiceException;
@@ -814,6 +815,167 @@ class AdminServiceResumeTest {
 
         // When contact exists, it should be not null
         assertNotNull(dto.getContacts());
+    }
+
+    // --- Phase 6: Access update tests ---
+
+    @Test
+    void updateUserAccess_returnsUpdatedDetails_whenSuccess() {
+        UUID targetId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+        AdminUserAccessUpdateRequest req = new AdminUserAccessUpdateRequest();
+        req.setRoleCode("ADMIN");
+        req.setStatusCode("ACTIVE");
+        req.setPermissionCode("ALLOWED");
+        req.setPrivileged(true);
+
+        when(adminDao.existsAndNotDeleted(targetId)).thenReturn(true);
+        when(adminDao.findRoleIdByCode("ADMIN")).thenReturn(2L);
+        when(adminDao.findStatusIdByCode("ACTIVE")).thenReturn(1L);
+        when(adminDao.findPermissionIdByCode("ALLOWED")).thenReturn(1L);
+        when(adminDao.updateUserAccess(targetId, 2L, 1L, 1L, true)).thenReturn(true);
+
+        // After update, getUserDetails returns DTO
+        AdminUserDetailsRow detailsRow = createUserDetailsRow(targetId);
+        when(adminDao.findUserDetails(targetId)).thenReturn(detailsRow);
+
+        AdminUserDetailsDto result = adminService.updateUserAccess(targetId, adminId, req);
+
+        assertNotNull(result);
+        assertEquals(targetId.toString(), result.getId());
+        verify(adminDao).updateUserAccess(targetId, 2L, 1L, 1L, true);
+    }
+
+    @Test
+    void updateUserAccess_returnsNull_whenTargetNotFound() {
+        UUID targetId = UUID.randomUUID();
+        when(adminDao.existsAndNotDeleted(targetId)).thenReturn(false);
+
+        AdminUserAccessUpdateRequest req = new AdminUserAccessUpdateRequest();
+        AdminUserDetailsDto result = adminService.updateUserAccess(targetId, UUID.randomUUID(), req);
+
+        assertNull(result);
+    }
+
+    @Test
+    void updateUserAccess_invalidRoleCode_throwsServiceException() {
+        UUID targetId = UUID.randomUUID();
+        when(adminDao.existsAndNotDeleted(targetId)).thenReturn(true);
+        when(adminDao.findRoleIdByCode("INVALID")).thenReturn(null);
+
+        AdminUserAccessUpdateRequest req = new AdminUserAccessUpdateRequest();
+        req.setRoleCode("INVALID");
+
+        assertThrows(ServiceException.class, () ->
+                adminService.updateUserAccess(targetId, UUID.randomUUID(), req)
+        );
+    }
+
+    @Test
+    void updateUserAccess_rejectsSelfDemotion() {
+        UUID adminId = UUID.randomUUID();
+        when(adminDao.existsAndNotDeleted(adminId)).thenReturn(true);
+        when(adminDao.findRoleIdByCode("USER")).thenReturn(1L);
+        when(adminDao.findStatusIdByCode("ACTIVE")).thenReturn(1L);
+        when(adminDao.findPermissionIdByCode("ALLOWED")).thenReturn(1L);
+        AdminDao.UserAccessState state = new AdminDao.UserAccessState();
+        state.roleCode = "ADMIN";
+        state.statusCode = "ACTIVE";
+        when(adminDao.findUserAccessState(adminId)).thenReturn(state);
+
+        AdminUserAccessUpdateRequest req = new AdminUserAccessUpdateRequest();
+        req.setRoleCode("USER");
+        req.setStatusCode("ACTIVE");
+        req.setPermissionCode("ALLOWED");
+        req.setPrivileged(false);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                adminService.updateUserAccess(adminId, adminId, req)
+        );
+    }
+
+    @Test
+    void updateUserAccess_rejectsSelfBlock() {
+        UUID adminId = UUID.randomUUID();
+        when(adminDao.existsAndNotDeleted(adminId)).thenReturn(true);
+        when(adminDao.findRoleIdByCode("ADMIN")).thenReturn(2L);
+        when(adminDao.findStatusIdByCode("BLOCKED")).thenReturn(2L);
+        when(adminDao.findPermissionIdByCode("ALLOWED")).thenReturn(1L);
+        AdminDao.UserAccessState state = new AdminDao.UserAccessState();
+        state.roleCode = "ADMIN";
+        state.statusCode = "ACTIVE";
+        when(adminDao.findUserAccessState(adminId)).thenReturn(state);
+
+        AdminUserAccessUpdateRequest req = new AdminUserAccessUpdateRequest();
+        req.setRoleCode("ADMIN");
+        req.setStatusCode("BLOCKED");
+        req.setPermissionCode("ALLOWED");
+        req.setPrivileged(false);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                adminService.updateUserAccess(adminId, adminId, req)
+        );
+    }
+
+    @Test
+    void updateUserAccess_allowsOwnPermissionEdit() {
+        UUID adminId = UUID.randomUUID();
+        when(adminDao.existsAndNotDeleted(adminId)).thenReturn(true);
+        when(adminDao.findRoleIdByCode("ADMIN")).thenReturn(2L);
+        when(adminDao.findStatusIdByCode("ACTIVE")).thenReturn(1L);
+        when(adminDao.findPermissionIdByCode("FORBIDDEN")).thenReturn(2L);
+        AdminDao.UserAccessState state = new AdminDao.UserAccessState();
+        state.roleCode = "ADMIN";
+        state.statusCode = "ACTIVE";
+        when(adminDao.findUserAccessState(adminId)).thenReturn(state);
+        when(adminDao.updateUserAccess(adminId, 2L, 1L, 2L, false)).thenReturn(true);
+        when(adminDao.findUserDetails(adminId)).thenReturn(createUserDetailsRow(adminId));
+
+        AdminUserAccessUpdateRequest req = new AdminUserAccessUpdateRequest();
+        req.setRoleCode("ADMIN");
+        req.setStatusCode("ACTIVE");
+        req.setPermissionCode("FORBIDDEN");
+        req.setPrivileged(false);
+
+        AdminUserDetailsDto result = adminService.updateUserAccess(adminId, adminId, req);
+
+        assertNotNull(result);
+    }
+
+    // --- Phase 6: User soft-delete tests ---
+
+    @Test
+    void deleteUser_returnsTrue_whenSuccess() {
+        UUID targetId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+        when(adminDao.existsAndNotDeleted(targetId)).thenReturn(true);
+        doNothing().when(adminDao).adminSoftDeleteUser(targetId);
+
+        boolean result = adminService.deleteUser(targetId, adminId);
+
+        assertTrue(result);
+        verify(adminDao).adminSoftDeleteUser(targetId);
+    }
+
+    @Test
+    void deleteUser_rejectsSelfDelete() {
+        UUID adminId = UUID.randomUUID();
+
+        assertThrows(IllegalArgumentException.class, () ->
+                adminService.deleteUser(adminId, adminId)
+        );
+    }
+
+    @Test
+    void deleteUser_returnsFalse_whenTargetNotFound() {
+        UUID targetId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+        when(adminDao.existsAndNotDeleted(targetId)).thenReturn(false);
+
+        boolean result = adminService.deleteUser(targetId, adminId);
+
+        assertFalse(result);
+        verify(adminDao, never()).adminSoftDeleteUser(any());
     }
 
     // Helper: reflection check that DTO doesn't have a field

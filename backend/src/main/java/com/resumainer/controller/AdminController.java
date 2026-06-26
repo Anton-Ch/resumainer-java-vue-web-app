@@ -3,6 +3,7 @@ package com.resumainer.controller;
 import com.resumainer.dto.UserSession;
 import com.resumainer.dto.admin.AdminDashboardDto;
 import com.resumainer.dto.admin.AdminSavedResumeDto;
+import com.resumainer.dto.admin.AdminUserAccessUpdateRequest;
 import com.resumainer.dto.admin.AdminUserDetailsDto;
 import com.resumainer.dto.admin.AdminUserListItemDto;
 import com.resumainer.model.PagedResponse;
@@ -13,7 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -128,6 +131,72 @@ public class AdminController {
             log.error("Error fetching user details for {}: {}", userId, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Failed to load user details."));
+        }
+    }
+
+    @PatchMapping("/users/{userId}/access")
+    public ResponseEntity<?> updateUserAccess(
+            @PathVariable UUID userId,
+            @RequestBody AdminUserAccessUpdateRequest request,
+            @SessionAttribute(value = "user", required = false) UserSession currentAdmin) {
+
+        if (currentAdmin == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        log.debug("updateUserAccess: targetUserId={}, currentAdminId={}",
+                userId, currentAdmin.getUserId());
+
+        try {
+            AdminUserDetailsDto details = adminService.updateUserAccess(
+                    userId, currentAdmin.getUserId(), request);
+            if (details == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "User not found."));
+            }
+            return ResponseEntity.ok(details);
+        } catch (IllegalArgumentException e) {
+            // Self-protection violation
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (com.resumainer.exception.ServiceException e) {
+            // Invalid lookup code
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error updating user access for {}: {}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to update user access."));
+        }
+    }
+
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<Map<String, String>> deleteUser(
+            @PathVariable UUID userId,
+            @SessionAttribute(value = "user", required = false) UserSession currentAdmin) {
+
+        if (currentAdmin == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        log.debug("deleteUser: targetUserId={}, currentAdminId={}",
+                userId, currentAdmin.getUserId());
+
+        try {
+            boolean deleted = adminService.deleteUser(userId, currentAdmin.getUserId());
+            if (deleted) {
+                return ResponseEntity.ok(Map.of("message", "User deleted"));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "Failed to delete user."));
+        } catch (IllegalArgumentException e) {
+            // Self-delete attempt
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error deleting user {}: {}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to delete user."));
         }
     }
 

@@ -2,8 +2,11 @@ package com.resumainer.service;
 
 import com.resumainer.dao.AdminDao;
 import com.resumainer.dao.AdminDao.AdminSavedResumeRow;
+import com.resumainer.dao.AdminDao.AdminUserDetailsRow;
+import com.resumainer.dao.AdminDao.AdminUserRow;
 import com.resumainer.dto.admin.AdminDashboardDto;
 import com.resumainer.dto.admin.AdminSavedResumeDto;
+import com.resumainer.dto.admin.AdminUserAccessUpdateRequest;
 import com.resumainer.dto.admin.AdminUserAccountDto;
 import com.resumainer.dto.admin.AdminUserAdditionalInfoDto;
 import com.resumainer.dto.admin.AdminUserContactDto;
@@ -221,6 +224,104 @@ public class AdminService {
                 .collect(Collectors.toList());
 
         return new PagedResponse<>(items, page, size, totalElements);
+    }
+
+    // --- Phase 6: Admin access update ---
+
+    /**
+     * Updates a user's access control fields.
+     *
+     * @param targetUserId   the user to update
+     * @param currentAdminId the currently logged-in admin
+     * @param request        the requested access changes
+     * @return updated AdminUserDetailsDto or null if user not found/deleted
+     * @throws ServiceException   if lookup code is invalid
+     * @throws IllegalArgumentException if self-demotion or self-block attempted
+     */
+    public AdminUserDetailsDto updateUserAccess(UUID targetUserId, UUID currentAdminId,
+                                                 AdminUserAccessUpdateRequest request) {
+        // Validate target user exists
+        if (!adminDao.existsAndNotDeleted(targetUserId)) {
+            return null;
+        }
+
+        // Resolve lookup codes to IDs
+        Long roleId = resolveRoleCode(request.getRoleCode());
+        Long statusId = resolveStatusCode(request.getStatusCode());
+        Long permissionId = resolvePermissionCode(request.getPermissionCode());
+
+        if (roleId == null) {
+            throw new ServiceException("INVALID_ROLE", "Invalid role code: " + request.getRoleCode());
+        }
+        if (statusId == null) {
+            throw new ServiceException("INVALID_STATUS", "Invalid status code: " + request.getStatusCode());
+        }
+        if (permissionId == null) {
+            throw new ServiceException("INVALID_PERMISSION", "Invalid permission code: " + request.getPermissionCode());
+        }
+
+        // Self-protection checks
+        if (targetUserId.equals(currentAdminId)) {
+            // Get current state for comparison
+            AdminDao.UserAccessState currentState = adminDao.findUserAccessState(targetUserId);
+
+            // Self-demotion: changing own role from ADMIN to USER
+            if ("ADMIN".equals(currentState.roleCode) && "USER".equals(request.getRoleCode())) {
+                throw new IllegalArgumentException("You cannot demote your own admin account.");
+            }
+
+            // Self-block: changing own status from ACTIVE to BLOCKED
+            if ("ACTIVE".equals(currentState.statusCode) && "BLOCKED".equals(request.getStatusCode())) {
+                throw new IllegalArgumentException("You cannot block your own admin account.");
+            }
+        }
+
+        // Update
+        adminDao.updateUserAccess(targetUserId, roleId, statusId, permissionId, request.isPrivileged());
+
+        // Return updated details
+        return getUserDetails(targetUserId, currentAdminId);
+    }
+
+    private Long resolveRoleCode(String code) {
+        if (code == null || code.isBlank()) return null;
+        return adminDao.findRoleIdByCode(code);
+    }
+
+    private Long resolveStatusCode(String code) {
+        if (code == null || code.isBlank()) return null;
+        return adminDao.findStatusIdByCode(code);
+    }
+
+    private Long resolvePermissionCode(String code) {
+        if (code == null || code.isBlank()) return null;
+        return adminDao.findPermissionIdByCode(code);
+    }
+
+    // --- Phase 6: Admin user soft-delete ---
+
+    /**
+     * Admin-scoped soft-delete for any user (self-delete rejected).
+     *
+     * @param targetUserId   the user to delete
+     * @param currentAdminId the currently logged-in admin
+     * @return true if deleted, false if not found or already deleted
+     * @throws IllegalArgumentException if target is current admin
+     */
+    public boolean deleteUser(UUID targetUserId, UUID currentAdminId) {
+        // Self-delete rejection
+        if (targetUserId.equals(currentAdminId)) {
+            throw new IllegalArgumentException("You cannot delete your own admin account.");
+        }
+
+        // Check target exists
+        if (!adminDao.existsAndNotDeleted(targetUserId)) {
+            return false;
+        }
+
+        // Perform transactional cascade soft-delete
+        adminDao.adminSoftDeleteUser(targetUserId);
+        return true;
     }
 
     // --- Phase 3: Admin resume delete ---
