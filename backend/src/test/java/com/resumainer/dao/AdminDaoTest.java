@@ -9,7 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -362,5 +362,96 @@ class AdminDaoTest {
         assertEquals("john@example.com", results.get(0).email);
         assertFalse(results.get(0).pdfFilePresent);
         assertFalse(results.get(0).htmlFilePresent);
+    }
+
+    // --- Phase 3: Admin resume soft-delete tests ---
+
+    @Test
+    void adminSoftDeleteResume_returnsTrue_whenUpdated() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(1);
+
+        boolean result = adminDao.adminSoftDeleteResume(101L);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void adminSoftDeleteResume_returnsFalse_whenNoRowUpdated() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(0);
+
+        boolean result = adminDao.adminSoftDeleteResume(999L);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void adminSoftDeleteResume_setsIsDeletedAndDeletedAt() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(1);
+
+        adminDao.adminSoftDeleteResume(101L);
+
+        verify(connection).prepareStatement(
+                argThat(sql -> {
+                    String s = sql.toString();
+                    return s.contains("UPDATE saved_resumes")
+                            && s.contains("is_deleted = TRUE")
+                            && s.contains("deleted_at = NOW()")
+                            && s.contains("WHERE id = ?")
+                            && !s.contains("user_id");  // not owner-scoped
+                })
+        );
+    }
+
+    @Test
+    void adminSoftDeleteResume_setsResumeIdParameter() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(1);
+
+        adminDao.adminSoftDeleteResume(101L);
+
+        verify(preparedStatement).setLong(1, 101L);
+    }
+
+    @Test
+    void adminSoftDeleteResume_skipsAlreadyDeletedResume() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(0);
+
+        boolean result = adminDao.adminSoftDeleteResume(101L);
+
+        assertFalse(result);
+        // SQL includes AND is_deleted = FALSE to prevent re-deleting
+        verify(connection).prepareStatement(
+                argThat(sql -> sql.toString().contains("is_deleted = FALSE"))
+        );
+    }
+
+    @Test
+    void adminSoftDeleteResume_notOwnerScoped() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(1);
+
+        adminDao.adminSoftDeleteResume(101L);
+
+        // Admin delete must not be owner-scoped
+        verify(connection).prepareStatement(
+                argThat(sql -> !sql.toString().contains("user_id"))
+        );
+    }
+
+    @Test
+    void adminSoftDeleteResume_handlesException() throws Exception {
+        when(preparedStatement.executeUpdate()).thenThrow(new RuntimeException("DB error"));
+
+        assertThrows(RuntimeException.class, () -> adminDao.adminSoftDeleteResume(101L));
+    }
+
+    @Test
+    void adminSoftDeleteResume_doesNotHardDelete() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(1);
+
+        adminDao.adminSoftDeleteResume(101L);
+
+        // Verify no DELETE statement is used
+        verify(connection).prepareStatement(
+                argThat(sql -> !sql.toString().toUpperCase().startsWith("DELETE"))
+        );
     }
 }

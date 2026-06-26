@@ -105,6 +105,19 @@ public class AdminService {
         return new PagedResponse<>(items, page, size, totalElements);
     }
 
+    // --- Phase 3: Admin resume delete ---
+
+    /**
+     * Admin-scoped soft-delete for any saved resume.
+     *
+     * @param resumeId the resume ID to delete
+     * @return true if deleted, false if not found or already deleted
+     */
+    public boolean deleteResume(long resumeId) {
+        log.debug("deleteResume: resumeId={}", resumeId);
+        return adminDao.adminSoftDeleteResume(resumeId);
+    }
+
     // --- Mapping ---
 
     private AdminSavedResumeDto toDto(AdminSavedResumeRow row) {

@@ -350,6 +350,38 @@ public class AdminDao {
         }
     }
 
+    // --- Phase 3: Admin resume soft-delete ---
+
+    /**
+     * Admin-scoped soft-delete for any saved resume (not owner-scoped).
+     *
+     * @param resumeId the resume ID to delete
+     * @return true if a row was updated, false if not found or already deleted
+     */
+    public boolean adminSoftDeleteResume(long resumeId) {
+        String sql = "UPDATE saved_resumes SET is_deleted = TRUE, deleted_at = NOW() "
+                + "WHERE id = ? AND is_deleted = FALSE";
+
+        log.debug("adminSoftDeleteResume: resumeId={}", resumeId);
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, resumeId);
+            boolean updated = stmt.executeUpdate() > 0;
+            if (updated) {
+                log.debug("Admin soft-deleted resume: id={}", resumeId);
+            } else {
+                log.debug("Admin soft-delete skipped: resumeId={} (not found or already deleted)", resumeId);
+            }
+            return updated;
+
+        } catch (SQLException e) {
+            log.error("Error admin soft-deleting resume: {}", resumeId, e);
+            throw new RuntimeException("Database error deleting resume", e);
+        }
+    }
+
     // --- Row mapping ---
 
     private AdminSavedResumeRow mapResumeRow(ResultSet rs) throws SQLException {

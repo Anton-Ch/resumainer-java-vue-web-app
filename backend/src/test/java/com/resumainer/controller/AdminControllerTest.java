@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
@@ -261,5 +262,39 @@ class AdminControllerTest {
                         .param("page", "-1")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+    }
+
+    // --- Phase 3: Admin resume delete tests ---
+
+    @Test
+    void deleteResume_returnsOkWithMessage_whenSuccess() throws Exception {
+        when(adminService.deleteResume(101L)).thenReturn(true);
+
+        mockMvc.perform(delete("/api/admin/resumes/101")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").exists());
+
+        verify(adminService).deleteResume(101L);
+    }
+
+    @Test
+    void deleteResume_returnsNotFound_whenNoSuchResume() throws Exception {
+        when(adminService.deleteResume(999L)).thenReturn(false);
+
+        mockMvc.perform(delete("/api/admin/resumes/999")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void deleteResume_returnsSafeError_whenServiceFails() throws Exception {
+        when(adminService.deleteResume(anyLong())).thenThrow(new RuntimeException("Internal DB error"));
+
+        mockMvc.perform(delete("/api/admin/resumes/1")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").exists());
     }
 }
