@@ -619,7 +619,17 @@
     },
     "aiModels": {
       "title": "AI Models",
-      "wip": "AI model management is coming in a future update."
+      "wip": "AI model management is coming in a future update.",
+      "wipBadge": "Work in progress",
+      "description": "The AI Models admin section is reserved for future model configuration. Current release does not support model management from the UI.",
+      "safetyNote": "No API keys are displayed here. No provider secrets are stored or edited here. Model and provider configuration remains backend/environment-controlled.",
+      "plannedTitle": "Planned for future releases",
+      "planModelList": "Model list and status overview",
+      "planProviderConfig": "Provider configuration (OpenRouter, etc.)",
+      "planDefaultModel": "Default model selection per generation type",
+      "planUsageCost": "Usage and cost visibility",
+      "backToHome": "Back to Admin Home",
+      "goToUsers": "Go to Users"
     },
     "stats": {
       "totalUsers": "Total users",
