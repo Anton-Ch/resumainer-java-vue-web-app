@@ -1,7 +1,9 @@
 package com.resumainer.controller;
 
+import com.resumainer.dto.UserSession;
 import com.resumainer.dto.admin.AdminDashboardDto;
 import com.resumainer.dto.admin.AdminSavedResumeDto;
+import com.resumainer.dto.admin.AdminUserDetailsDto;
 import com.resumainer.dto.admin.AdminUserListItemDto;
 import com.resumainer.model.PagedResponse;
 import com.resumainer.service.AdminService;
@@ -15,8 +17,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.SessionAttribute;
 
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Admin controller for all /api/admin/** endpoints.
@@ -99,6 +103,32 @@ public class AdminController {
                 sortField, sortDir, page, size);
 
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<?> getUserDetails(
+            @PathVariable UUID userId,
+            @SessionAttribute(value = "user", required = false) UserSession currentAdmin) {
+
+        if (currentAdmin == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        log.debug("getUserDetails: targetUserId={}, currentAdminId={}",
+                userId, currentAdmin.getUserId());
+
+        try {
+            AdminUserDetailsDto details = adminService.getUserDetails(userId, currentAdmin.getUserId());
+            if (details == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "User not found."));
+            }
+            return ResponseEntity.ok(details);
+        } catch (Exception e) {
+            log.error("Error fetching user details for {}: {}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to load user details."));
+        }
     }
 
     @DeleteMapping("/resumes/{id}")

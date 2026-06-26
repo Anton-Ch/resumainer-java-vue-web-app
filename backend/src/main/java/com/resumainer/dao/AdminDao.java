@@ -674,6 +674,147 @@ public class AdminDao {
         return USER_SORT_MAP.getOrDefault(f, "u.created_at");
     }
 
+    // --- Phase 5: Admin user details ---
+
+    /**
+     * Finds a single user's details for the admin user details page.
+     * Returns null if user is not found or soft-deleted.
+     */
+    public AdminUserDetailsRow findUserDetails(UUID userId) {
+        String sql = "SELECT u.id, u.username, u.email AS account_email, "
+                + "r.code AS role_code, r.name AS role_name, "
+                + "us.code AS status_code, us.name AS status_name, "
+                + "up.code AS permission_code, up.name AS permission_name, "
+                + "u.is_privileged, "
+                + "dl.code AS default_lang_code, dl.name AS default_lang_name, "
+                + "sl.code AS secondary_lang_code, sl.name AS secondary_lang_name, "
+                + "u.created_at, u.updated_at, "
+                + "cd.full_name, cd.professional_title, cd.phone, "
+                + "cd.resume_email, cd.location, "
+                + "cd.linkedin_url, cd.portfolio_url, cd.telegram, cd.whatsapp, "
+                + "api.skills, api.languages AS api_languages, "
+                + "api.professional_aspirations, api.achievements, "
+                + "api.general_information, "
+                + "api.ready_for_relocation, api.ready_for_business_trips, "
+                + "api.date_of_birth, api.citizenship "
+                + "FROM users u "
+                + "JOIN role r ON r.id = u.role_id "
+                + "JOIN user_status us ON us.id = u.status_id "
+                + "JOIN user_permission up ON up.id = u.permission_id "
+                + "LEFT JOIN language dl ON dl.id = u.default_language_id "
+                + "LEFT JOIN language sl ON sl.id = u.secondary_language_id "
+                + "LEFT JOIN contact_detail cd ON cd.user_id = u.id "
+                + "LEFT JOIN additional_profile_info api ON api.user_id = u.id "
+                + "WHERE u.id = ? AND u.is_deleted = FALSE";
+
+        log.debug("findUserDetails: userId={}", userId);
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setObject(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? mapUserDetailsRow(rs) : null;
+            }
+
+        } catch (SQLException e) {
+            log.error("Error finding user details: {}", userId, e);
+            throw new RuntimeException("Database error finding user details", e);
+        }
+    }
+
+    private AdminUserDetailsRow mapUserDetailsRow(ResultSet rs) throws SQLException {
+        AdminUserDetailsRow row = new AdminUserDetailsRow();
+        row.id = (UUID) rs.getObject("id");
+        row.username = rs.getString("username");
+        row.accountEmail = rs.getString("account_email");
+        row.roleCode = rs.getString("role_code");
+        row.roleName = rs.getString("role_name");
+        row.statusCode = rs.getString("status_code");
+        row.statusName = rs.getString("status_name");
+        row.permissionCode = rs.getString("permission_code");
+        row.permissionName = rs.getString("permission_name");
+        row.isPrivileged = rs.getBoolean("is_privileged");
+        row.defaultLanguageCode = rs.getString("default_lang_code");
+        row.defaultLanguageName = rs.getString("default_lang_name");
+        row.secondaryLanguageCode = rs.getString("secondary_lang_code");
+        row.secondaryLanguageName = rs.getString("secondary_lang_name");
+        java.sql.Timestamp createdAt = rs.getTimestamp("created_at");
+        row.createdAt = createdAt != null ? createdAt.toLocalDateTime() : null;
+        java.sql.Timestamp updatedAt = rs.getTimestamp("updated_at");
+        row.updatedAt = updatedAt != null ? updatedAt.toLocalDateTime() : null;
+
+        // Contact section
+        row.fullName = rs.getString("full_name");
+        row.professionalTitle = rs.getString("professional_title");
+        row.phone = rs.getString("phone");
+        row.resumeEmail = rs.getString("resume_email");
+        row.location = rs.getString("location");
+        row.linkedinUrl = rs.getString("linkedin_url");
+        row.portfolioUrl = rs.getString("portfolio_url");
+        row.telegram = rs.getString("telegram");
+        row.whatsapp = rs.getString("whatsapp");
+
+        // Additional info section (no photo_file_path per security rules)
+        row.skills = rs.getString("skills");
+        row.apiLanguages = rs.getString("api_languages");
+        row.professionalAspirations = rs.getString("professional_aspirations");
+        row.achievements = rs.getString("achievements");
+        row.generalInformation = rs.getString("general_information");
+        row.readyForRelocation = rs.getString("ready_for_relocation");
+        row.readyForBusinessTrips = rs.getString("ready_for_business_trips");
+        java.sql.Date dob = rs.getDate("date_of_birth");
+        row.dateOfBirth = dob != null ? dob.toLocalDate() : null;
+        row.citizenship = rs.getString("citizenship");
+        return row;
+    }
+
+    /**
+     * Lightweight row representation for admin user details.
+     * Contains all fields for account, contacts, and additional info sections.
+     */
+    public static class AdminUserDetailsRow {
+        public UUID id;
+        public String username;
+        public String accountEmail;
+        public String roleCode;
+        public String roleName;
+        public String statusCode;
+        public String statusName;
+        public String permissionCode;
+        public String permissionName;
+        public boolean isPrivileged;
+        public String defaultLanguageCode;
+        public String defaultLanguageName;
+        public String secondaryLanguageCode;
+        public String secondaryLanguageName;
+        public java.time.LocalDateTime createdAt;
+        public java.time.LocalDateTime updatedAt;
+
+        // Contact section
+        public String fullName;
+        public String professionalTitle;
+        public String phone;
+        public String resumeEmail;
+        public String location;
+        public String linkedinUrl;
+        public String portfolioUrl;
+        public String telegram;
+        public String whatsapp;
+
+        // Additional info section (safe fields only, no photo_file_path)
+        public String skills;
+        public String apiLanguages;
+        public String professionalAspirations;
+        public String achievements;
+        public String generalInformation;
+        public String readyForRelocation;
+        public String readyForBusinessTrips;
+        public java.time.LocalDate dateOfBirth;
+        public String citizenship;
+    }
+
     /**
      * Lightweight row representation for admin user listing.
      */
