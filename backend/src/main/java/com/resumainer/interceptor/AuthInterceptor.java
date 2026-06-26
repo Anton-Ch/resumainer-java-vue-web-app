@@ -41,8 +41,8 @@ public class AuthInterceptor implements HandlerInterceptor {
             // For /api/admin/** paths, require ADMIN role
             String path = request.getServletPath();
             if (path.startsWith("/api/admin/") && !"ADMIN".equals(user.getRole())) {
-                log.warn("Forbidden admin access attempt: {} {} by user {} with role {}",
-                        request.getMethod(), request.getRequestURI(), user.getEmail(), user.getRole());
+                log.warn("Forbidden admin access attempt: {} {} by userId={} role={}",
+                        request.getMethod(), request.getRequestURI(), user.getUserId(), user.getRole());
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 objectMapper.writeValue(response.getWriter(), Map.of(

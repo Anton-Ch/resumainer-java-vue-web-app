@@ -134,7 +134,7 @@
       <Column field="createdAt" :sortable="true" :header="$t('admin.resumes.created')" />
       <Column field="pdfAvailable" :header="$t('admin.resumes.pdfStatus')">
         <template #body="{ data }">
-          <Tag v-if="data.pdfAvailable" value="READY" severity="success" />
+          <Tag v-if="data.pdfAvailable" :value="$t('admin.resumes.pdfReady')" severity="success" />
           <Tag v-else :value="data.pdfStatus || 'N/A'" severity="warn" />
         </template>
       </Column>

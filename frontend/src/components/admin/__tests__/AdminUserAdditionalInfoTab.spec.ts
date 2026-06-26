@@ -16,6 +16,8 @@ const mockT = vi.fn((key: string) => {
     'admin.userDetails.dateOfBirth': 'Date of birth',
     'admin.userDetails.citizenship': 'Citizenship',
     'admin.userDetails.noAdditionalInfo': 'No additional info.',
+    'admin.userDetails.username': 'Username',
+    'admin.userDetails.notProvided': 'Not provided',
   }
   return m[key] || key
 })
@@ -39,9 +41,9 @@ function makeInfo(overrides: Partial<AdminUserAdditionalInfo> = {}): AdminUserAd
   }
 }
 
-function mountTab(info: AdminUserAdditionalInfo | null) {
+function mountTab(info: AdminUserAdditionalInfo | null, username: string = '') {
   return mount(AdminUserAdditionalInfoTab, {
-    props: { info },
+    props: { info, username },
     global: { mocks: { $t: mockT } },
   })
 }
@@ -74,5 +76,17 @@ describe('AdminUserAdditionalInfoTab', () => {
   it('renders empty state when info is null', () => {
     const wrapper = mountTab(null)
     expect(wrapper.text()).toContain('No additional info.')
+  })
+
+  it('renders username from prop', () => {
+    const wrapper = mountTab(makeInfo(), 'johndoe')
+    expect(wrapper.text()).toContain('johndoe')
+  })
+
+  it('username is read-only', () => {
+    const wrapper = mountTab(makeInfo(), 'johndoe')
+    expect(wrapper.find('input').exists()).toBe(false)
+    expect(wrapper.find('select').exists()).toBe(false)
+    expect(wrapper.find('button').exists()).toBe(false)
   })
 })

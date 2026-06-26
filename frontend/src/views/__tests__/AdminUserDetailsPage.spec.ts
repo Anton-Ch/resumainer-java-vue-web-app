@@ -53,7 +53,9 @@ const mockT = vi.fn((key: string) => {
     'admin.userDetails.deleteDescription': 'Delete description.',
     'admin.userDetails.noContacts': 'No contacts.',
     'admin.userDetails.noAdditionalInfo': 'No additional.',
-    'admin.userDetails.resumesComingSoon': 'Resumes coming soon.',
+    'admin.userDetails.userResumesTitle': 'User resumes.',
+    'admin.userDetails.userResumesDescription': 'User resumes.',
+    'admin.userDetails.userResumesLoadFailed': 'Failed.',
   }
   return m[key] || key
 })

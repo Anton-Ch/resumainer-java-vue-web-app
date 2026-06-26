@@ -548,8 +548,7 @@
     },
     "users": {
       "title": "Пользователи",
-      "subtitle": "Управление учётными записями",
-      "placeholder": "Таблица пользователей будет доступна в одном из будущих обновлений."
+      "subtitle": "Управление учётными записями"
     },
     "userDetails": {
       "title": "Данные пользователя",
@@ -585,10 +584,15 @@
       "tabContacts": "Контакты",
       "tabAdditional": "Доп. информация",
       "tabResumes": "Резюме",
-      "resumesComingSoon": "Список резюме пользователя будет доступен после расширения контракта бэкенд-эндпоинта.",
       "role": "Роль",
+      "roleUser": "Пользователь",
+      "roleAdmin": "Администратор",
       "status": "Статус",
+      "statusActive": "Активен",
+      "statusBlocked": "Заблокирован",
       "permission": "Право генерации",
+      "permissionAllowed": "Разрешено",
+      "permissionForbidden": "Запрещено",
       "isPrivileged": "Привилегированные права",
       "privileged": "Привилегированный",
       "nonPrivileged": "Обычный",
@@ -665,7 +669,8 @@
       "pageReport": "{first}–{last} из {totalRecords}",
       "noResults": "Резюме не найдены",
       "emptyTitle": "Нет резюме",
-      "emptyText": "Резюме по заданным критериям не найдены."
+      "emptyText": "Резюме по заданным критериям не найдены.",
+      "pdfReady": "Готов"
     },
     "usersTable": {
       "searchPlaceholder": "Поиск по имени пользователя, email или полному имени",

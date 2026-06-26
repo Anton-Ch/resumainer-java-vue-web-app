@@ -85,21 +85,21 @@ const emit = defineEmits<{
   'update:dirty': [isDirty: boolean]
 }>()
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 
 const roleOptions = computed(() => [
-  { value: 'USER', label: locale.value === 'ru' ? 'Пользователь' : 'User' },
-  { value: 'ADMIN', label: locale.value === 'ru' ? 'Администратор' : 'Admin' },
+  { value: 'USER', label: t('admin.userDetails.roleUser') },
+  { value: 'ADMIN', label: t('admin.userDetails.roleAdmin') },
 ])
 
 const statusOptions = computed(() => [
-  { value: 'ACTIVE', label: locale.value === 'ru' ? 'Активен' : 'Active' },
-  { value: 'BLOCKED', label: locale.value === 'ru' ? 'Заблокирован' : 'Blocked' },
+  { value: 'ACTIVE', label: t('admin.userDetails.statusActive') },
+  { value: 'BLOCKED', label: t('admin.userDetails.statusBlocked') },
 ])
 
 const permissionOptions = computed(() => [
-  { value: 'ALLOWED', label: locale.value === 'ru' ? 'Разрешено' : 'Allowed' },
-  { value: 'FORBIDDEN', label: locale.value === 'ru' ? 'Запрещено' : 'Forbidden' },
+  { value: 'ALLOWED', label: t('admin.userDetails.permissionAllowed') },
+  { value: 'FORBIDDEN', label: t('admin.userDetails.permissionForbidden') },
 ])
 
 const disableRole = computed(() =>

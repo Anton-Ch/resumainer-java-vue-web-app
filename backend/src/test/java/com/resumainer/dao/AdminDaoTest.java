@@ -150,8 +150,8 @@ class AdminDaoTest {
         when(resultSet.getString("public_url_link")).thenReturn("https://example.com/anton/ABC123");
         when(resultSet.getString("cover_letter")).thenReturn("Cover letter text");
         when(resultSet.getString("pdf_status")).thenReturn("READY");
-        when(resultSet.getString("pdf_file_path")).thenReturn("/pdfs/101.pdf");
-        when(resultSet.getString("html_file_path")).thenReturn("/html/101.html");
+        when(resultSet.getBoolean("pdf_file_present")).thenReturn(true);
+        when(resultSet.getBoolean("html_file_present")).thenReturn(true);
 
         java.util.List<AdminDao.AdminSavedResumeRow> results = adminDao.findResumes(
                 null, null, null, null, null,
@@ -349,8 +349,8 @@ class AdminDaoTest {
         when(resultSet.getString("public_url_link")).thenReturn(null);
         when(resultSet.getString("cover_letter")).thenReturn(null);
         when(resultSet.getString("pdf_status")).thenReturn(null);
-        when(resultSet.getString("pdf_file_path")).thenReturn(null);
-        when(resultSet.getString("html_file_path")).thenReturn(null);
+        when(resultSet.getBoolean("pdf_file_present")).thenReturn(false);
+        when(resultSet.getBoolean("html_file_present")).thenReturn(false);
 
         java.util.List<AdminDao.AdminSavedResumeRow> results = adminDao.findResumes(
                 null, null, null, null, null,
