@@ -28,6 +28,24 @@ const router = createRouter({
       component: () => import('@/views/AdminHomePage.vue'),
       meta: { requiresAuth: true, requiresAdmin: true }
     },
+    {
+      path: '/admin/users',
+      name: 'admin-users',
+      component: () => import('@/views/AdminUsersPage.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/admin/users/:userId',
+      name: 'admin-user-details',
+      component: () => import('@/views/AdminUserDetailsPage.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/admin/ai-models',
+      name: 'admin-ai-models',
+      component: () => import('@/views/AdminAiModelsWipPage.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
     // Profile redirect
     {
       path: '/profile',

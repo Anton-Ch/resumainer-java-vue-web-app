@@ -539,5 +539,29 @@
     "language": "Language",
     "logout": "Log out",
     "mobileMenu": "Menu"
+  },
+  "admin": {
+    "home": {
+      "title": "Admin",
+      "subtitle": "System overview and management"
+    },
+    "users": {
+      "title": "Users",
+      "subtitle": "Manage user accounts",
+      "placeholder": "User management table will be available in a future update."
+    },
+    "userDetails": {
+      "title": "User Details",
+      "back": "Back to Users",
+      "placeholder": "User details with contact, account, additional info, and resume tabs will be available in a future update."
+    },
+    "aiModels": {
+      "title": "AI Models",
+      "wip": "AI model management is coming in a future update."
+    },
+    "resumesSection": {
+      "title": "All Resumes",
+      "placeholder": "Resume moderation table will be available in a future update."
+    }
   }
 }
