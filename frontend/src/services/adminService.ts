@@ -96,6 +96,26 @@ export async function updateAdminUserAccess(userId: string, request: AdminUserAc
 }
 
 /**
+ * Fetch user-scoped admin resumes list for a specific user.
+ */
+export async function getAdminUserResumes(
+  userId: string,
+  query: AdminResumesQuery = {}
+): Promise<PagedResponse<AdminSavedResume>> {
+  const qs = buildQueryString({
+    page: query.page,
+    size: query.size,
+    search: query.search,
+    language: query.language,
+    adaptationLevel: query.adaptationLevel,
+    createdFrom: query.createdFrom,
+    createdTo: query.createdTo,
+    sort: query.sort
+  })
+  return apiRequest<PagedResponse<AdminSavedResume>>(`${BASE}/users/${userId}/resumes${qs}`)
+}
+
+/**
  * Soft-delete a user as admin (self-delete rejected by backend).
  */
 export async function deleteAdminUser(userId: string): Promise<{ message: string }> {

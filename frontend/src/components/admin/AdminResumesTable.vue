@@ -93,7 +93,7 @@
       @page="onPage"
       @sort="onSort"
       @row-click="onRowClick"
-      :currentPageReportTemplate="$t('admin.resumes.pageReport')"
+      :currentPageReportTemplate="pageReportTemplate"
       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
       :emptyMessage="$t('admin.resumes.noResults')"
       selectionMode="single"
@@ -121,7 +121,7 @@
           <span v-tooltip.top="data.ownerEmail" class="truncate-cell" style="max-width:200px">{{ data.ownerEmail }}</span>
         </template>
       </Column>
-      <Column field="languageCode" :sortable="true" :header="$t('admin.resumes.language')">
+      <Column field="language" :sortable="true" :header="$t('admin.resumes.language')">
         <template #body="{ data }">
           <Tag :value="data.languageCode" :severity="data.languageCode === 'EN' ? 'info' : 'success'" />
         </template>
@@ -181,6 +181,12 @@ const emit = defineEmits<{
 
 const { t, locale } = useI18n()
 const dt = ref()
+
+const pageReportTemplate = computed(() =>
+  locale.value === 'ru'
+    ? '{first}–{last} из {totalRecords}'
+    : 'Showing {first} to {last} of {totalRecords}'
+)
 
 const langOptions = computed(() => [
   { value: 'EN', label: locale.value === 'ru' ? 'Английский' : 'English' },

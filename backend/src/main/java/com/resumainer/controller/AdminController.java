@@ -134,6 +134,58 @@ public class AdminController {
         }
     }
 
+    @GetMapping("/users/{userId}/resumes")
+    public ResponseEntity<?> getUserResumes(
+            @PathVariable UUID userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String language,
+            @RequestParam(required = false) String adaptationLevel,
+            @RequestParam(required = false) String createdFrom,
+            @RequestParam(required = false) String createdTo,
+            @RequestParam(defaultValue = "createdAt,desc") String sort,
+            @SessionAttribute(value = "user", required = false) UserSession currentAdmin) {
+
+        if (currentAdmin == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        log.debug("getUserResumes: targetUserId={}, currentAdminId={}",
+                userId, currentAdmin.getUserId());
+
+        try {
+            AdminUserDetailsDto details = adminService.getUserDetails(userId, currentAdmin.getUserId());
+            if (details == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "User not found."));
+            }
+
+            String sortField = "createdAt";
+            String sortDir = "desc";
+            if (sort != null && !sort.isBlank()) {
+                String[] parts = sort.split(",");
+                sortField = parts[0].trim();
+                if (parts.length > 1) {
+                    sortDir = parts[1].trim();
+                }
+            }
+
+            PagedResponse<AdminSavedResumeDto> result = adminService.getResumesByUserId(
+                    userId, search, language, adaptationLevel, createdFrom, createdTo,
+                    sortField, sortDir, page, size);
+
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error fetching resumes for user {}: {}", userId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to load user resumes."));
+        }
+    }
+
     @PatchMapping("/users/{userId}/access")
     public ResponseEntity<?> updateUserAccess(
             @PathVariable UUID userId,
