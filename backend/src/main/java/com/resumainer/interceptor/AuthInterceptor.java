@@ -11,6 +11,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.Map;
 
+import com.resumainer.dto.UserSession;
+
 /**
  * HandlerInterceptor that checks for an authenticated session.
  * <p>
@@ -34,6 +36,22 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("user") != null) {
+            UserSession user = (UserSession) session.getAttribute("user");
+
+            // For /api/admin/** paths, require ADMIN role
+            String path = request.getServletPath();
+            if (path.startsWith("/api/admin/") && !"ADMIN".equals(user.getRole())) {
+                log.warn("Forbidden admin access attempt: {} {} by user {} with role {}",
+                        request.getMethod(), request.getRequestURI(), user.getEmail(), user.getRole());
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                objectMapper.writeValue(response.getWriter(), Map.of(
+                        "error", "Forbidden",
+                        "message", "Admin access required"
+                ));
+                return false;
+            }
+
             return true;
         }
 
