@@ -59,15 +59,15 @@
       </div>
 
       <!-- PDF status -->
-      <div v-if="!resume.pdfAvailable && resume.pdfMessage" class="pdf-unavailable-msg">
+      <div v-if="resume.pdfAvailable === false" class="pdf-unavailable-msg">
         <i class="pi pi-exclamation-triangle" style="color: #D97706;"></i>
-        <span>{{ resume.pdfMessage }}</span>
+        <span>{{ $t('admin.resumeDetails.pdfNotAvailable') }}</span>
       </div>
 
       <!-- Public link -->
-      <div v-if="resume.publicUrlLink" class="public-link-row">
+      <div v-if="absolutePublicUrlLink" class="public-link-row">
         <i class="pi pi-link" style="color: #8091A7;"></i>
-        <span class="link-text">{{ resume.publicUrlLink }}</span>
+        <span class="link-text">{{ absolutePublicUrlLink }}</span>
         <Button :label="$t('admin.resumeDetails.copyLink')" icon="pi pi-copy" class="p-button-text p-button-sm" @click="onCopyLink" />
       </div>
 
@@ -148,10 +148,19 @@ const visible = computed({
   set: (value) => emit('update:visible', value),
 })
 
+const absolutePublicUrlLink = computed(() => {
+  const link = props.resume?.publicUrlLink
+  if (!link) return null
+  if (/^https?:\/\//i.test(link)) return link
+  if (typeof window === 'undefined' || !window.location?.origin) return link
+  const normalizedPath = link.startsWith('/') ? link : `/${link}`
+  return `${window.location.origin}${normalizedPath}`
+})
+
 async function onCopyLink() {
-  if (!props.resume?.publicUrlLink) return
+  if (!absolutePublicUrlLink.value) return
   try {
-    await navigator.clipboard.writeText(props.resume.publicUrlLink)
+    await navigator.clipboard.writeText(absolutePublicUrlLink.value)
     toast.add({ severity: 'success', summary: '', detail: t('admin.resumeDetails.linkCopied'), life: 3000 })
   } catch {
     toast.add({ severity: 'error', summary: '', detail: t('admin.resumeDetails.copyFailed'), life: 3000 })

@@ -119,7 +119,7 @@
       @page="onPage"
       @sort="onSort"
       @row-click="onRowClick"
-      :currentPageReportTemplate="$t('admin.usersTable.pageReport')"
+      :currentPageReportTemplate="pageReportTemplate"
       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
       :emptyMessage="$t('admin.usersTable.noResults')"
       selectionMode="single"
@@ -156,7 +156,11 @@
         </template>
       </Column>
       <Column field="resumesCount" :sortable="true" :header="$t('admin.usersTable.resumesCount')" />
-      <Column field="createdAt" :sortable="true" :header="$t('admin.usersTable.created')" />
+      <Column field="createdAt" :sortable="true" :header="$t('admin.usersTable.created')">
+        <template #body="{ data }">
+          <span>{{ formatDateTime(data.createdAt) }}</span>
+        </template>
+      </Column>
       <template #empty>
         <div class="empty-state">
           <i class="pi pi-users" style="font-size:2.5rem;color:#8091A7;margin-bottom:0.5rem;display:block;"></i>
@@ -205,6 +209,20 @@ const emit = defineEmits<{
 
 const { t, locale } = useI18n()
 const dt = ref()
+
+const pageReportTemplate = computed(() =>
+  locale.value === 'ru'
+    ? '{first}–{last} из {totalRecords}'
+    : 'Showing {first} to {last} of {totalRecords}'
+)
+
+function formatDateTime(value: string | null | undefined): string {
+  if (!value) return '-'
+  if (value.length >= 16 && value.includes('T')) {
+    return `${value.slice(0, 10)}_${value.slice(11, 16)}`
+  }
+  return value
+}
 
 const roleOptions = computed(() => [
   { value: 'USER', label: locale.value === 'ru' ? 'Пользователь' : 'User' },

@@ -32,7 +32,7 @@
           <Tag v-if="details.isCurrentAdmin" :value="$t('admin.userDetails.you')" severity="info" />
         </div>
 
-        <Tabs :value="activeTab" @update:value="onTabChange">
+        <Tabs :key="tabsKey" :value="activeTab" @update:value="onTabChange">
           <TabList>
             <Tab value="0">{{ $t('admin.userDetails.tabContacts') }}</Tab>
             <Tab value="1">{{ $t('admin.userDetails.tabAccount') }}</Tab>
@@ -56,7 +56,7 @@
               <AdminUserAdditionalInfoTab :info="details.additionalInfo" />
             </TabPanel>
             <TabPanel value="3">
-              <AdminUserResumesTab />
+              <AdminUserResumesTab :userId="details.id" />
             </TabPanel>
           </TabPanels>
         </Tabs>
@@ -148,25 +148,35 @@ async function loadDetails() {
   }
 }
 
+const tabsKey = ref(0)
+const previousTab = ref('0')
+
 function onTabChange(newTab: string | number) {
-  const tab = String(newTab)
-  if (accountDirty.value && tab !== '1') {
+  const requestedTab = String(newTab)
+  if (requestedTab === activeTab.value) return
+
+  const leavingDirtyAccount = activeTab.value === '1' && accountDirty.value && requestedTab !== '1'
+
+  if (leavingDirtyAccount) {
     confirm.require({
       header: t('admin.userDetails.unsavedTitle'),
       message: t('admin.userDetails.unsavedText'),
       rejectLabel: t('admin.userDetails.stay'),
       acceptLabel: t('admin.userDetails.leave'),
+      reject: () => {
+        activeTab.value = '1'
+        tabsKey.value += 1
+      },
       accept: () => {
         accountDirty.value = false
-        activeTab.value = tab
-      },
-      reject: () => {
-        // Keep current tab
+        activeTab.value = requestedTab
+        tabsKey.value += 1
       }
     })
-  } else {
-    activeTab.value = tab
+    return
   }
+
+  activeTab.value = requestedTab
 }
 
 async function onSaveAccess(request: AdminUserAccessUpdateRequest) {

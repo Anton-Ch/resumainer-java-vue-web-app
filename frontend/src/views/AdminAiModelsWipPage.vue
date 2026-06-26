@@ -36,18 +36,19 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppHeader from '@/components/AppHeader.vue'
 import Button from 'primevue/button'
 
 const { t } = useI18n()
 
-const plannedItems = [
+const plannedItems = computed(() => [
   t('admin.aiModels.planModelList'),
   t('admin.aiModels.planProviderConfig'),
   t('admin.aiModels.planDefaultModel'),
   t('admin.aiModels.planUsageCost'),
-]
+])
 </script>
 
 <style scoped>

@@ -93,7 +93,7 @@
       @page="onPage"
       @sort="onSort"
       @row-click="onRowClick"
-      :currentPageReportTemplate="$t('home.table.pageReport')"
+      :currentPageReportTemplate="pageReportTemplate"
       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
       :responsiveLayout="isMobile ? 'scroll' : 'stack'"
       :emptyMessage="$t('home.table.noResultsTitle')"
@@ -185,6 +185,12 @@ const emit = defineEmits<{
 
 const { t, locale } = useI18n()
 const dt = ref()
+
+const pageReportTemplate = computed(() =>
+  locale.value === 'ru'
+    ? '{first}–{last} из {totalRecords}'
+    : 'Showing {first} to {last} of {totalRecords}'
+)
 
 // Reactive options — update when locale changes
 const languageOptions = [

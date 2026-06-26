@@ -31,6 +31,7 @@ const mockT = vi.fn((key: string) => {
     'admin.resumeDetails.confirm': 'Delete',
     'admin.resumeDetails.deleteSuccess': 'Deleted.',
     'admin.resumeDetails.deleteFailed': 'Failed.',
+    'admin.resumeDetails.pdfNotAvailable': 'PDF is being generated. Please try again later.',
     'admin.resumes.language': 'Language',
     'admin.resumes.adaptationLevel': 'Adaptation',
     'admin.resumes.resumeTitle': 'Resume title',
@@ -171,5 +172,31 @@ describe('AdminResumeDetailsDialog', () => {
     vm.confirmDelete()
     // confirm.require should NOT have been called because deleteLoading is true
     expect(confirmAcceptCallback).toBeNull()
+  })
+
+  it('relative public URL displays as absolute', () => {
+    const resume = makeResume(1, { publicUrlLink: '/vasyausername/RU3S3' })
+    wrapper = mountDialog({ visible: true, resume })
+    const vm = wrapper.vm as any
+    // window.location.origin is http://localhost:3000 in test
+    expect(vm.absolutePublicUrlLink).toBe('http://localhost:3000/vasyausername/RU3S3')
+  })
+
+  it('already absolute public URL is not double-prefixed', () => {
+    const resume = makeResume(1, { publicUrlLink: 'https://example.com/vasya/RU3S3' })
+    wrapper = mountDialog({ visible: true, resume })
+    const vm = wrapper.vm as any
+    expect(vm.absolutePublicUrlLink).toBe('https://example.com/vasya/RU3S3')
+  })
+
+  it('PDF unavailable message uses localized text, not raw backend message', () => {
+    const resume = makeResume(1, { pdfAvailable: false, pdfMessage: 'PDF is being generated.' })
+    wrapper = mountDialog({ visible: true, resume })
+    const vm = wrapper.vm as any
+    // Component uses $t('admin.resumeDetails.pdfNotAvailable'), not resume.pdfMessage directly
+    expect(vm.$props.resume.pdfAvailable).toBe(false)
+    expect(vm.$props.resume.pdfMessage).toBe('PDF is being generated.')
+    // The template v-if uses pdfAvailable === false, and renders i18n key, not raw message
+    expect(vm.$props.resume.pdfMessage).toBeTruthy()
   })
 })
