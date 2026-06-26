@@ -3,78 +3,241 @@
     <AppHeader />
 
     <main class="page-main">
-      <!-- Stats overview -->
-      <div class="stats-row">
-        <div class="stat-card vue-card">
-          <span class="stat-label">{{ $t('home.totalUsers') }}</span>
-          <span class="stat-value">0</span>
+      <h1 class="page-h1">{{ $t('admin.home.title') }}</h1>
+
+      <!-- Dashboard stats -->
+      <div v-if="dashboardLoading" class="skeleton-block">
+        <div class="stats-skeleton-row">
+          <Skeleton width="100%" height="100px" v-for="i in 4" :key="i" />
         </div>
-        <div class="stat-card vue-card">
-          <span class="stat-label">{{ $t('home.totalTokensSent') }}</span>
-          <span class="stat-value">0</span>
-        </div>
-        <div class="stat-card vue-card">
-          <span class="stat-label">{{ $t('home.totalTokensGenerated') }}</span>
-          <span class="stat-value">0</span>
-        </div>
-        <div class="stat-card vue-card">
-          <span class="stat-label">{{ $t('home.totalResumes') }}</span>
-          <span class="stat-value">0</span>
+      </div>
+      <div v-else-if="dashboardError" class="inline-error">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ dashboardError }}</span>
+        <Button icon="pi pi-refresh" :label="$t('admin.home.retry')" class="p-button-text p-button-sm" @click="loadDashboard" />
+      </div>
+      <AdminStatsCards
+        v-else-if="dashboard"
+        :totalUsers="dashboard.totalUsers"
+        :totalResumes="dashboard.totalResumes"
+        :totalTokensSent="dashboard.totalTokensSent"
+        :totalTokensSentWip="dashboard.totalTokensSentWip"
+        :totalTokensGenerated="dashboard.totalTokensGenerated"
+        :totalTokensGeneratedWip="dashboard.totalTokensGeneratedWip"
+      />
+
+      <!-- Quick actions -->
+      <AdminQuickActions @scrollToResumes="scrollToResumes" />
+
+      <!-- Admin Resumes section (anchored) -->
+      <div ref="resumesSection" class="section-header">
+        <h2>{{ $t('admin.resumes.title') }}</h2>
+        <div v-if="tableError" class="inline-error" style="margin-bottom:0.5rem;">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>{{ tableError }}</span>
+          <Button icon="pi pi-refresh" :label="$t('admin.home.retry')" class="p-button-text p-button-sm" @click="loadResumes" />
         </div>
       </div>
 
-      <!-- Navigation cards -->
-      <div class="nav-cards">
-        <button class="nav-card vue-card" @click="goTo('users')">
-          <div class="nav-card-icon nav-icon-blue">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2" fill="none"/>
-              <path d="M4 20c0-4 3.6-8 8-8s8 4 8 8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <span class="nav-card-title">{{ $t('home.users') }}</span>
-          <span class="nav-card-arrow">&rarr;</span>
-        </button>
-
-        <button class="nav-card vue-card" @click="goTo('resumes')">
-          <div class="nav-card-icon nav-icon-emerald">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
-              <line x1="8" y1="8" x2="16" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="8" y1="13" x2="16" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <line x1="8" y1="18" x2="13" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <span class="nav-card-title">{{ $t('home.resumes') }}</span>
-          <span class="nav-card-arrow">&rarr;</span>
-        </button>
-
-        <button class="nav-card vue-card" @click="goTo('ai-models')">
-          <div class="nav-card-icon nav-icon-violet">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <rect x="2" y="2" width="20" height="20" rx="4" stroke="currentColor" stroke-width="2" fill="none"/>
-              <circle cx="9" cy="9" r="2" stroke="currentColor" stroke-width="2" fill="none"/>
-              <circle cx="15" cy="15" r="2" stroke="currentColor" stroke-width="2" fill="none"/>
-              <line x1="10.5" y1="10.5" x2="13.5" y2="13.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <span class="nav-card-title">{{ $t('home.aiModels') }}</span>
-          <span class="nav-card-arrow">&rarr;</span>
-        </button>
+      <div v-if="tableLoading && resumes.length === 0" class="skeleton-block">
+        <Skeleton width="100%" height="200px" />
       </div>
+      <AdminResumesTable
+        v-else
+        :items="resumes"
+        :totalRecords="totalRecords"
+        :loading="tableLoading"
+        :first="firstRow"
+        :sortField="currentSortField"
+        :sortOrder="currentSortOrder"
+        :size="queryParams.size || 10"
+        @page="onPage"
+        @sort="onSort"
+        @filter="onFilter"
+        @search="onSearch"
+        @openResume="openResumeModal"
+      />
+
+      <!-- Resume Details Modal -->
+      <AdminResumeDetailsDialog
+        v-model:visible="modalVisible"
+        :resume="selectedResume"
+        :delete-loading="deleteLoading"
+        @delete="handleDelete"
+      />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import { useI18n } from 'vue-i18n'
 import AppHeader from '@/components/AppHeader.vue'
+import AdminStatsCards from '@/components/admin/AdminStatsCards.vue'
+import AdminQuickActions from '@/components/admin/AdminQuickActions.vue'
+import AdminResumesTable from '@/components/admin/AdminResumesTable.vue'
+import AdminResumeDetailsDialog from '@/components/admin/AdminResumeDetailsDialog.vue'
+import Button from 'primevue/button'
+import Skeleton from 'primevue/skeleton'
+import { getAdminDashboard, getAdminResumes, deleteAdminResume } from '@/services/adminService'
+import type { AdminDashboard, AdminSavedResume } from '@/types/admin'
 
-const router = useRouter()
+const toast = useToast()
+const { t } = useI18n()
 
-function goTo(section: string) {
-  // Will be implemented in a future feature (admin section)
+// --- Dashboard state ---
+const dashboard = ref<AdminDashboard | null>(null)
+const dashboardLoading = ref(true)
+const dashboardError = ref<string | null>(null)
+
+// --- Table state ---
+const resumes = ref<AdminSavedResume[]>([])
+const totalRecords = ref(0)
+const tableLoading = ref(true)
+const tableError = ref<string | null>(null)
+
+const queryParams = reactive<{
+  page: number
+  size: number
+  sort: string
+  search?: string
+  language?: string
+  adaptationLevel?: string
+  dateFrom?: string
+  dateTo?: string
+}>({
+  page: 0,
+  size: 10,
+  sort: 'createdAt,desc'
+})
+
+// --- Modal state ---
+const selectedResume = ref<AdminSavedResume | null>(null)
+const modalVisible = ref(false)
+const deleteLoading = ref(false)
+
+// --- Refs ---
+const resumesSection = ref<HTMLElement | null>(null)
+
+const firstRow = computed(() => (queryParams.page || 0) * (queryParams.size || 10))
+
+const currentSortField = computed(() => {
+  const sort = queryParams.sort || 'createdAt,desc'
+  return sort.split(',')[0] || 'createdAt'
+})
+
+const currentSortOrder = computed(() => {
+  const sort = queryParams.sort || 'createdAt,desc'
+  return sort.split(',')[1] === 'asc' ? 1 : -1
+})
+
+async function loadDashboard() {
+  dashboardLoading.value = true
+  dashboardError.value = null
+  try {
+    dashboard.value = await getAdminDashboard()
+  } catch (e: any) {
+    dashboardError.value = e.message || t('admin.home.error')
+  } finally {
+    dashboardLoading.value = false
+  }
 }
+
+async function loadResumes() {
+  tableLoading.value = true
+  tableError.value = null
+  try {
+    const data = await getAdminResumes({
+      page: queryParams.page,
+      size: queryParams.size,
+      search: queryParams.search,
+      language: queryParams.language,
+      adaptationLevel: queryParams.adaptationLevel,
+      createdFrom: queryParams.dateFrom,
+      createdTo: queryParams.dateTo,
+      sort: queryParams.sort
+    })
+    resumes.value = data.items
+    totalRecords.value = data.totalElements
+  } catch (e: any) {
+    tableError.value = e.message || t('admin.home.error')
+    resumes.value = []
+    totalRecords.value = 0
+  } finally {
+    tableLoading.value = false
+  }
+}
+
+function scrollToResumes() {
+  if (resumesSection.value) {
+    resumesSection.value.scrollIntoView({ behavior: 'smooth' })
+  }
+}
+
+// --- Table events ---
+function onPage(event: any) {
+  queryParams.page = Math.floor(event.first / event.rows)
+  queryParams.size = event.rows
+  loadResumes()
+}
+
+const ALLOWED_SORT_FIELDS = new Set([
+  'resumeTitle', 'vacancyTitle', 'companyName',
+  'language', 'adaptationLevel', 'createdAt',
+  'ownerUsername', 'ownerEmail', 'ownerFullName'
+])
+
+function onSort(event: any) {
+  const rawField = event.sortField || 'createdAt'
+  // Only use field if it is in the whitelist; otherwise fall back to default
+  const field = ALLOWED_SORT_FIELDS.has(rawField) ? rawField : 'createdAt'
+  const order = event.sortOrder === -1 ? 'desc' : 'asc'
+  queryParams.sort = `${field},${order}`
+  queryParams.page = 0
+  loadResumes()
+}
+
+function onFilter(filters: any) {
+  queryParams.language = filters.language || undefined
+  queryParams.adaptationLevel = filters.adaptationLevel || undefined
+  queryParams.dateFrom = filters.dateFrom || undefined
+  queryParams.dateTo = filters.dateTo || undefined
+  queryParams.page = 0
+  loadResumes()
+}
+
+function onSearch(search: string) {
+  queryParams.search = search || undefined
+  queryParams.page = 0
+  loadResumes()
+}
+
+function openResumeModal(resume: AdminSavedResume) {
+  selectedResume.value = resume
+  modalVisible.value = true
+}
+
+async function handleDelete(resumeId: number) {
+  if (deleteLoading.value) return
+  deleteLoading.value = true
+  try {
+    await deleteAdminResume(resumeId)
+    toast.add({ severity: 'success', summary: '', detail: t('admin.resumeDetails.deleteSuccess'), life: 3000 })
+    modalVisible.value = false
+    selectedResume.value = null
+    await Promise.all([loadDashboard(), loadResumes()])
+  } catch (e: any) {
+    toast.add({ severity: 'error', summary: '', detail: t('admin.resumeDetails.deleteFailed'), life: 3000 })
+  } finally {
+    deleteLoading.value = false
+  }
+}
+
+onMounted(() => {
+  loadDashboard()
+  loadResumes()
+})
 </script>
 
 <style scoped>
@@ -82,134 +245,60 @@ function goTo(section: string) {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background: #F6F7FB;
 }
-
 .page-main {
   flex: 1;
-  max-width: 1200px;
+  max-width: 1280px;
   width: 100%;
   margin: 0 auto;
-  padding: var(--vue-space-6);
+  padding: 1.5rem 1.5rem 2rem;
   display: flex;
   flex-direction: column;
-  gap: var(--vue-space-6);
+  gap: 1.25rem;
 }
-
-.stats-row {
+.page-h1 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #10233F;
+  margin: 0;
+}
+.section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.section-header h2 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #10233F;
+  margin: 0;
+}
+.skeleton-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.stats-skeleton-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--vue-space-6);
+  gap: 1rem;
 }
-
-.stat-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.stat-label {
-  font-family: var(--vue-font-body);
-  font-size: var(--vue-text-sm);
-  color: var(--vue-text-secondary);
-  font-weight: 500;
-}
-
-.stat-value {
-  font-family: var(--vue-font-heading);
-  font-size: var(--vue-text-2xl);
-  font-weight: 700;
-  color: var(--vue-text-primary);
-}
-
-.nav-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--vue-space-6);
-}
-
-.nav-card {
+.inline-error {
   display: flex;
   align-items: center;
-  gap: var(--vue-space-4);
-  cursor: pointer;
-  border: 1px solid var(--vue-border-soft);
-  transition: box-shadow var(--vue-motion-base) var(--vue-ease-standard),
-              border-color var(--vue-motion-fast) var(--vue-ease-standard);
-  text-align: left;
-  font-family: inherit;
-  font-size: inherit;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #FFF7ED;
+  border: 1px solid #FDE68A;
+  border-radius: 8px;
+  color: #92400E;
+  font-size: 0.9rem;
 }
-
-.nav-card:hover {
-  box-shadow: var(--vue-shadow-elevated);
-  border-color: var(--vue-border-default);
-}
-
-.nav-card-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--vue-radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.nav-card-icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-.nav-icon-blue {
-  background: var(--vue-accent-bg-blue);
-  color: var(--vue-accent-blue);
-}
-
-.nav-icon-emerald {
-  background: var(--vue-accent-bg-primary);
-  color: var(--vue-accent-primary);
-}
-
-.nav-icon-violet {
-  background: var(--vue-accent-bg-violet);
-  color: var(--vue-accent-violet);
-}
-
-.nav-card-title {
-  font-family: var(--vue-font-heading);
-  font-size: var(--vue-text-md);
-  font-weight: 600;
-  color: var(--vue-text-primary);
-  flex: 1;
-}
-
-.nav-card-arrow {
-  color: var(--vue-text-muted);
-  font-size: 18px;
-  transition: transform var(--vue-motion-fast) var(--vue-ease-standard);
-}
-
-.nav-card:hover .nav-card-arrow {
-  transform: translateX(3px);
-}
-
 @media (max-width: 639px) {
-  .stats-row,
-  .nav-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .page-main {
-    padding: var(--vue-space-4);
-  }
-}
-
-@media (min-width: 640px) and (max-width: 1023px) {
-  .stats-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .nav-cards {
+  .stats-skeleton-row {
     grid-template-columns: 1fr;
   }
 }
