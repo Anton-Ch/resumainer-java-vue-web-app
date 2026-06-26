@@ -1,6 +1,10 @@
 <template>
   <div class="additional-tab">
     <div class="detail-grid" v-if="info">
+      <div class="detail-field">
+        <span class="detail-label">{{ $t('admin.userDetails.username') }}</span>
+        <span class="detail-value">{{ username || $t('admin.userDetails.notProvided') }}</span>
+      </div>
       <div class="detail-field" v-if="info.skills">
         <span class="detail-label">{{ $t('admin.userDetails.skills') }}</span>
         <span class="detail-value">{{ info.skills }}</span>
@@ -47,6 +51,7 @@ import type { AdminUserAdditionalInfo } from '@/types/admin'
 
 defineProps<{
   info: AdminUserAdditionalInfo | null
+  username: string
 }>()
 </script>
 

@@ -43,6 +43,41 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
+---
+
+### 2026-06-26 - Feature 010 Admin Console Completed
+
+**Status**
+Active
+
+**Why this is durable**
+Feature 010 was the largest feature branch to date (61 files, 15 commits). It introduced a complete admin console with dashboard, resume moderation, user management, user details with access update, user soft-delete, and AI Models WIP page. The branch surfaced several recurring anti-patterns worth documenting as separate decisions (D46-D49).
+
+**Milestones**
+- Phase 1: Backend authorization + DTOs
+- Phase 2: Dashboard + resumes read API
+- Phase 3: Resume soft-delete
+- Phase 4: Admin users list API
+- Phase 5: User details read API
+- Phase 6: Access update + user soft-delete
+- Phase 7: Frontend foundation
+- Phase 8: Admin Home dashboard + resumes table
+- Phase 9: Admin users table
+- Phase 10: User details tabs
+- Phase 11: AI Models WIP page
+- Phase 12: Integration testing + 8 manual QA fixes
+- Phase 13: Final hardening + security review polish
+
+**Tests**
+Backend: 1117 tests, 0 failures. Frontend: 164 tests, 0 failures.
+
+**Key results**
+- 8 admin backend endpoints implemented, all with AuthInterceptor ADMIN check
+- 4 frontend admin routes: /admin, /admin/users, /admin/users/:userId, /admin/ai-models
+- No /admin/resumes route created
+- No PDF/AI generation internals modified
+- No database migrations added
+
 ### 2026-06-25 — Feature 009 Home Modal Fix Complete
 
 **Status**: Active

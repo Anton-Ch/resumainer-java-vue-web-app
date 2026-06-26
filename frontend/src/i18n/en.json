@@ -549,8 +549,7 @@
     },
     "users": {
       "title": "Users",
-      "subtitle": "Manage user accounts",
-      "placeholder": "User management table will be available in a future update."
+      "subtitle": "Manage user accounts"
     },
     "userDetails": {
       "title": "User Details",
@@ -586,10 +585,15 @@
       "tabContacts": "Contacts",
       "tabAdditional": "Additional Info",
       "tabResumes": "Resumes",
-      "resumesComingSoon": "User-scoped resume list will be available once the backend endpoint contract is extended.",
       "role": "Role",
+      "roleUser": "User",
+      "roleAdmin": "Admin",
       "status": "Status",
+      "statusActive": "Active",
+      "statusBlocked": "Blocked",
       "permission": "Generation permission",
+      "permissionAllowed": "Allowed",
+      "permissionForbidden": "Forbidden",
       "isPrivileged": "Privileged rights",
       "privileged": "Privileged",
       "nonPrivileged": "Non-privileged",
@@ -666,7 +670,8 @@
       "pageReport": "Showing {first} to {last} of {totalRecords}",
       "noResults": "No resumes found",
       "emptyTitle": "No resumes",
-      "emptyText": "No resumes found matching your search criteria."
+      "emptyText": "No resumes found matching your search criteria.",
+      "pdfReady": "Ready"
     },
     "usersTable": {
       "searchPlaceholder": "Search by username, email, or full name",

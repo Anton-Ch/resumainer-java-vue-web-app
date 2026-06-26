@@ -50,7 +50,8 @@ public class AdminDao {
             + "sr.language, l.name AS language_name, sr.adaptation_level, sr.created_at, "
             + "sr.public_code, sr.public_url_link, "
             + "sr.cover_letter, sr.pdf_status, "
-            + "sr.pdf_file_path, sr.html_file_path";
+            + "sr.pdf_file_path IS NOT NULL AND sr.pdf_file_path <> '' AS pdf_file_present, "
+            + "sr.html_file_path IS NOT NULL AND sr.html_file_path <> '' AS html_file_present";
 
     private static final String RESUME_FROM_JOIN =
             "FROM saved_resumes sr "
@@ -405,8 +406,8 @@ public class AdminDao {
         row.coverLetter = rs.getString("cover_letter");
         row.pdfStatus = rs.getString("pdf_status");
         // Determine if PDF and HTML files exist (not null paths)
-        row.pdfFilePresent = rs.getString("pdf_file_path") != null;
-        row.htmlFilePresent = rs.getString("html_file_path") != null;
+        row.pdfFilePresent = rs.getBoolean("pdf_file_present");
+        row.htmlFilePresent = rs.getBoolean("html_file_present");
         return row;
     }
 

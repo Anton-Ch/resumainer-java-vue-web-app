@@ -53,7 +53,7 @@
               />
             </TabPanel>
             <TabPanel value="2">
-              <AdminUserAdditionalInfoTab :info="details.additionalInfo" />
+              <AdminUserAdditionalInfoTab :info="details.additionalInfo" :username="details.account.username" />
             </TabPanel>
             <TabPanel value="3">
               <AdminUserResumesTab :userId="details.id" />
@@ -120,7 +120,6 @@ const notFound = ref(false)
 const savingAccess = ref(false)
 const deleting = ref(false)
 const activeTab = ref('0')
-const pendingTab = ref<string | null>(null)
 const accountDirty = ref(false)
 
 const headerName = computed(() => {
@@ -149,7 +148,6 @@ async function loadDetails() {
 }
 
 const tabsKey = ref(0)
-const previousTab = ref('0')
 
 function onTabChange(newTab: string | number) {
   const requestedTab = String(newTab)

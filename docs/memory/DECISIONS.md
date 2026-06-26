@@ -1134,3 +1134,126 @@ ves to a stateless JWT-based auth, CSRF protection becomes unnecessary and this 
 - Gained: Clean, predictable handoffs; no last-minute breakage
 - Made harder: Requires discipline to defer valid improvements
 - Reconsider: For trivial fixes (typos, naming, 1-line safety checks) that are clearly safe and directly related to the changed code, include them with explicit mention. When in doubt, ask.
+
+---
+
+### 2026-06-26 - PrimeVue template placeholders must not pass through vue-i18n $t() interpolation
+
+**Status**
+Active
+
+**Why this is durable**
+Three independent table components (AdminResumesTable, AdminUsersTable, SavedResumesTable) had the identical bug: the PrimeVue paginator rendered broken text because currentPageReportTemplate strings were passed through $t(). This anti-pattern will recur if not documented.
+
+**Decision**
+For PrimeVue components that use curly-brace placeholders ({first}, {last}, {totalRecords}), provide a computed raw string based on locale. Never pass these template strings through vue-i18n $t() because $t() consumes the {} placeholders before PrimeVue can process them.
+
+Correct pattern:
+```
+const pageReportTemplate = computed(() =>
+  locale.value === 'ru'
+    ? '{first}-{last} из {totalRecords}'
+    : 'Showing {first} to {last} of {totalRecords}'
+)
+```
+Then use :currentPageReportTemplate="pageReportTemplate" on the DataTable.
+
+**Evidence**
+Three component fixes in commit 6f4e630. Each showed broken text like -- instead of actual pagination range.
+
+**Tradeoffs**
+- Gained: Working paginator text in both locales
+- Made harder: The template string is now in component code instead of i18n files
+- Reconsider: If PrimeVue ever changes its placeholder syntax, all computed strings need updating
+
+---
+
+### 2026-06-26 - Data exposure audit must include SQL SELECT columns and log statements
+
+**Status**
+Active
+
+**Why this is durable**
+During the Feature 010 security review, the agent correctly avoided exposing raw file paths in DTOs but SQL SELECT columns loaded pdf_file_path and html_file_path into ResultSet rows (only used for null-check booleans). Security logs also exposed user.getEmail() instead of userId. These are subtle exposure surfaces that routine DTO reviews miss.
+
+**Decision**
+When auditing data exposure in admin/security contexts, check all of:
+1. DTO fields / JSON response shape
+2. Frontend TypeScript types
+3. Rendered UI components
+4. SQL SELECT column lists
+5. Log format strings
+6. Exception messages and stack traces
+7. ResultSet mapping code
+
+Preferred patterns:
+- Boolean SQL aliases (sr.pdf_file_path IS NOT NULL AS pdf_file_present) instead of loading raw path strings
+- userId instead of email in security/admin log messages
+- No password_hash, apiKey, secret, or raw file path fields in admin contracts
+
+**Evidence**
+Security review findings SEC-001 and SEC-002 on commit 6f4e630. AdminDao.java loaded raw paths into ResultSet. AuthInterceptor logged user email.
+
+**Tradeoffs**
+- Gained: Broader security posture beyond DTO-only reviews
+- Made harder: More audit surface to check
+- Reconsider: Not every log needs userId over email -- but security/admin auth logs specifically should minimize PII
+
+---
+
+### 2026-06-26 - Close frontend-backend API contracts end-to-end before marking feature complete
+
+**Status**
+Active
+
+**Why this is durable**
+During Feature 010, the User Details Resumes tab remained a placeholder for multiple phases because the backend controller endpoint GET /api/admin/users/{userId}/resumes was not exposed -- even though the Service and DAO methods existed since Phase 2. The full chain (controller -> service -> DAO) was never verified end-to-end. This pattern (implementing service/DAO without controller) wastes time and creates placeholder UI.
+
+**Decision**
+For every API feature, verify the full chain before moving on:
+1. Controller endpoint exists and is mapped
+2. Service method is callable from controller
+3. DAO method performs correct SQL
+4. Frontend service method calls correct URL
+5. UI component consumes the response
+6. DTOs match between backend response and frontend expectations
+7. Error states are handled at each layer
+
+Do not stop at service/DAO implementation. If the controller is missing, the feature is not consumable from the frontend, regardless of how complete the lower layers are.
+
+**Evidence**
+User Details Resumes tab was a placeholder for Phases 10-12 despite Service/DAO support existing since Phase 2. Required backend controller addition, frontend service method, and real tab component in the Phase 12 bugfix pack.
+
+**Tradeoffs**
+- Gained: Fewer placeholder features, earlier detection of missing endpoints
+- Made harder: Requires checking more files before declaring a task done
+- Reconsider: For exploratory/prototype work, service-only implementation may be acceptable -- but for production features, the controller is part of the contract
+
+---
+
+### 2026-06-26 - Final review/audit phases must enforce no-silent-coding rules
+
+**Status**
+Active
+
+**Why this is durable**
+During Feature 010 Phase 12 and 13, the project repeatedly required strict rules: no silent coding, no scope expansion, no broad refactors, allowed files list, forbidden areas list, STOP-and-ask before code changes, and commit approval required. These rules were essential for preventing scope creep and accidental changes during final hardening. The pattern is reusable across any AI-assisted development workflow.
+
+**Decision**
+All final review/audit/QA phases must include:
+1. No silent coding -- read-only evidence collection is always allowed, code changes require explicit approval
+2. Allowed files list -- only specified files may be modified
+3. Forbidden areas list -- PDF, AI, generation, migrations, dependencies clearly marked
+4. STOP-and-ask before any code change -- even cosmetic fixes
+5. No phase N+1 work -- do not start the next phase without user confirmation
+6. Commit approval required -- do not commit without explicit user permission
+7. No while-I-am-here refactors -- resist the urge to clean up unrelated code
+8. Targeted test commands -- run only relevant tests, then broader suite
+
+**Evidence**
+Feature 010 Phase 12 and 13 instructions explicitly included these rules. When enforced, the phase stayed focused and safe. When relaxed (early phases), scope crept and QA found more defects.
+
+**Tradeoffs**
+- Gained: Controlled final phases, no unexpected changes, clean evidence collection
+- Made harder: Slower response to discovered issues (must STOP and ask)
+- Reconsider: For emergency hotfixes, the process can be abbreviated -- but for standard feature completion, the discipline prevents regressions
