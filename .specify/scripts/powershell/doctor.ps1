@@ -40,17 +40,17 @@ function Check-File {
     }
 }
 
-# ── 1. Project structure ──────────────────────────────────────────
+# ---
 Write-Host ""
 Write-Host "=== Project Structure ==="
 Check-Directory ".specify" ".specify/ directory" "error"
 Check-Directory "specs" "specs/ directory" "info"
-Check-Directory "scripts" "scripts/ directory" "error"
-Check-Directory "templates" "templates/ directory" "error"
-Check-Directory "memory" "memory/ directory" "error"
-Check-File "memory/constitution.md" "memory/constitution.md" "warning"
+Check-Directory ".specify/scripts" ".specify/scripts/ directory" "error"
+Check-Directory ".specify/templates" ".specify/templates/ directory" "error"
+Check-Directory ".specify/memory" ".specify/memory/ directory" "error"
+Check-File ".specify/memory/constitution.md" ".specify/memory/constitution.md" "warning"
 
-# ── 2. AI agent detection ─────────────────────────────────────────
+# ---
 Write-Host ""
 Write-Host "=== AI Agent Configuration ==="
 
@@ -61,7 +61,7 @@ $Agents = @{
     ".gemini/commands" = "Gemini CLI"
     ".cursor/commands" = "Cursor"
     ".qwen/commands" = "Qwen Code"
-    ".opencode/command" = "opencode"
+    ".opencode/commands" = "opencode"
     ".codex/prompts" = "Codex CLI"
     ".windsurf/workflows" = "Windsurf"
     ".kilocode/workflows" = "Kilo Code"
@@ -103,7 +103,7 @@ if (-not $AgentFound) {
     $Notes += "No AI agent folder detected"
 }
 
-# ── 3. Feature specs ──────────────────────────────────────────────
+# ---
 Write-Host ""
 Write-Host "=== Feature Specifications ==="
 
@@ -119,7 +119,7 @@ if (Test-Path $specsDir -PathType Container) {
             $hasTasks = Test-Path (Join-Path $fdir.FullName "tasks.md")
 
             if ($hasSpec -and $hasPlan -and $hasTasks) {
-                Write-Host "  [OK] $($fdir.Name) — spec, plan, tasks all present"
+                Write-Host "  [OK] $($fdir.Name) - spec, plan, tasks all present"
             } else {
                 $missing = @()
                 if (-not $hasSpec) { $missing += "spec" }
@@ -127,10 +127,10 @@ if (Test-Path $specsDir -PathType Container) {
                 if (-not $hasTasks) { $missing += "tasks" }
 
                 if (-not $hasSpec) {
-                    Write-Host "  [ERROR] $($fdir.Name) — missing: $($missing -join ', ')"
+                    Write-Host "  [ERROR] $($fdir.Name) -- missing: $($missing -join ', ')"
                     $Errors += "Feature '$($fdir.Name)' is missing spec.md"
                 } else {
-                    Write-Host "  [PARTIAL] $($fdir.Name) — missing: $($missing -join ', ')"
+                    Write-Host "  [PARTIAL] $($fdir.Name) -- missing: $($missing -join ', ')"
                     if (-not $hasPlan) { $Notes += "Feature '$($fdir.Name)' has no plan.md" }
                     if (-not $hasTasks) { $Notes += "Feature '$($fdir.Name)' has no tasks.md" }
                 }
@@ -141,39 +141,40 @@ if (Test-Path $specsDir -PathType Container) {
     Write-Host "  [NOTE] No specs/ directory"
 }
 
-# ── 4. Scripts health ─────────────────────────────────────────────
+# ---
 Write-Host ""
 Write-Host "=== Scripts ==="
 
-$expectedScripts = @("common", "check-prerequisites", "create-new-feature", "setup-plan", "update-agent-context")
+$expectedBashScripts = @("common", "check-prerequisites", "create-new-feature", "detect-changed-files", "doctor", "setup-plan", "setup-plan-fixed", "setup-tasks", "status")
+$expectedPSScripts = @("detect-changed-files", "doctor", "status")
 
-$bashDir = Join-Path $ProjectRoot "scripts/bash"
+$bashDir = Join-Path $ProjectRoot ".specify/scripts/bash"
 if (Test-Path $bashDir -PathType Container) {
-    foreach ($name in $expectedScripts) {
+    foreach ($name in $expectedBashScripts) {
         $script = Join-Path $bashDir "$name.sh"
         if (Test-Path $script) {
             Write-Host "  [OK] bash/$name.sh"
         } else {
             Write-Host "  [MISSING] bash/$name.sh"
-            $Errors += "scripts/bash/$name.sh is missing"
+            $Notes += "scripts/bash/$name.sh is missing"
         }
     }
 }
 
-$psDir = Join-Path $ProjectRoot "scripts/powershell"
+$psDir = Join-Path $ProjectRoot ".specify/scripts/powershell"
 if (Test-Path $psDir -PathType Container) {
-    foreach ($name in $expectedScripts) {
+    foreach ($name in $expectedPSScripts) {
         $script = Join-Path $psDir "$name.ps1"
         if (Test-Path $script) {
             Write-Host "  [OK] powershell/$name.ps1"
         } else {
             Write-Host "  [MISSING] powershell/$name.ps1"
-            $Errors += "scripts/powershell/$name.ps1 is missing"
+            $Notes += "scripts/powershell/$name.ps1 is missing"
         }
     }
 }
 
-# ── 5. Extensions health ──────────────────────────────────────────
+# ---
 Write-Host ""
 Write-Host "=== Extensions ==="
 
@@ -191,7 +192,7 @@ if (Test-Path $regJson) {
     Write-Host "  [NOTE] No extensions installed"
 }
 
-# ── 6. Git status ─────────────────────────────────────────────────
+# ---
 Write-Host ""
 Write-Host "=== Git Repository ==="
 
@@ -211,7 +212,7 @@ if ($gitAvailable) {
     $Notes += "Git is not installed"
 }
 
-# ── Summary ───────────────────────────────────────────────────────
+# ---
 Write-Host ""
 Write-Host "=== Diagnostic Summary ==="
 
@@ -235,7 +236,7 @@ if ($Notes.Count -gt 0) {
 
 if ($Errors.Count -eq 0 -and $Warnings.Count -eq 0 -and $Notes.Count -eq 0) {
     Write-Host ""
-    Write-Host "  All checks passed — project looks healthy!"
+    Write-Host "  All checks passed - project looks healthy!"
 }
 
 Write-Host ""
