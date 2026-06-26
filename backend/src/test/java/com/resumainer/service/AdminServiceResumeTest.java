@@ -377,6 +377,38 @@ class AdminServiceResumeTest {
         );
     }
 
+    // --- Phase 3: Admin resume delete tests ---
+
+    @Test
+    void deleteResume_returnsTrue_whenDaoSucceeds() {
+        when(adminDao.adminSoftDeleteResume(101L)).thenReturn(true);
+
+        boolean result = adminService.deleteResume(101L);
+
+        assertTrue(result);
+        verify(adminDao).adminSoftDeleteResume(101L);
+    }
+
+    @Test
+    void deleteResume_returnsFalse_whenDaoReturnsFalse() {
+        when(adminDao.adminSoftDeleteResume(999L)).thenReturn(false);
+
+        boolean result = adminService.deleteResume(999L);
+
+        assertFalse(result);
+        verify(adminDao).adminSoftDeleteResume(999L);
+    }
+
+    @Test
+    void deleteResume_doesNotReturnInternalDetails() {
+        when(adminDao.adminSoftDeleteResume(101L)).thenReturn(true);
+
+        boolean result = adminService.deleteResume(101L);
+
+        // Service returns only boolean, no path/owner/internal details
+        assertEquals(true, result);
+    }
+
     // Helper: reflection check that DTO doesn't have a field
     private Object getFieldIfExists(Object obj, String fieldName) {
         try {
