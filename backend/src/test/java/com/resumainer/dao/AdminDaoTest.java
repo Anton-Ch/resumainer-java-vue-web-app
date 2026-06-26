@@ -716,4 +716,136 @@ class AdminDaoTest {
 
         assertEquals(0L, count);
     }
+
+    // --- Phase 5: Admin user details tests ---
+
+    @Test
+    void findUserDetails_returnsRow_whenUserExists() throws Exception {
+        java.util.UUID userId = java.util.UUID.randomUUID();
+        when(resultSet.next()).thenReturn(true).thenReturn(false);
+        when(resultSet.getObject("id")).thenReturn(userId);
+        when(resultSet.getString("username")).thenReturn("johndoe");
+        when(resultSet.getString("account_email")).thenReturn("john@example.com");
+        when(resultSet.getString("role_code")).thenReturn("USER");
+        when(resultSet.getString("role_name")).thenReturn("Regular User");
+        when(resultSet.getString("status_code")).thenReturn("ACTIVE");
+        when(resultSet.getString("status_name")).thenReturn("Active");
+        when(resultSet.getString("permission_code")).thenReturn("ALLOWED");
+        when(resultSet.getString("permission_name")).thenReturn("Allowed");
+        when(resultSet.getBoolean("is_privileged")).thenReturn(false);
+        when(resultSet.getString("default_lang_code")).thenReturn("EN");
+        when(resultSet.getString("default_lang_name")).thenReturn("English");
+        when(resultSet.getString("secondary_lang_code")).thenReturn(null);
+        when(resultSet.getString("secondary_lang_name")).thenReturn(null);
+        when(resultSet.getTimestamp("created_at")).thenReturn(null);
+        when(resultSet.getTimestamp("updated_at")).thenReturn(null);
+        when(resultSet.getString("full_name")).thenReturn("John Doe");
+        when(resultSet.getString("professional_title")).thenReturn("Developer");
+        when(resultSet.getString("phone")).thenReturn("+123456789");
+        when(resultSet.getString("resume_email")).thenReturn("resume@example.com");
+        when(resultSet.getString("location")).thenReturn("Almaty");
+        when(resultSet.getString("linkedin_url")).thenReturn("https://linkedin.com/in/johndoe");
+        when(resultSet.getString("portfolio_url")).thenReturn(null);
+        when(resultSet.getString("telegram")).thenReturn(null);
+        when(resultSet.getString("whatsapp")).thenReturn(null);
+        when(resultSet.getString("skills")).thenReturn("Java, Spring");
+        when(resultSet.getString("api_languages")).thenReturn("English, Russian");
+        when(resultSet.getString("professional_aspirations")).thenReturn("Grow");
+        when(resultSet.getString("achievements")).thenReturn(null);
+        when(resultSet.getString("general_information")).thenReturn(null);
+        when(resultSet.getString("ready_for_relocation")).thenReturn("YES");
+        when(resultSet.getString("ready_for_business_trips")).thenReturn("NO");
+        when(resultSet.getDate("date_of_birth")).thenReturn(java.sql.Date.valueOf("1993-01-01"));
+        when(resultSet.getString("citizenship")).thenReturn("Kazakhstan");
+
+        AdminDao.AdminUserDetailsRow row = adminDao.findUserDetails(userId);
+
+        assertNotNull(row);
+        assertEquals("john@example.com", row.accountEmail);
+        assertEquals("resume@example.com", row.resumeEmail);
+        assertEquals("John Doe", row.fullName);
+        assertEquals("USER", row.roleCode);
+        assertEquals("Active", row.statusName);
+        assertEquals("EN", row.defaultLanguageCode);
+    }
+
+    @Test
+    void findUserDetails_excludesDeletedUsers() throws Exception {
+        java.util.UUID userId = java.util.UUID.randomUUID();
+        when(resultSet.next()).thenReturn(false);
+
+        AdminDao.AdminUserDetailsRow row = adminDao.findUserDetails(userId);
+
+        assertNull(row);
+        verify(connection).prepareStatement(
+                argThat(sql -> sql.toString().contains("is_deleted = FALSE"))
+        );
+    }
+
+    @Test
+    void findUserDetails_usesLEFTJOINForContact() throws Exception {
+        when(resultSet.next()).thenReturn(false);
+
+        adminDao.findUserDetails(java.util.UUID.randomUUID());
+
+        verify(connection).prepareStatement(
+                argThat(sql -> sql.toString().contains("LEFT JOIN contact_detail cd"))
+        );
+    }
+
+    @Test
+    void findUserDetails_usesLEFTJOINForAdditionalInfo() throws Exception {
+        when(resultSet.next()).thenReturn(false);
+
+        adminDao.findUserDetails(java.util.UUID.randomUUID());
+
+        verify(connection).prepareStatement(
+                argThat(sql -> sql.toString().contains("LEFT JOIN additional_profile_info api"))
+        );
+    }
+
+    @Test
+    void findUserDetails_joinsLookupTables() throws Exception {
+        when(resultSet.next()).thenReturn(false);
+
+        adminDao.findUserDetails(java.util.UUID.randomUUID());
+
+        verify(connection).prepareStatement(
+                argThat(sql -> {
+                    String s = sql.toString();
+                    return s.contains("JOIN role r") && s.contains("JOIN user_status us")
+                            && s.contains("JOIN user_permission up");
+                })
+        );
+    }
+
+    @Test
+    void findUserDetails_doesNotSelectPasswordHash() throws Exception {
+        when(resultSet.next()).thenReturn(false);
+
+        adminDao.findUserDetails(java.util.UUID.randomUUID());
+
+        verify(connection).prepareStatement(
+                argThat(sql -> !sql.toString().toLowerCase().contains("password_hash"))
+        );
+    }
+
+    @Test
+    void findUserDetails_setsUserIdParameter() throws Exception {
+        when(resultSet.next()).thenReturn(false);
+        java.util.UUID userId = java.util.UUID.randomUUID();
+
+        adminDao.findUserDetails(userId);
+
+        verify(preparedStatement).setObject(1, userId);
+    }
+
+    @Test
+    void findUserDetails_handlesException() throws Exception {
+        when(preparedStatement.executeQuery()).thenThrow(new RuntimeException("DB error"));
+
+        assertThrows(RuntimeException.class, () ->
+                adminDao.findUserDetails(java.util.UUID.randomUUID())
+        );
+    }
 }

@@ -3,18 +3,15 @@ package com.resumainer.dto.admin;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Admin user table row DTO.
- * <p>
- * Contains user identity, role/status/permission info, and resume count.
- * <p>
- * Security: must not expose password_hash, API keys, or internal paths.
+ * Account section for admin user details.
+ * accountEmail comes from users.email (read-only display).
+ * Role/status/permission codes are used, not hardcoded IDs.
  */
-public class AdminUserListItemDto {
+public class AdminUserAccountDto {
 
     private String id;
-    private String fullName;
     private String username;
-    private String email;
+    private String accountEmail;
     private String roleCode;
     private String roleName;
     private String statusCode;
@@ -22,23 +19,24 @@ public class AdminUserListItemDto {
     private String permissionCode;
     private String permissionName;
     private boolean isPrivileged;
-    private long resumesCount;
+    private String defaultLanguageCode;
+    private String defaultLanguageName;
+    private String secondaryLanguageCode;
+    private String secondaryLanguageName;
     private String createdAt;
+    private String updatedAt;
 
-    public AdminUserListItemDto() {
+    public AdminUserAccountDto() {
     }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
-
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getAccountEmail() { return accountEmail; }
+    public void setAccountEmail(String accountEmail) { this.accountEmail = accountEmail; }
 
     public String getRoleCode() { return roleCode; }
     public void setRoleCode(String roleCode) { this.roleCode = roleCode; }
@@ -62,9 +60,21 @@ public class AdminUserListItemDto {
     public boolean isPrivileged() { return isPrivileged; }
     public void setPrivileged(boolean privileged) { isPrivileged = privileged; }
 
-    public long getResumesCount() { return resumesCount; }
-    public void setResumesCount(long resumesCount) { this.resumesCount = resumesCount; }
+    public String getDefaultLanguageCode() { return defaultLanguageCode; }
+    public void setDefaultLanguageCode(String defaultLanguageCode) { this.defaultLanguageCode = defaultLanguageCode; }
+
+    public String getDefaultLanguageName() { return defaultLanguageName; }
+    public void setDefaultLanguageName(String defaultLanguageName) { this.defaultLanguageName = defaultLanguageName; }
+
+    public String getSecondaryLanguageCode() { return secondaryLanguageCode; }
+    public void setSecondaryLanguageCode(String secondaryLanguageCode) { this.secondaryLanguageCode = secondaryLanguageCode; }
+
+    public String getSecondaryLanguageName() { return secondaryLanguageName; }
+    public void setSecondaryLanguageName(String secondaryLanguageName) { this.secondaryLanguageName = secondaryLanguageName; }
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    public String getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
 }

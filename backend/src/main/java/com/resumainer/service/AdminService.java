@@ -4,6 +4,10 @@ import com.resumainer.dao.AdminDao;
 import com.resumainer.dao.AdminDao.AdminSavedResumeRow;
 import com.resumainer.dto.admin.AdminDashboardDto;
 import com.resumainer.dto.admin.AdminSavedResumeDto;
+import com.resumainer.dto.admin.AdminUserAccountDto;
+import com.resumainer.dto.admin.AdminUserAdditionalInfoDto;
+import com.resumainer.dto.admin.AdminUserContactDto;
+import com.resumainer.dto.admin.AdminUserDetailsDto;
 import com.resumainer.dto.admin.AdminUserListItemDto;
 import com.resumainer.exception.ServiceException;
 import com.resumainer.model.PagedResponse;
@@ -104,6 +108,90 @@ public class AdminService {
                 .collect(Collectors.toList());
 
         return new PagedResponse<>(items, page, size, totalElements);
+    }
+
+    // --- Phase 5: Admin user details ---
+
+    /**
+     * Returns full user details for the admin user details page.
+     *
+     * @param targetUserId    the user whose details are requested
+     * @param currentAdminId  the currently logged-in admin's user id (for isCurrentAdmin)
+     * @return user details DTO with account, contacts, additional info sections
+     */
+    public AdminUserDetailsDto getUserDetails(UUID targetUserId, UUID currentAdminId) {
+        AdminDao.AdminUserDetailsRow row = adminDao.findUserDetails(targetUserId);
+
+        if (row == null) {
+            return null;
+        }
+
+        AdminUserDetailsDto dto = new AdminUserDetailsDto();
+        dto.setId(row.id.toString());
+        dto.setCurrentAdmin(targetUserId.equals(currentAdminId));
+        dto.setAccount(toAccountDto(row));
+        dto.setContacts(toContactDto(row));
+        dto.setAdditionalInfo(toAdditionalInfoDto(row));
+        return dto;
+    }
+
+    private AdminUserAccountDto toAccountDto(AdminDao.AdminUserDetailsRow row) {
+        AdminUserAccountDto dto = new AdminUserAccountDto();
+        dto.setId(row.id.toString());
+        dto.setUsername(row.username);
+        dto.setAccountEmail(row.accountEmail);
+        dto.setRoleCode(row.roleCode);
+        dto.setRoleName(row.roleName);
+        dto.setStatusCode(row.statusCode);
+        dto.setStatusName(row.statusName);
+        dto.setPermissionCode(row.permissionCode);
+        dto.setPermissionName(row.permissionName);
+        dto.setPrivileged(row.isPrivileged);
+        dto.setDefaultLanguageCode(row.defaultLanguageCode);
+        dto.setDefaultLanguageName(row.defaultLanguageName);
+        dto.setSecondaryLanguageCode(row.secondaryLanguageCode);
+        dto.setSecondaryLanguageName(row.secondaryLanguageName);
+        dto.setCreatedAt(row.createdAt != null ? row.createdAt.toString() : null);
+        dto.setUpdatedAt(row.updatedAt != null ? row.updatedAt.toString() : null);
+        return dto;
+    }
+
+    private AdminUserContactDto toContactDto(AdminDao.AdminUserDetailsRow row) {
+        if (row.fullName == null && row.professionalTitle == null && row.phone == null
+                && row.resumeEmail == null && row.location == null) {
+            // Contact detail may be missing entirely — return null section
+            return null;
+        }
+        AdminUserContactDto dto = new AdminUserContactDto();
+        dto.setFullName(row.fullName);
+        dto.setProfessionalTitle(row.professionalTitle);
+        dto.setPhone(row.phone);
+        dto.setResumeEmail(row.resumeEmail);
+        dto.setLocation(row.location);
+        dto.setLinkedinUrl(row.linkedinUrl);
+        dto.setPortfolioUrl(row.portfolioUrl);
+        dto.setTelegram(row.telegram);
+        dto.setWhatsapp(row.whatsapp);
+        return dto;
+    }
+
+    private AdminUserAdditionalInfoDto toAdditionalInfoDto(AdminDao.AdminUserDetailsRow row) {
+        if (row.skills == null && row.apiLanguages == null && row.professionalAspirations == null
+                && row.achievements == null && row.generalInformation == null
+                && row.dateOfBirth == null && row.citizenship == null) {
+            return null;
+        }
+        AdminUserAdditionalInfoDto dto = new AdminUserAdditionalInfoDto();
+        dto.setSkills(row.skills);
+        dto.setLanguages(row.apiLanguages);
+        dto.setProfessionalAspirations(row.professionalAspirations);
+        dto.setAchievements(row.achievements);
+        dto.setGeneralInformation(row.generalInformation);
+        dto.setReadyForRelocation(row.readyForRelocation);
+        dto.setReadyForBusinessTrips(row.readyForBusinessTrips);
+        dto.setDateOfBirth(row.dateOfBirth != null ? row.dateOfBirth.toString() : null);
+        dto.setCitizenship(row.citizenship);
+        return dto;
     }
 
     // --- Phase 4: Admin users listing ---

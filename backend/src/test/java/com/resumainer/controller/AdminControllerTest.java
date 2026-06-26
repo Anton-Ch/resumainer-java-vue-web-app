@@ -1,8 +1,13 @@
 package com.resumainer.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.resumainer.dto.UserSession;
 import com.resumainer.dto.admin.AdminDashboardDto;
 import com.resumainer.dto.admin.AdminSavedResumeDto;
+import com.resumainer.dto.admin.AdminUserAccountDto;
+import com.resumainer.dto.admin.AdminUserAdditionalInfoDto;
+import com.resumainer.dto.admin.AdminUserContactDto;
+import com.resumainer.dto.admin.AdminUserDetailsDto;
 import com.resumainer.dto.admin.AdminUserListItemDto;
 import com.resumainer.exception.GlobalExceptionHandler;
 import com.resumainer.model.PagedResponse;
@@ -14,6 +19,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -384,6 +390,116 @@ class AdminControllerTest {
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.errorCode").exists())
                 .andExpect(jsonPath("$.message").exists());
+    }
+
+    // --- Phase 5: Admin user details tests ---
+
+    private UUID adminUserId = UUID.randomUUID();
+    private UUID otherUserId = UUID.randomUUID();
+
+    private AdminUserDetailsDto createTestUserDetails(boolean isCurrentAdmin) {
+        AdminUserDetailsDto dto = new AdminUserDetailsDto();
+        dto.setId(isCurrentAdmin ? adminUserId.toString() : otherUserId.toString());
+        dto.setCurrentAdmin(isCurrentAdmin);
+
+        var account = new AdminUserAccountDto();
+        account.setId(dto.getId());
+        account.setUsername("johndoe");
+        account.setAccountEmail("john@example.com");
+        account.setRoleCode("USER");
+        account.setStatusCode("ACTIVE");
+        dto.setAccount(account);
+
+        var contacts = new AdminUserContactDto();
+        contacts.setFullName("John Doe");
+        contacts.setResumeEmail("resume@example.com");
+        dto.setContacts(contacts);
+
+        var additional = new AdminUserAdditionalInfoDto();
+        additional.setSkills("Java");
+        dto.setAdditionalInfo(additional);
+
+        return dto;
+    }
+
+    @Test
+    void getUserDetails_returnsOk_whenUserExists() throws Exception {
+        AdminUserDetailsDto dto = createTestUserDetails(false);
+        when(adminService.getUserDetails(otherUserId, adminUserId)).thenReturn(dto);
+
+        mockMvc.perform(get("/api/admin/users/{userId}", otherUserId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(otherUserId.toString()))
+                .andExpect(jsonPath("$.isCurrentAdmin").value(false))
+                .andExpect(jsonPath("$.account.accountEmail").value("john@example.com"))
+                .andExpect(jsonPath("$.contacts.resumeEmail").value("resume@example.com"))
+                .andExpect(jsonPath("$.account.roleCode").value("USER"))
+                .andExpect(jsonPath("$.account.isPrivileged").value(false))
+                .andExpect(jsonPath("$.additionalInfo.skills").value("Java"))
+                // Negative assertions: old names must not exist
+                .andExpect(jsonPath("$.currentAdmin").doesNotExist())
+                .andExpect(jsonPath("$.account.privileged").doesNotExist());
+    }
+
+    @Test
+    void getUserDetails_isCurrentAdmin_true_whenViewingSelf() throws Exception {
+        AdminUserDetailsDto dto = createTestUserDetails(true);
+        dto.setId(adminUserId.toString());
+        dto.setCurrentAdmin(true);
+        when(adminService.getUserDetails(adminUserId, adminUserId)).thenReturn(dto);
+
+        mockMvc.perform(get("/api/admin/users/{userId}", adminUserId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isCurrentAdmin").value(true))
+                .andExpect(jsonPath("$.currentAdmin").doesNotExist());
+    }
+
+    @Test
+    void getUserDetails_returnsNotFound_whenUserDoesNotExist() throws Exception {
+        UUID missingId = UUID.randomUUID();
+        when(adminService.getUserDetails(missingId, adminUserId)).thenReturn(null);
+
+        mockMvc.perform(get("/api/admin/users/{userId}", missingId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void getUserDetails_returnsSafeError_whenServiceFails() throws Exception {
+        when(adminService.getUserDetails(any(), any())).thenThrow(new RuntimeException("DB error"));
+
+        mockMvc.perform(get("/api/admin/users/{userId}", otherUserId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void getUserDetails_noSession_returns401() throws Exception {
+        mockMvc.perform(get("/api/admin/users/{userId}", otherUserId)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getUserDetails_dtoHasNoSensitiveFields() throws Exception {
+        AdminUserDetailsDto dto = createTestUserDetails(false);
+        when(adminService.getUserDetails(otherUserId, adminUserId)).thenReturn(dto);
+
+        mockMvc.perform(get("/api/admin/users/{userId}", otherUserId)
+                        .sessionAttr("user", new UserSession(adminUserId, "admin@test.com", "ADMIN"))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.account.passwordHash").doesNotExist())
+                .andExpect(jsonPath("$.account.password_hash").doesNotExist())
+                .andExpect(jsonPath("$.additionalInfo.photoFilePath").doesNotExist());
     }
 
     // --- Phase 3: Admin resume delete tests ---

@@ -2,8 +2,10 @@ package com.resumainer.service;
 
 import com.resumainer.dao.AdminDao;
 import com.resumainer.dao.AdminDao.AdminSavedResumeRow;
+import com.resumainer.dao.AdminDao.AdminUserDetailsRow;
 import com.resumainer.dao.AdminDao.AdminUserRow;
 import com.resumainer.dto.admin.AdminSavedResumeDto;
+import com.resumainer.dto.admin.AdminUserDetailsDto;
 import com.resumainer.dto.admin.AdminUserListItemDto;
 import com.resumainer.exception.ServiceException;
 import com.resumainer.model.PagedResponse;
@@ -588,6 +590,230 @@ class AdminServiceResumeTest {
         // No password hash or sensitive fields via reflection
         assertNull(getFieldIfExists(dto, "passwordHash"));
         assertNull(getFieldIfExists(dto, "password_hash"));
+    }
+
+    // --- Phase 5: Admin user details tests ---
+
+    private AdminUserDetailsRow createUserDetailsRow(UUID id) {
+        AdminUserDetailsRow row = new AdminUserDetailsRow();
+        row.id = id;
+        row.username = "johndoe";
+        row.accountEmail = "john@example.com";
+        row.roleCode = "USER";
+        row.roleName = "Regular User";
+        row.statusCode = "ACTIVE";
+        row.statusName = "Active";
+        row.permissionCode = "ALLOWED";
+        row.permissionName = "Allowed";
+        row.isPrivileged = false;
+        row.defaultLanguageCode = "EN";
+        row.defaultLanguageName = "English";
+        row.createdAt = java.time.LocalDateTime.of(2026, 6, 1, 12, 0);
+
+        // Contact section
+        row.fullName = "John Doe";
+        row.professionalTitle = "Developer";
+        row.phone = "+123456789";
+        row.resumeEmail = "resume@example.com";
+        row.location = "Almaty";
+        row.linkedinUrl = "https://linkedin.com/in/johndoe";
+
+        // Additional info
+        row.skills = "Java, Spring";
+        row.apiLanguages = "English, Russian";
+        row.professionalAspirations = "Grow professionally";
+        row.citizenship = "Kazakhstan";
+        return row;
+    }
+
+    @Test
+    void getUserDetails_returnsDto_whenUserExists() {
+        UUID userId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+        AdminUserDetailsRow row = createUserDetailsRow(userId);
+        when(adminDao.findUserDetails(userId)).thenReturn(row);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, adminId);
+
+        assertNotNull(dto);
+        assertEquals(userId.toString(), dto.getId());
+        assertFalse(dto.isCurrentAdmin());
+        verify(adminDao).findUserDetails(userId);
+    }
+
+    @Test
+    void getUserDetails_returnsNull_whenUserNotFound() {
+        UUID userId = UUID.randomUUID();
+        when(adminDao.findUserDetails(userId)).thenReturn(null);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, UUID.randomUUID());
+
+        assertNull(dto);
+    }
+
+    @Test
+    void getUserDetails_isCurrentAdmin_true_whenViewingSelf() {
+        UUID userId = UUID.randomUUID();
+        AdminUserDetailsRow row = createUserDetailsRow(userId);
+        when(adminDao.findUserDetails(userId)).thenReturn(row);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, userId);
+
+        assertTrue(dto.isCurrentAdmin());
+    }
+
+    @Test
+    void getUserDetails_isCurrentAdmin_false_whenViewingOther() {
+        UUID userId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+        AdminUserDetailsRow row = createUserDetailsRow(userId);
+        when(adminDao.findUserDetails(userId)).thenReturn(row);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, adminId);
+
+        assertFalse(dto.isCurrentAdmin());
+    }
+
+    @Test
+    void getUserDetails_accountEmail_fromUsersEmail() {
+        UUID userId = UUID.randomUUID();
+        AdminUserDetailsRow row = createUserDetailsRow(userId);
+        row.accountEmail = "john@example.com";
+        when(adminDao.findUserDetails(userId)).thenReturn(row);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, UUID.randomUUID());
+
+        assertEquals("john@example.com", dto.getAccount().getAccountEmail());
+    }
+
+    @Test
+    void getUserDetails_resumeEmail_fromContactDetailResumeEmail() {
+        UUID userId = UUID.randomUUID();
+        AdminUserDetailsRow row = createUserDetailsRow(userId);
+        row.resumeEmail = "resume@example.com";
+        when(adminDao.findUserDetails(userId)).thenReturn(row);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, UUID.randomUUID());
+
+        assertEquals("resume@example.com", dto.getContacts().getResumeEmail());
+    }
+
+    @Test
+    void getUserDetails_fullName_fromContactDetail() {
+        UUID userId = UUID.randomUUID();
+        AdminUserDetailsRow row = createUserDetailsRow(userId);
+        row.fullName = "John Doe";
+        when(adminDao.findUserDetails(userId)).thenReturn(row);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, UUID.randomUUID());
+
+        assertEquals("John Doe", dto.getContacts().getFullName());
+    }
+
+    @Test
+    void getUserDetails_missingContactDetail_returnsNullSection() {
+        UUID userId = UUID.randomUUID();
+        AdminUserDetailsRow row = createUserDetailsRow(userId);
+        // Set all contact fields to null to simulate missing contact_detail
+        row.fullName = null;
+        row.professionalTitle = null;
+        row.phone = null;
+        row.resumeEmail = null;
+        row.location = null;
+        when(adminDao.findUserDetails(userId)).thenReturn(row);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, UUID.randomUUID());
+
+        assertNull(dto.getContacts());
+    }
+
+    @Test
+    void getUserDetails_missingAdditionalInfo_returnsNullSection() {
+        UUID userId = UUID.randomUUID();
+        AdminUserDetailsRow row = createUserDetailsRow(userId);
+        // Set all additional info fields to null
+        row.skills = null;
+        row.apiLanguages = null;
+        row.professionalAspirations = null;
+        row.achievements = null;
+        row.generalInformation = null;
+        row.dateOfBirth = null;
+        row.citizenship = null;
+        when(adminDao.findUserDetails(userId)).thenReturn(row);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, UUID.randomUUID());
+
+        assertNull(dto.getAdditionalInfo());
+    }
+
+    @Test
+    void getUserDetails_accountSectionHasAllFields() {
+        UUID userId = UUID.randomUUID();
+        AdminUserDetailsRow row = createUserDetailsRow(userId);
+        when(adminDao.findUserDetails(userId)).thenReturn(row);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, UUID.randomUUID());
+
+        assertEquals("johndoe", dto.getAccount().getUsername());
+        assertEquals("USER", dto.getAccount().getRoleCode());
+        assertEquals("ACTIVE", dto.getAccount().getStatusCode());
+        assertEquals("ALLOWED", dto.getAccount().getPermissionCode());
+        assertEquals("EN", dto.getAccount().getDefaultLanguageCode());
+        assertFalse(dto.getAccount().isPrivileged());
+    }
+
+    @Test
+    void getUserDetails_contactsSectionHasSafeFields() {
+        UUID userId = UUID.randomUUID();
+        AdminUserDetailsRow row = createUserDetailsRow(userId);
+        when(adminDao.findUserDetails(userId)).thenReturn(row);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, UUID.randomUUID());
+
+        assertEquals("Developer", dto.getContacts().getProfessionalTitle());
+        assertEquals("+123456789", dto.getContacts().getPhone());
+        assertEquals("Almaty", dto.getContacts().getLocation());
+    }
+
+    @Test
+    void getUserDetails_additionalInfoSectionHasSafeFields() {
+        UUID userId = UUID.randomUUID();
+        AdminUserDetailsRow row = createUserDetailsRow(userId);
+        when(adminDao.findUserDetails(userId)).thenReturn(row);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, UUID.randomUUID());
+
+        assertEquals("Java, Spring", dto.getAdditionalInfo().getSkills());
+        assertEquals("English, Russian", dto.getAdditionalInfo().getLanguages());
+        assertEquals("Kazakhstan", dto.getAdditionalInfo().getCitizenship());
+    }
+
+    @Test
+    void getUserDetails_dtoHasNoSensitiveFields() {
+        UUID userId = UUID.randomUUID();
+        AdminUserDetailsRow row = createUserDetailsRow(userId);
+        when(adminDao.findUserDetails(userId)).thenReturn(row);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, UUID.randomUUID());
+
+        // No password hash
+        assertNull(getFieldIfExists(dto.getAccount(), "passwordHash"));
+        assertNull(getFieldIfExists(dto.getAccount(), "password_hash"));
+        // No photo file path
+        assertNull(getFieldIfExists(dto.getAdditionalInfo(), "photoFilePath"));
+        assertNull(getFieldIfExists(dto.getAdditionalInfo(), "photo_file_path"));
+    }
+
+    @Test
+    void getUserDetails_contactsAreNull_whenDetailMissing() {
+        UUID userId = UUID.randomUUID();
+        AdminUserDetailsRow row = createUserDetailsRow(userId);
+        when(adminDao.findUserDetails(userId)).thenReturn(row);
+
+        AdminUserDetailsDto dto = adminService.getUserDetails(userId, UUID.randomUUID());
+
+        // When contact exists, it should be not null
+        assertNotNull(dto.getContacts());
     }
 
     // Helper: reflection check that DTO doesn't have a field
