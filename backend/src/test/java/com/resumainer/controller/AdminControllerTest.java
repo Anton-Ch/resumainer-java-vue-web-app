@@ -3,6 +3,7 @@ package com.resumainer.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.resumainer.dto.admin.AdminDashboardDto;
 import com.resumainer.dto.admin.AdminSavedResumeDto;
+import com.resumainer.dto.admin.AdminUserListItemDto;
 import com.resumainer.exception.GlobalExceptionHandler;
 import com.resumainer.model.PagedResponse;
 import com.resumainer.service.AdminService;
@@ -262,6 +263,127 @@ class AdminControllerTest {
                         .param("page", "-1")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+    }
+
+    // --- Phase 4: Admin users listing tests ---
+
+    @Test
+    void getUsers_returnsOkWithItemsField() throws Exception {
+        AdminUserListItemDto dto = new AdminUserListItemDto();
+        dto.setId("uuid-1");
+        dto.setUsername("johndoe");
+        dto.setEmail("john@example.com");
+        dto.setFullName("John Doe");
+        dto.setRoleCode("USER");
+        dto.setRoleName("Regular User");
+        dto.setStatusCode("ACTIVE");
+        dto.setStatusName("Active");
+        dto.setPermissionCode("ALLOWED");
+        dto.setPrivileged(false);
+        dto.setResumesCount(3L);
+        dto.setCreatedAt("2026-06-01T12:00:00");
+
+        PagedResponse<AdminUserListItemDto> paged = new PagedResponse<>(
+                List.of(dto), 0, 10, 1);
+        when(adminService.getUsers(any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(paged);
+
+        mockMvc.perform(get("/api/admin/users")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isArray())
+                .andExpect(jsonPath("$.items[0].username").value("johndoe"))
+                .andExpect(jsonPath("$.items[0].email").value("john@example.com"))
+                .andExpect(jsonPath("$.items[0].fullName").value("John Doe"))
+                .andExpect(jsonPath("$.items[0].roleCode").value("USER"))
+                .andExpect(jsonPath("$.items[0].statusCode").value("ACTIVE"))
+                .andExpect(jsonPath("$.items[0].resumesCount").value(3))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                // Ensure no content field (must be items)
+                .andExpect(jsonPath("$.content").doesNotExist())
+                // Ensure no sensitive fields
+                .andExpect(jsonPath("$.items[0].passwordHash").doesNotExist());
+    }
+
+    @Test
+    void getUsers_passesQueryParameters() throws Exception {
+        PagedResponse<AdminUserListItemDto> paged = new PagedResponse<>(List.of(), 0, 10, 0);
+        when(adminService.getUsers(any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(paged);
+
+        mockMvc.perform(get("/api/admin/users")
+                        .param("search", "john")
+                        .param("role", "USER")
+                        .param("status", "ACTIVE")
+                        .param("permission", "ALLOWED")
+                        .param("rights", "PRIVILEGED")
+                        .param("createdFrom", "2026-06-01")
+                        .param("createdTo", "2026-06-25")
+                        .param("sort", "username,asc")
+                        .param("page", "1")
+                        .param("size", "20")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(adminService).getUsers(
+                eq("john"), eq("USER"), eq("ACTIVE"), eq("ALLOWED"), eq("PRIVILEGED"),
+                eq("2026-06-01"), eq("2026-06-25"),
+                eq("username"), eq("asc"), eq(1), eq(20));
+    }
+
+    @Test
+    void getUsers_defaultParameters() throws Exception {
+        PagedResponse<AdminUserListItemDto> paged = new PagedResponse<>(List.of(), 0, 10, 0);
+        when(adminService.getUsers(any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(paged);
+
+        mockMvc.perform(get("/api/admin/users")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(adminService).getUsers(
+                isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(),
+                eq("createdAt"), eq("desc"), eq(0), eq(10));
+    }
+
+    @Test
+    void getUsers_emptyResult() throws Exception {
+        PagedResponse<AdminUserListItemDto> paged = new PagedResponse<>(List.of(), 0, 10, 0);
+        when(adminService.getUsers(any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(paged);
+
+        mockMvc.perform(get("/api/admin/users")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isEmpty())
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
+    void getUsers_invalidDate_returnsBadRequest() throws Exception {
+        when(adminService.getUsers(any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenThrow(new com.resumainer.exception.ServiceException("INVALID_DATE",
+                        "Invalid date format for createdFrom"));
+
+        mockMvc.perform(get("/api/admin/users")
+                        .param("createdFrom", "not-a-date")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_DATE"));
+    }
+
+    @Test
+    void getUsers_returnsSafeError_whenServiceFails() throws Exception {
+        when(adminService.getUsers(any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenThrow(new RuntimeException("DB error"));
+
+        mockMvc.perform(get("/api/admin/users")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.errorCode").exists())
+                .andExpect(jsonPath("$.message").exists());
     }
 
     // --- Phase 3: Admin resume delete tests ---

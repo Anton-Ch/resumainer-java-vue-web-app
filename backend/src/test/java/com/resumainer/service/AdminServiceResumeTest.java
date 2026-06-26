@@ -2,13 +2,15 @@ package com.resumainer.service;
 
 import com.resumainer.dao.AdminDao;
 import com.resumainer.dao.AdminDao.AdminSavedResumeRow;
-import com.resumainer.dto.admin.AdminDashboardDto;
+import com.resumainer.dao.AdminDao.AdminUserRow;
 import com.resumainer.dto.admin.AdminSavedResumeDto;
+import com.resumainer.dto.admin.AdminUserListItemDto;
 import com.resumainer.exception.ServiceException;
 import com.resumainer.model.PagedResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -407,6 +409,185 @@ class AdminServiceResumeTest {
 
         // Service returns only boolean, no path/owner/internal details
         assertEquals(true, result);
+    }
+
+    // --- Phase 4: Admin users listing tests ---
+
+    private AdminUserRow createUserRow(UUID id, String username, String email,
+                                        String fullName, String roleCode, String roleName,
+                                        String statusCode, String statusName,
+                                        String permissionCode, String permissionName,
+                                        boolean isPrivileged, long resumesCount) {
+        AdminUserRow row = new AdminUserRow();
+        row.id = id;
+        row.username = username;
+        row.email = email;
+        row.fullName = fullName;
+        row.roleCode = roleCode;
+        row.roleName = roleName;
+        row.statusCode = statusCode;
+        row.statusName = statusName;
+        row.permissionCode = permissionCode;
+        row.permissionName = permissionName;
+        row.isPrivileged = isPrivileged;
+        row.resumesCount = resumesCount;
+        row.createdAt = LocalDateTime.of(2026, 6, 1, 12, 0);
+        return row;
+    }
+
+    @Test
+    void getUsers_returnsPagedResponseWithItems() {
+        AdminUserRow row = createUserRow(UUID.randomUUID(), "johndoe", "john@example.com",
+                "John Doe", "USER", "Regular User", "ACTIVE", "Active",
+                "ALLOWED", "Allowed", false, 3);
+
+        when(adminDao.findUsers(any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(List.of(row));
+        when(adminDao.countUsers(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(1L);
+
+        PagedResponse<AdminUserListItemDto> result = adminService.getUsers(
+                null, null, null, null, null, null, null,
+                "createdAt", "desc", 0, 10);
+
+        assertNotNull(result);
+        assertEquals(1, result.getItems().size());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(0, result.getPage());
+        assertEquals(10, result.getSize());
+    }
+
+    @Test
+    void getUsers_dtoHasCorrectIdentityFields() {
+        UUID userId = UUID.randomUUID();
+        AdminUserRow row = createUserRow(userId, "johndoe", "john@example.com",
+                "John Doe", "USER", "Regular User", "ACTIVE", "Active",
+                "ALLOWED", "Allowed", false, 3);
+
+        when(adminDao.findUsers(any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(List.of(row));
+        when(adminDao.countUsers(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(1L);
+
+        PagedResponse<AdminUserListItemDto> result = adminService.getUsers(
+                null, null, null, null, null, null, null,
+                "createdAt", "desc", 0, 10);
+
+        AdminUserListItemDto dto = result.getItems().get(0);
+        assertEquals(userId.toString(), dto.getId());
+        assertEquals("john@example.com", dto.getEmail());
+        assertEquals("John Doe", dto.getFullName());
+        assertEquals("johndoe", dto.getUsername());
+    }
+
+    @Test
+    void getUsers_dtoHasReadableStatusAndRole() {
+        AdminUserRow row = createUserRow(UUID.randomUUID(), "johndoe", "john@example.com",
+                "John Doe", "USER", "Regular User", "ACTIVE", "Active",
+                "ALLOWED", "Allowed", false, 3);
+
+        when(adminDao.findUsers(any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(List.of(row));
+        when(adminDao.countUsers(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(1L);
+
+        PagedResponse<AdminUserListItemDto> result = adminService.getUsers(
+                null, null, null, null, null, null, null,
+                "createdAt", "desc", 0, 10);
+
+        AdminUserListItemDto dto = result.getItems().get(0);
+        assertEquals("USER", dto.getRoleCode());
+        assertEquals("Regular User", dto.getRoleName());
+        assertEquals("ACTIVE", dto.getStatusCode());
+        assertEquals("Active", dto.getStatusName());
+        assertEquals("ALLOWED", dto.getPermissionCode());
+        assertEquals("Allowed", dto.getPermissionName());
+        assertFalse(dto.isPrivileged());
+    }
+
+    @Test
+    void getUsers_dtoHasResumesCountAndCreatedAt() {
+        AdminUserRow row = createUserRow(UUID.randomUUID(), "johndoe", "john@example.com",
+                "John Doe", "USER", "Regular User", "ACTIVE", "Active",
+                "ALLOWED", "Allowed", false, 5);
+
+        when(adminDao.findUsers(any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(List.of(row));
+        when(adminDao.countUsers(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(1L);
+
+        PagedResponse<AdminUserListItemDto> result = adminService.getUsers(
+                null, null, null, null, null, null, null,
+                "createdAt", "desc", 0, 10);
+
+        AdminUserListItemDto dto = result.getItems().get(0);
+        assertEquals(5L, dto.getResumesCount());
+        assertNotNull(dto.getCreatedAt());
+    }
+
+    @Test
+    void getUsers_emptyResult() {
+        when(adminDao.findUsers(any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(List.of());
+        when(adminDao.countUsers(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(0L);
+
+        PagedResponse<AdminUserListItemDto> result = adminService.getUsers(
+                null, null, null, null, null, null, null,
+                "createdAt", "desc", 0, 10);
+
+        assertTrue(result.getItems().isEmpty());
+        assertEquals(0, result.getTotalElements());
+    }
+
+    @Test
+    void getUsers_passesSearchAndFiltersToDao() {
+        when(adminDao.findUsers(any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(List.of());
+        when(adminDao.countUsers(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(0L);
+
+        adminService.getUsers("john", "ADMIN", "ACTIVE", "ALLOWED", "PRIVILEGED",
+                "2026-06-01", "2026-06-25",
+                "createdAt", "desc", 0, 10);
+
+        verify(adminDao).findUsers(eq("john"), eq("ADMIN"), eq("ACTIVE"),
+                eq("ALLOWED"), eq("PRIVILEGED"),
+                eq("2026-06-01"), eq("2026-06-25"),
+                eq("createdAt"), eq("desc"), eq(0), eq(10));
+        verify(adminDao).countUsers(eq("john"), eq("ADMIN"), eq("ACTIVE"),
+                eq("ALLOWED"), eq("PRIVILEGED"),
+                eq("2026-06-01"), eq("2026-06-25"));
+    }
+
+    @Test
+    void getUsers_invalidDate_throwsServiceException() {
+        assertThrows(ServiceException.class, () ->
+                adminService.getUsers(null, null, null, null, null, "bad-date", null,
+                        "createdAt", "desc", 0, 10)
+        );
+    }
+
+    @Test
+    void getUsers_dtoHasNoSensitiveFields() {
+        AdminUserRow row = createUserRow(UUID.randomUUID(), "johndoe", "john@example.com",
+                "John Doe", "USER", "Regular User", "ACTIVE", "Active",
+                "ALLOWED", "Allowed", false, 3);
+
+        when(adminDao.findUsers(any(), any(), any(), any(), any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(List.of(row));
+        when(adminDao.countUsers(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(1L);
+
+        PagedResponse<AdminUserListItemDto> result = adminService.getUsers(
+                null, null, null, null, null, null, null,
+                "createdAt", "desc", 0, 10);
+
+        AdminUserListItemDto dto = result.getItems().get(0);
+
+        // No password hash or sensitive fields via reflection
+        assertNull(getFieldIfExists(dto, "passwordHash"));
+        assertNull(getFieldIfExists(dto, "password_hash"));
     }
 
     // Helper: reflection check that DTO doesn't have a field

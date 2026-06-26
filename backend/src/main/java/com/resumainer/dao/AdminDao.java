@@ -461,6 +461,238 @@ public class AdminDao {
         public boolean htmlFilePresent;
     }
 
+    // --- Phase 4: Admin users listing ---
+
+    private static final Set<String> ALLOWED_USER_SORT_FIELDS = Set.of(
+            "fullname", "username", "email",
+            "role", "status", "generationpermission",
+            "rights", "resumescount", "createdat"
+    );
+
+    private static final Map<String, String> USER_SORT_MAP = Map.of(
+            "fullname", "cd.full_name",
+            "username", "u.username",
+            "email", "u.email",
+            "role", "r.code",
+            "status", "us.code",
+            "generationpermission", "up.code",
+            "rights", "u.is_privileged",
+            "resumescount", "resumes_count",
+            "createdat", "u.created_at"
+    );
+
+    private static final String USER_SELECT_COLUMNS =
+            "u.id, cd.full_name, u.username, u.email, "
+            + "r.code AS role_code, r.name AS role_name, "
+            + "us.code AS status_code, us.name AS status_name, "
+            + "up.code AS permission_code, up.name AS permission_name, "
+            + "u.is_privileged, "
+            + "COUNT(sr.id) AS resumes_count, "
+            + "u.created_at";
+
+    private static final String USER_FROM_JOIN =
+            "FROM users u "
+            + "LEFT JOIN contact_detail cd ON cd.user_id = u.id "
+            + "JOIN role r ON r.id = u.role_id "
+            + "JOIN user_status us ON us.id = u.status_id "
+            + "JOIN user_permission up ON up.id = u.permission_id "
+            + "LEFT JOIN saved_resumes sr ON sr.user_id = u.id AND sr.is_deleted = FALSE";
+
+    /**
+     * Paginated admin users listing with search, filters, date range, and sort.
+     */
+    public List<AdminUserRow> findUsers(String search,
+                                         String role, String status,
+                                         String permission, String rights,
+                                         String createdFrom, String createdTo,
+                                         String sortField, String sortDir,
+                                         int page, int size) {
+        String sortColumn = validateUserSortField(sortField);
+        String direction = validateSortDir(sortDir);
+
+        SqlBuilder sql = new SqlBuilder("WHERE u.is_deleted = FALSE");
+
+        if (isNotBlank(search)) {
+            sql.append(" AND (LOWER(u.username) LIKE ? OR LOWER(u.email) LIKE ? "
+                      + "OR LOWER(cd.full_name) LIKE ?)");
+            String p = "%" + search.toLowerCase().trim() + "%";
+            sql.addParam(p).addParam(p).addParam(p);
+        }
+
+        if (isNotBlank(role) && !"ALL".equalsIgnoreCase(role.trim())) {
+            sql.appendInClause("AND r.code IN", new String[]{role});
+        }
+
+        if (isNotBlank(status) && !"ALL".equalsIgnoreCase(status.trim())) {
+            sql.appendInClause("AND us.code IN", new String[]{status});
+        }
+
+        if (isNotBlank(permission) && !"ALL".equalsIgnoreCase(permission.trim())) {
+            sql.appendInClause("AND up.code IN", new String[]{permission});
+        }
+
+        if ("PRIVILEGED".equalsIgnoreCase(rights)) {
+            sql.append(" AND u.is_privileged = TRUE");
+        } else if ("NON_PRIVILEGED".equalsIgnoreCase(rights)) {
+            sql.append(" AND u.is_privileged = FALSE");
+        }
+
+        if (isNotBlank(createdFrom)) {
+            sql.append(" AND u.created_at >= ?::date");
+            sql.addParam(createdFrom.trim());
+        }
+
+        if (isNotBlank(createdTo)) {
+            sql.append(" AND u.created_at < (?::date + INTERVAL '1 day')");
+            sql.addParam(createdTo.trim());
+        }
+
+        int offset = page * size;
+        String groupBy = " GROUP BY u.id, cd.full_name, u.username, u.email, "
+                + "r.code, r.name, us.code, us.name, up.code, up.name, "
+                + "u.is_privileged, u.created_at";
+
+        String query = "SELECT " + USER_SELECT_COLUMNS + " "
+                + USER_FROM_JOIN + " "
+                + sql.getWhere()
+                + groupBy
+                + " ORDER BY " + sortColumn + " " + direction
+                + " LIMIT ? OFFSET ?";
+
+        log.debug("findUsers: page={}, size={}, search={}, role={}, status={}, "
+                + "permission={}, rights={}, from={}, to={}, sort={} {}",
+                page, size, search, role, status, permission, rights,
+                createdFrom, createdTo, sortField, direction);
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            sql.setParameters(stmt);
+            stmt.setInt(sql.getParamCount() + 1, size);
+            stmt.setInt(sql.getParamCount() + 2, offset);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<AdminUserRow> results = new ArrayList<>();
+                while (rs.next()) {
+                    results.add(mapUserRow(rs));
+                }
+                return results;
+            }
+
+        } catch (SQLException e) {
+            log.error("Error finding admin users", e);
+            throw new RuntimeException("Database error finding admin users", e);
+        }
+    }
+
+    /**
+     * COUNT query with the same filters as findUsers (for pagination).
+     */
+    public long countUsers(String search, String role, String status,
+                           String permission, String rights,
+                           String createdFrom, String createdTo) {
+        SqlBuilder sql = new SqlBuilder("WHERE u.is_deleted = FALSE");
+
+        if (isNotBlank(search)) {
+            sql.append(" AND (LOWER(u.username) LIKE ? OR LOWER(u.email) LIKE ? "
+                      + "OR LOWER(cd.full_name) LIKE ?)");
+            String p = "%" + search.toLowerCase().trim() + "%";
+            sql.addParam(p).addParam(p).addParam(p);
+        }
+
+        if (isNotBlank(role) && !"ALL".equalsIgnoreCase(role.trim())) {
+            sql.appendInClause("AND r.code IN", new String[]{role});
+        }
+
+        if (isNotBlank(status) && !"ALL".equalsIgnoreCase(status.trim())) {
+            sql.appendInClause("AND us.code IN", new String[]{status});
+        }
+
+        if (isNotBlank(permission) && !"ALL".equalsIgnoreCase(permission.trim())) {
+            sql.appendInClause("AND up.code IN", new String[]{permission});
+        }
+
+        if ("PRIVILEGED".equalsIgnoreCase(rights)) {
+            sql.append(" AND u.is_privileged = TRUE");
+        } else if ("NON_PRIVILEGED".equalsIgnoreCase(rights)) {
+            sql.append(" AND u.is_privileged = FALSE");
+        }
+
+        if (isNotBlank(createdFrom)) {
+            sql.append(" AND u.created_at >= ?::date");
+            sql.addParam(createdFrom.trim());
+        }
+
+        if (isNotBlank(createdTo)) {
+            sql.append(" AND u.created_at < (?::date + INTERVAL '1 day')");
+            sql.addParam(createdTo.trim());
+        }
+
+        String query = "SELECT COUNT(DISTINCT u.id) " + USER_FROM_JOIN + " " + sql.getWhere();
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            sql.setParameters(stmt);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getLong(1) : 0;
+            }
+
+        } catch (SQLException e) {
+            log.error("Error counting admin users", e);
+            throw new RuntimeException("Database error counting admin users", e);
+        }
+    }
+
+    private AdminUserRow mapUserRow(ResultSet rs) throws SQLException {
+        AdminUserRow row = new AdminUserRow();
+        row.id = (UUID) rs.getObject("id");
+        row.fullName = rs.getString("full_name");
+        row.username = rs.getString("username");
+        row.email = rs.getString("email");
+        row.roleCode = rs.getString("role_code");
+        row.roleName = rs.getString("role_name");
+        row.statusCode = rs.getString("status_code");
+        row.statusName = rs.getString("status_name");
+        row.permissionCode = rs.getString("permission_code");
+        row.permissionName = rs.getString("permission_name");
+        row.isPrivileged = rs.getBoolean("is_privileged");
+        row.resumesCount = rs.getLong("resumes_count");
+        java.sql.Timestamp ts = rs.getTimestamp("created_at");
+        row.createdAt = ts != null ? ts.toLocalDateTime() : null;
+        return row;
+    }
+
+    private String validateUserSortField(String field) {
+        if (field == null || field.isBlank()) return "u.created_at";
+        String f = field.trim().toLowerCase();
+        if (!ALLOWED_USER_SORT_FIELDS.contains(f)) {
+            throw new IllegalArgumentException("Invalid sort field: " + field
+                    + ". Allowed: " + ALLOWED_USER_SORT_FIELDS);
+        }
+        return USER_SORT_MAP.getOrDefault(f, "u.created_at");
+    }
+
+    /**
+     * Lightweight row representation for admin user listing.
+     */
+    public static class AdminUserRow {
+        public UUID id;
+        public String fullName;
+        public String username;
+        public String email;
+        public String roleCode;
+        public String roleName;
+        public String statusCode;
+        public String statusName;
+        public String permissionCode;
+        public String permissionName;
+        public boolean isPrivileged;
+        public long resumesCount;
+        public java.time.LocalDateTime createdAt;
+    }
+
     // --- SQL Builder ---
 
     private static class SqlBuilder {

@@ -2,6 +2,7 @@ package com.resumainer.controller;
 
 import com.resumainer.dto.admin.AdminDashboardDto;
 import com.resumainer.dto.admin.AdminSavedResumeDto;
+import com.resumainer.dto.admin.AdminUserListItemDto;
 import com.resumainer.model.PagedResponse;
 import com.resumainer.service.AdminService;
 import org.slf4j.Logger;
@@ -64,6 +65,37 @@ public class AdminController {
 
         PagedResponse<AdminSavedResumeDto> result = adminService.getResumes(
                 search, language, adaptationLevel, createdFrom, createdTo,
+                sortField, sortDir, page, size);
+
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<PagedResponse<AdminUserListItemDto>> getUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String permission,
+            @RequestParam(required = false) String rights,
+            @RequestParam(required = false) String createdFrom,
+            @RequestParam(required = false) String createdTo,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+
+        // Parse sort parameter: "field,direction" or just "field"
+        String sortField = "createdAt";
+        String sortDir = "desc";
+        if (sort != null && !sort.isBlank()) {
+            String[] parts = sort.split(",");
+            sortField = parts[0].trim();
+            if (parts.length > 1) {
+                sortDir = parts[1].trim();
+            }
+        }
+
+        PagedResponse<AdminUserListItemDto> result = adminService.getUsers(
+                search, role, status, permission, rights, createdFrom, createdTo,
                 sortField, sortDir, page, size);
 
         return ResponseEntity.ok(result);
