@@ -4,6 +4,7 @@ import com.resumainer.dao.AdminDao;
 import com.resumainer.dao.AdminDao.AdminSavedResumeRow;
 import com.resumainer.dto.admin.AdminDashboardDto;
 import com.resumainer.dto.admin.AdminSavedResumeDto;
+import com.resumainer.dto.admin.AdminUserListItemDto;
 import com.resumainer.exception.ServiceException;
 import com.resumainer.model.PagedResponse;
 import org.slf4j.Logger;
@@ -105,6 +106,35 @@ public class AdminService {
         return new PagedResponse<>(items, page, size, totalElements);
     }
 
+    // --- Phase 4: Admin users listing ---
+
+    /**
+     * Paginated admin users listing with search, filters, date range, and sort.
+     */
+    public PagedResponse<AdminUserListItemDto> getUsers(String search,
+                                                         String role, String status,
+                                                         String permission, String rights,
+                                                         String createdFrom, String createdTo,
+                                                         String sortField, String sortDir,
+                                                         int page, int size) {
+        // Validate date formats before DAO SQL execution
+        validateDateParam("createdFrom", createdFrom);
+        validateDateParam("createdTo", createdTo);
+
+        List<AdminDao.AdminUserRow> rows = adminDao.findUsers(
+                search, role, status, permission, rights, createdFrom, createdTo,
+                sortField, sortDir, page, size);
+
+        long totalElements = adminDao.countUsers(
+                search, role, status, permission, rights, createdFrom, createdTo);
+
+        List<AdminUserListItemDto> items = rows.stream()
+                .map(this::toUserDto)
+                .collect(Collectors.toList());
+
+        return new PagedResponse<>(items, page, size, totalElements);
+    }
+
     // --- Phase 3: Admin resume delete ---
 
     /**
@@ -163,6 +193,24 @@ public class AdminService {
 
         dto.setCoverLetter(row.coverLetter);
 
+        return dto;
+    }
+
+    private AdminUserListItemDto toUserDto(AdminDao.AdminUserRow row) {
+        AdminUserListItemDto dto = new AdminUserListItemDto();
+        dto.setId(row.id != null ? row.id.toString() : null);
+        dto.setFullName(row.fullName);
+        dto.setUsername(row.username);
+        dto.setEmail(row.email);
+        dto.setRoleCode(row.roleCode);
+        dto.setRoleName(row.roleName);
+        dto.setStatusCode(row.statusCode);
+        dto.setStatusName(row.statusName);
+        dto.setPermissionCode(row.permissionCode);
+        dto.setPermissionName(row.permissionName);
+        dto.setPrivileged(row.isPrivileged);
+        dto.setResumesCount(row.resumesCount);
+        dto.setCreatedAt(row.createdAt != null ? row.createdAt.toString() : null);
         return dto;
     }
 
