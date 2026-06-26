@@ -543,7 +543,9 @@
   "admin": {
     "home": {
       "title": "Admin",
-      "subtitle": "System overview and management"
+      "subtitle": "System overview and management",
+      "retry": "Retry",
+      "error": "Failed to load dashboard."
     },
     "users": {
       "title": "Users",
@@ -559,9 +561,62 @@
       "title": "AI Models",
       "wip": "AI model management is coming in a future update."
     },
-    "resumesSection": {
+    "stats": {
+      "totalUsers": "Total users",
+      "totalResumes": "Total resumes",
+      "totalTokensSent": "Total tokens sent",
+      "totalTokensGenerated": "Total tokens generated",
+      "wip": "WIP"
+    },
+    "quickActions": {
+      "users": "Users",
+      "resumes": "Resumes",
+      "aiModels": "AI Models"
+    },
+    "resumes": {
       "title": "All Resumes",
-      "placeholder": "Resume moderation table will be available in a future update."
+      "searchPlaceholder": "Search by title, vacancy, company, or owner",
+      "clear": "Clear",
+      "clearTooltip": "Clear all filters",
+      "resumeTitle": "Resume title",
+      "vacancy": "Vacancy",
+      "company": "Company",
+      "owner": "Owner",
+      "email": "Email",
+      "language": "Language",
+      "adaptationLevel": "Adaptation level",
+      "created": "Created",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "pdfStatus": "PDF",
+      "dateError": "End date must be after start date.",
+      "pageReport": "Showing {first} to {last} of {totalRecords}",
+      "noResults": "No resumes found",
+      "emptyTitle": "No resumes",
+      "emptyText": "No resumes found matching your search criteria."
+    },
+    "resumeDetails": {
+      "title": "Resume details",
+      "ownerInfo": "Owner information",
+      "resumeInfo": "Resume information",
+      "username": "Username",
+      "email": "Email",
+      "fullName": "Full name",
+      "coverLetter": "Cover letter",
+      "noCoverLetter": "Cover letter was not selected in generation settings.",
+      "openPdf": "Open PDF",
+      "downloadPdf": "Download PDF",
+      "downloadHtml": "Download HTML",
+      "copyLink": "Copy link",
+      "linkCopied": "Link copied.",
+      "copyFailed": "Failed to copy",
+      "delete": "Delete",
+      "deleteTitle": "Delete resume?",
+      "deleteText": "This resume will no longer be available from its workspace or public link.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "deleteSuccess": "Resume deleted.",
+      "deleteFailed": "Failed to delete resume."
     }
   }
 }
