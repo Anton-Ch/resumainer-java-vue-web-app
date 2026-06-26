@@ -68,6 +68,20 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles IllegalArgumentException (invalid sort field, direction, etc.).
+     * Returns 400 with a safe message — no stack trace, no raw DB error.
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex,
+                                                                      HttpServletRequest request) {
+        log.warn("Invalid argument at {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
+        return ResponseEntity.badRequest().body(Map.of(
+                "errorCode", "INVALID_REQUEST",
+                "message", ex.getMessage() != null ? ex.getMessage() : "Invalid request parameter."
+        ));
+    }
+
+    /**
      * Handles all unhandled server errors (500). Returns JSON for API, HTML for pages.
      */
     @ExceptionHandler(Exception.class)
