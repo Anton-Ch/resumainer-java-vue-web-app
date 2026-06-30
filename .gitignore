@@ -1,6 +1,9 @@
 # Spec Kit memory cache (binary SQLite)
 .spec-kit-memory/
 
+# Serena agent cache
+.serena/
+
 # Java / Maven
 target/
 *.class
