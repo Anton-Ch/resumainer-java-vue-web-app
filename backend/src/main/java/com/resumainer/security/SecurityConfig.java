@@ -70,8 +70,9 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-                                           AuthenticationManager authenticationManager) throws Exception {
-        log.info("Phase 4 — Configuring Spring Security JSON login/logout/status");
+                                           AuthenticationManager authenticationManager,
+                                           UserDao userDao) throws Exception {
+        log.info("Phase 5 — Configuring Spring Security with failed login tracking");
 
         http
             // Phase 1+: all endpoints open — auth rules come in Phase 7
@@ -87,11 +88,11 @@ public class SecurityConfig {
                 .sessionFixation().migrateSession()
             );
 
-        // Phase 4: JSON login filter
+        // Phase 4/5: JSON login filter with failed login counter tracking
         JsonAuthenticationFilter jsonFilter = new JsonAuthenticationFilter();
         jsonFilter.setAuthenticationManager(authenticationManager);
-        jsonFilter.setAuthenticationSuccessHandler(new JsonAuthenticationSuccessHandler());
-        jsonFilter.setAuthenticationFailureHandler(new JsonAuthenticationFailureHandler());
+        jsonFilter.setAuthenticationSuccessHandler(new JsonAuthenticationSuccessHandler(userDao));
+        jsonFilter.setAuthenticationFailureHandler(new JsonAuthenticationFailureHandler(userDao));
         http.addFilterAt(jsonFilter, UsernamePasswordAuthenticationFilter.class);
 
         // Phase 4: JSON logout
@@ -104,7 +105,7 @@ public class SecurityConfig {
         );
 
         SecurityFilterChain chain = http.build();
-        log.info("Phase 4 — Spring Security filter chain built successfully");
+        log.info("Phase 5 — Spring Security filter chain built successfully");
         return chain;
     }
 

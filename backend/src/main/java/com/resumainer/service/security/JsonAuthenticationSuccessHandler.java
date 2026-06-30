@@ -1,6 +1,7 @@
 package com.resumainer.service.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.resumainer.dao.UserDao;
 import com.resumainer.dto.UserSession;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,11 +28,19 @@ import java.util.Map;
  * {@link UserSession} so that old {@code AuthInterceptor} and session-based
  * controllers continue to work until Phase 7 removes them.
  * Spring Security Authentication remains the authoritative source of truth.
+ *
+ * <p>Resets the failed login counter on successful authentication.
  */
 public class JsonAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
     private static final Logger log = LoggerFactory.getLogger(JsonAuthenticationSuccessHandler.class);
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    private final UserDao userDao;
+
+    public JsonAuthenticationSuccessHandler(UserDao userDao) {
+        this.userDao = userDao;
+    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -63,9 +72,16 @@ public class JsonAuthenticationSuccessHandler implements AuthenticationSuccessHa
                     role,
                     privileged
             ));
+
+            // Reset failed login counter on successful login
+            try {
+                userDao.resetLoginAttempts(userDetails.getUserId());
+            } catch (Exception e) {
+                log.warn("Failed to reset login attempts for userId={}", userDetails.getUserId());
+            }
         }
 
-        // Safe logging: email, IP only
+        // Safe logging: email, IP only — no passwords, hashes, tokens, secrets
         String email = authentication.getName();
         String ip = request.getRemoteAddr();
         log.info("Login successful: email={}, ip={}", email, ip);

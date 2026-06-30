@@ -368,6 +368,252 @@ class JsonLoginIntegrationTest {
     }
 
     // ============================================================
+    // Phase 5 — Failed login counter, CAPTCHA, and lock tests
+    // ============================================================
+
+    private User createUserWithAttempts(long roleId, long statusId, boolean emailVerified, int failedAttempts) {
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        user.setEmail("test@example.com");
+        user.setPasswordHash("$2a$12$b6Flut1MIqFT5gQNqWZwtOWAIxbDDZHNW.tDRA4ppSCcZGHIXJTyG");
+        user.setUsername("testuser");
+        user.setRoleId(roleId);
+        user.setStatusId(statusId);
+        user.setPermissionId(1L);
+        user.setPrivileged(false);
+        user.setEmailVerified(emailVerified);
+        user.setPasswordLoginEnabled(true);
+        user.setFailedLoginAttempts(failedAttempts);
+        user.setCreatedAt(LocalDateTime.now());
+        return user;
+    }
+
+    @Test
+    @DisplayName("T058: bad password increments failed login counter")
+    void badPassword_incrementsFailedLoginCounter() throws Exception {
+        User user = createUserWithAttempts(1L, 1L, true, 0);
+        user.setId(UUID.randomUUID());
+        when(mockUserDao.findByEmail("test@example.com")).thenReturn(user);
+
+        Map<String, Object> body = Map.of(
+                "email", "test@example.com",
+                "password", "WrongPass123",
+                "rememberMe", false
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_CREDENTIALS"));
+
+        // Verify DAO was called to increment counter: 0+1=1, no lock
+        verify(mockUserDao).updateLoginAttempts(user.getId(), 1, null);
+    }
+
+    @Test
+    @DisplayName("T059: after 3 failed attempts returns CAPTCHA_REQUIRED")
+    void after3Attempts_returnsCaptchaRequired() throws Exception {
+        User user = createUserWithAttempts(1L, 1L, true, 2);
+        user.setId(UUID.randomUUID());
+        when(mockUserDao.findByEmail("test@example.com")).thenReturn(user);
+
+        Map<String, Object> body = Map.of(
+                "email", "test@example.com",
+                "password", "WrongPass123",
+                "rememberMe", false
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("CAPTCHA_REQUIRED"));
+
+        // Verify DAO was called: 2+1=3, no lock yet
+        verify(mockUserDao).updateLoginAttempts(user.getId(), 3, null);
+    }
+
+    @Test
+    @DisplayName("T060: after 5 failed attempts locks account and returns ACCOUNT_LOCKED")
+    void after5Attempts_returnsAccountLocked() throws Exception {
+        User user = createUserWithAttempts(1L, 1L, true, 4);
+        user.setId(UUID.randomUUID());
+        when(mockUserDao.findByEmail("test@example.com")).thenReturn(user);
+
+        Map<String, Object> body = Map.of(
+                "email", "test@example.com",
+                "password", "WrongPass123",
+                "rememberMe", false
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("ACCOUNT_LOCKED"));
+
+        // Verify DAO was called: 4+1=5, with lock time
+        verify(mockUserDao).updateLoginAttempts(eq(user.getId()), eq(5), notNull());
+    }
+
+    @Test
+    @DisplayName("T061: successful login resets failed login counter")
+    void successfulLogin_resetsFailedLoginCounter() throws Exception {
+        User user = createUserWithAttempts(1L, 1L, true, 3);
+        user.setId(UUID.randomUUID());
+        when(mockUserDao.findByEmail("test@example.com")).thenReturn(user);
+
+        Map<String, Object> body = Map.of(
+                "email", "test@example.com",
+                "password", "Aa123456",
+                "rememberMe", false
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        verify(mockUserDao).resetLoginAttempts(user.getId());
+    }
+
+    @Test
+    @DisplayName("T068: blocked account returns INVALID_CREDENTIALS and does NOT increment counter")
+    void blockedAccount_returnsInvalidCredentials_andDoesNotIncrementCounter() throws Exception {
+        User user = createUserWithAttempts(1L, 2L, true, 0);
+        user.setId(UUID.randomUUID());
+        when(mockUserDao.findByEmail("blocked@test.com")).thenReturn(user);
+
+        Map<String, Object> body = Map.of(
+                "email", "blocked@test.com",
+                "password", "AnyPass123",
+                "rememberMe", false
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_CREDENTIALS"));
+
+        // Must not increment counter — blocked accounts are not eligible for password login
+        verify(mockUserDao, never()).updateLoginAttempts(any(), anyInt(), any());
+    }
+
+    @Test
+    @DisplayName("Password-login-disabled returns INVALID_CREDENTIALS and does NOT increment counter")
+    void passwordLoginDisabled_returnsInvalidCredentials_andDoesNotIncrementCounter() throws Exception {
+        User user = createUserWithAttempts(1L, 1L, true, 0);
+        user.setId(UUID.randomUUID());
+        user.setPasswordLoginEnabled(false);
+        when(mockUserDao.findByEmail("disabled@test.com")).thenReturn(user);
+
+        Map<String, Object> body = Map.of(
+                "email", "disabled@test.com",
+                "password", "AnyPass123",
+                "rememberMe", false
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_CREDENTIALS"));
+
+        verify(mockUserDao, never()).updateLoginAttempts(any(), anyInt(), any());
+    }
+
+    @Test
+    @DisplayName("Unverified email returns EMAIL_NOT_VERIFIED and does NOT increment counter")
+    void unverifiedEmail_returnsEmailNotVerified_andDoesNotIncrementCounter() throws Exception {
+        User user = createUserWithAttempts(1L, 1L, false, 0);
+        user.setId(UUID.randomUUID());
+        when(mockUserDao.findByEmail("unverified@test.com")).thenReturn(user);
+
+        Map<String, Object> body = Map.of(
+                "email", "unverified@test.com",
+                "password", "AnyPass123",
+                "rememberMe", false
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("EMAIL_NOT_VERIFIED"));
+
+        verify(mockUserDao, never()).updateLoginAttempts(any(), anyInt(), any());
+    }
+
+    @Test
+    @DisplayName("Locked account returns ACCOUNT_LOCKED and does NOT increment counter")
+    void lockedAccount_returnsAccountLocked_andDoesNotIncrementCounter() throws Exception {
+        User user = createUserWithAttempts(1L, 1L, true, 5);
+        user.setId(UUID.randomUUID());
+        user.setLockedUntil(LocalDateTime.now().plusMinutes(15));
+        when(mockUserDao.findByEmail("locked@test.com")).thenReturn(user);
+
+        Map<String, Object> body = Map.of(
+                "email", "locked@test.com",
+                "password", "AnyPass123",
+                "rememberMe", false
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("ACCOUNT_LOCKED"));
+
+        verify(mockUserDao, never()).updateLoginAttempts(any(), anyInt(), any());
+    }
+
+    @Test
+    @DisplayName("Unknown email returns INVALID_CREDENTIALS and does NOT increment counter")
+    void unknownEmail_returnsInvalidCredentials_andDoesNotIncrementCounter() throws Exception {
+        when(mockUserDao.findByEmail("unknown@example.com")).thenReturn(null);
+
+        Map<String, Object> body = Map.of(
+                "email", "unknown@example.com",
+                "password", "AnyPass123",
+                "rememberMe", false
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_CREDENTIALS"));
+
+        verify(mockUserDao, never()).updateLoginAttempts(any(), anyInt(), any());
+    }
+
+    @Test
+    @DisplayName("After 4 failed attempts returns CAPTCHA_REQUIRED and does NOT lock yet")
+    void after4Attempts_returnsCaptchaRequired_andDoesNotLockYet() throws Exception {
+        User user = createUserWithAttempts(1L, 1L, true, 3);
+        user.setId(UUID.randomUUID());
+        when(mockUserDao.findByEmail("test@example.com")).thenReturn(user);
+
+        Map<String, Object> body = Map.of(
+                "email", "test@example.com",
+                "password", "WrongPass123",
+                "rememberMe", false
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("CAPTCHA_REQUIRED"));
+
+        // Counter incremented from 3 to 4, but lock is null (only locks at 5+)
+        verify(mockUserDao).updateLoginAttempts(user.getId(), 4, null);
+    }
+
+    // ============================================================
     // Test Configuration
     // ============================================================
 
