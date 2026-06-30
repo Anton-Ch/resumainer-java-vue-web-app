@@ -101,12 +101,12 @@ Agents provide specialization.
 
 ## First milestone
 
-> Java Spring config + Hello World Tomcat page in Docker
+> Auth Hardening and Spring Security Migration (Feature 011)
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the implementation
-plan at `specs/009-home-modal-fix/plan.md`.
+plan at `specs/011-auth-hardening/plan.md`.
 <!-- SPECKIT END -->
 
 ### Spec Kit
