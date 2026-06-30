@@ -169,10 +169,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(localeChangeInterceptor());
-        // AuthInterceptor checks for valid session on all paths except /api/auth/*
+        // AuthInterceptor checks for valid session on all paths except /api/auth/* and /api/csrf
         registry.addInterceptor(authInterceptor())
                 .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/auth/**");
+                .excludePathPatterns("/api/auth/**", "/api/csrf", "/api/csrf/ping");
     }
 
     // ============================================================

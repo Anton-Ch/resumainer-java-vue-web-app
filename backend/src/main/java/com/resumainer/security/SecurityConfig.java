@@ -14,12 +14,14 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  * Phase 1 — Minimal non-Boot Spring Security configuration.
@@ -79,8 +81,20 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .anyRequest().permitAll()
             )
-            // Phase 1+: Spring Security CSRF disabled — legacy CsrfFilter handles CSRF
-            .csrf(AbstractHttpConfigurer::disable)
+            // Phase 6: Spring Security CSRF for SPA with CookieCsrfTokenRepository
+            // Cookie XSRF-TOKEN (non-HTTP-only so JS can read it), header X-XSRF-TOKEN
+            // Uses SpaCsrfTokenRequestHandler for BREACH-safe rendering and SPA-compatible
+            // token resolution: raw cookie token is matched against X-XSRF-TOKEN header.
+            // Deferred token is forced to load on every response via handle().
+            // Public endpoints excluded using AntPathRequestMatcher.
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .csrfTokenRequestHandler(new com.resumainer.service.security.SpaCsrfTokenRequestHandler())
+                .ignoringRequestMatchers(
+                    new AntPathRequestMatcher("/api/auth/**"),
+                    new AntPathRequestMatcher("/api/public/**")
+                )
+            )
             // Phase 1: headers disabled — WebConfig.securityHeadersFilter continues
             .headers(headers -> headers.disable())
             // Phase 4: session management with session fixation protection
@@ -105,7 +119,7 @@ public class SecurityConfig {
         );
 
         SecurityFilterChain chain = http.build();
-        log.info("Phase 5 — Spring Security filter chain built successfully");
+        log.info("Phase 6 — Spring Security CSRF enabled via CookieCsrfTokenRepository");
         return chain;
     }
 

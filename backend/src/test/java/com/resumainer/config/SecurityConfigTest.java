@@ -112,11 +112,20 @@ class SecurityConfigTest {
     }
 
     @Test
-    @DisplayName("Phase 1 permissive: POST any-path passes security (returns 404 — no controller)")
+    @DisplayName("Phase 1 permissive: POST any-path with CSRF passes security (returns 404 — no controller)")
     void postRequest_passesThroughSecurity() throws Exception {
         mockMvc.perform(post("/any-path")
-                        .contentType("application/json"))
+                        .contentType("application/json")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Phase 6: POST any-path without CSRF returns 403")
+    void postWithoutCsrf_returns403() throws Exception {
+        mockMvc.perform(post("/any-path")
+                        .contentType("application/json"))
+                .andExpect(status().isForbidden());
     }
 
     @Test

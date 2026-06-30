@@ -1,15 +1,46 @@
 /**
- * Shared HTTP client with CSRF token handling (OWASP cookie-to-header pattern).
+ * Shared HTTP client with CSRF token handling (Spring Security CookieCsrfTokenRepository).
  *
- * Reads XSRF-TOKEN from the non-HTTP-only cookie set by CsrfFilter,
- * and sends it as X-CSRF-Token header for unsafe methods (POST, PUT, PATCH, DELETE).
+ * Bootstraps CSRF token via GET /api/csrf on first unsafe request.
+ * Reads XSRF-TOKEN from the non-HTTP-only cookie set by Spring Security,
+ * and sends it as X-XSRF-TOKEN header for unsafe methods (POST, PUT, PATCH, DELETE).
  *
  * All requests include credentials (session cookie) for authentication.
  */
 
+let csrfBootstrapPromise: Promise<void> | null = null
+
+/**
+ * Read XSRF-TOKEN from document.cookie.
+ * The cookie is set by Spring Security CookieCsrfTokenRepository (non-HTTP-only, so JS can read it).
+ */
 function getCsrfToken(): string {
   const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
   return match ? decodeURIComponent(match[1]) : ''
+}
+
+/**
+ * Ensure CSRF token is bootstrapped by calling GET /api/csrf if no token cookie exists.
+ * @param force if true, always re-bootstrap even if cookie exists
+ */
+export async function ensureCsrfToken(force = false): Promise<void> {
+  if (!force && getCsrfToken()) return
+
+  if (!csrfBootstrapPromise || force) {
+    csrfBootstrapPromise = fetch('/api/csrf', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' }
+    }).then(async response => {
+      if (!response.ok) {
+        throw new Error(`Failed to bootstrap CSRF token: ${response.status}`)
+      }
+    }).finally(() => {
+      csrfBootstrapPromise = null
+    })
+  }
+
+  await csrfBootstrapPromise
 }
 
 function isUnsafeMethod(method: string): boolean {
@@ -35,11 +66,12 @@ export async function apiRequest<T>(url: string, options: RequestInit = {}): Pro
     headers.set('Content-Type', 'application/json')
   }
 
-  // Add CSRF token for unsafe methods
+  // Bootstrap CSRF token for unsafe methods, then add header
   if (isUnsafeMethod(method)) {
+    await ensureCsrfToken()
     const csrfToken = getCsrfToken()
     if (csrfToken) {
-      headers.set('X-CSRF-Token', csrfToken)
+      headers.set('X-XSRF-TOKEN', csrfToken)
     }
   }
 

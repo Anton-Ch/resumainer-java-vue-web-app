@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -611,6 +612,56 @@ class JsonLoginIntegrationTest {
 
         // Counter incremented from 3 to 4, but lock is null (only locks at 5+)
         verify(mockUserDao).updateLoginAttempts(user.getId(), 4, null);
+    }
+
+    // ============================================================
+    // Phase 6 — CSRF tests
+    // ============================================================
+
+    @Test
+    @DisplayName("T071: POST without CSRF to protected path returns 403")
+    void postWithoutCsrf_returns403() throws Exception {
+        mockMvc.perform(post("/api/some-protected-path")
+                        .contentType("application/json"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("T072: POST with valid CSRF passes Spring Security (may return 404 from no controller)")
+    void postWithCsrf_passesSecurity() throws Exception {
+        mockMvc.perform(post("/api/some-protected-path")
+                        .contentType("application/json")
+                        .with(csrf()))
+                .andExpect(status().isNotFound()); // 404 = passed CSRF, no controller
+    }
+
+    @Test
+    @DisplayName("T072: Auth endpoint excluded from CSRF: login works without CSRF token")
+    void authLogin_worksWithoutCsrf() throws Exception {
+        User user = createUserWithAttempts(1L, 1L, true, 0);
+        user.setId(UUID.randomUUID());
+        when(mockUserDao.findByEmail("test@example.com")).thenReturn(user);
+
+        Map<String, Object> body = Map.of(
+                "email", "test@example.com",
+                "password", "WrongPass123",
+                "rememberMe", false
+        );
+
+        // Login works without CSRF token because /api/auth/** is excluded
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_CREDENTIALS"));
+    }
+
+    @Test
+    @DisplayName("Public endpoint excluded from CSRF: POST without CSRF token works")
+    void publicEndpoint_worksWithoutCsrf() throws Exception {
+        mockMvc.perform(post("/api/public/some-resume")
+                        .contentType("application/json"))
+                .andExpect(status().isNotFound()); // 404 = passed CSRF+auth, no controller
     }
 
     // ============================================================

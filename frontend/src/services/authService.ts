@@ -2,9 +2,10 @@
  * Auth API service.
  *
  * Handles HTTP calls to /api/auth/* endpoints.
- * Reads CSRF token from cookie and sends it as X-CSRF-Token header
- * (OWASP cookie-to-header pattern via CsrfFilter).
+ * Refreshes CSRF token after login/logout.
  */
+
+import { ensureCsrfToken } from '@/services/httpClient'
 
 const API_BASE = '/api/auth'
 
@@ -31,7 +32,7 @@ export interface AuthStatusData {
 
 /**
  * Read XSRF-TOKEN from document.cookie.
- * The cookie is set by CsrfFilter (non-HTTP-only, so JS can read it).
+ * The cookie is set by Spring Security CookieCsrfTokenRepository (non-HTTP-only, so JS can read it).
  */
 function getCsrfToken(): string {
   const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)
@@ -40,6 +41,7 @@ function getCsrfToken(): string {
 
 /**
  * Build fetch options with JSON body, content type, and CSRF header.
+ * Sends X-XSRF-TOKEN header per Spring Security CookieCsrfTokenRepository convention.
  */
 function buildOptions(method: string, body?: unknown): RequestInit {
   const headers: Record<string, string> = {
@@ -48,7 +50,7 @@ function buildOptions(method: string, body?: unknown): RequestInit {
 
   const csrfToken = getCsrfToken()
   if (csrfToken) {
-    headers['X-CSRF-Token'] = csrfToken
+    headers['X-XSRF-TOKEN'] = csrfToken
   }
 
   return {
@@ -89,6 +91,7 @@ export async function register(
 
 /**
  * Log in with email and password.
+ * After successful login, refresh CSRF token for subsequent unsafe requests.
  */
 export async function login(
   email: string,
@@ -99,18 +102,29 @@ export async function login(
     `${API_BASE}/login`,
     buildOptions('POST', { email, password, rememberMe })
   )
-  return handleResponse<AuthResponseData>(res)
+  const data = await handleResponse<AuthResponseData>(res)
+  // Login changes authentication state — refresh CSRF token
+  if (res.ok && data.success) {
+    await ensureCsrfToken(true)
+  }
+  return data
 }
 
 /**
  * Log out (invalidate session).
+ * After logout, refresh CSRF token for next login.
  */
 export async function logout(): Promise<AuthResponseData> {
   const res = await fetch(
     `${API_BASE}/logout`,
     buildOptions('POST')
   )
-  return handleResponse<AuthResponseData>(res)
+  const data = await handleResponse<AuthResponseData>(res)
+  // Logout clears authentication — refresh CSRF token for next requests
+  if (res.ok) {
+    await ensureCsrfToken(true)
+  }
+  return data
 }
 
 /**

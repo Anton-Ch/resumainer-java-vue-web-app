@@ -2,7 +2,6 @@ package com.resumainer.initializer;
 
 import com.resumainer.config.RootConfig;
 import com.resumainer.config.WebConfig;
-import com.resumainer.filter.CsrfFilter;
 import com.resumainer.security.SecurityConfig;
 import jakarta.servlet.Filter;
 import jakarta.servlet.ServletRegistration;
@@ -18,10 +17,8 @@ import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatche
  * {@link AbstractAnnotationConfigDispatcherServletInitializer}.
  * Auto-discovered by Tomcat 10.1+ via the ServletContainerInitializer SPI.
  * <p>
- * <b>Phase 3 change:</b> Root config now loads {@link RootConfig} and {@link SecurityConfig}.
- * {@link RootConfig} scans infrastructure (DataSource) and DAO packages so that
- * {@link SecurityConfig} can inject {@code UserDao} for {@code UserDetailsService}.
- * The servlet context excludes these packages to prevent duplicate bean creation.
+ * <b>Phase 6 change:</b> Legacy {@code CsrfFilter} removed — Spring Security CSRF
+ * via {@code CookieCsrfTokenRepository} handles CSRF protection now.
  */
 public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
 
@@ -62,22 +59,16 @@ public class AppInitializer extends AbstractAnnotationConfigDispatcherServletIni
     /**
      * Register servlet filters for all requests.
      * <p>
-     * Order:
-     * <ol>
-     *   <li>{@link DelegatingFilterProxy} for {@code springSecurityFilterChain}
-     *       (Spring Security filter chain in permissive Phase 1 mode)</li>
-     *   <li>{@link CsrfFilter} (legacy custom CSRF — stays active until Phase 6)</li>
-     * </ol>
+     * Phase 6: Only the Spring Security filter chain is registered via
+     * {@link DelegatingFilterProxy}. Legacy {@code CsrfFilter} has been removed —
+     * Spring Security CSRF with {@code CookieCsrfTokenRepository} handles CSRF.
      * <p>
      * In pure Spring MVC, use getServletFilters() — NOT FilterRegistrationBean (see B6).
-     * The root {@code WebApplicationContext} (loaded from {@link SecurityConfig}) provides
-     * the {@code springSecurityFilterChain} bean that {@link DelegatingFilterProxy} resolves.
      */
     @Override
     protected Filter[] getServletFilters() {
         return new Filter[]{
-                new DelegatingFilterProxy("springSecurityFilterChain"),
-                new CsrfFilter()
+                new DelegatingFilterProxy("springSecurityFilterChain")
         };
     }
 }
