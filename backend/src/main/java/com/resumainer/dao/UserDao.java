@@ -28,13 +28,15 @@ public class UserDao {
     private static final String SELECT_BY_EMAIL =
             "SELECT id, email, password_hash, username, role_id, status_id, permission_id, " +
             "default_language_id, secondary_language_id, is_privileged, failed_login_attempts, " +
-            "locked_until, created_at, updated_at, deleted_at, is_deleted " +
+            "locked_until, email_verified, email_verified_at, password_login_enabled, " +
+            "created_at, updated_at, deleted_at, is_deleted " +
             "FROM users WHERE LOWER(email) = LOWER(?) AND is_deleted = FALSE";
 
     private static final String SELECT_BY_ID =
             "SELECT id, email, password_hash, username, role_id, status_id, permission_id, " +
             "default_language_id, secondary_language_id, is_privileged, failed_login_attempts, " +
-            "locked_until, created_at, updated_at, deleted_at, is_deleted " +
+            "locked_until, email_verified, email_verified_at, password_login_enabled, " +
+            "created_at, updated_at, deleted_at, is_deleted " +
             "FROM users WHERE id = ?";
 
     private static final String UPDATE_LOGIN_ATTEMPTS =
@@ -255,6 +257,9 @@ public class UserDao {
         user.setPrivileged(rs.getBoolean("is_privileged"));
         user.setFailedLoginAttempts(rs.getInt("failed_login_attempts"));
         user.setLockedUntil(rs.getObject("locked_until", LocalDateTime.class));
+        user.setEmailVerified(rs.getBoolean("email_verified"));
+        user.setEmailVerifiedAt(rs.getObject("email_verified_at", LocalDateTime.class));
+        user.setPasswordLoginEnabled(rs.getBoolean("password_login_enabled"));
         user.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
         user.setUpdatedAt(rs.getObject("updated_at", LocalDateTime.class));
         user.setDeletedAt(rs.getObject("deleted_at", LocalDateTime.class));

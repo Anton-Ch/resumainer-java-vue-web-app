@@ -1,11 +1,15 @@
 package com.resumainer.config;
 
+import com.resumainer.dao.UserDao;
 import com.resumainer.security.SecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.security.web.FilterChainProxy;
@@ -50,7 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * require session state or authentication must be aware of this behavior.
  */
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = SecurityConfig.class)
+@ContextConfiguration(classes = {SecurityConfig.class, SecurityConfigTest.TestSecurityConfig.class})
 @WebAppConfiguration
 class SecurityConfigTest {
 
@@ -133,5 +137,17 @@ class SecurityConfigTest {
                 "PasswordEncoder must verify correct password");
         assertTrue(passwordEncoder.matches("WrongPass", hash) == false,
                 "PasswordEncoder must reject wrong password");
+    }
+
+    /**
+     * Test configuration that provides a mock {@link UserDao} for the
+     * {@code userDetailsService} bean defined in {@link SecurityConfig}.
+     */
+    @Configuration
+    static class TestSecurityConfig {
+        @Bean
+        public UserDao userDao() {
+            return Mockito.mock(UserDao.class);
+        }
     }
 }

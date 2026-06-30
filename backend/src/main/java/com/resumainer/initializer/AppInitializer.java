@@ -1,5 +1,6 @@
 package com.resumainer.initializer;
 
+import com.resumainer.config.RootConfig;
 import com.resumainer.config.WebConfig;
 import com.resumainer.filter.CsrfFilter;
 import com.resumainer.security.SecurityConfig;
@@ -17,16 +18,16 @@ import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatche
  * {@link AbstractAnnotationConfigDispatcherServletInitializer}.
  * Auto-discovered by Tomcat 10.1+ via the ServletContainerInitializer SPI.
  * <p>
- * <b>Phase 1 change:</b> Root config now loads {@link SecurityConfig} to create a
- * root {@code WebApplicationContext} where Spring Security's
- * {@code springSecurityFilterChain} bean is defined.
- * The filter is registered via {@link DelegatingFilterProxy} in {@link #getServletFilters()}.
+ * <b>Phase 3 change:</b> Root config now loads {@link RootConfig} and {@link SecurityConfig}.
+ * {@link RootConfig} scans infrastructure (DataSource) and DAO packages so that
+ * {@link SecurityConfig} can inject {@code UserDao} for {@code UserDetailsService}.
+ * The servlet context excludes these packages to prevent duplicate bean creation.
  */
 public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
 
     @Override
     protected Class<?>[] getRootConfigClasses() {
-        return new Class<?>[]{SecurityConfig.class};
+        return new Class<?>[]{RootConfig.class, SecurityConfig.class};
     }
 
     @Override

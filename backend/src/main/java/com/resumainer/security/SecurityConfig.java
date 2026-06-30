@@ -1,15 +1,25 @@
 package com.resumainer.security;
 
+import com.resumainer.dao.UserDao;
+import com.resumainer.service.security.CustomUserDetailsService;
+import com.resumainer.service.security.JsonAuthenticationFailureHandler;
+import com.resumainer.service.security.JsonAuthenticationFilter;
+import com.resumainer.service.security.JsonAuthenticationSuccessHandler;
+import com.resumainer.service.security.JsonLogoutSuccessHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * Phase 1 — Minimal non-Boot Spring Security configuration.
@@ -54,25 +64,47 @@ public class SecurityConfig {
      * </ul>
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        log.info("Phase 1 — Bootstrapping Spring Security filter chain (permissive mode)");
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           AuthenticationManager authenticationManager) throws Exception {
+        log.info("Phase 4 — Configuring Spring Security JSON login/logout/status");
 
         http
-            // Phase 1: all endpoints open — no auth rules yet
+            // Phase 1+: all endpoints open — auth rules come in Phase 7
             .authorizeHttpRequests(auth -> auth
                 .anyRequest().permitAll()
             )
-            // Phase 1: Spring Security CSRF disabled — legacy CsrfFilter handles CSRF
+            // Phase 1+: Spring Security CSRF disabled — legacy CsrfFilter handles CSRF
             .csrf(AbstractHttpConfigurer::disable)
             // Phase 1: headers disabled — WebConfig.securityHeadersFilter continues
             .headers(headers -> headers.disable())
-            // Phase 1: no session management yet
+            // Phase 4: session management with session fixation protection
             .sessionManagement(session -> session
-                .disable()
+                .sessionFixation().migrateSession()
             );
 
+        // Phase 4: JSON login filter
+        JsonAuthenticationFilter jsonFilter = new JsonAuthenticationFilter();
+        jsonFilter.setAuthenticationManager(authenticationManager);
+        jsonFilter.setAuthenticationSuccessHandler(new JsonAuthenticationSuccessHandler());
+        jsonFilter.setAuthenticationFailureHandler(new JsonAuthenticationFailureHandler());
+        http.addFilterAt(jsonFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // Phase 4: JSON logout
+        http.logout(logout -> logout
+                .logoutUrl("/api/auth/logout")
+                .logoutSuccessHandler(new JsonLogoutSuccessHandler())
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
+        );
+
         SecurityFilterChain chain = http.build();
-        log.info("Phase 1 — Spring Security filter chain built successfully");
+        log.info("Phase 4 — Spring Security filter chain built successfully");
         return chain;
     }
 
@@ -86,5 +118,18 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
+    }
+
+    /**
+     * Spring Security {@code UserDetailsService} bean.
+     *
+     * <p>Loads users by email (not username). Integrates with the project's
+     * {@code UserDao} which is available in the root context.
+     * Spring Security automatically discovers this bean and uses it with
+     * {@code DaoAuthenticationProvider} for authentication.
+     */
+    @Bean
+    public UserDetailsService userDetailsService(UserDao userDao) {
+        return new CustomUserDetailsService(userDao);
     }
 }

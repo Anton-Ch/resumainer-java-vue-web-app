@@ -45,7 +45,7 @@ import java.util.Locale;
 @ComponentScan(basePackages = "com.resumainer",
                excludeFilters = @ComponentScan.Filter(
                    type = org.springframework.context.annotation.FilterType.REGEX,
-                   pattern = "com\\.resumainer\\.security\\..*"
+                   pattern = "com\\.resumainer\\.(security|infrastructure\\.db|dao)\\..*"
                ))
 @EnableWebMvc
 public class WebConfig implements WebMvcConfigurer {

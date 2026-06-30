@@ -26,6 +26,10 @@ public class User {
     private int failedLoginAttempts;
     private LocalDateTime lockedUntil;
 
+    private boolean emailVerified;
+    private LocalDateTime emailVerifiedAt;
+    private boolean passwordLoginEnabled;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
@@ -130,6 +134,30 @@ public class User {
 
     public void setLockedUntil(LocalDateTime lockedUntil) {
         this.lockedUntil = lockedUntil;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+    public LocalDateTime getEmailVerifiedAt() {
+        return emailVerifiedAt;
+    }
+
+    public void setEmailVerifiedAt(LocalDateTime emailVerifiedAt) {
+        this.emailVerifiedAt = emailVerifiedAt;
+    }
+
+    public boolean isPasswordLoginEnabled() {
+        return passwordLoginEnabled;
+    }
+
+    public void setPasswordLoginEnabled(boolean passwordLoginEnabled) {
+        this.passwordLoginEnabled = passwordLoginEnabled;
     }
 
     public LocalDateTime getCreatedAt() {
