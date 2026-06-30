@@ -1,115 +1,107 @@
 # Feature Progress Dashboard
 
-**Generated**: 2026-06-12
-**Current branch**: `feat/007-resume-generation`
-
----
-
-## SDD Lifecycle Gantt
+**Generated**: 2026-06-30
 
 ```mermaid
 gantt
-    title ResumAIner Feature Progress
+    title SDD Feature Progress — ResumAIner
     dateFormat X
     axisFormat %s
 
     section 001-hello-world-tomcat
-    Specify     :done, f1s, 0, 1
-    Plan        :done, f1p, 1, 2
-    Tasks       :done, f1t, 2, 3
-    Implement   :done, f1i, 3, 4
-    Verify      :done, f1v, 4, 5
+    Specify :done, s01, 0, 1
+    Plan    :done, p01, 1, 2
+    Tasks   :done, t01, 2, 3
+    Implement :done, i01, 3, 4
+    Verify  :done, v01, 4, 5
 
     section 002-thymeleaf-landing-page
-    Specify     :done, f2s, 0, 1
-    Plan        :done, f2p, 1, 2
-    Tasks       :done, f2t, 2, 3
-    Implement   :done, f2i, 3, 4
-    Verify      :done, f2v, 4, 5
+    Specify :done, s02, 0, 1
+    Plan    :done, p02, 1, 2
+    Tasks   :done, t02, 2, 3
+    Implement :done, i02, 3, 4
+    Verify  :done, v02, 4, 5
 
     section 003-vue-auth-page
-    Specify     :done, f3s, 0, 1
-    Plan        :done, f3p, 1, 2
-    Tasks       :done, f3t, 2, 3
-    Implement   :done, f3i, 3, 4
-    Verify      :done, f3v, 4, 5
+    Specify :done, s03, 0, 1
+    Plan    :done, p03, 1, 2
+    Tasks   :done, t03, 2, 3
+    Implement :done, i03, 3, 4
+    Verify  :done, v03, 4, 5
 
-    section 004-custom-jdbc-connection-pool
-    Specify     :done, f4s, 0, 1
-    Plan        :done, f4p, 1, 2
-    Tasks       :done, f4t, 2, 3
-    Implement   :done, f4i, 3, 4
-    Verify      :done, f4v, 4, 5
+    section 004-custom-jdbc-pool
+    Specify :done, s04, 0, 1
+    Plan    :done, p04, 1, 2
+    Tasks   :done, t04, 2, 3
+    Implement :done, i04, 3, 4
+    Verify  :done, v04, 4, 5
 
     section 005-user-home-page
-    Specify     :done, f5s, 0, 1
-    Plan        :done, f5p, 1, 2
-    Tasks       :done, f5t, 2, 3
-    Implement   :done, f5i, 3, 4
-    Verify      :done, f5v, 4, 5
+    Specify :done, s05, 0, 1
+    Plan    :done, p05, 1, 2
+    Tasks   :done, t05, 2, 3
+    Implement :done, i05, 3, 4
+    Verify  :done, v05, 4, 5
 
     section 006-user-profile
-    Specify     :done, f6s, 0, 1
-    Plan        :done, f6p, 1, 2
-    Tasks       :done, f6t, 2, 3
-    Implement   :done, f6i, 3, 4
-    Verify      :done, f6v, 4, 5
+    Specify :done, s06, 0, 1
+    Plan    :done, p06, 1, 2
+    Tasks   :done, t06, 2, 3
+    Implement :done, i06, 3, 4
+    Verify  :done, v06, 4, 5
 
-    section 007-resume-generation [ACTIVE]
-    Specify     :done, f7s, 0, 1
-    Plan        :done, f7p, 1, 2
-    Tasks       :done, f7t, 2, 3
-    Implement   :active, f7i, 3, 4
-    Verify      :f7v, 4, 5
+    section 007-resume-generation
+    Specify :done, s07, 0, 1
+    Plan    :done, p07, 1, 2
+    Tasks   :done, t07, 2, 3
+    Implement :done, i07, 3, 4
+    Verify  :done, v07, 4, 5
+
+    section 008-pdf-generation
+    Specify :done, s08, 0, 1
+    Plan    :done, p08, 1, 2
+    Tasks   :done, t08, 2, 3
+    Implement :done, i08, 3, 4
+    Verify  :done, v08, 4, 5
+
+    section 009-home-modal-fix
+    Specify :done, s09, 0, 1
+    Plan    :done, p09, 1, 2
+    Tasks   :done, t09, 2, 3
+    Implement :done, i09, 3, 4
+    Verify  :done, v09, 4, 5
+
+    section 010-admin-page-users
+    Specify :done, s10, 0, 1
+    Plan    :done, p10, 1, 2
+    Tasks   :done, t10, 2, 3
+    Implement :done, i10, 3, 4
+    Verify  :done, v10, 4, 5
+
+    section 011-auth-hardening
+    Specify :done, s11, 0, 1
+    Plan    :done, p11, 1, 2
+    Tasks   :active, t11, 2, 3
+    Implement :a11, 3, 4
+    Verify  :v11, 4, 5
 ```
-
----
 
 ## Summary
 
-| Feature | Phase | Tasks | Progress | Branch | Status |
-|---------|-------|-------|----------|--------|--------|
-| 001-hello-world-tomcat | ✅ Complete | 22/22 | ██████████ 100% | `feat/001-hello-world-tomcat` | Merged to `main` |
-| 002-thymeleaf-landing-page | ✅ Complete | 27/27 | ██████████ 100% | `feat/002-thymeleaf-landing-page` | Merged to `main` |
-| 003-vue-auth-page | ✅ Complete | 63/63 | ██████████ 100% | `feat/003-vue-auth-page` | Merged to `main` |
-| 004-custom-jdbc-connection-pool | ✅ Complete | 55/55 | ██████████ 100% | `feat/004-custom-jdbc-connection-pool` | Merged to `main` |
-| 005-user-home-page | ✅ Complete | 41/41 | ██████████ 100% | `feat/005-user-home-page` | Merged to `main` |
-| 006-user-profile | ✅ Complete | 48/48 | ██████████ 100% | `feat/006-profile-page` | Merged to `main` |
-| **007-resume-generation** | 🔵 **Tasks — Ready for Implement** | **0/150** | ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ **0%** | **`feat/007-resume-generation`** | **Active** |
+| # | Feature | Phase | Tasks | Status |
+|---|---------|-------|-------|--------|
+| 001 | Hello World Tomcat | Verify | 22/22 | ✅ Complete |
+| 002 | Thymeleaf Landing Page | Verify | 27/27 | ✅ Complete |
+| 003 | Vue Auth Page | Verify | 63/63 | ✅ Complete |
+| 004 | Custom JDBC Connection Pool | Verify | 55/55 | ✅ Complete |
+| 005 | User Home Page | Verify | 41/41 | ✅ Complete |
+| 006 | User Profile | Verify | 48/48 | ✅ Complete |
+| 007 | Resume Generation | Verify | 160/160 | ✅ Complete |
+| 008 | PDF Generation | Verify | 204/204 | ✅ Complete |
+| 009 | Home Modal Fix | Verify | 171/171 | ✅ Complete |
+| 010 | Admin Console Users & Resumes | Verify | merged via PR #12 | ✅ Complete |
+| 011 | **Auth Hardening & Spring Security** | **Tasks** | **0/335** | **🔄 In Progress** |
 
----
+**9 features complete** · **1 complete (merged)** · **1 in progress (Tasks phase)**
 
-## Feature 007 — Task Breakdown
-
-```mermaid
-pie title 007-resume-generation Task Status (150 total)
-    "Not started" : 150
-```
-
-```mermaid
-pie title 007-resume-generation Tasks by Phase (150 total)
-    "Phase 0: Context" : 5
-    "Phase 1-2: Migrations" : 15
-    "Phase 3: Models/DTOs" : 9
-    "Phase 4: DAOs" : 10
-    "Phase 5: Prompt + AI" : 9
-    "Phase 6: Parser" : 11
-    "Phase 7: APIs" : 7
-    "Phase 8: Rendering + PDF" : 8
-    "Phase 9: Finalize/Export" : 10
-    "Phase 10-11: Frontend" : 22
-    "Phase 12: Profile UI" : 7
-    "Phase 13: Tests" : 17
-    "Phase 14: Docs" : 6
-```
-
----
-
-## Legend
-
-| Status | Meaning |
-|--------|---------|
-| ✅ Complete | Spec + Plan + Tasks + Implementation + Verification all done |
-| 🔵 Tasks | Spec + Plan + Tasks ready, ready for implementation |
-| 🟡 Implement | In development |
-| ⬜ Not started | No work done yet |
+**Next step**: Start implementation — Phase 0: Baseline Security Map.
