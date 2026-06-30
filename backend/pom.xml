@@ -16,6 +16,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.version>6.2.11</spring.version>
+        <spring-security.version>6.5.1</spring-security.version>
         <logback.version>1.5.16</logback.version>
         <junit.version>5.12.2</junit.version>
         <surefire.version>3.5.5</surefire.version>
@@ -97,6 +98,38 @@
             <version>${jackson.version}</version>
         </dependency>
 
+        <!-- Spring Security (non-Boot — explicit dependency management) -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <version>${spring-security.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+            <version>${spring-security.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+            <version>${spring-security.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+            <version>${spring-security.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-oauth2-client</artifactId>
+            <version>${spring-security.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-oauth2-jose</artifactId>
+            <version>${spring-security.version}</version>
+        </dependency>
+
         <!-- Spring JDBC (DataSource transaction manager) -->
         <dependency>
             <groupId>org.springframework</groupId>
@@ -149,6 +182,14 @@
             <version>${spring.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Spring Security test support (SecurityMockMvcConfigurers, @WithMockUser) -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <version>${spring-security.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Hamcrest matchers (used by MockMvc assertions) -->
         <dependency>
             <groupId>org.hamcrest</groupId>

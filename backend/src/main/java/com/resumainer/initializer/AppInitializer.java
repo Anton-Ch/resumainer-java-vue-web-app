@@ -2,9 +2,11 @@ package com.resumainer.initializer;
 
 import com.resumainer.config.WebConfig;
 import com.resumainer.filter.CsrfFilter;
+import com.resumainer.security.SecurityConfig;
 import jakarta.servlet.Filter;
 import jakarta.servlet.ServletRegistration;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
@@ -14,12 +16,17 @@ import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatche
  * Bootstraps the DispatcherServlet without web.xml by extending
  * {@link AbstractAnnotationConfigDispatcherServletInitializer}.
  * Auto-discovered by Tomcat 10.1+ via the ServletContainerInitializer SPI.
+ * <p>
+ * <b>Phase 1 change:</b> Root config now loads {@link SecurityConfig} to create a
+ * root {@code WebApplicationContext} where Spring Security's
+ * {@code springSecurityFilterChain} bean is defined.
+ * The filter is registered via {@link DelegatingFilterProxy} in {@link #getServletFilters()}.
  */
 public class AppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
 
     @Override
     protected Class<?>[] getRootConfigClasses() {
-        return null;
+        return new Class<?>[]{SecurityConfig.class};
     }
 
     @Override
@@ -54,12 +61,21 @@ public class AppInitializer extends AbstractAnnotationConfigDispatcherServletIni
     /**
      * Register servlet filters for all requests.
      * <p>
-     * CsrfFilter: OWASP cookie-to-header CSRF protection.
+     * Order:
+     * <ol>
+     *   <li>{@link DelegatingFilterProxy} for {@code springSecurityFilterChain}
+     *       (Spring Security filter chain in permissive Phase 1 mode)</li>
+     *   <li>{@link CsrfFilter} (legacy custom CSRF — stays active until Phase 6)</li>
+     * </ol>
+     * <p>
      * In pure Spring MVC, use getServletFilters() — NOT FilterRegistrationBean (see B6).
+     * The root {@code WebApplicationContext} (loaded from {@link SecurityConfig}) provides
+     * the {@code springSecurityFilterChain} bean that {@link DelegatingFilterProxy} resolves.
      */
     @Override
     protected Filter[] getServletFilters() {
         return new Filter[]{
+                new DelegatingFilterProxy("springSecurityFilterChain"),
                 new CsrfFilter()
         };
     }
