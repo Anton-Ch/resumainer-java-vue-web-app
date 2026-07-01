@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -627,12 +628,13 @@ class JsonLoginIntegrationTest {
     }
 
     @Test
-    @DisplayName("T072: POST with valid CSRF passes Spring Security (may return 404 from no controller)")
-    void postWithCsrf_passesSecurity() throws Exception {
+    @DisplayName("T072: Authenticated POST with valid CSRF passes Spring Security (returns 404 from no controller)")
+    void authenticatedPostWithCsrf_passesSecurity() throws Exception {
         mockMvc.perform(post("/api/some-protected-path")
                         .contentType("application/json")
-                        .with(csrf()))
-                .andExpect(status().isNotFound()); // 404 = passed CSRF, no controller
+                        .with(csrf())
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("test@example.com").roles("USER")))
+                .andExpect(status().isNotFound()); // 404 = passed CSRF+auth, no controller
     }
 
     @Test
@@ -674,6 +676,11 @@ class JsonLoginIntegrationTest {
         @Bean
         public UserDao userDao() {
             return mockUserDao;
+        }
+
+        @Bean
+        public HandlerMappingIntrospector mvcHandlerMappingIntrospector() {
+            return new HandlerMappingIntrospector();
         }
     }
 }

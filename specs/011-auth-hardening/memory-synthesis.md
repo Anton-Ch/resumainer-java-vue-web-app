@@ -1,39 +1,37 @@
 # Memory Synthesis
 
 ## Current Scope
-Feature 011 — Auth Hardening and Spring Security Migration. Full migration from custom session auth to Spring Security in a non-Boot Spring MVC app with Vue SPA frontend.
+- Feature: 011-auth-hardening
+- Spec: Feature Specification: Auth Hardening and Spring Security Migration
+- Feature folder: specs\011-auth-hardening
+- Spec context: # Feature Specification : Auth Hardening and Spring Security Migration **Feature Branch **: `feat/011-auth-hardening` **Created**: 2026-06-30 **Status**: Draft v0 .2 — review-corrected **Input**: Full authentication hardening before production deploy : migrate existing...
 
-**Affected modules**: auth controller/service/DAO, security filters/interceptors, frontend auth pages/service/router, admin user details, landing page, Docker/configuration, Flyway migrations.
+## Relevant Project Context
+- [none]
 
 ## Relevant Decisions
-- **CSRF cookie-to-header pattern (D-CSRF-001)** — Current project uses custom `CsrfFilter` (extends OncePerRequestFilter) with XSRF-TOKEN cookie and X-CSRF-Token header. Decision explicitly notes: "If the project adds Spring Security in the future, replace CsrfFilter with Spring Security's built-in CSRF protection." (Reason: migration target known, Source: `docs/memory/DECISIONS.md` L256-281)
-- **D47 — Data exposure audit must include SQL SELECT columns and log statements** — When auditing security, check all of: DTOs, SQL SELECT columns, log statements, error responses. Do NOT rely on DTO-only review. (Reason: our new auth logging FRs must follow this, Source: `docs/memory/DECISIONS.md` L1177-1200)
-- **D40 — Separate implementation complete from contract proven** — Checkpoint evidence standard: changed files + assertions + sample + audit. (Reason: applies to every STOP checkpoint in this feature, Source: `docs/memory/DECISIONS.md`)
+- [D1] Status Active Why this is durable Unit tests caught 0 of the 6 bugs found during manual testing of Feature 003. Bugs like missing Flyway bean, unresolved DataSource URL, unresponsive i18n validation messages, and duplicate toggle text were invisible to unit tests. They only appeared in the full Docker environment with actual PostgreSQL, Nginx, and browser interaction. (Source: `docs/memory/DECISIONS.md`)
+- [D2] Status Active Why this is durable During manual testing, hardcoded English strings were found in AuthPage.vue (info panel text, subtitles) and in LoginForm/RegisterForm (Zod validation messages). These were not caught during implementation because they were &quot;invisible&quot; — the page looked correct in English, but switching to Russian revealed untranslated text. Every future feature with UI will have the same risk. (Source: `docs/memory/DECISIONS.md`)
 
 ## Active Architecture Constraints
-- **Non-Boot filter registration** — In pure Spring MVC, filters register via `AppInitializer.getServletFilters()` returning `Filter[]`. `FilterRegistrationBean` is Spring Boot only and will cause compilation errors. (Reason: critical for SecurityFilterChain bootstrap, Source: `docs/memory/BUGS.md` L174-187)
-- **Flyway requires explicit bean** — Pure Spring MVC does NOT auto-configure Flyway. Must define `@Bean(initMethod="migrate")` in config. (Reason: applies to all new migrations in this feature, Source: `docs/memory/BUGS.md` L330-361)
-- **MockMvc standalone session isolation** — Each `perform()` creates a fresh MockHttpSession. Filter tests requiring session state must pre-configure MockHttpSession. (Reason: applies to SecurityFilterChain/CSRF testing, Source: `docs/memory/BUGS.md` L291-326)
+- [none]
 
 ## Accepted Deviations
-- None identified.
+- [V1] Status Active Why this is durable Every Vue SPA feature that accepts user input needs form validation. PrimeVue 4 introduced a new Form component with resolver-based validation. The pattern is non-obvious and differs from PrimeVue 3. (Source: `docs/memory/DECISIONS.md`)
 
 ## Relevant Security Constraints
-- **S1 — CSRF is mandatory for all form submissions** — Without Spring Security, custom CSRF filter is required. This feature replaces it with Spring Security CSRF. (Source: `docs/memory/DECISIONS.md`)
-- **S2 — BCrypt for all password storage** — Constitution mandates BCrypt hashing. (Source: `.specify/memory/constitution.md`)
-- **S3 — No secrets in logs, DTOs, or frontend assets** — D47 extends this to SQL columns and log statements. (Source: `docs/memory/DECISIONS.md` L1177-1200)
+- [S1] Status Active Why this is durable During the Feature 010 security review, the agent correctly avoided exposing raw file paths in DTOs but SQL SELECT columns loaded pdf_file_path and html_file_path into ResultSet rows (only used for null-check booleans). Security logs also exposed user.getEmail() instead of userId. These are subtle exposure surfaces that routine DTO reviews miss. (Source: `docs/memory/DECISIONS.md`)
+- [S2] D37 | Checkpoint evidence standard : changed files + assertions + sample + audit | evidence ,checkpoint,quality,verification,testing,process,standard,best-practice | DECISIONS .md | active D38 | Do not mock the unit whose behavior is under test | testing ,mock,unit-test,tdd,best-practice,anti-pattern | DECISIONS .md | active D39 | Every bug fix must include a regression test that would fail on the previous implementation | bug-fix ,regression,testing,tdd,quality,process,best-practice | DECISIONS .md | active D40 | Separate implementation complete from contract proven | quality ,verification,contract,testing,evidence,process,best-practice | DECISIONS... (Source: `docs/memory/INDEX.md`)
+- [S3] Status Active Why this is durable Every feature with form submissions needs CSRF protection. Without Spring Security, there is no built-in CSRF filter. This pattern must be reused for all future POST/PUT/DELETE endpoints. (Source: `docs/memory/DECISIONS.md`)
 
 ## Related Historical Lessons
-- **B1 — CSRF header migration risk** — Frontend API services must include CSRF headers for unsafe methods. When migrating from X-CSRF-Token to X-XSRF-TOKEN, ALL unsafe-request paths must be updated, not just auth service. (Source: `docs/memory/BUGS.md` L554-580)
-- **B2 — Auth error handling in frontend** — Login/Register forms must catch errors from authService. Our new auth error codes must be handled the same way. (Source: `docs/memory/BUGS.md` L647-670)
-- **B3 — Uniform 404 delay for public endpoints** — Public unauthenticated endpoints must use uniform delay to prevent enumeration. Relevant for verify-email, password-reset-validate, and forgot-password endpoints. (Source: `docs/memory/BUGS.md` L901-918)
-- **B29 — Dual-flag soft delete** — `is_deleted` and `deleted_at` must both be updated. Relevant for user account status checks in authentication. (Source: `docs/memory/BUGS.md` L937-947)
+- [B1] Status Active Symptoms POST, PUT, PATCH, or DELETE requests to any /api/* endpoint return 403 with: {&quot;error&quot;:&quot;Invalid or missing CSRF token&quot;}. The XSRF-TOKEN cookie is present in document.cookie, but the X-CSRF-Token header is missing from the request. Root Cause The backend CsrfFilter implements OWASP cookie-to-header pattern: it sets a non-HTTP-only cookie XSRF-TOKEN and validates the X-CSRF-Token header for unsafe methods (POST, PUT, PATCH, DELETE). (Source: `docs/memory/BUGS.md`)
+- [B2] Status Active Symptoms After submitting a form (login/register), the API returns a non-2xx response (409, 401, etc.) with a descriptive error message. The request fails on the network level but the user sees NO error message on the page. The form just resets or stays unchanged with no feedback. (Source: `docs/memory/BUGS.md`)
 
 ## Conflict Warnings
-- **Hard conflict: Custom CsrfFilter vs Spring Security CSRF** — The existing decision (D-CSRF-001) explicitly recommends replacing custom CSRF with Spring Security CSRF. This feature does exactly that. No conflict — the decision anticipates this migration.
-- **Soft conflict: Session-based testing patterns** — Existing MockMvc filter tests use custom session patterns. After migration to Spring Security, tests must use Spring Security test annotations (`@WithMockUser`, `SecurityMockMvcRequestPostProcessors`). Plan must account for test migration.
+- [none]
 
 ## Retrieval Notes
-- Index entries considered: 20 max (10 used)
-- Source sections read: DECISIONS.md (targeted), BUGS.md (targeted), INDEX.md
-- Budget status: within 900-word limit
+- Index entries considered: 10
+- Source sections read: 10
+- Budget status: within limit

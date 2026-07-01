@@ -22,17 +22,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 
 /**
- * Phase 1 — Minimal non-Boot Spring Security configuration.
+ * Non-Boot Spring Security configuration for ResumAIner.
  *
- * <p><b>TEMPORARY Phase 1 state:</b>
+ * <p><b>Phase 7 — Authorization rules active:</b>
  * <ul>
- *   <li>All endpoints are {@code permitAll()} — auth rules will be added in Phase 4/7.</li>
- *   <li>Spring Security CSRF is {@code disabled} — legacy {@code CsrfFilter} remains active.
- *       Final CSRF migration will happen in Phase 6.</li>
- *   <li>Security headers are {@code disabled} — the existing {@code securityHeadersFilter}
- *       in {@code WebConfig} continues to provide headers.</li>
+ *   <li>Public: landing {@code GET /}, static assets, error pages, favicon, CSRF bootstrap,
+ *       auth endpoints ({@code /api/auth/**}), public resume links, CORS preflight.</li>
+ *   <li>Admin: {@code /api/admin/**} requires {@code ADMIN} role.</li>
+ *   <li>All other requests require authentication.</li>
  * </ul>
  *
  * <p>This config is loaded in the ROOT {@code WebApplicationContext} via
@@ -43,6 +43,11 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
  * <p>Non-Boot filter registration: the {@code springSecurityFilterChain} filter
  * is registered through {@code DelegatingFilterProxy} in
  * {@code AppInitializer.getServletFilters()} (not Spring Boot's {@code FilterRegistrationBean}).
+ *
+ * <p>Uses explicit {@link AntPathRequestMatcher} and {@link RegexRequestMatcher}
+ * instead of string-based matchers because this bean lives in the root context
+ * (not the servlet context), and MVC request matchers require {@code HandlerMappingIntrospector}
+ * from the servlet context. Explicit matchers avoid this cross-context dependency.
  */
 @Configuration
 @EnableWebSecurity
@@ -50,36 +55,60 @@ public class SecurityConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
-    /**
-     * Phase 1 — Permissive filter chain.
-     *
-     * <p>All requests are permitted. Spring Security CSRF is disabled so that the
-     * legacy {@code CsrfFilter} continues to provide CSRF protection unchanged.
-     * Security headers are disabled so the existing {@code securityHeadersFilter} bean
-     * in {@code WebConfig} remains the source of security header behavior.
-     *
-     * <p>Intended to be tightened in later phases:
-     * <ul>
-     *   <li>Phase 4 — JSON login/logout/status with Spring Security Authentication</li>
-     *   <li>Phase 6 — Spring Security CSRF replaces legacy CsrfFilter</li>
-     *   <li>Phase 7 — Authorization rules for ADMIN/USER routes</li>
-     * </ul>
-     */
+    /** Regex that matches public resume URLs: /{username}/{publicCode}. */
+    static final String PUBLIC_RESUME_REGEX = "^/(?!api/|app/|static/|assets/|error/)[A-Za-z0-9._-]+/[A-Za-z0-9]+$";
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
+    /**
+     * Phase 7 — Security filter chain with full authorization rules.
+     *
+     * <p>Uses explicit {@link AntPathRequestMatcher} and {@link RegexRequestMatcher}
+     * instead of string-based {@code MvcRequestMatcher} because this config
+     * lives in the root context (see class-level docs).
+     *
+     * <p>CSRF via CookieCsrfTokenRepository with SpaCsrfTokenRequestHandler.
+     * Auth and public endpoints excluded from CSRF.
+     *
+     * <p>Security headers are provided by {@code WebConfig.securityHeadersFilter}.
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            AuthenticationManager authenticationManager,
                                            UserDao userDao) throws Exception {
-        log.info("Phase 5 — Configuring Spring Security with failed login tracking");
+        log.info("Phase 7 — Configuring Spring Security with full authorization rules");
 
         http
-            // Phase 1+: all endpoints open — auth rules come in Phase 7
+            // Phase 7 — Authorization rules using explicit request matchers.
+            //
+            // SecurityConfig is loaded in the root context. Using explicit
+            // AntPathRequestMatcher/RegexRequestMatcher instead of string patterns
+            // avoids MvcRequestMatcher dependency on HandlerMappingIntrospector
+            // which lives in the servlet context.
+            //
+            // Order matters: more specific rules first, catch-all last.
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
+                // CORS preflight — must be open for all origins
+                .requestMatchers(new AntPathRequestMatcher("/**", "OPTIONS")).permitAll()
+                // Landing page and static assets
+                .requestMatchers(new AntPathRequestMatcher("/", "GET")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/static/**", "GET")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/error/**", "GET")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/favicon.ico", "GET")).permitAll()
+                // Public resume links: /{username}/{publicCode}
+                .requestMatchers(new RegexRequestMatcher(PUBLIC_RESUME_REGEX, "GET")).permitAll()
+                // Auth flows, CSRF bootstrap, public API
+                .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/csrf")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/csrf/ping")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/public/**")).permitAll()
+                // Admin API — ADMIN role only
+                .requestMatchers(new AntPathRequestMatcher("/api/admin/**")).hasRole("ADMIN")
+                // Everything else requires authentication
+                .anyRequest().authenticated()
             )
             // Phase 6: Spring Security CSRF for SPA with CookieCsrfTokenRepository
             // Cookie XSRF-TOKEN (non-HTTP-only so JS can read it), header X-XSRF-TOKEN

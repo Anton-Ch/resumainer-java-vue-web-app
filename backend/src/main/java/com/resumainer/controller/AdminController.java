@@ -28,7 +28,10 @@ import java.util.UUID;
 /**
  * Admin controller for all /api/admin/** endpoints.
  * <p>
- * Every endpoint is protected by AuthInterceptor ADMIN role check.
+ * Every endpoint is protected by Spring Security (ADMIN role required
+ * via SecurityConfig.authorizeHttpRequests). Legacy UserSession session
+ * attribute is a temporary compatibility bridge — use Spring Security
+ * Authentication parameter for current user identity.
  */
 @RestController
 @RequestMapping("/api/admin")

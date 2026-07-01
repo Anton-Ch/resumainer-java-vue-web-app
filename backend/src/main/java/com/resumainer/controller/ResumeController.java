@@ -17,7 +17,10 @@ import java.util.Map;
  * REST controller for saved resume operations.
  * <p>
  * Handles paginated listing (with search/filter/sort) and soft-delete.
- * All endpoints require authentication (handled by AuthInterceptor).
+ * All endpoints require authentication (enforced by Spring Security
+ * via SecurityConfig.authorizeHttpRequests). Legacy UserSession session
+ * attribute is a temporary compatibility bridge — use Spring Security
+ * Authentication parameter for current user identity.
  */
 @RestController
 @RequestMapping("/api/resumes")

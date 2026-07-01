@@ -6,14 +6,17 @@ import com.resumainer.exception.GlobalExceptionHandler;
 import com.resumainer.exception.ServiceException;
 import com.resumainer.model.User;
 import com.resumainer.service.AuthService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -46,6 +49,12 @@ class AuthControllerTest {
                 .build();
     }
 
+    @AfterEach
+    void tearDown() {
+        // Clear SecurityContext after each test to avoid cross-test contamination
+        SecurityContextHolder.clearContext();
+    }
+
     // ============================================================
     // Register tests
     // ============================================================
@@ -55,6 +64,8 @@ class AuthControllerTest {
         User user = new User();
         user.setId(UUID.randomUUID());
         user.setEmail("test@example.com");
+        user.setRoleId(1L); // USER role
+        user.setStatusId(1L); // ACTIVE
 
         when(authService.register(any(RegisterRequest.class))).thenReturn(user);
 
@@ -139,5 +150,64 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
+    }
+
+    // ============================================================
+    // Phase 7 — Registration creates Spring Security Authentication
+    // ============================================================
+
+    private User createRegisteredUser() {
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        user.setEmail("newuser@test.com");
+        user.setPasswordHash("$2a$12$dummyhashfortestingonly1234567890");
+        user.setRoleId(1L); // USER
+        user.setStatusId(1L); // ACTIVE
+        user.setPermissionId(1L); // ALLOWED
+        user.setPrivileged(false);
+        return user;
+    }
+
+    @Test
+    void register_success_createsSpringSecurityAuthentication() throws Exception {
+        User user = createRegisteredUser();
+        when(authService.register(any(RegisterRequest.class))).thenReturn(user);
+
+        RegisterRequest request = new RegisterRequest("newuser@test.com", "StrongPass1", "StrongPass1");
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        // Verify Spring Security Authentication was created in SecurityContext
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        assertNotNull(auth, "Spring Security Authentication must exist after registration");
+        assertTrue(auth.isAuthenticated(), "Authentication must be marked as authenticated");
+        assertEquals("newuser@test.com", auth.getName());
+        assertTrue(auth.getAuthorities().stream()
+                        .anyMatch(a -> "ROLE_USER".equals(a.getAuthority())),
+                "Must have ROLE_USER authority");
+    }
+
+    @Test
+    void register_success_createsLegacySessionUserAttribute() throws Exception {
+        User user = createRegisteredUser();
+        when(authService.register(any(RegisterRequest.class))).thenReturn(user);
+
+        RegisterRequest request = new RegisterRequest("newuser@test.com", "StrongPass1", "StrongPass1");
+
+        var result = mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        var session = result.getRequest().getSession();
+        assertNotNull(session, "Session must exist after registration");
+        var userAttr = session.getAttribute("user");
+        assertNotNull(userAttr, "Legacy session 'user' attribute must be set");
+        assertInstanceOf(com.resumainer.dto.UserSession.class, userAttr);
     }
 }

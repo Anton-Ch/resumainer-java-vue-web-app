@@ -9,3 +9,21 @@ _Feature: `specs/011-auth-hardening`_
 - [2] Feature Branch : feat /011-auth-hardening Created : 2026-06-30 Status : Draft v0 .2 — review-corrected Input : Full authentication hardening before production deploy : migrate existing custom session authentication to Spring Security , add strict email confirmation , password reset by email , Google OAuth2 login , persistent remember-me , Cloudflare Turnstile captcha for public auth forms , Resend email... (specs/011-auth-hardening/spec.md)
 - [3] spec / Feature Specification: Auth Hardening and Spring Security Migration / Brainstorm Log / Session 2026-06-30 (specs/011-auth-hardening/spec.md)
 - [4] These codes are part of the frontend/backend contract. Do not rename, duplicate, or invent alternatives without STOP approval. (specs/011-auth-hardening/spec.md)
+
+## Plan
+- [1] Severity : High Mitigation : safe application logging only, explicit negative tests, D47 exposure audit. (specs/011-auth-hardening/plan.md)
+- [2] Auth event logging is allowed only as safe application logging. Do not create an audit-log table or audit subsystem in this feature. Logs must not include passwords, raw tokens, token hashes, password hashes, API keys, OAuth secrets, Turnstile secrets, Resend secrets, or stack traces. (specs/011-auth-hardening/plan.md)
+- [3] Branch : feat /011-auth-hardening Date : 2026-06-30 Spec : specs /011-auth-hardening/spec.md Status : Draft v0 .3 — review-corrected Input : Feature specification for full authentication hardening before production deployment . Instruction for implementer : This plan is a controlled implementation guide for a high-risk authentication migration . If any item conflicts with the actual current codebase , STOP and ask... (specs/011-auth-hardening/plan.md)
+- [4] States: success; expired; invalid. (specs/011-auth-hardening/plan.md)
+- [5] email field; captcha; generic success message. (specs/011-auth-hardening/plan.md)
+- [6] Severity : High Mitigation : UserDetails account checks on remember-me auth. (specs/011-auth-hardening/plan.md)
+- [7] These rules are mandatory for OpenCode and DeepSeek. They are not optional style preferences. (specs/011-auth-hardening/plan.md)
+- [8] Severity : High Mitigation : prod config validation. (specs/011-auth-hardening/plan.md)
+- [9] Add: /app/auth/check-email /app/auth/verified /app/auth/forgot-password /app/auth/reset-password Keep: /app/auth /app/home /app/admin (specs/011-auth-hardening/plan.md)
+- [10] Severity : Critical Mitigation : Temporary deprecation only, final cleanup phase, reference scan with Serena. (specs/011-auth-hardening/plan.md)
+
+## Tasks
+- [1] Feature Branch : feat/011-auth-hardening Input : Design documents from specs/011-auth-hardening/ Primary Documents : spec.md and plan.md for Auth Hardening and Spring Security Migration. Status : FINAL v1.0 Hard rule : If current code conflicts with this task list, STOP and report the conflict. Do not silently reinterpret requirements. (specs/011-auth-hardening/tasks.md)
+- [2] When sources conflict, follow this order: specs/011-auth-hardening/spec.md specs/011-auth-hardening/plan.md this tasks.md project constitution / Spec Kit rules explicitly approved user decisions in the current chat current codebase evidence external documentation model assumptions If two sources conflict, STOP and ask. Do not silently choose. (specs/011-auth-hardening/tasks.md)
+- [3] These rules are based on recurring implementation anti-patterns previously caught in capstone work. (specs/011-auth-hardening/tasks.md)
+- [4] Do not invent additional auth routes without STOP approval. [ ] /app/auth [ ] /app/auth/check-email [ ] /app/auth/verified [ ] /app/auth/forgot-password [ ] /app/auth/reset-password (specs/011-auth-hardening/tasks.md)

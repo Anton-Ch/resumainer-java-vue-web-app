@@ -1,6 +1,5 @@
 package com.resumainer.config;
 
-import com.resumainer.interceptor.AuthInterceptor;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -169,10 +168,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(localeChangeInterceptor());
-        // AuthInterceptor checks for valid session on all paths except /api/auth/* and /api/csrf
-        registry.addInterceptor(authInterceptor())
-                .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/auth/**", "/api/csrf", "/api/csrf/ping");
+        // Authorization is handled by Spring Security (SecurityConfig).
+        // AuthInterceptor was removed in Phase 7. Spring Security's
+        // authorizeHttpRequests rules protect /api/admin/** and require
+        // authentication for all other API endpoints.
     }
 
     // ============================================================
@@ -196,15 +195,6 @@ public class WebConfig implements WebMvcConfigurer {
                 .dataSource(dataSource)
                 .locations("classpath:db/migration")
                 .load();
-    }
-
-    // ============================================================
-    // Interceptor Beans
-    // ============================================================
-
-    @Bean
-    public AuthInterceptor authInterceptor() {
-        return new AuthInterceptor();
     }
 
     // ============================================================

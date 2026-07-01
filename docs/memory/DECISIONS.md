@@ -1257,3 +1257,15 @@ Feature 010 Phase 12 and 13 instructions explicitly included these rules. When e
 - Gained: Controlled final phases, no unexpected changes, clean evidence collection
 - Made harder: Slower response to discovered issues (must STOP and ask)
 - Reconsider: For emergency hotfixes, the process can be abbreviated -- but for standard feature completion, the discipline prevents regressions
+
+---
+
+### 2026-06-30 - SPA CSRF with Spring Security 6.5 requires explicit bootstrap
+
+---
+
+### 2026-06-30 - Non-Boot Spring MVC: DAO and Security must share root ApplicationContext
+
+---
+
+### 2026-06-30 - Failed login counter must only increment for password-eligible users

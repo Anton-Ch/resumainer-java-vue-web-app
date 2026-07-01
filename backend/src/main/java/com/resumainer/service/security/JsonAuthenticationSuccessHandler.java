@@ -10,7 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 import java.io.IOException;
 import java.util.Map;
@@ -25,8 +27,10 @@ import java.util.Map;
  * </pre>
  *
  * <p><b>Temporary legacy bridge:</b> Sets HttpSession attribute "user" with
- * {@link UserSession} so that old {@code AuthInterceptor} and session-based
- * controllers continue to work until Phase 7 removes them.
+ * {@link UserSession} so that controllers that still read
+ * {@code session.getAttribute("user")} continue to work until Phase 18
+ * removes the bridge. Controllers should migrate to Spring Security
+ * {@code Authentication} parameter instead.
  * Spring Security Authentication remains the authoritative source of truth.
  *
  * <p>Resets the failed login counter on successful authentication.
@@ -64,8 +68,22 @@ public class JsonAuthenticationSuccessHandler implements AuthenticationSuccessHa
         Object principal = authentication.getPrincipal();
         if (principal instanceof CustomUserDetails userDetails) {
             privileged = userDetails.isPrivileged();
-            // Legacy session bridge: set HttpSession "user" attribute
             HttpSession session = request.getSession(true);
+
+            // Explicitly persist Spring Security Authentication to session.
+            // AbstractAuthenticationProcessingFilter.successfulAuthentication()
+            // calls this.securityContextRepository.saveContext() which may not
+            // persist correctly with non-Boot DelegatingFilterProxy setup.
+            // Direct persistence ensures the SecurityContext survives to the
+            // next request. This is the same pattern used in AuthController.register().
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            session.setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    SecurityContextHolder.getContext());
+
+            // Legacy session bridge: set HttpSession "user" attribute for
+            // controllers that still read session.getAttribute("user").
+            // Will be removed in Phase 18.
             session.setAttribute("user", new UserSession(
                     userDetails.getUserId(),
                     userDetails.getUsername(),

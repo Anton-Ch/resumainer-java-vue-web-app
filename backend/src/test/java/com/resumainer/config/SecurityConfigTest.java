@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -102,22 +103,21 @@ class SecurityConfigTest {
     }
 
     @Test
-    @DisplayName("Phase 1 permissive: GET any-path passes security (returns 404 — no controller)")
-    void getRequest_passesThroughSecurity() throws Exception {
-        // 404 is expected because there is no controller mapped to /any-path,
-        // but the fact that we get 404 (not 401/403) proves Spring Security
-        // permitted the request in Phase 1 permissive mode.
+    @DisplayName("Phase 7: GET any-path without auth returns 403 (authenticated required)")
+    void getRequest_withoutAuth_returnsForbidden() throws Exception {
+        // Phase 7 changed from permitAll to .anyRequest().authenticated(),
+        // so unauthenticated requests return 403 Forbidden.
         mockMvc.perform(get("/any-path"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    @DisplayName("Phase 1 permissive: POST any-path with CSRF passes security (returns 404 — no controller)")
-    void postRequest_passesThroughSecurity() throws Exception {
+    @DisplayName("Phase 7: POST any-path with CSRF but without auth returns 403")
+    void postRequest_withoutAuth_returnsForbidden() throws Exception {
         mockMvc.perform(post("/any-path")
                         .contentType("application/json")
                         .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -157,6 +157,16 @@ class SecurityConfigTest {
         @Bean
         public UserDao userDao() {
             return Mockito.mock(UserDao.class);
+        }
+
+        /**
+         * Required by MvcRequestMatcher in SecurityConfig.filterChain().
+         * Without this bean, Spring Security fails to parse requestMatchers
+         * in non-Boot test contexts that do not load @EnableWebMvc.
+         */
+        @Bean
+        public HandlerMappingIntrospector mvcHandlerMappingIntrospector() {
+            return new HandlerMappingIntrospector();
         }
     }
 }

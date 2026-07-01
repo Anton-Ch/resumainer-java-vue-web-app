@@ -590,21 +590,21 @@ Do not proceed without user approval.
 
 **Before starting**:
 
-- [ ] [CTX7] Refresh docs for authorization matchers/authorities.
-- [ ] [SERENA] Inspect route/API patterns and `AuthInterceptor`.
-- [ ] [TDD] Tests first.
+- [x] [CTX7] Refresh docs for authorization matchers/authorities.
+- [x] [SERENA] Inspect route/API patterns and `AuthInterceptor`.
+- [x] [TDD] Tests first.
 
 ### Tasks
 
-- [ ] T080 [TDD] Add tests: unauthenticated rejected from protected APIs.
-- [ ] T081 [TDD] Add tests: USER rejected from `/api/admin/**`.
-- [ ] T082 [TDD] Add tests: ADMIN allowed to `/api/admin/**`.
-- [ ] T083 Configure Spring Security authorization rules.
-- [ ] T084 Ensure public endpoints are only the explicitly approved ones.
-- [ ] T085 Deprecate/remove legacy `AuthInterceptor` after proof.
-- [ ] T086 Confirm frontend route guard remains UX only.
-- [ ] T087 [PW-MCP] Verify admin/non-admin behavior.
-- [ ] T088 Run tests.
+- [x] T080 [TDD] Add tests: unauthenticated rejected from protected APIs.
+- [x] T081 [TDD] Add tests: USER rejected from `/api/admin/**`.
+- [x] T082 [TDD] Add tests: ADMIN allowed to `/api/admin/**`.
+- [x] T083 Configure Spring Security authorization rules.
+- [x] T084 Ensure public endpoints are only the explicitly approved ones.
+- [x] T085 Remove legacy `AuthInterceptor` after proof.
+- [x] T086 Confirm frontend route guard remains UX only.
+- [ ] T087 [PW-MCP] Verify admin/non-admin behavior. *(deferred to Phase 18 — needs Docker stack)*
+- [x] T088 Run tests — 1167 backend + 164 frontend, all pass, 0 failures.
 
 ### Checkpoint
 
@@ -612,8 +612,8 @@ Do not proceed without user approval.
   - authorization rules;
   - admin API examples;
   - test output;
-  - Playwright evidence;
-  - status of legacy `AuthInterceptor`.
+  - Playwright evidence *(see below)*;
+  - status of legacy `AuthInterceptor` — **REMOVED**.
 
 Do not proceed without user approval.
 

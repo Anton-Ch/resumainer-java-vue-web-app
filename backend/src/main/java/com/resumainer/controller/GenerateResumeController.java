@@ -26,7 +26,10 @@ import java.util.UUID;
 
 /**
  * REST controller for the generation pipeline.
- * All endpoints require authentication (guarded by AuthInterceptor).
+ * All endpoints require authentication (enforced by Spring Security
+ * via SecurityConfig.authorizeHttpRequests). Legacy UserSession session
+ * attribute is a temporary compatibility bridge — use Spring Security
+ * Authentication parameter for current user identity.
  * User ID is extracted from HttpSession, never from request body.
  */
 @RestController

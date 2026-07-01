@@ -11,7 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -37,8 +40,11 @@ public class AuthController {
     /**
      * Register a new user.
      * <p>
-     * Phase 4: still uses old custom registration flow. Auto-login still active
-     * via session attribute for backward compatibility. Will be updated in Phase 10.
+     * Phase 7 compatibility: creates both Spring Security Authentication and
+     * legacy UserSession session attribute (as a bridge for controllers that
+     * still read {@code session.getAttribute("user")}).
+     * <p>
+     * Will be updated in Phase 10 (email verification / no auto-login).
      *
      * @param request the registration request (validated via @Valid)
      * @param session the HTTP session (for auto-login after registration)
@@ -60,7 +66,18 @@ public class AuthController {
                         .body(AuthResponse.failure("Registration failed"));
             }
 
-            // Auto-login via old custom session (temporary — Phase 10 will change this)
+            // Phase 7: Create Spring Security Authentication for the registered user
+            CustomUserDetails userDetails = new CustomUserDetails(user, user.getRoleId());
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+            session.setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    SecurityContextHolder.getContext());
+
+            // Legacy bridge: maintain old session attribute for controllers that
+            // still read session.getAttribute("user"). Will be removed in Phase 18.
             com.resumainer.dto.UserSession userSession = new com.resumainer.dto.UserSession(
                     user.getId(), user.getEmail(), "USER", user.isPrivileged());
             session.setAttribute("user", userSession);
