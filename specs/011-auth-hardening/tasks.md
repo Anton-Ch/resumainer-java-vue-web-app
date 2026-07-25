@@ -625,23 +625,21 @@ Do not proceed without user approval.
 
 **Before starting**:
 
-- [ ] [CTX7] Refresh docs for Java HTTP client/project HTTP style and testing external calls.
-- [ ] [SERENA] Inspect config loading style.
-- [ ] [TDD] Tests first.
+- [x] [CTX7] Refresh docs for Java HTTP client/project HTTP style and testing external calls.
+- [x] [SERENA] Inspect config loading style.
+- [x] [TDD] Tests first.
 
 ### Tasks
 
-- [ ] T090 [TDD] Add tests for valid dev captcha token.
-- [ ] T091 [TDD] Add tests that dev bypass is rejected in prod mode.
-- [ ] T092 [TDD] Add tests for invalid captcha response.
-- [ ] T093 Implement `CaptchaService` interface only if it stays simple.
-- [ ] T094 Implement Turnstile verification.
-- [ ] T095 Implement config-driven dev token `dev-captcha-pass`.
-- [ ] T096 Add production missing-secret fail-safe.
-- [ ] T097 Add auth error codes:
-  - `CAPTCHA_INVALID`
-  - `CAPTCHA_REQUIRED`
-- [ ] T098 Run tests.
+- [x] T090 [TDD] Add tests for valid dev captcha token.
+- [x] T091 [TDD] Add tests that dev bypass is rejected in prod mode.
+- [x] T092 [TDD] Add tests for invalid captcha response.
+- [x] T093 Implement `CaptchaService` interface — simple single-method interface.
+- [x] T094 Implement Turnstile verification via HttpClient + Cloudflare Siteverify API.
+- [x] T095 Implement config-driven dev token `dev-captcha-pass`.
+- [x] T096 Add production missing-secret fail-safe.
+- [x] T097 Auth error codes `CAPTCHA_INVALID` and `CAPTCHA_REQUIRED` already exist in failure handler.
+- [x] T098 Run tests — 1184 backend, 164 frontend, all pass.
 
 ### Checkpoint
 
