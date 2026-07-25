@@ -11,7 +11,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -182,6 +184,74 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/static/**")
                 .addResourceLocations("/static/");
+    }
+
+    // ============================================================
+    // PropertySourcesPlaceholderConfigurer — resolves ${...} in @Value.
+    //
+    // Precedence (highest first):
+    // 1. JVM system properties / environment variables
+    // 2. application-{profile}.properties (if a profile is active)
+    // 3. application.properties (base, lowest file priority)
+    //
+    // Must be static — BeanFactoryPostProcessors are instantiated
+    // before regular beans.
+    // ============================================================
+
+    /**
+     * Resolves {@code ${...}} placeholders in {@code @Value} annotations.
+     *
+     * <p>Loads {@code application.properties} as the base file, then
+     * {@code application-{profile}.properties} on top if a runtime profile
+     * is active. Environment variables and JVM system properties are
+     * resolved by Spring's environment and override both files.
+     *
+     * <p>Does NOT use {@code @PropertySource} to avoid double-registration
+     * conflicts. Files are loaded in the exact order needed for correct
+     * precedence: base first, profile-specific last (wins).
+     */
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+        PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
+
+        // Determine active profile: system property → env var → no default (safe)
+        String profile = resolveActiveProfile();
+
+        // Load base file first, profile-specific second (profile wins)
+        if (profile != null && !"default".equals(profile)) {
+            configurer.setLocations(
+                    new ClassPathResource("application.properties"),
+                    new ClassPathResource("application-" + profile + ".properties")
+            );
+        } else {
+            configurer.setLocations(
+                    new ClassPathResource("application.properties")
+            );
+        }
+
+        // setIgnoreResourceNotFound=true so missing profile files don't break startup
+        configurer.setIgnoreResourceNotFound(true);
+        // localOverride=false: env vars / system props override file values
+        configurer.setLocalOverride(false);
+        return configurer;
+    }
+
+    /**
+     * Determines the active Spring profile from runtime sources.
+     * Checks: system property → environment variable.
+     * Returns {@code null} if no profile is explicitly set (safe default).
+     */
+    private static String resolveActiveProfile() {
+        String profile = System.getProperty("spring.profiles.active");
+        if (profile != null && !profile.isBlank()) {
+            return profile.trim();
+        }
+        profile = System.getenv("SPRING_PROFILES_ACTIVE");
+        if (profile != null && !profile.isBlank()) {
+            return profile.trim();
+        }
+        // No default — safe: no profile means no profile-specific overrides
+        return null;
     }
 
     // ============================================================

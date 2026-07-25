@@ -46,6 +46,13 @@ services:
       DB_USER: ${DB_USER:-resumainer}
       DB_HOST: db
       DB_PORT: "5432"
+      # Email — Resend (Phase 9)
+      RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
+      APP_EMAIL_FROM: "${APP_EMAIL_FROM:-ResumAIner <noreply@send.resumainer.com>}"
+      APP_FRONTEND_PUBLIC_BASE_URL: ${APP_FRONTEND_PUBLIC_BASE_URL:?APP_FRONTEND_PUBLIC_BASE_URL is required}
+      APP_BACKEND_PUBLIC_BASE_URL: ${APP_BACKEND_PUBLIC_BASE_URL:?APP_BACKEND_PUBLIC_BASE_URL is required}
+      APP_EMAIL_RESEND_API_URL: ${APP_EMAIL_RESEND_API_URL:-https://api.resend.com/emails}
+      APP_EMAIL_RESEND_TIMEOUT_MS: ${APP_EMAIL_RESEND_TIMEOUT_MS:-10000}
     depends_on:
       db:
         condition: service_healthy
