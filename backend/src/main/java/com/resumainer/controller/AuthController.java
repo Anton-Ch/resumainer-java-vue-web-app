@@ -4,26 +4,25 @@ import com.resumainer.dto.AuthResponse;
 import com.resumainer.dto.RegisterRequest;
 import com.resumainer.model.User;
 import com.resumainer.service.AuthService;
+import com.resumainer.service.VerificationService;
 import com.resumainer.service.security.CustomUserDetails;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.Map;
 
 /**
  * REST controller for authentication endpoints.
- * <p>
- * Registration still uses custom AuthService. Login/logout are handled by
- * Spring Security (Phase 4). Status reads from Spring Security Authentication.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -32,29 +31,22 @@ public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
+    private final VerificationService verificationService;
+    private final String frontendBaseUrl;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService,
+                          VerificationService verificationService,
+                          @Value("${app.frontend.public.base-url}") String frontendBaseUrl) {
         this.authService = authService;
+        this.verificationService = verificationService;
+        this.frontendBaseUrl = frontendBaseUrl != null ? frontendBaseUrl.replaceAll("/+$", "") : "";
     }
 
     /**
-     * Register a new user.
-     * <p>
-     * Phase 7 compatibility: creates both Spring Security Authentication and
-     * legacy UserSession session attribute (as a bridge for controllers that
-     * still read {@code session.getAttribute("user")}).
-     * <p>
-     * Will be updated in Phase 10 (email verification / no auto-login).
-     *
-     * @param request the registration request (validated via @Valid)
-     * @param session the HTTP session (for auto-login after registration)
-     * @return AuthResponse with role and redirect URL
+     * Register a new user with strict email verification.
      */
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(
-            @Valid @RequestBody RegisterRequest request,
-            HttpSession session) {
-
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         log.info("Registration attempt for email: {}", request.getEmail());
 
         try {
@@ -63,58 +55,119 @@ public class AuthController {
             if (user == null || user.getId() == null) {
                 log.error("Registration returned null user for email: {}", request.getEmail());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(AuthResponse.failure("Registration failed"));
+                        .body(AuthResponse.failure("REGISTRATION_FAILED", "Registration failed. Please try again."));
             }
 
-            // Phase 7: Create Spring Security Authentication for the registered user
-            CustomUserDetails userDetails = new CustomUserDetails(user, user.getRoleId());
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authToken);
-            session.setAttribute(
-                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                    SecurityContextHolder.getContext());
-
-            // Legacy bridge: maintain old session attribute for controllers that
-            // still read session.getAttribute("user"). Will be removed in Phase 18.
-            com.resumainer.dto.UserSession userSession = new com.resumainer.dto.UserSession(
-                    user.getId(), user.getEmail(), "USER", user.isPrivileged());
-            session.setAttribute("user", userSession);
-
-            log.info("User registered and logged in: {}", user.getEmail());
-            return ResponseEntity.ok(AuthResponse.success("USER", "/home"));
+            log.info("User registered successfully (pending verification): {}", user.getEmail());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(AuthResponse.pendingVerification());
 
         } catch (com.resumainer.exception.ServiceException e) {
+            String publicCode;
+            String publicMessage;
+            HttpStatus status;
+
+            switch (e.getErrorCode()) {
+                case "auth.email.alreadyRegistered":
+                case "auth.email.duplicate":
+                    publicCode = "DUPLICATE_EMAIL";
+                    publicMessage = "An account with this email already exists.";
+                    status = HttpStatus.CONFLICT;
+                    break;
+                case "auth.password.weak":
+                    publicCode = "INVALID_INPUT";
+                    publicMessage = "Password does not meet strength requirements.";
+                    status = HttpStatus.BAD_REQUEST;
+                    break;
+                case "auth.password.mismatch":
+                    publicCode = "INVALID_INPUT";
+                    publicMessage = "Passwords do not match.";
+                    status = HttpStatus.BAD_REQUEST;
+                    break;
+                case "auth.captcha.invalid":
+                    publicCode = "CAPTCHA_INVALID";
+                    publicMessage = "CAPTCHA verification failed. Please try again.";
+                    status = HttpStatus.BAD_REQUEST;
+                    break;
+                default:
+                    publicCode = "REGISTRATION_FAILED";
+                    publicMessage = "Registration failed. Please try again.";
+                    status = HttpStatus.INTERNAL_SERVER_ERROR;
+                    break;
+            }
+
             log.warn("Registration failed for {}: {}", request.getEmail(), e.getMessage());
-
-            HttpStatus status = switch (e.getErrorCode()) {
-                case "auth.email.alreadyRegistered" -> HttpStatus.CONFLICT;
-                case "auth.password.weak", "auth.password.mismatch" -> HttpStatus.BAD_REQUEST;
-                default -> HttpStatus.INTERNAL_SERVER_ERROR;
-            };
-
             return ResponseEntity.status(status)
-                    .body(AuthResponse.failure(e.getMessage()));
+                    .body(AuthResponse.failure(publicCode, publicMessage));
+
+        } catch (Exception e) {
+            log.error("Unexpected registration error for {}: {}", request.getEmail(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(AuthResponse.failure("REGISTRATION_FAILED", "Registration failed. Please try again."));
         }
     }
 
     /**
-     * Check the current authentication status from Spring Security.
-     * <p>
-     * Source of truth is Spring Security Authentication, not old session attribute.
-     *
-     * @param authentication Spring Security Authentication (null if unauthenticated)
-     * @return map with authenticated flag, email, and role
+     * Handle @Valid validation failures for registration with AuthResponse format.
      */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<AuthResponse> handleValidationError(MethodArgumentNotValidException ex) {
+        log.warn("Registration validation failed: errorCount={}",
+                ex.getBindingResult().getErrorCount());
+        return ResponseEntity.badRequest()
+                .body(AuthResponse.failure("INVALID_INPUT", "Please check your input and try again."));
+    }
+
+    /**
+     * Handle malformed JSON or empty body for the register endpoint.
+     * Returns the same AuthResponse format as other validation failures.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<AuthResponse> handleMessageNotReadable() {
+        log.warn("Registration request not readable: malformed JSON or empty body");
+        return ResponseEntity.badRequest()
+                .body(AuthResponse.failure("INVALID_INPUT", "Please check your input and try again."));
+    }
+
+    /**
+     * Verify email via token from email link.
+     */
+    @GetMapping("/verify-email")
+    public ResponseEntity<Void> verifyEmail(@RequestParam(value = "token", required = false) String token) {
+        long start = System.nanoTime();
+
+        VerificationService.VerifyResult result = verificationService.verify(token);
+
+        long elapsed = System.nanoTime() - start;
+        long delayMs = Math.max(0, 200 - (elapsed / 1_000_000));
+        if (delayMs > 0) {
+            try { Thread.sleep(delayMs); } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        return switch (result) {
+            case SUCCESS -> redirectToVerified("success");
+            case TOKEN_EXPIRED -> redirectToVerified("expired");
+            case TOKEN_INVALID -> redirectToVerified("invalid");
+        };
+    }
+
+    /** Redirect to frontend verification result page. */
+    private ResponseEntity<Void> redirectToVerified(String status) {
+        String url = frontendBaseUrl + "/app/auth/verified?status=" + status;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(URI.create(url));
+        return ResponseEntity.status(HttpStatus.FOUND).headers(headers).build();
+    }
+
+    /** Check current authentication status from Spring Security. */
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> status(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()
                 || "anonymousUser".equals(authentication.getPrincipal())) {
             return ResponseEntity.ok(Map.of(
-                    "authenticated", false,
-                    "email", "",
-                    "role", ""
+                    "authenticated", false, "email", "", "role", ""
             ));
         }
 
@@ -129,7 +182,6 @@ public class AuthController {
             ));
         }
 
-        // Fallback: basic info from authentication
         return ResponseEntity.ok(Map.of(
                 "authenticated", true,
                 "email", authentication.getName(),

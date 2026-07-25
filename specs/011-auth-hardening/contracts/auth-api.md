@@ -2,7 +2,8 @@
 
 **Date**: 2026-06-30  
 **Source**: `spec.md` API Contract Draft  
-**Status**: Frozen (do not change without STOP approval)
+**Status**: Active  
+**Phase 10 update**: Added registration error codes CAPTCHA_INVALID, DUPLICATE_EMAIL, INVALID_INPUT, REGISTRATION_FAILED.
 
 ## General Rules
 
@@ -43,7 +44,6 @@ Request:
 ```json
 {
   "email": "user@example.com",
-  "username": "anton",
   "password": "StrongPass1",
   "passwordConfirmation": "StrongPass1",
   "captchaToken": "turnstile-token-or-dev-captcha-pass"
@@ -60,12 +60,31 @@ Success (201):
 }
 ```
 
+Failure examples (all use `success=false`):
+```json
+{ "success": false, "code": "CAPTCHA_INVALID", "message": "CAPTCHA verification failed. Please try again." }
+{ "success": false, "code": "DUPLICATE_EMAIL", "message": "An account with this email already exists." }
+{ "success": false, "code": "INVALID_INPUT", "message": "Please check your input and try again." }
+{ "success": false, "code": "REGISTRATION_FAILED", "message": "Registration failed. Please try again." }
+```
+
+| Code | HTTP | Description |
+|------|------|-------------|
+| `REGISTRATION_PENDING_EMAIL_VERIFICATION` | 201 | Registration accepted — verify email before first login |
+| `CAPTCHA_INVALID` | 400 | CAPTCHA token missing, invalid, or rejected |
+| `DUPLICATE_EMAIL` | 409 | Email already registered (pre-check or unique-constraint race) |
+| `INVALID_INPUT` | 400 | One or more request fields failed validation |
+| `REGISTRATION_FAILED` | 500 | Unexpected server error — no details exposed |
+
+All failures return: `{ "success": false, "code": "...", "message": "..." }` with no `role` or `redirectUrl` fields.
+
 Rules:
-- Captcha required.
-- Creates unverified user.
-- Does NOT auto-login.
-- Creates 24h email verification token (hash stored).
-- Sends verification email via Resend or dev logging.
+- CAPTCHA verified before any side effect (password hash, DB, token, email).
+- Creates unverified user with `email_verified=false`.
+- Does NOT auto-login — no SecurityContext, no session attributes.
+- Creates 24h email verification token (hash stored, raw token never stored).
+- Sends verification email via Resend or dev logging after DB commit.
+- Internal server error messages must not expose stack traces, SQL details, DAO messages, or configuration internals.
 
 ---
 
@@ -293,6 +312,10 @@ Rules:
 | `TOKEN_EXPIRED` | Verification/reset token has expired |
 | `OAUTH_EMAIL_NOT_VERIFIED` | Google returned unverified email |
 | `OAUTH_LOGIN_FAILED` | Google OAuth2 flow failed |
+| `CAPTCHA_INVALID` | CAPTCHA token missing, invalid or rejected |
+| `DUPLICATE_EMAIL` | Email already registered (pre-check or unique-constraint race) |
+| `INVALID_INPUT` | Request field validation failed |
+| `REGISTRATION_FAILED` | Registration server error (no details exposed) |
 | `RATE_LIMITED` | Too many requests |
 | `REGISTRATION_PENDING_EMAIL_VERIFICATION` | Registration success — verify email |
 

@@ -6,6 +6,7 @@ package com.resumainer.dto;
 public class AuthResponse {
 
     private boolean success;
+    private String code;
     private String role;
     private String message;
     private String redirectUrl;
@@ -13,8 +14,9 @@ public class AuthResponse {
     public AuthResponse() {
     }
 
-    public AuthResponse(boolean success, String role, String message, String redirectUrl) {
+    public AuthResponse(boolean success, String code, String role, String message, String redirectUrl) {
         this.success = success;
+        this.code = code;
         this.role = role;
         this.message = message;
         this.redirectUrl = redirectUrl;
@@ -24,15 +26,30 @@ public class AuthResponse {
      * Factory for successful authentication response.
      */
     public static AuthResponse success(String role, String redirectUrl) {
-        return new AuthResponse(true, role, null, redirectUrl);
+        return new AuthResponse(true, null, role, null, redirectUrl);
     }
 
     /**
-     * Factory for failed authentication response.
+     * Factory for registration-pending-verification response.
      */
-    public static AuthResponse failure(String message) {
-        return new AuthResponse(false, null, message, null);
+    public static AuthResponse pendingVerification() {
+        return new AuthResponse(true, "REGISTRATION_PENDING_EMAIL_VERIFICATION", null,
+                "Please check your email to verify your account.", "/auth/check-email");
     }
+
+    /**
+     * Factory for failed authentication response with public error code.
+     *
+     * @param code    the public error code from the API contract (e.g. CAPTCHA_INVALID)
+     * @param message user-facing error message
+     * @return AuthResponse with success=false, the given code and message
+     */
+    public static AuthResponse failure(String code, String message) {
+        return new AuthResponse(false, code, null, message, null);
+    }
+
+    // Note: legacy failure(String) factory was removed in Phase 10.
+    // All auth failures must use failure(String code, String message).
 
     public boolean isSuccess() {
         return success;
@@ -40,6 +57,14 @@ public class AuthResponse {
 
     public void setSuccess(boolean success) {
         this.success = success;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getRole() {

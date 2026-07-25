@@ -22,6 +22,8 @@ public class RegisterRequest {
     @NotBlank(message = "{auth.passwordConfirmation.required}")
     private String passwordConfirmation;
 
+    private String captchaToken;
+
     public RegisterRequest() {
     }
 
@@ -29,6 +31,13 @@ public class RegisterRequest {
         this.email = email;
         this.password = password;
         this.passwordConfirmation = passwordConfirmation;
+    }
+
+    public RegisterRequest(String email, String password, String passwordConfirmation, String captchaToken) {
+        this.email = email;
+        this.password = password;
+        this.passwordConfirmation = passwordConfirmation;
+        this.captchaToken = captchaToken;
     }
 
     public String getEmail() {
@@ -53,5 +62,13 @@ public class RegisterRequest {
 
     public void setPasswordConfirmation(String passwordConfirmation) {
         this.passwordConfirmation = passwordConfirmation;
+    }
+
+    public String getCaptchaToken() {
+        return captchaToken;
+    }
+
+    public void setCaptchaToken(String captchaToken) {
+        this.captchaToken = captchaToken;
     }
 }

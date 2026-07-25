@@ -243,6 +243,54 @@ public class UserDao {
         }
     }
 
+    private static final String MARK_EMAIL_VERIFIED =
+            "UPDATE users SET email_verified = TRUE, email_verified_at = ? WHERE id = ? AND email_verified = FALSE";
+
+    /**
+     * Mark a user as email verified (auto-managed connection).
+     */
+    public void markEmailVerified(UUID userId) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(MARK_EMAIL_VERIFIED)) {
+            stmt.setObject(1, LocalDateTime.now());
+            stmt.setObject(2, userId);
+            int affected = stmt.executeUpdate();
+            if (affected == 0) {
+                log.warn("markEmailVerified: user not found: {}", userId);
+            } else {
+                log.info("Email verified for user: {}", userId);
+            }
+        } catch (SQLException e) {
+            log.error("Error marking email verified for user: {}", userId, e);
+            throw new RuntimeException("Database error marking email verified", e);
+        }
+    }
+
+    /**
+     * Mark a user as email verified within an existing connection (for transaction support).
+     *
+     * @param userId the user's UUID
+     * @param conn   existing database connection (transaction-managed)
+     * @return the number of rows affected
+     * @throws RuntimeException if the user is not found (affected == 0)
+     */
+    public int markEmailVerified(UUID userId, Connection conn) {
+        try (PreparedStatement stmt = conn.prepareStatement(MARK_EMAIL_VERIFIED)) {
+            stmt.setObject(1, LocalDateTime.now());
+            stmt.setObject(2, userId);
+            int affected = stmt.executeUpdate();
+            if (affected == 0) {
+                log.warn("markEmailVerified: user not found: {}", userId);
+                throw new RuntimeException("User not found for email verification: " + userId);
+            }
+            log.info("Email verified for user: {}", userId);
+            return affected;
+        } catch (SQLException e) {
+            log.error("Error marking email verified for user: {}", userId, e);
+            throw new RuntimeException("Database error marking email verified", e);
+        }
+    }
+
     private User mapRow(ResultSet rs) throws SQLException {
         User user = new User();
         user.setId(rs.getObject("id", UUID.class));
