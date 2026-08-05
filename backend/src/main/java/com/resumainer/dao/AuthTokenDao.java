@@ -211,16 +211,22 @@ public class AuthTokenDao {
      * @param tokenType the token type to invalidate
      */
     public void invalidateOldTokens(String userId, String tokenType) {
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(INVALIDATE_OLD)) {
+        try (Connection conn = dataSource.getConnection()) {
+            invalidateOldTokens(userId, tokenType, conn);
+        } catch (SQLException e) {
+            log.error("Error invalidating old tokens for user: {}", userId, e);
+            throw new RuntimeException("Database error invalidating auth tokens", e);
+        }
+    }
 
+    /** Invalidates old active tokens on the caller's transaction connection. */
+    public int invalidateOldTokens(String userId, String tokenType, Connection conn) {
+        try (PreparedStatement stmt = conn.prepareStatement(INVALIDATE_OLD)) {
             stmt.setObject(1, LocalDateTime.now());
             stmt.setObject(2, userId);
             stmt.setString(3, tokenType);
-            stmt.executeUpdate();
-
+            return stmt.executeUpdate();
         } catch (SQLException e) {
-            log.error("Error invalidating old tokens for user: {}", userId, e);
             throw new RuntimeException("Database error invalidating auth tokens", e);
         }
     }

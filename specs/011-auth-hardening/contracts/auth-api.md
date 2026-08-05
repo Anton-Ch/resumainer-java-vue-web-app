@@ -123,11 +123,30 @@ Safe response:
 }
 ```
 
+Rate-limited response:
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 60
+```
+
+```json
+{
+  "success": false,
+  "code": "RATE_LIMITED",
+  "message": "Too many verification email requests. Please try again later."
+}
+```
+
 Rules:
 - Captcha required.
-- 60-second cooldown.
-- Max 5/hour, 20/day per email/IP.
+- 60-second cooldown by default (`app.auth.resend.cooldown-seconds`).
+- Max 5/hour by default (`app.auth.resend.hourly-limit`).
+- Max 20/day by default (`app.auth.resend.daily-limit`).
+- Email and IP limits are independent; exceeding either blocks the request.
+- `Retry-After` is the whole number of seconds until all violated limits permit another request.
 - Safe response for unknown/already-verified accounts.
+- Deleted accounts return the same complete safe response.
+- Email delivery failure after the database commit returns the same complete safe response.
 - New token should supersede older active verification tokens.
 
 ---

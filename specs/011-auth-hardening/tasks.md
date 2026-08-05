@@ -694,50 +694,55 @@ Do not proceed without user approval.
 
 ## Phase 10 — Registration and Email Verification
 
+**Status**: BACKEND COMPLETE, VERIFIED, ACCEPTED, AND COMMITTED (`c1d7466`). Frontend check-email and verification-result pages are intentionally deferred to Phase 15 (T191, T192, T197, T201).
+
 **Goal**: Implement strict email confirmation.
 
 **Before starting**:
 
-- [ ] [CTX7] Refresh docs for registration patterns with Spring Security and token safety.
-- [ ] [SERENA] Inspect existing register flow and frontend form.
-- [ ] [PG-MCP] Verify DB schema ready.
-- [ ] [TDD] Tests first.
+- [x] [CTX7] Refresh docs for registration patterns with Spring Security and token safety.
+- [x] [SERENA] Inspect existing register flow and frontend form.
+- [x] [PG-MCP] Verify DB schema ready.
+- [x] [TDD] Tests first.
 
 ### Tasks
 
-- [ ] T110 [TDD] Add tests: registration requires captcha.
-- [ ] T111 [TDD] Add tests: registration creates unverified user.
-- [ ] T112 [TDD] Add tests: registration does not auto-login.
-- [ ] T113 [TDD] Add tests: raw token is not stored.
-- [ ] T114 [TDD] Add tests: valid verification token verifies user.
-- [ ] T115 [TDD] Add tests: expired/invalid/consumed token fails safely.
-- [ ] T116 Update registration DTO to include captcha token.
-- [ ] T117 Update registration service to create unverified account.
-- [ ] T118 Generate hashed email verification token.
-- [ ] T119 Send verification email through email service.
-- [ ] T120 Add backend verify endpoint.
-- [ ] T121 Add simple uniform delay where appropriate for verification outcomes to reduce timing enumeration signals without adding a new timing framework.
-- [ ] T122 Add safe application logging for email verification completion: email and timestamp only.
-- [ ] T123 Add negative tests/proof that verification logging excludes raw tokens, token hashes, passwords, password hashes, API keys, secrets, and stack traces.
-- [ ] T124 Redirect verification result to frontend status page.
-- [ ] T125 Add frontend check-email page.
-- [ ] T126 Add frontend verified-result page.
-- [ ] T127 Ensure unverified user cannot log in and gets `EMAIL_NOT_VERIFIED`.
-- [ ] T128 [PW-MCP] Verify registration/check-email/verify flow.
+- [x] T110 [TDD] Add tests: registration requires captcha.
+- [x] T111 [TDD] Add tests: registration creates unverified user.
+- [x] T112 [TDD] Add tests: registration does not auto-login.
+- [x] T113 [TDD] Add tests: raw token is not stored.
+- [x] T114 [TDD] Add tests: valid verification token verifies user.
+- [x] T115 [TDD] Add tests: expired/invalid/consumed token fails safely.
+- [x] T116 Update registration DTO to include captcha token.
+- [x] T117 Update registration service to create unverified account.
+- [x] T118 Generate hashed email verification token.
+- [x] T119 Send verification email through email service.
+- [x] T120 Add backend verify endpoint.
+- [x] T121 Add simple uniform delay where appropriate for verification outcomes to reduce timing enumeration signals without adding a new timing framework.
+- [x] T122 Add safe application logging for email verification completion. Accepted implementation logs user ID instead of email; Logback supplies the timestamp.
+- [x] T123 Verify that verification logging excludes raw tokens, token hashes, passwords, password hashes, API keys, secrets, and stack traces.
+- [x] T124 Redirect verification result to frontend status route.
+- [x] T127 Ensure unverified user cannot log in and gets `EMAIL_NOT_VERIFIED`.
+- [x] T128 [PW-MCP] Verify the accepted Phase 10 backend registration/verification flow. Frontend status-page rendering is deferred to Phase 15.
+
+### Deferred frontend scope
+
+- T125 moved to Phase 15 tasks T191, T197, and T201: add frontend check-email page.
+- T126 moved to Phase 15 tasks T192, T197, and T201: add frontend verified-result page.
 
 ### Checkpoint
 
-- [ ] T129 [STOP] [EVIDENCE] Report:
+- [x] T129 [STOP] [EVIDENCE] Phase 10 backend checkpoint reviewed, accepted, and committed as `c1d7466`:
   - register response;
   - DB user verification state;
   - token hash/consume behavior;
-  - verification logging proof;
-  - uniform-delay behavior if applied;
+  - safe verification logging proof;
+  - uniform-delay behavior;
   - unverified login rejection;
-  - browser evidence;
+  - accepted backend flow evidence;
   - tests.
 
-Do not proceed without user approval.
+User approval recorded. Phase 11 is the next implementation phase.
 
 ---
 
@@ -747,35 +752,35 @@ Do not proceed without user approval.
 
 **Before starting**:
 
-- [ ] [CTX7] Refresh rate limiting and Spring MVC docs as needed.
-- [ ] [SERENA] Inspect auth token/email service.
-- [ ] [PG-MCP] Verify token state if needed.
-- [ ] [TDD] Tests first.
+- [x] [CTX7] Refreshed Spring MVC validation/response docs and Tomcat trusted-proxy docs.
+- [x] [SERENA] Inspected auth token, user, controller, captcha, and email symbols/references.
+- [x] [PG-MCP] Verified current `users` and `auth_tokens` schema; no migration required.
+- [x] [TDD] RED tests were run before production implementation and failed on missing Phase 11 behavior.
 
 ### Tasks
 
-- [ ] T130 [TDD] Add tests: resend requires captcha.
-- [ ] T131 [TDD] Add tests: resend cooldown 60 seconds.
-- [ ] T132 [TDD] Add tests: max 5/hour and 20/day per email/IP.
-- [ ] T133 [TDD] Add tests: unknown/already-verified email safe response.
-- [ ] T134 Implement resend endpoint.
-- [ ] T135 Add simple uniform delay where appropriate for resend outcomes to reduce timing enumeration signals without adding a new timing framework.
-- [ ] T136 Invalidate or supersede old active verification tokens.
-- [ ] T137 Add frontend resend action on check-email/unverified-login state.
-- [ ] T138 Add localized messages.
-- [ ] T139 [PW-MCP] Verify resend UI and rate limit state.
+- [x] T130 [TDD] Add tests: resend requires captcha.
+- [x] T131 [TDD] Add tests: resend cooldown 60 seconds.
+- [x] T132 [TDD] Add tests: max 5/hour and 20/day per independent email/IP keys, including atomic concurrency and bounded state.
+- [x] T133 [TDD] Add tests: unknown/already-verified/deleted/eligible and post-commit email failure return the same complete safe response.
+- [x] T134 Implement resend endpoint.
+- [x] T135 Add configurable 200 ms minimum uniform delay for database resend outcomes.
+- [x] T136 Invalidate old active verification tokens and insert the replacement hash on the same locked JDBC transaction connection.
+- [ ] T137 Deferred to Phase 15 T203: frontend has no Turnstile token source yet; do not add a broken resend action or hard-code the dev token.
+- [ ] T138 Deferred with T137 to Phase 15 i18n tasks T204-T205.
+- [ ] T139 [PW-MCP] Deferred until T137-T138 and Phase 15 T203 provide a real CAPTCHA-backed UI.
 
 ### Checkpoint
 
-- [ ] T140 [STOP] [EVIDENCE] Report:
+- [x] T140 [STOP] [EVIDENCE] Checkpoint explicitly accepted by the user:
   - resend API behavior;
   - uniform-delay behavior if applied;
   - rate limit proof;
   - token replacement behavior;
-  - browser evidence;
+  - browser evidence or explicit frontend/CAPTCHA dependency limitation;
   - tests.
 
-Do not proceed without user approval.
+User approval recorded. Phase 11 is accepted; Phase 12 has not started.
 
 ---
 

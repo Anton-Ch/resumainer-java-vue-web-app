@@ -30,6 +30,7 @@ import org.thymeleaf.templatemode.TemplateMode;
 import org.flywaydb.core.Flyway;
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.time.Clock;
 import java.util.Locale;
 
 /**
@@ -44,12 +45,23 @@ import java.util.Locale;
  */
 @Configuration
 @ComponentScan(basePackages = "com.resumainer",
-               excludeFilters = @ComponentScan.Filter(
-                   type = org.springframework.context.annotation.FilterType.REGEX,
-                   pattern = "com\\.resumainer\\.(security|infrastructure\\.db|dao)\\..*"
-               ))
+               excludeFilters = {
+                   @ComponentScan.Filter(
+                       type = org.springframework.context.annotation.FilterType.REGEX,
+                       pattern = "com\\.resumainer\\.(security|infrastructure\\.db|dao)\\..*"
+                   ),
+                   @ComponentScan.Filter(
+                       type = org.springframework.context.annotation.FilterType.ANNOTATION,
+                       classes = Configuration.class
+                   )
+               })
 @EnableWebMvc
 public class WebConfig implements WebMvcConfigurer {
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemUTC();
+    }
 
     private final ApplicationContext applicationContext;
 

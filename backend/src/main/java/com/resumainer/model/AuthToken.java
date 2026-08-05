@@ -53,5 +53,5 @@ public class AuthToken {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public boolean isConsumed() { return consumedAt != null; }
-    public boolean isExpired() { return LocalDateTime.now().isAfter(expiresAt); }
+    public boolean isExpired(LocalDateTime now) { return !now.isBefore(expiresAt); }
 }

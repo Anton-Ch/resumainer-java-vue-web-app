@@ -86,6 +86,37 @@ class UserDaoTest {
     }
 
     @Test
+    void findVerificationCandidateForUpdate_selectsOnlyRequiredColumnsAndReturnsDeletedRow() throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getObject("id", UUID.class)).thenReturn(userId);
+        when(resultSet.getObject("status_id", Long.class)).thenReturn(1L);
+        when(resultSet.getBoolean("email_verified")).thenReturn(false);
+        when(resultSet.getBoolean("is_deleted")).thenReturn(true);
+
+        UserDao.VerificationCandidate result = userDao.findVerificationCandidateForUpdate(
+                "deleted@example.com", connection);
+
+        assertNotNull(result);
+        assertEquals(userId, result.id());
+        assertEquals(1L, result.statusId());
+        assertFalse(result.emailVerified());
+        assertTrue(result.deleted(), "locked lookup must return deleted rows for generic handling");
+
+        var sqlCaptor = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(connection).prepareStatement(sqlCaptor.capture());
+        String sql = sqlCaptor.getValue().toLowerCase(java.util.Locale.ROOT);
+        assertTrue(sql.contains("select id, status_id, email_verified, is_deleted"));
+        assertTrue(sql.contains("for update"));
+        assertFalse(sql.contains("password_hash"));
+        assertFalse(sql.contains("locked_until"));
+        assertFalse(sql.contains("failed_login_attempts"));
+        assertFalse(sql.contains("password_login_enabled"));
+        verify(dataSource, never()).getConnection();
+    }
+
+    @Test
     void findById_existingUser_returnsUser() throws Exception {
         UUID userId = UUID.randomUUID();
         when(preparedStatement.executeQuery()).thenReturn(resultSet);

@@ -81,6 +81,9 @@ class PropertyLoadingTest {
         // Prod profile must NOT enable dev fallback
         assertEquals("false", props.getProperty("app.email.dev-fallback-enabled"),
                 "Prod profile must disable email dev fallback");
+        assertEquals("${APP_AUTH_TRUSTED_PROXY_HOSTS:}",
+                props.getProperty("app.auth.trusted-proxy-hosts"),
+                "Prod profile must expose the trusted proxy environment mapping");
     }
 
     @Test

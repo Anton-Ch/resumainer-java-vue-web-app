@@ -1,0 +1,32 @@
+feature: 011-auth-hardening
+branch: feat/011-auth-hardening
+execution_command: speckit.superpowers.execute
+current_phase: 11
+phase_name: Resend Verification
+state: checkpoint_completed
+completed_tasks:
+  - T130
+  - T131
+  - T132
+  - T133
+  - T134
+  - T135
+  - T136
+deferred_tasks:
+  T137: "Deferred to Phase 15 T203 because no real frontend Turnstile token source exists."
+  T138: "Deferred with T137 to Phase 15 i18n tasks T204-T205."
+  T139: "Deferred until the CAPTCHA-backed frontend resend action exists."
+checkpoint: T140
+checkpoint_status: approved
+verification:
+  focused_tests: 104
+  phase_10_regression_tests: 69
+  auth_security_tests: 229
+  full_backend_tests: 1323
+  frontend_test_files: 19
+  frontend_tests: 164
+  failures: 0
+  spring_context_startup: passed
+  docker_compose_config: passed
+commit_created: false
+next_phase_started: false

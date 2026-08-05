@@ -11,7 +11,11 @@ import org.mockito.InOrder;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,6 +29,7 @@ class VerificationServiceTest {
     private DataSource dataSource;
     private Connection connection;
     private VerificationService verificationService;
+    private Clock clock;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -38,7 +43,8 @@ class VerificationServiceTest {
         when(userDao.markEmailVerified(any(UUID.class), any(Connection.class))).thenReturn(1);
         when(authTokenDao.markConsumed(anyLong(), any(Connection.class))).thenReturn(1);
 
-        verificationService = new VerificationService(authTokenDao, userDao, dataSource);
+        clock = Clock.fixed(Instant.parse("2026-08-05T12:00:00Z"), ZoneOffset.UTC);
+        verificationService = new VerificationService(authTokenDao, userDao, dataSource, clock);
     }
 
     private AuthToken createValidToken(String rawToken) {
@@ -48,7 +54,7 @@ class VerificationServiceTest {
         token.setUserId(UUID.randomUUID().toString());
         token.setTokenType("EMAIL_VERIFICATION");
         token.setTokenHash(hash);
-        token.setExpiresAt(LocalDateTime.now().plusHours(24));
+        token.setExpiresAt(LocalDateTime.of(2026, 8, 6, 12, 0));
         token.setConsumedAt(null);
         return token;
     }
@@ -87,13 +93,53 @@ class VerificationServiceTest {
         String rawToken = TokenHashUtil.generateRawToken();
         String tokenHash = TokenHashUtil.hashToken(rawToken);
         AuthToken expired = createValidToken(rawToken);
-        expired.setExpiresAt(LocalDateTime.now().minusHours(1));
+        expired.setExpiresAt(LocalDateTime.of(2026, 8, 5, 11, 59));
 
         when(authTokenDao.findByHash(tokenHash, "EMAIL_VERIFICATION", connection)).thenReturn(expired);
 
         assertEquals(VerificationService.VerifyResult.TOKEN_EXPIRED, verificationService.verify(rawToken));
         verify(userDao, never()).markEmailVerified(any(UUID.class), any(Connection.class));
         verify(authTokenDao, never()).markConsumed(anyLong(), any(Connection.class));
+    }
+
+    @Test
+    void verify_atExactExpiryBoundary_returnsExpired() throws Exception {
+        String rawToken = TokenHashUtil.generateRawToken();
+        AuthToken token = createValidToken(rawToken);
+        token.setExpiresAt(LocalDateTime.of(2026, 8, 5, 12, 0));
+        when(authTokenDao.findByHash(TokenHashUtil.hashToken(rawToken), "EMAIL_VERIFICATION", connection))
+                .thenReturn(token);
+
+        assertEquals(VerificationService.VerifyResult.TOKEN_EXPIRED, verificationService.verify(rawToken));
+        verify(userDao, never()).markEmailVerified(any(UUID.class), any(Connection.class));
+    }
+
+    @Test
+    void verify_beforeExpiry_acceptsToken() throws Exception {
+        String rawToken = TokenHashUtil.generateRawToken();
+        AuthToken token = createValidToken(rawToken);
+        token.setExpiresAt(LocalDateTime.of(2026, 8, 5, 12, 0, 0, 1));
+        when(authTokenDao.findByHash(TokenHashUtil.hashToken(rawToken), "EMAIL_VERIFICATION", connection))
+                .thenReturn(token);
+
+        assertEquals(VerificationService.VerifyResult.SUCCESS, verificationService.verify(rawToken));
+    }
+
+    @Test
+    void verify_nonUtcJvmDefault_doesNotChangeInjectedClockDecision() throws Exception {
+        TimeZone original = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("Asia/Almaty"));
+            String rawToken = TokenHashUtil.generateRawToken();
+            AuthToken token = createValidToken(rawToken);
+            token.setExpiresAt(LocalDateTime.of(2026, 8, 5, 12, 1));
+            when(authTokenDao.findByHash(TokenHashUtil.hashToken(rawToken), "EMAIL_VERIFICATION", connection))
+                    .thenReturn(token);
+
+            assertEquals(VerificationService.VerifyResult.SUCCESS, verificationService.verify(rawToken));
+        } finally {
+            TimeZone.setDefault(original);
+        }
     }
 
     @Test

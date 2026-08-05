@@ -53,6 +53,8 @@ services:
       APP_BACKEND_PUBLIC_BASE_URL: ${APP_BACKEND_PUBLIC_BASE_URL:?APP_BACKEND_PUBLIC_BASE_URL is required}
       APP_EMAIL_RESEND_API_URL: ${APP_EMAIL_RESEND_API_URL:-https://api.resend.com/emails}
       APP_EMAIL_RESEND_TIMEOUT_MS: ${APP_EMAIL_RESEND_TIMEOUT_MS:-10000}
+      # Only this internal Nginx peer may supply X-Real-IP to the auth rate limiter.
+      APP_AUTH_TRUSTED_PROXY_HOSTS: ${APP_AUTH_TRUSTED_PROXY_HOSTS:-frontend}
     depends_on:
       db:
         condition: service_healthy

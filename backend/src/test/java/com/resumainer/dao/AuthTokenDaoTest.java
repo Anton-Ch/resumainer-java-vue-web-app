@@ -75,7 +75,7 @@ class AuthTokenDaoTest {
         assertEquals("EMAIL_VERIFICATION", result.getTokenType());
         assertEquals("hash123", result.getTokenHash());
         assertFalse(result.isConsumed());
-        assertFalse(result.isExpired());
+        assertFalse(result.isExpired(java.time.LocalDateTime.now()));
         verify(preparedStatement).setString(1, "hash123");
         verify(preparedStatement).setString(2, "EMAIL_VERIFICATION");
     }
@@ -132,5 +132,17 @@ class AuthTokenDaoTest {
         verify(preparedStatement).setObject(2, "550e8400-e29b-41d4-a716-446655440000");
         verify(preparedStatement).setString(3, "EMAIL_VERIFICATION");
         verify(preparedStatement).executeUpdate();
+    }
+
+    @Test
+    void invalidateOldTokens_withConnection_usesProvidedConnectionOnly() throws Exception {
+        when(preparedStatement.executeUpdate()).thenReturn(2);
+
+        int affected = authTokenDao.invalidateOldTokens(
+                "550e8400-e29b-41d4-a716-446655440000", "EMAIL_VERIFICATION", connection);
+
+        assertEquals(2, affected);
+        verify(connection).prepareStatement(contains("consumed_at IS NULL"));
+        verify(dataSource, never()).getConnection();
     }
 }

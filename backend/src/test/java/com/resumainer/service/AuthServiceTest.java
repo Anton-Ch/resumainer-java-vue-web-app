@@ -22,6 +22,10 @@ import org.mockito.InOrder;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,6 +45,7 @@ class AuthServiceTest {
     private DataSource dataSource;
     private Connection connection;
     private AuthService authService;
+    private Clock clock;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -58,9 +63,10 @@ class AuthServiceTest {
         when(dataSource.getConnection()).thenReturn(connection);
         when(captchaService.verify(any())).thenReturn(CaptchaResult.success());
 
+        clock = Clock.fixed(Instant.parse("2026-08-05T12:00:00Z"), ZoneOffset.UTC);
         authService = new AuthService(userDao, roleDao, contactDetailDao,
                 passwordService, captchaService, authTokenDao,
-                emailTemplateService, emailService, dataSource, 1440);
+                emailTemplateService, emailService, dataSource, clock, 1440);
 
         // Default: userDao.create sets ID
         doAnswer(invocation -> {
@@ -172,11 +178,8 @@ class AuthServiceTest {
                 "token_hash must be 64 lowercase hex characters");
         assertEquals("EMAIL_VERIFICATION", stored.getTokenType());
         assertNull(stored.getConsumedAt(), "New token must not be consumed");
-        // Verify TTL is approximately 24 hours (1440 minutes) from now
-        assertNotNull(stored.getExpiresAt(), "Token must have expiry");
-        long ttlMinutes = java.time.Duration.between(java.time.LocalDateTime.now(), stored.getExpiresAt()).toMinutes();
-        assertTrue(ttlMinutes >= 1430 && ttlMinutes <= 1450,
-                "Token TTL must be approximately 1440 minutes (24h), was: " + ttlMinutes);
+        assertEquals(LocalDateTime.of(2026, 8, 6, 12, 0), stored.getExpiresAt(),
+                "Registration expiry must use the injected clock plus 1440 minutes");
     }
 
     @Test
@@ -199,6 +202,33 @@ class AuthServiceTest {
         assertNotNull(allTokens.get(1));
         assertNotEquals(allTokens.get(0), allTokens.get(1),
                 "Two different registrations must produce different raw tokens");
+    }
+
+    @Test
+    void register_generatedToken_isImmediatelyAcceptedByVerificationUsingSameClock() throws Exception {
+        when(passwordService.isStrongPassword(any())).thenReturn(true);
+        when(passwordService.hashPassword(any())).thenReturn("$2a$12$hash");
+        when(userDao.findByEmail(any())).thenReturn(null);
+        when(roleDao.findByCode("USER")).thenReturn(new Role(1L, "USER", "Regular User"));
+        ArgumentCaptor<String> rawTokenCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<AuthToken> storedTokenCaptor = ArgumentCaptor.forClass(AuthToken.class);
+        when(emailTemplateService.createVerificationEmail(anyString(), rawTokenCaptor.capture()))
+                .thenReturn(new com.resumainer.service.email.EmailMessage("t@t.com", "s", "<p>h</p>", "t"));
+        when(authTokenDao.insert(storedTokenCaptor.capture(), any(Connection.class))).thenReturn(null);
+
+        authService.register(new RegisterRequest("test@example.com", "StrongPass1", "StrongPass1", "captcha"));
+        AuthToken stored = storedTokenCaptor.getValue();
+        stored.setId(1L);
+        when(authTokenDao.findByHash(stored.getTokenHash(), "EMAIL_VERIFICATION", connection))
+                .thenReturn(stored);
+        when(userDao.markEmailVerified(any(UUID.class), same(connection))).thenReturn(1);
+        when(authTokenDao.markConsumed(1L, connection)).thenReturn(1);
+
+        VerificationService verificationService = new VerificationService(
+                authTokenDao, userDao, dataSource, clock);
+
+        assertEquals(VerificationService.VerifyResult.SUCCESS,
+                verificationService.verify(rawTokenCaptor.getValue()));
     }
 
     // ============================================================

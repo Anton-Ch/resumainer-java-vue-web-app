@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -30,11 +32,14 @@ public class VerificationService {
     private final AuthTokenDao authTokenDao;
     private final UserDao userDao;
     private final DataSource dataSource;
+    private final Clock clock;
 
-    public VerificationService(AuthTokenDao authTokenDao, UserDao userDao, DataSource dataSource) {
+    public VerificationService(AuthTokenDao authTokenDao, UserDao userDao, DataSource dataSource,
+                               Clock clock) {
         this.authTokenDao = authTokenDao;
         this.userDao = userDao;
         this.dataSource = dataSource;
+        this.clock = clock;
     }
 
     /**
@@ -86,7 +91,7 @@ public class VerificationService {
                 return VerifyResult.TOKEN_INVALID;
             }
 
-            if (stored.isExpired()) {
+            if (stored.isExpired(LocalDateTime.now(clock))) {
                 conn.rollback();
                 return VerifyResult.TOKEN_EXPIRED;
             }

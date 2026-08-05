@@ -4,7 +4,7 @@
 - W21 | Feature 009 Phase 1 Backend Foundation Completed | milestone,feature-009,phase-1,backend,dto,public-route,410,soft-delete | [WORKLOG.md](WORKLOG.md) | active
 - W22 | Feature 009 Home Modal Fix Complete | milestone,feature-009,frontend,phase-2,modal,csrf-fix,e2e,410 | [WORKLOG.md](WORKLOG.md) | active
 - W23 | Feature 010 Admin Console Users and Resumes Completed | milestone,feature-010,admin,backend,frontend,completed | [WORKLOG.md](WORKLOG.md) | active
-- W23 | Feature 011 Auth Hardening Phases 1-6 (Spring Security migration) completed | milestone,feature-011,spring-security,auth-hardening,csrf,login,migrations | [WORKLOG.md](WORKLOG.md) | active
+- W24 | Feature 011 Auth Hardening Phases 1-10 completed | milestone,feature-011,phases-1-10,spring-security,auth-hardening,registration,email-verification,resend,next | [WORKLOG.md](WORKLOG.md) | active
 
 ## Bugs
 - B29 | Dual-flag soft delete must update both is_deleted and deleted_at | database,soft-delete,dao,consistency,is_deleted,deleted_at,security,feature-009 | [BUGS.md](BUGS.md) | active

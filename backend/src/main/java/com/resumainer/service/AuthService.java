@@ -25,6 +25,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.Clock;
 
 /**
  * Service for user registration with email verification.
@@ -49,6 +50,7 @@ public class AuthService {
     private final EmailTemplateService emailTemplateService;
     private final EmailService emailService;
     private final DataSource dataSource;
+    private final Clock clock;
     private final int verificationTtlMinutes;
 
     public AuthService(UserDao userDao, RoleDao roleDao,
@@ -59,6 +61,7 @@ public class AuthService {
                        EmailTemplateService emailTemplateService,
                        EmailService emailService,
                        DataSource dataSource,
+                       Clock clock,
                        @Value("${app.auth.email-verification.ttl-minutes:1440}")
                        int verificationTtlMinutes) {
         this.userDao = userDao;
@@ -70,6 +73,7 @@ public class AuthService {
         this.emailTemplateService = emailTemplateService;
         this.emailService = emailService;
         this.dataSource = dataSource;
+        this.clock = clock;
         this.verificationTtlMinutes = verificationTtlMinutes;
     }
 
@@ -117,7 +121,7 @@ public class AuthService {
         // 5. Generate raw token + hash (before transaction)
         String rawToken = TokenHashUtil.generateRawToken();
         String tokenHash = TokenHashUtil.hashToken(rawToken);
-        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(verificationTtlMinutes);
+        LocalDateTime expiresAt = LocalDateTime.now(clock).plusMinutes(verificationTtlMinutes);
 
         // 6. Hash password
         String passwordHash = passwordService.hashPassword(request.getPassword());

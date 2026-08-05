@@ -2,14 +2,20 @@ package com.resumainer.controller;
 
 import com.resumainer.dto.AuthResponse;
 import com.resumainer.dto.RegisterRequest;
+import com.resumainer.dto.ResendVerificationRequest;
+import com.resumainer.dto.ResendVerificationResponse;
 import com.resumainer.model.User;
 import com.resumainer.service.AuthService;
+import com.resumainer.service.ResendVerificationService;
 import com.resumainer.service.VerificationService;
 import com.resumainer.service.security.CustomUserDetails;
+import com.resumainer.service.security.TrustedProxyClientIpExtractor;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,14 +38,28 @@ public class AuthController {
 
     private final AuthService authService;
     private final VerificationService verificationService;
+    private final ResendVerificationService resendVerificationService;
+    private final TrustedProxyClientIpExtractor clientIpExtractor;
     private final String frontendBaseUrl;
 
+    @Autowired
     public AuthController(AuthService authService,
                           VerificationService verificationService,
+                          ResendVerificationService resendVerificationService,
+                          TrustedProxyClientIpExtractor clientIpExtractor,
                           @Value("${app.frontend.public.base-url}") String frontendBaseUrl) {
         this.authService = authService;
         this.verificationService = verificationService;
+        this.resendVerificationService = resendVerificationService;
+        this.clientIpExtractor = clientIpExtractor;
         this.frontendBaseUrl = frontendBaseUrl != null ? frontendBaseUrl.replaceAll("/+$", "") : "";
+    }
+
+    /** Test/backward-compatible constructor for endpoints that do not use resend verification. */
+    public AuthController(AuthService authService,
+                          VerificationService verificationService,
+                          String frontendBaseUrl) {
+        this(authService, verificationService, null, null, frontendBaseUrl);
     }
 
     /**
@@ -150,6 +170,28 @@ public class AuthController {
             case SUCCESS -> redirectToVerified("success");
             case TOKEN_EXPIRED -> redirectToVerified("expired");
             case TOKEN_INVALID -> redirectToVerified("invalid");
+        };
+    }
+
+    /** Resends verification email without disclosing account existence. */
+    @PostMapping("/email-verification/resend")
+    public ResponseEntity<?> resendVerification(
+            @Valid @RequestBody ResendVerificationRequest request,
+            HttpServletRequest servletRequest) {
+        String clientIp = clientIpExtractor.extract(servletRequest);
+        ResendVerificationService.Result result = resendVerificationService.resend(
+                request.getEmail().trim().toLowerCase(java.util.Locale.ROOT),
+                request.getCaptchaToken(), clientIp);
+
+        return switch (result.status()) {
+            case SUCCESS -> ResponseEntity.ok(ResendVerificationResponse.genericSuccess());
+            case CAPTCHA_INVALID -> ResponseEntity.badRequest().body(
+                    AuthResponse.failure("CAPTCHA_INVALID",
+                            "CAPTCHA verification failed. Please try again."));
+            case RATE_LIMITED -> ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header(HttpHeaders.RETRY_AFTER, String.valueOf(result.retryAfterSeconds()))
+                    .body(AuthResponse.failure("RATE_LIMITED",
+                            "Too many verification email requests. Please try again later."));
         };
     }
 

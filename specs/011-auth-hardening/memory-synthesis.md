@@ -19,12 +19,12 @@
 - [none]
 
 ## Relevant Security Constraints
-- [S1] D37 | Checkpoint evidence standard : changed files + assertions + sample + audit | evidence ,checkpoint,quality,verification,testing,process,standard,best-practice | DECISIONS .md | active D38 | Do not mock the unit whose behavior is under test | testing ,mock,unit-test,tdd,best-practice,anti-pattern | DECISIONS .md | active D39 | Every bug fix must include a regression test that would fail on the previous implementation | bug-fix ,regression,testing,tdd,quality,process,best-practice | DECISIONS .md | active D40 | Separate implementation complete from contract proven | quality ,verification,contract,testing,evidence,process,best-practice | DECISIONS... (Source: `docs/memory/INDEX.md`)
-- [S2] Status Active Why this is durable Every feature with form submissions needs CSRF protection. Without Spring Security, there is no built-in CSRF filter. This pattern must be reused for all future POST/PUT/DELETE endpoints. (Source: `docs/memory/DECISIONS.md`)
-- [S3] DECISIONS / Technical Decisions (`docs/memory/`) / Template / 2026-06-30 - SPA CSRF with Spring Security 6.5 requires explicit bootstrap (Source: `docs/memory/DECISIONS.md`)
+- [S1] Status : Active — Phase 10 backend registration and email verification was implemented, verified, accepted, and committed as c1d7466 . Phase 11 Resend Verification is next. Milestones Phases 1-6: Spring Security bootstrap, auth schema, user details, JSON login/logout/status, failed-login protection, and SPA CSRF migration. (Source: `docs/memory/WORKLOG.md`)
+- [S2] D37 | Checkpoint evidence standard : changed files + assertions + sample + audit | evidence ,checkpoint,quality,verification,testing,process,standard,best-practice | DECISIONS .md | active D38 | Do not mock the unit whose behavior is under test | testing ,mock,unit-test,tdd,best-practice,anti-pattern | DECISIONS .md | active D39 | Every bug fix must include a regression test that would fail on the previous implementation | bug-fix ,regression,testing,tdd,quality,process,best-practice | DECISIONS .md | active D40 | Separate implementation complete from contract proven | quality ,verification,contract,testing,evidence,process,best-practice | DECISIONS... (Source: `docs/memory/INDEX.md`)
+- [S3] Status Active Why this is durable Phases 23-27 delivered the complete production PDF pipeline : Phase 23 : Download controller security fixes (Content-Disposition header injection fix , missing exists () check , SecurityException →500 bug ), public route rate limiter , timing hardening Phase 24 : Frontend export /finalize flow repair — DTO URL contract , disabled PDF buttons , absolute public link , duplicate navigation fix , error handling , double-click prevention Phase 25 : V12 .1 budget parity... (Source: `docs/memory/WORKLOG.md`)
 
 ## Related Historical Lessons
-- [B1] Status Active Symptoms After submitting a form (login/register), the API returns a non-2xx response (409, 401, etc.) with a descriptive error message. The request fails on the network level but the user sees NO error message on the page. The form just resets or stays unchanged with no feedback. (Source: `docs/memory/BUGS.md`)
+- [none]
 
 ## Conflict Warnings
 - [none]

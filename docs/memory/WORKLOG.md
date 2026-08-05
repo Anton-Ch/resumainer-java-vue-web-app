@@ -47,7 +47,20 @@ This is not a changelog. Do not record routine releases, version bumps, or imple
 
 ---
 
-### 2026-06-30 - Feature 011 Auth Hardening Phases 1-6 completed
+### 2026-07-26 - Feature 011 Auth Hardening Phases 1-10 completed
+
+**Status**: Active — Phase 10 backend registration and email verification was implemented, verified, accepted, and committed as `c1d7466`. Phase 11 Resend Verification is next.
+
+**Milestones**
+- Phases 1-6: Spring Security bootstrap, auth schema, user details, JSON login/logout/status, failed-login protection, and SPA CSRF migration.
+- Phase 7: Authorization rules completed and legacy `AuthInterceptor` removed.
+- Phase 8: Cloudflare Turnstile captcha service completed.
+- Phase 9: Resend email service completed.
+- Phase 10: Backend registration and email verification completed with CAPTCHA enforcement, unverified account creation, hashed verification tokens, atomic token consumption, safe redirect outcomes, and unverified-login rejection.
+
+**Scope note**: Frontend check-email and verified-result pages were not part of commit `c1d7466`; they remain explicitly deferred to Phase 15 tasks T191, T192, T197, and T201.
+
+**Evidence**: Commit `c1d7466` contains the accepted Phase 10 backend implementation and tests. `tasks.md` records the approved checkpoint and deferred frontend scope.
 
 ### 2026-06-26 - Feature 010 Admin Console Completed
 

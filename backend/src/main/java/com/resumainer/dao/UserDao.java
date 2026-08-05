@@ -32,6 +32,10 @@ public class UserDao {
             "created_at, updated_at, deleted_at, is_deleted " +
             "FROM users WHERE LOWER(email) = LOWER(?) AND is_deleted = FALSE";
 
+    private static final String SELECT_VERIFICATION_CANDIDATE_BY_EMAIL_FOR_UPDATE =
+            "SELECT id, status_id, email_verified, is_deleted " +
+            "FROM users WHERE LOWER(email) = LOWER(?) FOR UPDATE";
+
     private static final String SELECT_BY_ID =
             "SELECT id, email, password_hash, username, role_id, status_id, permission_id, " +
             "default_language_id, secondary_language_id, is_privileged, failed_login_attempts, " +
@@ -133,6 +137,36 @@ public class UserDao {
             log.error("Error finding user by email: {}", trimmed, e);
             throw new RuntimeException("Database error finding user by email", e);
         }
+    }
+
+    /**
+     * Finds and locks the minimal verification-resend projection by normalized email.
+     * Deleted rows are intentionally returned so the service can apply one generic
+     * public response without opening a second query or connection.
+     *
+     * @param email normalized email address
+     * @param conn transaction-managed connection
+     * @return locked verification candidate, or {@code null}
+     */
+    public VerificationCandidate findVerificationCandidateForUpdate(String email, Connection conn) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email must not be null or empty");
+        }
+        try (PreparedStatement stmt = conn.prepareStatement(SELECT_VERIFICATION_CANDIDATE_BY_EMAIL_FOR_UPDATE)) {
+            stmt.setString(1, email.trim().toLowerCase());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? new VerificationCandidate(
+                        rs.getObject("id", UUID.class),
+                        rs.getObject("status_id", Long.class),
+                        rs.getBoolean("email_verified"),
+                        rs.getBoolean("is_deleted")) : null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Database error finding user for update", e);
+        }
+    }
+
+    public record VerificationCandidate(UUID id, Long statusId, boolean emailVerified, boolean deleted) {
     }
 
     /**
